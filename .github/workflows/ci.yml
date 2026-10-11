@@ -162,6 +162,8 @@ jobs:
       - name: Install stable and isolated nightly coverage toolchains
         run: python -B scripts/native-setup.py --coverage
       - name: Enforce native 85 percent regions and 80 percent branches
+        env:
+          NUMERA_ORACLE_ROOT: ${{ github.workspace }}/.ci-work/baseline
         run: python -B scripts/native-ci.py coverage
       - name: Preserve coverage evidence
         if: always()

@@ -348,7 +348,7 @@ pub(crate) fn absolute(path: &Path) -> bool {
             || (s.as_bytes().get(1) == Some(&b':')
                 && s.as_bytes()
                     .get(2)
-                    .is_some_and(|b| [b'/', b'\\'].contains(b)))
+                    .is_some_and(|b| b"/\\".contains(b)))
     }
     #[cfg(not(windows))]
     {

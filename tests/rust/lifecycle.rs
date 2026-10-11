@@ -1,3 +1,7 @@
+#[path = "common/config.rs"]
+mod config_fixture;
+#[path = "common/image.rs"]
+mod image_fixture;
 mod common;
 use common::Workspace;
 use numera_image_gen_mcp::{
@@ -51,7 +55,7 @@ fn writer_fences_terminal_accounting_and_original_journal_survive_reopen() {
     assert!(two.claim("output", Some(&original), false).unwrap());
     original = two.get("output").unwrap();
     two.reserve("output", 1048576, 2097152).unwrap();
-    let bytes = Workspace::image();
+    let bytes = image_fixture::original();
     let image = inspect(bytes.clone(), &config, None).unwrap();
     two.retain("output", 0, &bytes, Some(&original)).unwrap();
     let pending = two.pending("output").unwrap();
@@ -96,7 +100,7 @@ fn writer_fences_terminal_accounting_and_original_journal_survive_reopen() {
 fn documented_resolution_and_original_format_deviations_are_reported_not_resized() {
     let workspace = Workspace::new();
     let config = workspace.config("https://invalid.example/v1", "openai-images");
-    let image = inspect(Workspace::image(), &config, None).unwrap();
+    let image = inspect(image_fixture::original(), &config, None).unwrap();
     let mut r = receipt("requirements");
     r.value["output_requirements"] = json!({"size":"1024x1024","output_format":"jpeg","background":"transparent","aspect_ratio":"1:1","image_size":"4K","upscale_source":{"width":8,"height":6},
         "dimension_evidence":{"pixel_sizes":[{"aspect_ratio":"1:1","resolution":"4K","width":4096,"height":4096}]}});

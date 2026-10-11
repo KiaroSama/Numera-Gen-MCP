@@ -1,3 +1,7 @@
+#[path = "common/config.rs"]
+mod config_fixture;
+#[path = "common/image.rs"]
+mod image_fixture;
 mod common;
 use common::Workspace;
 use numera_image_gen_mcp::{
@@ -41,7 +45,7 @@ async fn completed_retained_bytes_recover_after_local_cancel_without_credentials
             .unwrap()
     );
     receipt = store.get("recover-original").unwrap();
-    let bytes = Workspace::image();
+    let bytes = image_fixture::original();
     store.reserve("recover-original", 1048576, 2097152).unwrap();
     store
         .retain("recover-original", 0, &bytes, Some(&receipt))

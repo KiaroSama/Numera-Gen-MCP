@@ -98,6 +98,42 @@ path = "tests/rust/policy.rs"
 name = "config_parity"
 path = "tests/rust/config_parity.rs"
 
+[[test]]
+name = "discovery"
+path = "tests/rust/discovery.rs"
+
+[[test]]
+name = "network"
+path = "tests/rust/network.rs"
+
+[[test]]
+name = "editing"
+path = "tests/rust/editing.rs"
+
+[[test]]
+name = "application"
+path = "tests/rust/application.rs"
+
+[[test]]
+name = "comfy"
+path = "tests/rust/comfy.rs"
+
+[[test]]
+name = "maintenance"
+path = "tests/rust/maintenance.rs"
+
+[[test]]
+name = "model_policy"
+path = "tests/rust/model_policy.rs"
+
+[[test]]
+name = "migration"
+path = "tests/rust/migration.rs"
+
+[[test]]
+name = "journal"
+path = "tests/rust/journal.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

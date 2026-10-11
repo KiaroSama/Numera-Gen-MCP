@@ -78,7 +78,8 @@ impl ServerHandler for Handler {
                             .as_object()
                             .is_some_and(|p| p.contains_key(key))
                     })
-                }) {
+                })
+            {
                 return Err(NumeraError::new(
                     "invalid_input",
                     "Tool arguments do not match the public schema.",

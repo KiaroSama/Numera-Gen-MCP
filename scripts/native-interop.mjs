@@ -157,6 +157,9 @@ async function start(configFile) {
       TEMP: join(workspace, "temp"),
       TMP: join(workspace, "temp"),
       TMPDIR: join(workspace, "temp"),
+      ...(process.env.LLVM_PROFILE_FILE
+        ? { LLVM_PROFILE_FILE: process.env.LLVM_PROFILE_FILE }
+        : {}),
     },
     stderr: "pipe",
   });

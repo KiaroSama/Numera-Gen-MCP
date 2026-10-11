@@ -2,9 +2,11 @@
 
 ## Native Rust migration — pending hosted verification
 
-The first hosted native runs compiled the application and release binary, but strict Clippy and
-source-policy parity failed. Some native fixtures passed; the complete native suite, coverage gates
-and packaged distribution have not passed. Existing Node evidence below is historical regression
+Hosted revision `3f27fb9` compiled the application and release binary on all six OS/CPU targets.
+All 15 then-existing native suites passed (38 cases on POSIX, 39 on Windows), including the repaired
+source-policy oracle. Formatting and remaining test-helper/Windows Clippy issues still blocked the
+stable jobs. Measured coverage was 52.93% executable regions / 46.95% branches, below the unchanged
+85% / 80% gates. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
 evidence, not proof that the Rust migration passes. Hosted stable jobs run
 rustfmt, strict Clippy, all discovered Rust suites, native release compilation and archive checks on
 Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% executable regions and
@@ -16,8 +18,11 @@ Native tests require nonempty fixtures and compare real decoded original bytes/m
 shutdown. The hosted interoperability fixture also exercises two actual SDK hosts sharing source-seeded
 SQLite receipts and restarts both twice, preserving original bytes and asserting that recovery sends
 no generation POST. Transport/auth/poll errors remain distinct from terminal provider states. This
-fixture is newly authored and has not yet passed. SQLite fixture stores, loopback services and owned
-child processes must close and clean up.
+fixture passed on all six targets at `3f27fb9`, using 25 source-seeded jobs, not live providers.
+The next coverage workflow instruments the same external acceptance path before generating its
+report; a passing external fixture alone does not establish the coverage floor. New discovery,
+network, application and editing fixtures remain pending CI. SQLite fixture stores, loopback
+services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

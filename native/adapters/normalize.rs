@@ -294,7 +294,8 @@ pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normal
     if connection["adapter"] == "openai-responses"
         && let Some(event) = events
             .iter()
-            .find(|e| ["response.failed", "response.incomplete"].contains(&e.kind.as_str())) {
+            .find(|e| ["response.failed", "response.incomplete"].contains(&e.kind.as_str()))
+    {
         let result = &event.data["response"];
         if truthy(result) {
             if !result.is_object() {

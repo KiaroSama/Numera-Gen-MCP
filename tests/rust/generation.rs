@@ -1,3 +1,7 @@
+#[path = "common/config.rs"]
+mod config_fixture;
+#[path = "common/image.rs"]
+mod image_fixture;
 mod common;
 use common::Workspace;
 use numera_image_gen_mcp::{
@@ -19,7 +23,7 @@ use tokio_util::sync::CancellationToken;
 #[tokio::test]
 async fn actual_loopback_generation_preserves_bytes_and_deduplicates_paid_post() {
     let workspace = Workspace::new();
-    let image = Workspace::image();
+    let image = image_fixture::original();
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     let stop = CancellationToken::new();

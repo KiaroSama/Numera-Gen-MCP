@@ -1,3 +1,7 @@
+#[path = "common/config.rs"]
+mod config_fixture;
+#[path = "common/image.rs"]
+mod image_fixture;
 use numera_image_gen_mcp::{
     adapters::{types::Input, workflow},
     files::images::{self, Image},
@@ -184,7 +188,7 @@ fn absent_empty_oversized_ui_graphs_and_dangling_bindings_fail_closed() {
 fn every_reference_and_mask_requires_an_existing_distinct_input_target() {
     let workspace = common::Workspace::new();
     let config = workspace.config("https://fixture.example", "comfyui");
-    let image = images::inspect(common::Workspace::image(), &config, None).unwrap();
+    let image = images::inspect(image_fixture::original(), &config, None).unwrap();
     let references = vec![image.clone(), image.clone()];
     let request = request();
     for mode in [

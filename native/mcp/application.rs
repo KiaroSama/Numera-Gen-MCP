@@ -134,7 +134,8 @@ impl Application {
                 && let Ok(pinned) = snapshot_credentials(&c, &g.env, &g.runtime).await
                 && connection_identity(name, &pinned)? == identity
             {
-                let mut route = json!({"paths":c["paths"],"query":c["query"],"baseUrlMode":c["baseUrlMode"]});
+                let mut route =
+                    json!({"paths":c["paths"],"query":c["query"],"baseUrlMode":c["baseUrlMode"]});
                 for key in ["proxy", "workflow"] {
                     if let Some(value) = c.get(key) {
                         route[key] = value.clone();

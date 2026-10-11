@@ -27,7 +27,8 @@ pub fn deviations(receipt: &Receipt, image: &Image, index: u32) -> Vec<String> {
     if let Some(size) = expected["size"].as_str()
         && size.split_once('x').is_some_and(|(w, h)| {
             !w.is_empty() && !h.is_empty() && w.bytes().chain(h.bytes()).all(|b| b.is_ascii_digit())
-        }) && size != format!("{}x{}", image.width, image.height)
+        })
+        && size != format!("{}x{}", image.width, image.height)
     {
         result.push(format!(
             "Output {index} dimensions differ from requested size."

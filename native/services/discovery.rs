@@ -42,8 +42,7 @@ impl Discovery {
     ) -> Result<Value> {
         let (id, c) = config.select(name)?;
         let old = self.cache.get(&id);
-        if !refresh
-            && let Some((until, catalog)) = old.filter(|(until, _)| *until > Instant::now())
+        if !refresh && let Some((until, catalog)) = old.filter(|(until, _)| *until > Instant::now())
         {
             let _ = until;
             let mut catalog = catalog.clone();

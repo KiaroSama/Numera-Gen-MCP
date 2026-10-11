@@ -221,7 +221,8 @@ pub fn effective_request(connection: &Value, request: &Value, model: &str) -> Re
             && let Some(value) = overrides["defaults"]
                 .get(*key)
                 .filter(|v| !v.is_null())
-                .or_else(|| connection["defaults"].get(*key)) {
+                .or_else(|| connection["defaults"].get(*key))
+        {
             merged.insert((*key).into(), value.clone());
         }
     }

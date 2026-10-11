@@ -5,7 +5,15 @@ use serde_json::{Value, json};
 use std::{collections::HashMap, path::Path};
 use uuid::Uuid;
 
-type StoredRequestRow = (String, String, String, Option<String>, Option<i64>, i64, i64);
+type StoredRequestRow = (
+    String,
+    String,
+    String,
+    Option<String>,
+    Option<i64>,
+    i64,
+    i64,
+);
 
 #[derive(Clone, Debug)]
 pub struct Receipt {

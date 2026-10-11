@@ -45,7 +45,8 @@ def environment() -> dict[str, str]:
     return env
 
 
-def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT) -> None:
+def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT, capture: bool = False) -> bytes:
+    captured = bytearray()
     started = time.monotonic()
     events: queue.Queue[tuple[str, bytes | None]] = queue.Queue()
     kwargs = {"creationflags": subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
@@ -81,9 +82,15 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
                 ended += 1
                 continue
             last = time.monotonic()
-            target = sys.stdout.buffer if name == "stdout" else sys.stderr.buffer
-            target.write(chunk)
-            target.flush()
+            if capture and name == "stdout":
+                captured.extend(chunk)
+                if len(captured) > 1048576:
+                    failed = True
+                    raise RuntimeError("Owned command captured output exceeds limit")
+            else:
+                target = sys.stdout.buffer if name == "stdout" else sys.stderr.buffer
+                target.write(chunk)
+                target.flush()
         code = child.wait(timeout=5)
         if code:
             failed = True
@@ -108,6 +115,7 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
                 raise RuntimeError("Owned command output reader did not close")
         emit("INFO", "Owned command stopped.", command=Path(args[0]).name, pid=child.pid,
              exit_code=child.returncode, duration_seconds=round(time.monotonic() - started, 3), terminated=failed)
+    return bytes(captured)
 
 
 def inventory() -> None:
@@ -127,13 +135,16 @@ def inventory() -> None:
 def coverage_gate() -> None:
     report = json.loads((WORK / "coverage.json").read_text(encoding="utf-8"))
     summaries = [item["totals"] for item in report["data"]]
+    failed = []
     for metric, floor in [("regions", 85), ("branches", 80)]:
         count = sum(s[metric]["count"] for s in summaries)
         covered = sum(s[metric]["covered"] for s in summaries)
         percent = covered / count * 100 if count else 0
         emit("INFO", "Native coverage measured.", metric=metric, count=count, covered=covered, percent=round(percent, 2))
         if count == 0 or percent < floor:
-            raise RuntimeError(f"Native {metric} coverage is below {floor}%")
+            failed.append(f"{metric} below {floor}%")
+    if failed:
+        raise RuntimeError("Native coverage gates failed: " + ", ".join(failed))
 
 
 def main() -> None:
@@ -182,8 +193,30 @@ def main() -> None:
                 raise RuntimeError("Required native gates failed: " + ", ".join(failures))
         else:
             run(["cargo", "install", "cargo-llvm-cov", "--version", "0.9.1", "--locked", "--root", str(ROOT / ".ci-cache/cargo")], wall=600, idle=180, env=env)
-            run(["cargo", "+nightly-2026-10-10", "llvm-cov", "--locked", "--branch", "--all-targets", "--json",
-                 "--output-path", str(WORK / "coverage.json"), "--fail-under-regions", "85", "--", "--test-threads=2"], wall=1200, idle=180, env=env)
+            coverage = ["cargo", "+nightly-2026-10-10", "llvm-cov"]
+            exported = run(coverage + ["show-env", "--branch"], wall=30, idle=20, env=env, capture=True)
+            import shlex
+            instrumented = env.copy()
+            for line in exported.decode("utf-8").splitlines():
+                fields = shlex.split(line)
+                if len(fields) != 1 or "=" not in fields[0]:
+                    raise RuntimeError("Invalid coverage environment assignment")
+                key, value = fields[0].split("=", 1)
+                if not key.replace("_", "").isalnum() or not key.isupper():
+                    raise RuntimeError("Invalid coverage environment key")
+                instrumented[key] = value
+            for key in ["CARGO_LLVM_COV_TARGET_DIR", "CARGO_LLVM_COV_BUILD_DIR"]:
+                if not Path(instrumented[key]).resolve().is_relative_to(ROOT):
+                    raise RuntimeError("Instrumented build path escapes workspace")
+            if not Path(instrumented["LLVM_PROFILE_FILE"]).resolve().is_relative_to(ROOT):
+                raise RuntimeError("Coverage profile path escapes workspace")
+            instrumented["CARGO_TARGET_DIR"] = instrumented["CARGO_LLVM_COV_TARGET_DIR"]
+            run(coverage + ["clean", "--workspace"], wall=60, idle=30, env=instrumented)
+            run(["cargo", "+nightly-2026-10-10", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], wall=1200, idle=180, env=instrumented)
+            run(["cargo", "+nightly-2026-10-10", "build", "--locked"], wall=600, idle=180, env=instrumented)
+            instrumented["NUMERA_NATIVE_BINARY"] = str(Path(instrumented["CARGO_LLVM_COV_TARGET_DIR"]) / "debug/numera-image-gen-mcp")
+            run(["node", "scripts/native-interop.mjs"], wall=180, idle=45, env=instrumented)
+            run(coverage + ["report", "--branch", "--json", "--output-path", str(WORK / "coverage.json")], wall=60, idle=30, env=instrumented)
             coverage_gate()
 
 

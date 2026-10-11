@@ -108,6 +108,6 @@ pub async fn health(
         connections.push(json!({"name":name,"reachable":reachable,"authentication_checked":checked,"generation_verified":false,"error":error}));
     }
     Ok(
-        json!({"configuration_valid":true,"runtime":"Rust 1.99.0","storage":storage,"connections":connections,"caveats":["Passing probes does not prove generation/editing entitlement.","Gateway/provider retries cannot establish global exactly-once billing."]}),
+        json!({"configuration_valid":true,"runtime":"Rust 1.99.0","storage":storage,"connections":connections,"generation_verified":false,"caveats":["Passing probes does not prove generation/editing entitlement.","Gateway/provider retries cannot establish global exactly-once billing."]}),
     )
 }

@@ -1,3 +1,5 @@
+#[path = "common/image.rs"]
+mod image_fixture;
 use numera_image_gen_mcp::{
     error::Result,
     jobs::{Receipt, Store},
@@ -160,7 +162,7 @@ fn wrong_job_and_local_cancellation_do_not_claim_authoritative_terminal_state() 
 #[test]
 fn shared_terminal_control_fences_old_writer_and_preserves_retained_originals() {
     let workspace = common::Workspace::new();
-    let bytes = common::Workspace::image();
+    let bytes = image_fixture::original();
     let directory = workspace.0.join("state");
     let mut owner = Store::open(&directory).unwrap();
     let mut control = Store::open(&directory).unwrap();
@@ -228,7 +230,7 @@ fn shared_terminal_control_fences_old_writer_and_preserves_retained_originals() 
 #[test]
 fn received_completion_wins_late_cancellation_and_preserves_accounting() {
     let workspace = common::Workspace::new();
-    let bytes = common::Workspace::image();
+    let bytes = image_fixture::original();
     let directory = workspace.0.join("state");
     let mut owner = Store::open(&directory).unwrap();
     let mut control = Store::open(&directory).unwrap();
@@ -267,7 +269,7 @@ fn received_completion_wins_late_cancellation_and_preserves_accounting() {
 #[test]
 fn terminal_writer_keeps_reservation_until_retention_then_releases_unused_capacity() {
     let workspace = common::Workspace::new();
-    let bytes = common::Workspace::image();
+    let bytes = image_fixture::original();
     assert!(bytes.len() < 4096, "tiny source-generated image fixture");
     let directory = workspace.0.join("state");
     let mut owner = Store::open(&directory).unwrap();
