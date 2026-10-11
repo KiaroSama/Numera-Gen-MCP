@@ -30,7 +30,7 @@ fn explicit_native_json_generation_fields_preserve_references_masks_and_reject_u
     let image = inspect(image_fixture::original(), &json!({}), None).unwrap();
     let refs = vec![image.clone(), image.clone()];
     let request = json!({"prompt":"Preserve 日本語","count":1,"provider_options":{}});
-    for mode in ["json", "generation-json"] {
+    for mode in ["json", "generation"] {
         let c = json!({"adapter":"openai-images","edit":{"mode":mode,"encoding":"images","maxReferences":2,"masks":true,"maskPolarity":"transparent-edit"}});
         let prepared = build_request(&input(&c, &request, &refs, Some(&image))).unwrap();
         assert_eq!(

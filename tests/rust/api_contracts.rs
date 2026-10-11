@@ -31,7 +31,7 @@ async fn bad_headers_proxies_and_missing_destinations_fail_before_network() {
             ),
             (
                 HashMap::new(),
-                json!({"baseUrl":server.origin,"proxy":{"url":"not-a-url"}}),
+                json!({"baseUrl":server.origin,"proxy":{"url":"://"}}),
                 "invalid_configuration",
             ),
             (HashMap::new(), json!({}), "upstream_error"),

@@ -132,7 +132,7 @@ pub fn save(
             "Published image path changed during storage.",
         ));
     }
-    let saved = read_image(&target, config)?;
+    let saved = read_image(&target, config).map_err(|_| error())?;
     if saved.sha256 != image.sha256 {
         return Err(
             NumeraError::new("output_file_error", "Saved image hash mismatch.").stage("storage"),
