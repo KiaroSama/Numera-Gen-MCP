@@ -9,6 +9,7 @@ use rmcp::ServiceExt;
 use serde_json::json;
 use std::{
     collections::HashMap,
+    io::IsTerminal,
     path::{Path, PathBuf},
     sync::Arc,
     time::Duration,
@@ -31,39 +32,69 @@ fn installation_root(executable: &Path) -> Result<PathBuf> {
     })
 }
 
+fn application(
+    args: Vec<String>,
+    root: &Path,
+    env: HashMap<String, String>,
+    runtime: RuntimePaths,
+) -> Result<Arc<Application>> {
+    let file = config::config_file(&args, &env, root)?;
+    let mut pinned = args;
+    if let Some(file) = &file {
+        pinned.extend(["--config".into(), file.to_string_lossy().into_owned()]);
+    }
+    let config = config::load_config(&pinned, &env, root)?;
+    let logger = Arc::new(Logger::with_retention(
+        Path::new(config.value["logging"]["directory"].as_str().ok_or_else(NumeraError::runtime)?),
+        config.value["logging"]["level"].as_str().unwrap_or("INFO"),
+        config.value["logging"]["retentionDays"].as_u64().unwrap_or(14),
+    ));
+    let reload = file.map(|file| ConfigReload::new(config.clone(), file, pinned, env.clone()));
+    Ok(Arc::new(Application::new(config, reload, logger, runtime, env, CancellationToken::new())?))
+}
+
+async fn http(args: Vec<String>, root: &Path, env: HashMap<String, String>, runtime: RuntimePaths) -> Result<()> {
+    use numera_image_gen_mcp::{cli::http_settings, mcp::http_server};
+    let port = http_settings::port(root, &args, &env)?;
+    let (_, args) = http_settings::split_port_args(&args)?;
+    let token = http_settings::token(root, &env)?;
+    let application = application(args, root, env, runtime)?;
+    let stop = application.stop.clone();
+    let listener = http_server::bind(port).await?;
+    eprintln!("Local MCP HTTP: http://127.0.0.1:{port}/mcp (authentication required).");
+    let service = http_server::serve(listener, application, http_server::Options::new(port, token), stop.clone());
+    tokio::pin!(service);
+    tokio::select! {
+        result = service.as_mut() => result,
+        _ = http_server::shutdown_signal() => {stop.cancel(); service.await}
+    }
+}
+
+async fn menu(root: &Path, env: &HashMap<String, String>, runtime: &RuntimePaths) -> Result<()> {
+    use numera_image_gen_mcp::cli::menu::{step, MenuAction};
+    let logger = Logger::new(&root.join("logs"), "INFO");
+    loop {
+        let action = step(root, env, &mut std::io::stdin().lock(), &mut std::io::stdout().lock())?;
+        logger.log("INFO", "menu", "Native menu action selected.", json!({"action":format!("{action:?}")}));
+        match action {
+            MenuAction::Exit => return Ok(()),
+            MenuAction::Continue => {},
+            MenuAction::StartHttp { port } => {
+                http(vec!["--port".into(), port.to_string()], root, env.clone(), runtime.clone()).await?;
+            }
+        }
+    }
+}
+
 async fn bridge(
     args: Vec<String>,
     root: PathBuf,
     env: HashMap<String, String>,
     runtime: RuntimePaths,
 ) -> Result<()> {
-    let file = config::config_file(&args, &env, &root)?;
-    let mut pinned = args;
-    if let Some(file) = &file {
-        pinned.extend(["--config".into(), file.to_string_lossy().into_owned()]);
-    }
-    let config = config::load_config(&pinned, &env, &root)?;
-    let logger = Arc::new(Logger::with_retention(
-        Path::new(
-            config.value["logging"]["directory"]
-                .as_str()
-                .ok_or_else(NumeraError::runtime)?,
-        ),
-        config.value["logging"]["level"].as_str().unwrap_or("INFO"),
-        config.value["logging"]["retentionDays"]
-            .as_u64()
-            .unwrap_or(14),
-    ));
-    let reload = file.map(|file| ConfigReload::new(config.clone(), file, pinned, env.clone()));
-    let stop = CancellationToken::new();
-    let application = Arc::new(Application::new(
-        config,
-        reload,
-        logger.clone(),
-        runtime,
-        env,
-        stop.clone(),
-    )?);
+    let application = application(args, &root, env, runtime)?;
+    let logger = application.logger.clone();
+    let stop = application.stop.clone();
     let handler = Handler::new(application.clone())?;
     let transport = Stdio::new(128 * 1024 * 1024, stop.clone());
     let service = handler
@@ -103,7 +134,7 @@ fn main() {
     }
     if matches!(args.first().map(String::as_str), Some("--help" | "help")) {
         println!(
-            "Numera Image-Gen MCP\nUsage: numera-image-gen-mcp bridge [--config ABSOLUTE_PATH]\nClaude launches bridge directly; no launcher or background service is required.\nConfiguration: adjacent .env/config.local.json, explicit --config or NUMERA_CONFIG.\nManaged temporary files and cache stay inside the installation root."
+            "Numera Image-Gen MCP\nUsage: numera-image-gen-mcp bridge [--config ABSOLUTE_PATH]\n       numera-image-gen-mcp http [--port 1969] [--config ABSOLUTE_PATH]\n       numera-image-gen-mcp menu\nHTTP listens only on 127.0.0.1 at /mcp; a separate private local token is required.\nClaude launches bridge directly; no launcher or background service is required.\nConfiguration: adjacent .env/config.local.json, explicit --config or NUMERA_CONFIG.\nManaged temporary files and cache stay inside the installation root."
         );
         return;
     }
@@ -148,6 +179,12 @@ fn main() {
                     "Read-only readiness has unresolved blockers.",
                 ))
             };
+        }
+        if args.first().is_some_and(|s| s == "http") {
+            return executor.block_on(http(args[1..].to_vec(), &root, env, runtime));
+        }
+        if args.first().is_some_and(|s| s == "menu") || (args.is_empty() && std::io::stdin().is_terminal()) {
+            return executor.block_on(menu(&root, &env, &runtime));
         }
         let args = if args.first().is_some_and(|s| s == "bridge") {
             args[1..].to_vec()

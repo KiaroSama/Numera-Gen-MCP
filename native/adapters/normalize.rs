@@ -259,17 +259,9 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
     }
     result.upstream_model = string(&value["model"]);
     result.upstream_id = string(&value["id"]);
-    result.usage = value
-        .get("usage")
-        .filter(|v| !v.is_null())
-        .or_else(|| value.get("usageMetadata"))
-        .cloned();
+    result.usage = value.get("usage").cloned();
     if !signatures.is_empty() {
-        let mut continuation = json!({"signatures":signatures});
-        if let Some(id) = value.get("id") {
-            continuation["upstream_id"] = id.clone();
-        }
-        result.continuation = Some(continuation);
+        result.continuation = Some(json!({"signatures":signatures}));
     }
     Ok(result)
 }

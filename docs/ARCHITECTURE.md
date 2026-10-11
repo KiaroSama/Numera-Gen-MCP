@@ -31,6 +31,19 @@ UTF-8 UTC structured files and stderr, never protocol stdout; credentials/prompt
 redacted at every level. The executable needs no Node/Python/Rust installation. ComfyUI, if selected,
 owns inference and GPU/model/node installation; Numera does not bundle or silently install them.
 
+## Direct local HTTP and native menu
+
+The optional `http` command serves the same `Application` and ten-tool `Handler` through official
+RMCP Streamable HTTP. Hyper owns bounded connections; a tracked task set and explicit shutdown close
+owned work. The default endpoint is `127.0.0.1:1969/mcp`, with validated port overrides and no public
+binding or silent collision fallback. Host/Origin and separate local Bearer authentication guard
+requests before dispatch. SDK-negotiated modern/legacy session and cancellation semantics stay distinct.
+
+`native/cli/http_settings.rs` owns private persistent port/token files independently of image provider
+configuration. `native/cli/menu.rs` supplies native start/port/guidance/exit interaction; explicit
+`bridge` never displays a menu. No OS service, OAuth relay or reference-project account features are
+added. HTTP/menu and their new CI paths remain unverified until the integrated candidate passes.
+
 ## Decisions and recovery
 
 Same request ID plus identical effective inputs/account returns the same durable receipt; a changed

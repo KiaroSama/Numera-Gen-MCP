@@ -43,4 +43,9 @@ selected private config. Preserve originals, receipts/journals and migration sna
 runtime until the owner has switched configuration and verified the actual native connection; then
 remove only inspected obsolete project-local dependencies/build/temp/cache, never global caches.
 
+Optional native `menu` provides direct HTTP start, port changes and connection guidance on both
+Linux and macOS. `http` defaults to `127.0.0.1:1969/mcp`, requires a private local Bearer token, and
+runs in foreground; Ctrl+C stops it. It is separate from automatic stdio `bridge` startup.
+[HTTP/menu details](HTTP.md) describe the pending native target and safe client authentication.
+
 [Installation](../README.md#installation-and-setup) · [Claude clients](CLAUDE.md) · [Codex](CODEX.md).

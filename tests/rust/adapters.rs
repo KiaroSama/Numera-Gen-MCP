@@ -2,11 +2,7 @@
 mod normalized_fixture;
 use normalized_fixture::normalized;
 use numera_image_gen_mcp::{
-    adapters::{
-        build_request,
-        normalize::normalize,
-        types::Input,
-    },
+    adapters::{build_request, normalize::normalize, types::Input},
     error::Result,
     files::images::{decode_base64, inspect},
     http::api::Body,

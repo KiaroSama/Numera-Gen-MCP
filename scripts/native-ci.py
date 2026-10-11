@@ -165,7 +165,7 @@ def main() -> None:
         if args.phase == "coverage-gate":
             coverage_gate()
             return
-        if not (ROOT / "Cargo.lock").exists():
+        if not (ROOT / "Cargo.lock").exists() or os.environ.get("NUMERA_RESOLVE_HTTP_LOCK") == "true":
             run(["cargo", "generate-lockfile"], wall=180, idle=90, env=env)
         if args.phase == "stable":
             failures = []
@@ -175,6 +175,7 @@ def main() -> None:
                 (["cargo", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], 900, 180),
                 (["cargo", "build", "--locked", "--release"], 900, 180),
                 (["node", "scripts/native-interop.mjs"], 180, 45),
+                (["node", "scripts/native-http-interop.mjs"], 90, 30),
             ]:
                 try:
                     run(command, wall=wall, idle=idle, env=env)
@@ -218,6 +219,7 @@ def main() -> None:
             run(["cargo", "+nightly-2026-10-10", "build", "--locked"], wall=600, idle=180, env=instrumented)
             instrumented["NUMERA_NATIVE_BINARY"] = str(Path(instrumented["CARGO_LLVM_COV_TARGET_DIR"]) / "debug/numera-image-gen-mcp")
             run(["node", "scripts/native-interop.mjs"], wall=180, idle=45, env=instrumented)
+            run(["node", "scripts/native-http-interop.mjs"], wall=90, idle=30, env=instrumented)
             run(coverage + ["report", "--branch", "--json", "--output-path", str(WORK / "coverage.json")], wall=60, idle=30, env=instrumented)
             coverage_gate()
 

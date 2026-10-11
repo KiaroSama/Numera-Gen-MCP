@@ -32,6 +32,11 @@ complete parity, strict quality checks, coverage floors and packaged distributio
 The previously tested Node implementation remains available until the native replacement is verified.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
 
+The native target also adds an optional direct HTTP MCP endpoint at `http://127.0.0.1:1969/mcp`,
+a configurable port and a cross-platform native menu. It reuses Numera's own tools, not a remote MCP
+proxy. Local authentication is separate from provider keys; `bridge` remains launcher-free.
+[HTTP and menu setup](docs/HTTP.md) is pending exact-SHA hosted verification.
+
 ## Installation and setup
 
 ### 1. Download the ready native build

@@ -9,6 +9,9 @@ lets the MCP host run the executable without a manual launcher. Installation/cli
 explain that native target. Selected Rust runtime fixtures have passed hosted CI; complete migration
 acceptance, coverage floors, verified packages and a native Release remain pending.
 Old local runtime/dependencies remain until owner host cutover and verified native reconnection.
+Optional direct local HTTP MCP, default configurable port1969, and a native Windows/Linux/macOS menu
+are being added. They reuse Numera's existing tools and state, preserve stdio `bridge`, and require
+separate private local authentication. These new paths have not yet passed hosted CI.
 
 ## Unreleased - 2026-10-05
 

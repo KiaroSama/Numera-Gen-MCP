@@ -2,7 +2,8 @@
 
 One-time host registration is required. After registration Claude launches the native executable
 itself with `args: ["bridge"]`; no launcher, daemon or manual server startup is needed. Numera is
-stdio MCP, not an HTTP server. It does not replace Claude's chat model.
+stdio MCP in `bridge` mode. The optional separate [direct HTTP mode](HTTP.md) listens locally on
+configurable port1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
 
 The native migration is still awaiting hosted compilation/parity and a verified Release. The examples
 below describe the native target; do not point a live host at an executable that has not been installed.

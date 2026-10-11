@@ -66,6 +66,7 @@ jobs:
     env:
       NUMERA_TEST_WORKERS: "2"
       CARGO_BUILD_JOBS: "2"
+      NUMERA_RESOLVE_HTTP_LOCK: "true"
       RUST_TEST_THREADS: "2"
       PYTHONDONTWRITEBYTECODE: "1"
       npm_config_cache: ${{ github.workspace }}/.ci-cache/npm
@@ -134,6 +135,7 @@ jobs:
     env:
       NUMERA_TEST_WORKERS: "2"
       CARGO_BUILD_JOBS: "2"
+      NUMERA_RESOLVE_HTTP_LOCK: "true"
       RUST_TEST_THREADS: "2"
       PYTHONDONTWRITEBYTECODE: "1"
       npm_config_cache: ${{ github.workspace }}/.ci-cache/npm

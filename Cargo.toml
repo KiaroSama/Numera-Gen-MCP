@@ -16,7 +16,11 @@ name = "numera-image-gen-mcp"
 path = "native/main.rs"
 
 [dependencies]
-rmcp = { version = "=3.5.1", default-features = false, features = ["server"] }
+rmcp = { version = "=3.5.1", default-features = false, features = ["server", "transport-streamable-http-server"] }
+hyper = { version = "=1.12.0", features = ["server", "http1"] }
+hyper-util = { version = "=0.1.21", features = ["tokio"] }
+http-body-util = "=0.1.5"
+subtle = "=2.6.1"
 base64 = "=0.23.1"
 chrono = { version = "=0.4.45", default-features = false, features = ["clock", "serde"] }
 icu_collator = "=2.3.1"
@@ -157,6 +161,18 @@ path = "tests/rust/output_recovery.rs"
 [[test]]
 name = "registration_contracts"
 path = "tests/rust/registration_contracts.rs"
+
+[[test]]
+name = "http_server"
+path = "tests/rust/http_server.rs"
+
+[[test]]
+name = "http_settings"
+path = "tests/rust/http_settings.rs"
+
+[[test]]
+name = "menu"
+path = "tests/rust/menu.rs"
 
 [profile.release]
 lto = "thin"

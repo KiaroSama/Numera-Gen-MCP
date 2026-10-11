@@ -21,7 +21,10 @@ The coverage workflow instruments the same external acceptance path before gener
 a passing external fixture alone does not establish the coverage floor. The next candidate adds
 source-generated final SSE/result normalization, actual multipart capture, targeted cancellation,
 public generation/editing, output recovery and conservative registration fixtures. These additions
-are unexecuted until hosted CI; suite discovery must match all 30 declared Rust targets. SQLite fixture stores, loopback
+passed their selected runtime paths in the next hosted candidate, except a new normalization oracle
+exposed an unwanted `usageMetadata` fallback; that production drift is being repaired. Complete parity
+and coverage acceptance remain pending. Direct HTTP/menu adds three further Rust targets and an actual
+two-client HTTP SDK fixture; all 33 targets must be discovered, with new HTTP paths still unexecuted. SQLite fixture stores, loopback
 services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with

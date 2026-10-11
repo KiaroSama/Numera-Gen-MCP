@@ -33,7 +33,7 @@ def main() -> None:
     for name in ["LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", ".env.example",
                  "schemas/config.schema.json", "schemas/simple-config.schema.json", "schemas/image-request.schema.json",
                  "examples/claude-desktop.json", "examples/claude-project.json", "examples/codex.toml",
-                 "docs/CONFIGURATION.md", "docs/CLAUDE.md", "docs/CODEX.md", "docs/ARCHITECTURE.md",
+                 "docs/CONFIGURATION.md", "docs/CLAUDE.md", "docs/CODEX.md", "docs/ARCHITECTURE.md", "docs/HTTP.md",
                  "docs/WINDOWS-WSL.md", "docs/COMPATIBILITY.md", "docs/IMAGE-EDITING.md", "docs/LINUX-MACOS.md",
                  "docs/REQUIREMENTS.md", "docs/REFERENCES.md", "SECURITY.md", "docs/TESTING.md",
                  "docs/PRACTICAL-TESTING.md", "docs/TEST-RESULTS.md", "docs/testing/MIGRATION-MATRIX.md",
