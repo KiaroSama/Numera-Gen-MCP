@@ -1,2 +1,2 @@
-pub mod registration;
 pub mod maintenance;
+pub mod registration;

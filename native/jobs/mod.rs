@@ -1,6 +1,6 @@
-mod store;
-mod lifecycle;
 mod journal;
+mod lifecycle;
 mod migration;
-pub use store::{Store, Receipt, RequestRow};
+mod store;
 pub use journal::ResultItem;
+pub use store::{Receipt, RequestRow, Store};

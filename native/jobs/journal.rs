@@ -1,45 +1,69 @@
-use super::store::{Store, Receipt, terminal};
+use super::store::{Receipt, Store, terminal};
+use crate::compat::hash::sha256;
 use crate::error::{NumeraError, Result};
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{OptionalExtension, params};
 use serde_json::{Value, json};
-use sha2::{Digest,Sha256};
 use uuid::Uuid;
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct ResultItem {
-    pub index:u32,
-    pub output_id:String,
-    pub target:Option<String>,
-    pub bytes:Option<Vec<u8>>,
-    pub url:Option<String>,
-    pub sha256:Option<String>,
-    pub phase:String,
+    pub index: u32,
+    pub output_id: String,
+    pub target: Option<String>,
+    pub bytes: Option<Vec<u8>>,
+    pub url: Option<String>,
+    pub sha256: Option<String>,
+    pub phase: String,
 }
 
-fn decode(row:&rusqlite::Row<'_>)->rusqlite::Result<ResultItem> {
-    Ok(ResultItem {index:row.get(0)?,output_id:row.get(1)?,target:row.get(2)?,bytes:row.get(3)?,url:row.get(4)?,sha256:row.get(5)?,phase:row.get(6)?})
+fn decode(row: &rusqlite::Row<'_>) -> rusqlite::Result<ResultItem> {
+    Ok(ResultItem {
+        index: row.get(0)?,
+        output_id: row.get(1)?,
+        target: row.get(2)?,
+        bytes: row.get(3)?,
+        url: row.get(4)?,
+        sha256: row.get(5)?,
+        phase: row.get(6)?,
+    })
 }
 
 impl Store {
-    fn item(&self,id:&str,index:u32)->Result<Option<ResultItem>> {
-        if index>=10 {return Err(NumeraError::new("invalid_response","Provider returned too many final image items.").stage("response"));}
+    fn item(&self, id: &str, index: u32) -> Result<Option<ResultItem>> {
+        if index >= 10 {
+            return Err(NumeraError::new(
+                "invalid_response",
+                "Provider returned too many final image items.",
+            )
+            .stage("response"));
+        }
         self.db.query_row("SELECT item,output_id,target,bytes,url,sha256,phase FROM result_journal WHERE request_id=? AND item=?",params![id,index],decode)
             .optional().map_err(|_|NumeraError::storage())
     }
-    pub fn has_pending(&self,id:&str)->Result<bool> {
+    pub fn has_pending(&self, id: &str) -> Result<bool> {
         self.db.query_row("SELECT EXISTS(SELECT 1 FROM result_journal WHERE request_id=? AND phase!='committed')",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())
     }
-    pub fn needs_local_recovery(&self,id:&str)->Result<bool> {
-        let receipt=self.get(id)?;
-        Ok(self.has_pending(id)? || (receipt.value["generation_outcome"]=="completed" && receipt.value["outputs"].as_array().is_some_and(|v|!v.is_empty()) && !terminal(receipt.status())))
+    pub fn needs_local_recovery(&self, id: &str) -> Result<bool> {
+        let receipt = self.get(id)?;
+        Ok(self.has_pending(id)?
+            || (receipt.value["generation_outcome"] == "completed"
+                && receipt.value["outputs"]
+                    .as_array()
+                    .is_some_and(|v| !v.is_empty())
+                && !terminal(receipt.status())))
     }
-    pub fn pending(&self,id:&str)->Result<Vec<ResultItem>> {
+    pub fn pending(&self, id: &str) -> Result<Vec<ResultItem>> {
         let mut stmt=self.db.prepare("SELECT item,output_id,target,bytes,url,sha256,phase FROM result_journal WHERE request_id=? AND phase!='committed' ORDER BY item").map_err(|_|NumeraError::storage())?;
-        stmt.query_map([id],decode).and_then(Iterator::collect).map_err(|_|NumeraError::storage())
+        stmt.query_map([id], decode)
+            .and_then(Iterator::collect)
+            .map_err(|_| NumeraError::storage())
     }
-    pub fn reserve(&mut self,id:&str,bytes:i64,budget:i64)->Result<()> {
-        if bytes<=0 || budget<=0 || bytes>9007199254740991 || budget>9007199254740991 {
-            return Err(NumeraError::new("invalid_configuration","Result journal limits must be positive safe integers."));
+    pub fn reserve(&mut self, id: &str, bytes: i64, budget: i64) -> Result<()> {
+        if bytes <= 0 || budget <= 0 || bytes > 9007199254740991 || budget > 9007199254740991 {
+            return Err(NumeraError::new(
+                "invalid_configuration",
+                "Result journal limits must be positive safe integers.",
+            ));
         }
         self.transaction(|store| {
             store.fence(id,None)?;
@@ -53,14 +77,20 @@ impl Store {
             Ok(())
         })
     }
-    fn other_bytes(&self,id:&str,index:u32)->Result<i64> {
+    fn other_bytes(&self, id: &str, index: u32) -> Result<i64> {
         self.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),(SELECT json_extract(metadata,'$.bytes') FROM outputs WHERE id=output_id),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM result_journal WHERE request_id=? AND item!=?",params![id,index],|r|r.get(0)).map_err(|_|NumeraError::storage())
     }
-    pub fn retain(&mut self,id:&str,index:u32,bytes:&[u8],expected:Option<&Receipt>)->Result<()> {
+    pub fn retain(
+        &mut self,
+        id: &str,
+        index: u32,
+        bytes: &[u8],
+        expected: Option<&Receipt>,
+    ) -> Result<()> {
         self.transaction(|store| {
             let request=store.fence(id,expected)?;
             let old=store.item(id,index)?;
-            let hash=format!("{:x}",Sha256::digest(bytes));
+            let hash=sha256(bytes);
             if old.as_ref().and_then(|v|v.sha256.as_deref()).is_some_and(|v|v!=hash) {
                 return Err(NumeraError::new("invalid_response","An existing result item changed its image bytes.").stage("response"));
             }
@@ -76,7 +106,13 @@ impl Store {
             store.update(&mut receipt)
         })
     }
-    pub fn retain_url(&mut self,id:&str,index:u32,url:&str,expected:Option<&Receipt>)->Result<()> {
+    pub fn retain_url(
+        &mut self,
+        id: &str,
+        index: u32,
+        url: &str,
+        expected: Option<&Receipt>,
+    ) -> Result<()> {
         self.transaction(|store| {
             let row=store.fence(id,expected)?;
             let old=store.item(id,index)?;
@@ -90,7 +126,13 @@ impl Store {
             Ok(())
         })
     }
-    pub fn publication(&mut self,id:&str,index:u32,target:impl FnOnce(&str)->Result<String>,expected:Option<&Receipt>)->Result<ResultItem> {
+    pub fn publication(
+        &mut self,
+        id: &str,
+        index: u32,
+        target: impl FnOnce(&str) -> Result<String>,
+        expected: Option<&Receipt>,
+    ) -> Result<ResultItem> {
         self.transaction(|store| {
             store.fence(id,expected)?;
             let mut item=store.item(id,index)?.ok_or_else(||NumeraError::new("output_file_error","Stable publication requires retained, validated image bytes.").stage("storage"))?;
@@ -101,7 +143,14 @@ impl Store {
             Ok(item)
         })
     }
-    pub fn commit(&mut self,id:&str,index:u32,output:&Value,deviations:&[String],expected:Option<&Receipt>)->Result<()> {
+    pub fn commit(
+        &mut self,
+        id: &str,
+        index: u32,
+        output: &Value,
+        deviations: &[String],
+        expected: Option<&Receipt>,
+    ) -> Result<()> {
         self.transaction(|store| {
             store.fence(id,expected)?;
             let item=store.item(id,index)?.ok_or_else(NumeraError::storage)?;

@@ -17,20 +17,44 @@
     "background": { "type": "string" },
     "seed": { "type": "integer" },
     "negative_prompt": { "type": "string" },
-    "provider_options": { "type": "object", "additionalProperties": {}, "default": {} },
-    "reference_images": { "type": "array", "items": { "$ref": "#/$defs/source" }, "maxItems": 32, "default": [] },
+    "provider_options": {
+      "type": "object",
+      "additionalProperties": {},
+      "default": {}
+    },
+    "reference_images": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" },
+      "maxItems": 32,
+      "default": []
+    },
     "mask": { "$ref": "#/$defs/source" },
     "upscale": { "type": "boolean" },
     "edit_region": {
-      "type": "object", "additionalProperties": false, "required": ["x", "y", "width", "height"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
       "properties": {
         "x": { "type": "integer", "minimum": 0, "maximum": 64000000 },
         "y": { "type": "integer", "minimum": 0, "maximum": 64000000 },
-        "width": { "type": "integer", "exclusiveMinimum": 0, "maximum": 64000000 },
-        "height": { "type": "integer", "exclusiveMinimum": 0, "maximum": 64000000 }
+        "width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 64000000
+        },
+        "height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 64000000
+        }
       }
     },
-    "target_language": { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "\\S" },
+    "target_language": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "\\S"
+    },
     "output_subdirectory": { "type": "string" },
     "filename_prefix": { "type": "string" },
     "return_mode": { "type": "string", "enum": ["files", "files_and_preview"] },
@@ -39,10 +63,42 @@
   "$defs": {
     "source": {
       "oneOf": [
-        { "type": "object", "additionalProperties": false, "required": ["type", "output_id"], "properties": { "type": { "const": "output_id" }, "output_id": { "type": "string", "format": "uuid" } } },
-        { "type": "object", "additionalProperties": false, "required": ["type", "path"], "properties": { "type": { "const": "path" }, "path": { "type": "string", "minLength": 1 } } },
-        { "type": "object", "additionalProperties": false, "required": ["type", "url"], "properties": { "type": { "const": "url" }, "url": { "type": "string", "format": "uri" } } },
-        { "type": "object", "additionalProperties": false, "required": ["type", "data_url"], "properties": { "type": { "const": "data_url" }, "data_url": { "type": "string", "maxLength": 30000000 } } }
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "output_id"],
+          "properties": {
+            "type": { "const": "output_id" },
+            "output_id": { "type": "string", "format": "uuid" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "path"],
+          "properties": {
+            "type": { "const": "path" },
+            "path": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "url"],
+          "properties": {
+            "type": { "const": "url" },
+            "url": { "type": "string", "format": "uri" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "data_url"],
+          "properties": {
+            "type": { "const": "data_url" },
+            "data_url": { "type": "string", "maxLength": 30000000 }
+          }
+        }
       ]
     }
   }

@@ -18,7 +18,11 @@ pub struct Prepared {
 }
 impl Prepared {
     pub fn json(operation: &str, prefix: &'static str, value: Value) -> Self {
-        Self { operation: operation.into(), prefix, body: Body::Json(value) }
+        Self {
+            operation: operation.into(),
+            prefix,
+            body: Body::Json(value),
+        }
     }
 }
 
@@ -31,7 +35,10 @@ pub struct ResultItem {
 }
 
 #[derive(Clone)]
-pub struct Job { pub id: String, pub kind: String }
+pub struct Job {
+    pub id: String,
+    pub kind: String,
+}
 
 #[derive(Default)]
 pub struct Normalized {
@@ -46,5 +53,9 @@ pub struct Normalized {
 }
 
 pub fn mime_data(image: &Image) -> String {
-    format!("data:{};base64,{}", image.mime, STANDARD.encode(&image.bytes))
+    format!(
+        "data:{};base64,{}",
+        image.mime,
+        STANDARD.encode(&image.bytes)
+    )
 }

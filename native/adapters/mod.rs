@@ -1,14 +1,14 @@
-pub mod types;
-pub mod normalize;
-pub mod workflow;
 pub mod comfy;
-mod images;
 mod gemini;
+mod images;
+pub mod normalize;
 mod openai;
 mod openrouter;
+pub mod types;
+pub mod workflow;
 
-pub use gemini::encode_component;
 use crate::error::{NumeraError, Result};
+pub use gemini::encode_component;
 use types::{Input, Prepared};
 
 pub fn build_request(input: &Input<'_>) -> Result<Prepared> {
@@ -17,7 +17,13 @@ pub fn build_request(input: &Input<'_>) -> Result<Prepared> {
         "gemini" | "gemini-interactions" => gemini::request(input),
         "openai-responses" | "chat-images" => openai::request(input),
         "openrouter-images" => openrouter::request(input),
-        "comfyui" => Err(NumeraError::new("invalid_configuration", "ComfyUI requires workflow execution, not a prompt-only request.")),
-        _ => Err(NumeraError::new("invalid_configuration", "Unknown configured adapter.")),
+        "comfyui" => Err(NumeraError::new(
+            "invalid_configuration",
+            "ComfyUI requires workflow execution, not a prompt-only request.",
+        )),
+        _ => Err(NumeraError::new(
+            "invalid_configuration",
+            "Unknown configured adapter.",
+        )),
     }
 }

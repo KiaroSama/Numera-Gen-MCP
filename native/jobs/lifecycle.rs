@@ -1,40 +1,65 @@
-use super::store::{Store, Receipt, busy, terminal, now};
+use super::store::{Receipt, Store, busy, now, terminal};
 use crate::error::{NumeraError, Result};
 use rusqlite::params;
-use serde_json::{Value,json};
+use serde_json::{Value, json};
 
 impl Store {
-    pub(super) fn expire(&mut self, id:Option<&str>) -> Result<()> {
+    pub(super) fn expire(&mut self, id: Option<&str>) -> Result<()> {
         self.db.execute_batch("UPDATE requests SET reservation=0 WHERE owner IS NULL AND json_extract(receipt,'$.status')='outcome_unknown' AND json_extract(receipt,'$.upstream_job') IS NULL AND NOT EXISTS(SELECT 1 FROM result_journal WHERE request_id=requests.id AND phase!='committed')")
             .map_err(|_|NumeraError::storage())?;
-        let ids:Vec<String>={
+        let ids: Vec<String> = {
             let mut query=self.db.prepare("SELECT id FROM requests WHERE lease<=? AND owner IS NOT NULL AND (? IS NULL OR id=?)").map_err(|_|NumeraError::storage())?;
-            query.query_map(params![now(),id,id],|r|r.get(0)).and_then(Iterator::collect).map_err(|_|NumeraError::storage())?
+            query
+                .query_map(params![now(), id, id], |r| r.get(0))
+                .and_then(Iterator::collect)
+                .map_err(|_| NumeraError::storage())?
         };
         for id in ids {
-            let row=self.row(&id)?;
-            let mut receipt=row.receipt;
-            let retained=self.has_pending(&id)?;
+            let row = self.row(&id)?;
+            let mut receipt = row.receipt;
+            let retained = self.has_pending(&id)?;
             if busy(receipt.status()) && receipt.value["upstream_terminal"].is_null() {
-                if receipt.status()=="prepared" {
-                    receipt.value["status"]=json!("failed");
-                    receipt.value["generation_outcome"]=json!("not_submitted");
-                } else if !retained && receipt.value["outputs"].as_array().is_none_or(Vec::is_empty) {
-                    let upstream=!receipt.value["upstream_job"].is_null();
-                    receipt.value["status"]=json!(if upstream {"running"} else {"outcome_unknown"});
-                    receipt.value["generation_outcome"]=json!(if upstream {"running"} else {"unknown"});
+                if receipt.status() == "prepared" {
+                    receipt.value["status"] = json!("failed");
+                    receipt.value["generation_outcome"] = json!("not_submitted");
+                } else if !retained
+                    && receipt.value["outputs"]
+                        .as_array()
+                        .is_none_or(Vec::is_empty)
+                {
+                    let upstream = !receipt.value["upstream_job"].is_null();
+                    receipt.value["status"] = json!(if upstream {
+                        "running"
+                    } else {
+                        "outcome_unknown"
+                    });
+                    receipt.value["generation_outcome"] =
+                        json!(if upstream { "running" } else { "unknown" });
                 }
                 receipt.touch();
             }
-            let reserve=retained || (!receipt.value["upstream_job"].is_null() && busy(receipt.status()));
+            let reserve =
+                retained || (!receipt.value["upstream_job"].is_null() && busy(receipt.status()));
             self.db.execute("UPDATE requests SET receipt=?,owner=NULL,lease=0,generation=generation+1,reservation=CASE WHEN ? THEN reservation ELSE 0 END WHERE id=? AND generation=? AND lease<=?",
                 params![receipt.value.to_string(),reserve,id,row.generation,now()]).map_err(|_|NumeraError::storage())?;
         }
         Ok(())
     }
 
-    pub fn terminate(&mut self,id:&str,state:&str,error:&Value,expected:Option<&Receipt>,job:Option<&Value>)->Result<Receipt> {
-        if !matches!(state,"failed"|"cancelled"|"incomplete") { return Err(NumeraError::new("invalid_response","Invalid terminal provider state.")); }
+    pub fn terminate(
+        &mut self,
+        id: &str,
+        state: &str,
+        error: &Value,
+        expected: Option<&Receipt>,
+        job: Option<&Value>,
+    ) -> Result<Receipt> {
+        if !matches!(state, "failed" | "cancelled" | "incomplete") {
+            return Err(NumeraError::new(
+                "invalid_response",
+                "Invalid terminal provider state.",
+            ));
+        }
         self.transaction(|store| {
             if expected.is_some() {store.fence(id,expected)?;}
             let row=store.row(id)?;
@@ -59,7 +84,13 @@ impl Store {
         self.get(id)
     }
 
-    pub fn admit(&mut self,id:&str,connection:&str,global:usize,per_connection:usize)->Result<bool> {
+    pub fn admit(
+        &mut self,
+        id: &str,
+        connection: &str,
+        global: usize,
+        per_connection: usize,
+    ) -> Result<bool> {
         self.transaction(|store| {
             store.expire(None)?;
             let values:Vec<String>={
@@ -77,7 +108,7 @@ impl Store {
         })
     }
 
-    pub fn claim(&mut self,id:&str,expected:Option<&Receipt>,received:bool)->Result<bool> {
+    pub fn claim(&mut self, id: &str, expected: Option<&Receipt>, received: bool) -> Result<bool> {
         self.transaction(|store| {
             store.expire(Some(id))?;
             let row=store.row(id)?;
@@ -97,7 +128,7 @@ impl Store {
         })
     }
 
-    pub fn queued(&mut self)->Result<usize> {
+    pub fn queued(&mut self) -> Result<usize> {
         self.transaction(|store| {
             store.expire(None)?;
             store.db.query_row("SELECT COUNT(*) FROM requests WHERE json_extract(receipt,'$.status')='prepared'",[],|r|r.get::<_,i64>(0))

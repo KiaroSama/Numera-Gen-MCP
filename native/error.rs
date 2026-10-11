@@ -29,8 +29,11 @@ impl NumeraError {
     }
 
     pub fn runtime() -> Self {
-        Self::new("upstream_error", "The operation failed. Inspect the redacted local log.")
-            .stage("runtime")
+        Self::new(
+            "upstream_error",
+            "The operation failed. Inspect the redacted local log.",
+        )
+        .stage("runtime")
     }
 
     pub fn storage() -> Self {

@@ -1,8 +1,15 @@
-use numera_image_gen_mcp::{capabilities::{capabilities, effective_request, safe_options}, dimensions::{image_dimensions, evidence, validate}, error::Result};
+use numera_image_gen_mcp::{
+    capabilities::{capabilities, effective_request, safe_options},
+    dimensions::{evidence, image_dimensions, validate},
+    error::Result,
+};
 use serde_json::{Value, json};
 
 fn outcome(result: Result<Value>) -> Value {
-    match result { Ok(value) => json!({"value":value}), Err(error) => json!({"error":error.code}) }
+    match result {
+        Ok(value) => json!({"value":value}),
+        Err(error) => json!({"error":error.code}),
+    }
 }
 
 #[test]
@@ -16,17 +23,49 @@ fn source_oracle_policy_dimensions_and_effective_request_match() {
     for case in oracle["policy"].as_array().unwrap() {
         let c = &case["connection"];
         let model = case["model"].as_str().unwrap();
-        assert_eq!(capabilities(c, model), case["capabilities"], "{}", case["name"]);
-        assert_eq!(image_dimensions(c, model, 64000000), case["dimensions"], "{}", case["name"]);
+        assert_eq!(
+            capabilities(c, model),
+            case["capabilities"],
+            "{}",
+            case["name"]
+        );
+        assert_eq!(
+            image_dimensions(c, model, 64000000),
+            case["dimensions"],
+            "{}",
+            case["name"]
+        );
         assert_eq!(evidence(c, model), case["evidence"], "{}", case["name"]);
     }
     for case in oracle["effective"].as_array().unwrap() {
-        assert_eq!(outcome(effective_request(&case["connection"], &case["request"], case["model"].as_str().unwrap())), case["expected"], "{}", case["name"]);
+        assert_eq!(
+            outcome(effective_request(
+                &case["connection"],
+                &case["request"],
+                case["model"].as_str().unwrap()
+            )),
+            case["expected"],
+            "{}",
+            case["name"]
+        );
     }
     for case in oracle["options"].as_array().unwrap() {
-        assert_eq!(outcome(safe_options(&case["input"], None, 0)), case["expected"]);
+        assert_eq!(
+            outcome(safe_options(&case["input"], None, 0)),
+            case["expected"]
+        );
     }
     for case in oracle["dimensionValidation"].as_array().unwrap() {
-        assert_eq!(outcome(validate(&case["connection"], case["model"].as_str().unwrap(), &case["request"]).map(|()| json!(true))), case["expected"]);
+        assert_eq!(
+            outcome(
+                validate(
+                    &case["connection"],
+                    case["model"].as_str().unwrap(),
+                    &case["request"]
+                )
+                .map(|()| json!(true))
+            ),
+            case["expected"]
+        );
     }
 }

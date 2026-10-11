@@ -1,32 +1,77 @@
-use crate::{config::{Config, snapshot_credentials}, runtime_paths::RuntimePaths, capabilities, dimensions,
-    error::{Result, NumeraError, object, array}, http::api::{self, Body}};
+use crate::{
+    capabilities,
+    config::{Config, snapshot_credentials},
+    dimensions,
+    error::{NumeraError, Result, array, object},
+    http::api::{self, Body},
+    runtime_paths::RuntimePaths,
+};
 use reqwest::Method;
-use serde_json::{Value,json};
-use std::{collections::{HashMap,HashSet},time::{Duration,Instant}};
+use serde_json::{Value, json};
+use std::{
+    collections::{HashMap, HashSet},
+    time::{Duration, Instant},
+};
 use tokio_util::sync::CancellationToken;
 
-pub fn prefix(c:&Value)->&'static str {
-    match c["adapter"].as_str().unwrap_or("") {"comfyui"=>"", "gemini"|"gemini-interactions"=>"/v1beta", "openrouter-images"=>"/api/v1", _=>"/v1"}
+pub fn prefix(c: &Value) -> &'static str {
+    match c["adapter"].as_str().unwrap_or("") {
+        "comfyui" => "",
+        "gemini" | "gemini-interactions" => "/v1beta",
+        "openrouter-images" => "/api/v1",
+        _ => "/v1",
+    }
 }
-fn time()->String {chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis,true)}
+fn time() -> String {
+    chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+}
 #[derive(Default)]
-pub struct Discovery { cache:HashMap<String,(Instant,Value)> }
+pub struct Discovery {
+    cache: HashMap<String, (Instant, Value)>,
+}
 
 impl Discovery {
-    pub async fn list(&mut self,config:&Config,runtime:&RuntimePaths,env:&HashMap<String,String>,name:Option<&str>,refresh:bool,cancel:&CancellationToken)->Result<Value> {
-        let (id,c)=config.select(name)?;
-        let old=self.cache.get(&id);
+    pub async fn list(
+        &mut self,
+        config: &Config,
+        runtime: &RuntimePaths,
+        env: &HashMap<String, String>,
+        name: Option<&str>,
+        refresh: bool,
+        cancel: &CancellationToken,
+    ) -> Result<Value> {
+        let (id, c) = config.select(name)?;
+        let old = self.cache.get(&id);
         if !refresh {
-            if let Some((until,catalog))=old.filter(|(until,_)|*until>Instant::now()) {
-                let _=until;let mut catalog=catalog.clone();catalog["cached"]=json!(true);return Ok(catalog);
+            if let Some((until, catalog)) = old.filter(|(until, _)| *until > Instant::now()) {
+                let _ = until;
+                let mut catalog = catalog.clone();
+                catalog["cached"] = json!(true);
+                return Ok(catalog);
             }
         }
         let configured=array(&c["configuredModels"]).iter().map(|m|json!({"id":m["id"],"name":m["name"],"configured":true,
             "metadata":{"source":"configured","account_availability":"unknown","generation_verified":false}})).collect::<Vec<_>>();
-        if !refresh && !configured.is_empty(){return Ok(json!({"models":configured,"complete":true,"warnings":["Configured model list only; provider availability is unverified. Use refresh for provider discovery."],"cached":false,"checked_at":time()}));}
-        let mut result=json!({"models":configured,"complete":true,"warnings":[],"cached":false,"checked_at":time()});
-        let route=if c["gateway"]=="omniroute"{"images/generations"}else if c["gateway"]=="9router"{"models/image"}else if c["adapter"]=="openrouter-images"{"images/models"}else if c["adapter"]=="comfyui"{"object_info"}else{"models"};
-        let mut operation=route.to_owned();let mut cursor:Option<String>=None;let mut seen=HashSet::new();
+        if !refresh && !configured.is_empty() {
+            return Ok(
+                json!({"models":configured,"complete":true,"warnings":["Configured model list only; provider availability is unverified. Use refresh for provider discovery."],"cached":false,"checked_at":time()}),
+            );
+        }
+        let mut result = json!({"models":configured,"complete":true,"warnings":[],"cached":false,"checked_at":time()});
+        let route = if c["gateway"] == "omniroute" {
+            "images/generations"
+        } else if c["gateway"] == "9router" {
+            "models/image"
+        } else if c["adapter"] == "openrouter-images" {
+            "images/models"
+        } else if c["adapter"] == "comfyui" {
+            "object_info"
+        } else {
+            "models"
+        };
+        let mut operation = route.to_owned();
+        let mut cursor: Option<String> = None;
+        let mut seen = HashSet::new();
         let action=async {
             let pinned=snapshot_credentials(&c,env,runtime).await?;
             let headers=pinned.headers();
@@ -61,29 +106,92 @@ impl Discovery {
             }
             Ok::<(),NumeraError>(())
         }.await;
-        if let Err(error)=action {
-            result["complete"]=json!(false);result["warnings"].as_array_mut().ok_or_else(NumeraError::runtime)?.push(json!(error));
-            if let Some((_,old))=old {result["models"]=old["models"].clone();result["warnings"].as_array_mut().ok_or_else(NumeraError::runtime)?.push(json!("Using stale catalog; availability is unknown."));}
-        }
-        self.cache.insert(id,(Instant::now()+Duration::from_secs(60),result.clone()));Ok(result)
-    }
-
-    pub async fn model(config:&Config,runtime:&RuntimePaths,env:&HashMap<String,String>,name:Option<&str>,model:&str,cancel:&CancellationToken)->Result<Value> {
-        let (id,c)=config.select(name)?;
-        let mut cap=capabilities::capabilities(&c,model);
-        let mut advertised=Value::Null;
-        if c["gateway"]=="9router" || c["adapter"]=="openrouter-images" {
-            if let Ok(pinned)=snapshot_credentials(&c,env,runtime).await {
-                let operation=if c["gateway"]=="9router"{"models/info".into()}else{format!("images/models/{}/endpoints",model.split('/').map(crate::adapters::encode_component).collect::<Vec<_>>().join("/"))};
-                let query=(c["gateway"]=="9router").then(||json!({"id":model}));
-                if let Ok(value)=api::json(pinned.value(),&pinned.headers(),&operation,if c["gateway"]=="9router"{"/v1"}else{"/api/v1"},Method::GET,Body::Empty,query.as_ref(),cancel).await {advertised=value;}
+        if let Err(error) = action {
+            result["complete"] = json!(false);
+            result["warnings"]
+                .as_array_mut()
+                .ok_or_else(NumeraError::runtime)?
+                .push(json!(error));
+            if let Some((_, old)) = old {
+                result["models"] = old["models"].clone();
+                result["warnings"]
+                    .as_array_mut()
+                    .ok_or_else(NumeraError::runtime)?
+                    .push(json!("Using stale catalog; availability is unknown."));
             }
         }
-        let mut dimensions=dimensions::image_dimensions(&c,model,config.value["files"]["maxPixels"].as_u64().unwrap_or(64000000));
-        dimensions["documented_limits"]=dimensions::evidence(&c,model);
-        dimensions["guidance"]=json!("Inspect documented model limits before generation. Route safety max_pixels is not a model maximum; verify original returned dimensions and do not infer account entitlement.");
-        cap["connection"]=json!(id);cap["model_id"]=json!(model);
-        cap["display_name"]=array(&c["configuredModels"]).iter().find(|m|m["id"]==model).map_or(Value::Null,|m|m["name"].clone());
-        cap["dimensions"]=dimensions;cap["advertised"]=advertised;Ok(cap)
+        self.cache.insert(
+            id,
+            (Instant::now() + Duration::from_secs(60), result.clone()),
+        );
+        Ok(result)
+    }
+
+    pub async fn model(
+        config: &Config,
+        runtime: &RuntimePaths,
+        env: &HashMap<String, String>,
+        name: Option<&str>,
+        model: &str,
+        cancel: &CancellationToken,
+    ) -> Result<Value> {
+        let (id, c) = config.select(name)?;
+        let mut cap = capabilities::capabilities(&c, model);
+        let mut advertised = Value::Null;
+        if c["gateway"] == "9router" || c["adapter"] == "openrouter-images" {
+            if let Ok(pinned) = snapshot_credentials(&c, env, runtime).await {
+                let operation = if c["gateway"] == "9router" {
+                    "models/info".into()
+                } else {
+                    format!(
+                        "images/models/{}/endpoints",
+                        model
+                            .split('/')
+                            .map(crate::adapters::encode_component)
+                            .collect::<Vec<_>>()
+                            .join("/")
+                    )
+                };
+                let query = (c["gateway"] == "9router").then(|| json!({"id":model}));
+                if let Ok(value) = api::json(
+                    pinned.value(),
+                    &pinned.headers(),
+                    &operation,
+                    if c["gateway"] == "9router" {
+                        "/v1"
+                    } else {
+                        "/api/v1"
+                    },
+                    Method::GET,
+                    Body::Empty,
+                    query.as_ref(),
+                    cancel,
+                )
+                .await
+                {
+                    advertised = value;
+                }
+            }
+        }
+        let mut dimensions = dimensions::image_dimensions(
+            &c,
+            model,
+            config.value["files"]["maxPixels"]
+                .as_u64()
+                .unwrap_or(64000000),
+        );
+        dimensions["documented_limits"] = dimensions::evidence(&c, model);
+        dimensions["guidance"] = json!(
+            "Inspect documented model limits before generation. Route safety max_pixels is not a model maximum; verify original returned dimensions and do not infer account entitlement."
+        );
+        cap["connection"] = json!(id);
+        cap["model_id"] = json!(model);
+        cap["display_name"] = array(&c["configuredModels"])
+            .iter()
+            .find(|m| m["id"] == model)
+            .map_or(Value::Null, |m| m["name"].clone());
+        cap["dimensions"] = dimensions;
+        cap["advertised"] = advertised;
+        Ok(cap)
     }
 }

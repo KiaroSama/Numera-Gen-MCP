@@ -1,7 +1,8 @@
 use crate::error::{NumeraError, Result};
 use serde_json::{Value, json};
 
-const SOURCE: &str = "https://ai.google.dev/gemini-api/docs/image-generation#aspect-ratios-and-image-size";
+const SOURCE: &str =
+    "https://ai.google.dev/gemini-api/docs/image-generation#aspect-ratios-and-image-size";
 const TIERS: &[&str] = &["0.5K", "1K", "2K", "4K"];
 // Google AI for Developers, CC BY 4.0. Discrete documented sizes, never inferred pixels.
 const FLASH: &[(&str, [&str; 4])] = &[
@@ -22,33 +23,73 @@ const FLASH: &[(&str, [&str; 4])] = &[
 ];
 
 fn known(model: &str) -> Option<bool> {
-    if ["gemini-3.1-flash-image", "models/gemini-3.1-flash-image", "antigravity/gemini-3.1-flash-image"].contains(&model) { Some(false) }
-    else if ["gemini-3-pro-image", "gemini-3-pro-image-preview", "models/gemini-3-pro-image", "models/gemini-3-pro-image-preview", "antigravity/gemini-3-pro-image", "antigravity/gemini-3-pro-image-preview"].contains(&model) { Some(true) }
-    else { None }
+    if [
+        "gemini-3.1-flash-image",
+        "models/gemini-3.1-flash-image",
+        "antigravity/gemini-3.1-flash-image",
+    ]
+    .contains(&model)
+    {
+        Some(false)
+    } else if [
+        "gemini-3-pro-image",
+        "gemini-3-pro-image-preview",
+        "models/gemini-3-pro-image",
+        "models/gemini-3-pro-image-preview",
+        "antigravity/gemini-3-pro-image",
+        "antigravity/gemini-3-pro-image-preview",
+    ]
+    .contains(&model)
+    {
+        Some(true)
+    } else {
+        None
+    }
 }
 
 pub fn image_dimensions(connection: &Value, model: &str, max_pixels: u64) -> Value {
     let pro = known(model);
-    let native = ["gemini", "gemini-interactions"].contains(&connection["adapter"].as_str().unwrap_or(""));
+    let native =
+        ["gemini", "gemini-interactions"].contains(&connection["adapter"].as_str().unwrap_or(""));
     let omni = connection["gateway"] == "omniroute" && model.starts_with("antigravity/");
     let requested = connection["modelOverrides"][model]["supportedParameters"].as_array();
     let accepted: Vec<Value> = if let Some(requested) = requested {
-        requested.iter().filter(|v| v.as_str().is_some_and(|s| ["size", "aspect_ratio", "image_size"].contains(&s))).cloned().collect()
+        requested
+            .iter()
+            .filter(|v| {
+                v.as_str()
+                    .is_some_and(|s| ["size", "aspect_ratio", "image_size"].contains(&s))
+            })
+            .cloned()
+            .collect()
     } else {
-        let values: &[&str] = if connection["adapter"] == "openrouter-images" { &["size", "aspect_ratio", "image_size"] }
-            else if native || connection["adapter"] == "chat-images" { &["aspect_ratio", "image_size"] }
-            else if omni { &["size", "aspect_ratio", "image_size"] }
-            else if connection["adapter"] == "comfyui" { &[] } else { &["size"] };
+        let values: &[&str] = if connection["adapter"] == "openrouter-images" {
+            &["size", "aspect_ratio", "image_size"]
+        } else if native || connection["adapter"] == "chat-images" {
+            &["aspect_ratio", "image_size"]
+        } else if omni {
+            &["size", "aspect_ratio", "image_size"]
+        } else if connection["adapter"] == "comfyui" {
+            &[]
+        } else {
+            &["size"]
+        };
         values.iter().map(|s| json!(s)).collect()
     };
     let start = if pro == Some(true) { 1 } else { 0 };
-    let ratios: Vec<&str> = FLASH.iter().filter(|(ratio, _)| pro != Some(true) || !["1:4", "1:8", "4:1", "8:1"].contains(ratio)).map(|(ratio, _)| *ratio).collect();
+    let ratios: Vec<&str> = FLASH
+        .iter()
+        .filter(|(ratio, _)| pro != Some(true) || !["1:4", "1:8", "4:1", "8:1"].contains(ratio))
+        .map(|(ratio, _)| *ratio)
+        .collect();
     let mut pixels = Vec::new();
     if pro.is_some() {
         for (ratio, sizes) in FLASH.iter().filter(|(ratio, _)| ratios.contains(ratio)) {
             for (i, size) in sizes.iter().enumerate().skip(start) {
                 if let Some((w, h)) = size.split_once('x') {
-                    if let (Ok(width), Ok(height)) = (w.parse::<u64>(), h.parse::<u64>()) { pixels.push(json!({"aspect_ratio":ratio, "resolution":TIERS[i], "width":width, "height":height})); }
+                    if let (Ok(width), Ok(height)) = (w.parse::<u64>(), h.parse::<u64>()) {
+                        pixels.push(json!({"aspect_ratio":ratio, "resolution":TIERS[i], "width":width, "height":height}));
+                    }
                 }
             }
         }
@@ -66,8 +107,16 @@ pub fn image_dimensions(connection: &Value, model: &str, max_pixels: u64) -> Val
 pub fn evidence(connection: &Value, model: &str) -> Value {
     let dimensions = image_dimensions(connection, model, 64000000);
     let pixels = &dimensions["model_support"]["pixel_sizes"];
-    let engine = model.strip_prefix("cx/").or_else(|| model.strip_prefix("codex/")).unwrap_or(model);
-    let gpt = ["gpt-image-2", "gpt-image-2.5-sunburst", "gpt-image-2.5-flare"].contains(&engine);
+    let engine = model
+        .strip_prefix("cx/")
+        .or_else(|| model.strip_prefix("codex/"))
+        .unwrap_or(model);
+    let gpt = [
+        "gpt-image-2",
+        "gpt-image-2.5-sunburst",
+        "gpt-image-2.5-flare",
+    ]
+    .contains(&engine);
     let discrete = pixels.as_array();
     json!({"kind":if discrete.is_some(){"discrete"}else if gpt{"custom"}else{"unknown"},
         "source":if discrete.is_some(){Some(SOURCE)}else if gpt{Some("https://developers.openai.com/api/docs/guides/image-generation#customize-image-output")}else{None},
@@ -81,19 +130,55 @@ pub fn evidence(connection: &Value, model: &str) -> Value {
 pub fn validate(connection: &Value, model: &str, request: &Value) -> Result<()> {
     let info = evidence(connection, model);
     if let Some(pixels) = info["pixel_sizes"].as_array() {
-        for (field, key, message) in [("aspect_ratio", "aspect_ratio", "Requested aspect ratio is outside the documented model presets."),
-            ("image_size", "resolution", "Requested resolution tier is outside the documented model presets.")] {
-            if request[field].as_str().is_some_and(|s| !s.is_empty()) && !pixels.iter().any(|p| p[key] == request[field]) { return Err(NumeraError::new("unsupported_parameter", message)); }
+        for (field, key, message) in [
+            (
+                "aspect_ratio",
+                "aspect_ratio",
+                "Requested aspect ratio is outside the documented model presets.",
+            ),
+            (
+                "image_size",
+                "resolution",
+                "Requested resolution tier is outside the documented model presets.",
+            ),
+        ] {
+            if request[field].as_str().is_some_and(|s| !s.is_empty())
+                && !pixels.iter().any(|p| p[key] == request[field])
+            {
+                return Err(NumeraError::new("unsupported_parameter", message));
+            }
         }
     }
-    if info["kind"] != "custom" { return Ok(()); }
-    let Some(size) = request["size"].as_str() else { return Ok(()); };
-    let Some((w, h)) = size.split_once('x') else { return Ok(()); };
-    if w.is_empty() || h.is_empty() || !w.bytes().chain(h.bytes()).all(|b| b.is_ascii_digit()) { return Ok(()); }
-    let invalid = || NumeraError::new("unsupported_parameter", "Requested dimensions exceed the documented image-model limits; a gateway cannot guarantee larger native output.");
-    let width: u64 = w.parse().map_err(|_|invalid())?;
-    let height: u64 = h.parse().map_err(|_|invalid())?;
+    if info["kind"] != "custom" {
+        return Ok(());
+    }
+    let Some(size) = request["size"].as_str() else {
+        return Ok(());
+    };
+    let Some((w, h)) = size.split_once('x') else {
+        return Ok(());
+    };
+    if w.is_empty() || h.is_empty() || !w.bytes().chain(h.bytes()).all(|b| b.is_ascii_digit()) {
+        return Ok(());
+    }
+    let invalid = || {
+        NumeraError::new(
+            "unsupported_parameter",
+            "Requested dimensions exceed the documented image-model limits; a gateway cannot guarantee larger native output.",
+        )
+    };
+    let width: u64 = w.parse().map_err(|_| invalid())?;
+    let height: u64 = h.parse().map_err(|_| invalid())?;
     let count = width.checked_mul(height).ok_or_else(invalid)?;
-    if width > 3840 || height > 3840 || !(655360..=8294400).contains(&count) || width % 16 != 0 || height % 16 != 0 || width * 3 < height || width > height * 3 { return Err(invalid()); }
+    if width > 3840
+        || height > 3840
+        || !(655360..=8294400).contains(&count)
+        || width % 16 != 0
+        || height % 16 != 0
+        || width * 3 < height
+        || width > height * 3
+    {
+        return Err(invalid());
+    }
     Ok(())
 }

@@ -34,8 +34,8 @@ def main() -> None:
                  "schemas/config.schema.json", "schemas/simple-config.schema.json", "schemas/image-request.schema.json",
                  "examples/claude-desktop.json", "examples/claude-project.json", "examples/codex.toml",
                  "docs/CONFIGURATION.md", "docs/CLAUDE.md", "docs/CODEX.md", "docs/ARCHITECTURE.md",
-                 "docs/WINDOWS-WSL.md", "docs/COMPATIBILITY.md", "docs/EDITING.md", "docs/IMAGE-SIZES.md",
-                 "docs/REQUIREMENTS.md", "docs/REFERENCES.md", "docs/SECURITY.md", "docs/TESTING.md",
+                 "docs/WINDOWS-WSL.md", "docs/COMPATIBILITY.md", "docs/IMAGE-EDITING.md", "docs/LINUX-MACOS.md",
+                 "docs/REQUIREMENTS.md", "docs/REFERENCES.md", "SECURITY.md", "docs/TESTING.md",
                  "docs/PRACTICAL-TESTING.md", "docs/TEST-RESULTS.md", "docs/testing/MIGRATION-MATRIX.md",
                  "docs/assets/logo.png"]:
         entries[name] = (ROOT / name).read_bytes()

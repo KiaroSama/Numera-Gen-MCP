@@ -1,14 +1,14 @@
 //! Source-runtime compatibility for existing persisted request fingerprints.
 //! Remove only after an explicitly versioned identity migration and tested rollback.
+use super::hash::sha256;
 use crate::error::{NumeraError, Result};
 use icu_collator::{Collator, CollatorBorrowed, options::CollatorOptions};
 use icu_locale::locale;
 use serde_json::Value;
-use sha2::{Digest, Sha256};
 use std::cmp::Ordering;
 
 pub fn fingerprint(value: &Value) -> Result<String> {
-    Ok(format!("{:x}", Sha256::digest(canonical_json(value)?.as_bytes())))
+    Ok(sha256(canonical_json(value)?.as_bytes()))
 }
 
 pub fn canonical_json(value: &Value) -> Result<String> {
@@ -25,20 +25,29 @@ fn index(key: &str) -> Option<u32> {
 }
 
 fn write_value(value: &Value, collator: &CollatorBorrowed<'_>, output: &mut String) -> Result<()> {
-    enum Token<'a> { Value(&'a Value), Key(&'a str), Character(char) }
+    enum Token<'a> {
+        Value(&'a Value),
+        Key(&'a str),
+        Character(char),
+    }
     // Explicit traversal also handles valid deeply nested extension values without call-stack growth.
     let mut pending = vec![Token::Value(value)];
     while let Some(token) = pending.pop() {
         match token {
             Token::Character(c) => output.push(c),
-            Token::Key(s) => output.push_str(&serde_json::to_string(s).map_err(|_| NumeraError::runtime())?),
+            Token::Key(s) => {
+                output.push_str(&serde_json::to_string(s).map_err(|_| NumeraError::runtime())?)
+            }
             Token::Value(Value::Null) => output.push_str("null"),
             Token::Value(Value::Bool(b)) => output.push_str(if *b { "true" } else { "false" }),
             Token::Value(Value::Number(n)) => {
                 // JSON.parse uses IEEE-754 even when serde retains an integer representation.
                 let number = n.as_f64().ok_or_else(NumeraError::runtime)?;
-                if number == 0.0 { output.push('0'); }
-                else { output.push_str(ryu_js::Buffer::new().format(number)); }
+                if number == 0.0 {
+                    output.push('0');
+                } else {
+                    output.push_str(ryu_js::Buffer::new().format(number));
+                }
             }
             Token::Value(Value::String(s)) => pending.push(Token::Key(s)),
             Token::Value(Value::Array(values)) => {
@@ -46,7 +55,9 @@ fn write_value(value: &Value, collator: &CollatorBorrowed<'_>, output: &mut Stri
                 pending.push(Token::Character(']'));
                 for (i, v) in values.iter().enumerate().rev() {
                     pending.push(Token::Value(v));
-                    if i != 0 { pending.push(Token::Character(',')); }
+                    if i != 0 {
+                        pending.push(Token::Character(','));
+                    }
                 }
             }
             Token::Value(Value::Object(values)) => {
@@ -66,7 +77,9 @@ fn write_value(value: &Value, collator: &CollatorBorrowed<'_>, output: &mut Stri
                     pending.push(Token::Value(&values[key]));
                     pending.push(Token::Character(':'));
                     pending.push(Token::Key(key));
-                    if i != 0 { pending.push(Token::Character(',')); }
+                    if i != 0 {
+                        pending.push(Token::Character(','));
+                    }
                 }
             }
         }

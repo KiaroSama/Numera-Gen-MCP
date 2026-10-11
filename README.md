@@ -43,12 +43,12 @@ not a bundled runtime.
 
 Choose the archive for your actual OS/CPU:
 
-| OS | CPU | Archive suffix |
-| --- | --- | --- |
-| Windows | Intel/AMD 64-bit | `x86_64-pc-windows-msvc.zip` |
-| Windows | ARM64 | `aarch64-pc-windows-msvc.zip` |
-| Linux | Intel/AMD 64-bit or ARM64 | `x86_64-unknown-linux-gnu.tar.gz` / `aarch64-unknown-linux-gnu.tar.gz` |
-| macOS | Intel or Apple Silicon | `x86_64-apple-darwin.tar.gz` / `aarch64-apple-darwin.tar.gz` |
+| OS      | CPU                       | Archive suffix                                                         |
+| ------- | ------------------------- | ---------------------------------------------------------------------- |
+| Windows | Intel/AMD 64-bit          | `x86_64-pc-windows-msvc.zip`                                           |
+| Windows | ARM64                     | `aarch64-pc-windows-msvc.zip`                                          |
+| Linux   | Intel/AMD 64-bit or ARM64 | `x86_64-unknown-linux-gnu.tar.gz` / `aarch64-unknown-linux-gnu.tar.gz` |
+| macOS   | Intel or Apple Silicon    | `x86_64-apple-darwin.tar.gz` / `aarch64-apple-darwin.tar.gz`           |
 
 Published compatibility and minimum OS versions must match that Release's actual native CI evidence.
 A Linux binary is not proof that Claude Desktop itself supports Linux.
@@ -318,13 +318,13 @@ Keep the old executable until the new host connection actually succeeds. Only th
 obsolete project-local runtime/dependency/temp/cache paths. Never clear another project's or a
 system/global cache.
 
-| Problem | Check |
-| --- | --- |
-| Server not visible | Actual absolute binary path, `args: ["bridge"]`, correct host file and trust/reconnect |
-| Startup exits | Private config validity, writable project-contained scratch and configured storage; inspect redacted log |
-| No configured models | At least one enabled model with exact ID and readable name |
-| Catalog/probe fails | Selected route, API prefix, credentials and account; this is not generation failure proof |
-| Unknown outcome | Inspect the same receipt with `get_job`; do not submit a replacement automatically |
+| Problem              | Check                                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| Server not visible   | Actual absolute binary path, `args: ["bridge"]`, correct host file and trust/reconnect                   |
+| Startup exits        | Private config validity, writable project-contained scratch and configured storage; inspect redacted log |
+| No configured models | At least one enabled model with exact ID and readable name                                               |
+| Catalog/probe fails  | Selected route, API prefix, credentials and account; this is not generation failure proof                |
+| Unknown outcome      | Inspect the same receipt with `get_job`; do not submit a replacement automatically                       |
 
 ## Protocols and tools
 
