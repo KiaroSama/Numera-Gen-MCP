@@ -1,9 +1,11 @@
 # Native migration acceptance matrix
 
 Baseline: `fc7da25c3b470199949b1b4c67127d77afa0c34a`, 50 discovered suites / 470 cases.
-The Rust implementation is in progress. **No Rust compilation, tests, coverage, packaged execution or
-migration acceptance has passed yet.** Old TypeScript production source remains authoritative until
-hosted differential verification passes. A file existing is not a verified mapping.
+The Rust implementation is in progress. Hosted compilation and release builds have succeeded, and
+some native fixtures passed, but strict Clippy and the source-policy oracle failed. **The complete
+native suite, coverage gates, packaged execution and migration acceptance have not passed.** Old
+TypeScript production source remains authoritative until hosted differential verification passes.
+A file existing is not a verified mapping.
 
 | Boundary                                              | Native implementation                                                 | Authored verification                                             | Status                                                              |
 | ----------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |

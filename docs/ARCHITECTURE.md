@@ -15,7 +15,9 @@ migration matrix records acceptance rather than implying that authored modules h
   and explicit ComfyUI workflow contracts. Tools construct no provider payloads. Gateway forwarding,
   native model capability and account entitlement are separate evidence layers.
 - `native/services/`: discovery, readiness, generation, admission, finalization and existing-handle
-  recovery. Intent is persisted before paid submission; unknown outcomes are never resubmitted.
+  recovery. `generation.rs` coordinates validated inputs; `submission.rs` owns admission, submission,
+  existing-job polling and continuation retention. Intent is persisted before paid submission;
+  unknown outcomes are never resubmitted.
   Cancellation of local waiting does not establish upstream cancellation or a refund.
 - `native/jobs/`: bundled SQLite, preserved schema v2/WAL/FULL, renewable 30-second leases and
   generation fences. Journal phases waiting/retained/publishing/committed keep stable output identity
