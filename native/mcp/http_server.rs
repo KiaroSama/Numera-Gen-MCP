@@ -234,9 +234,7 @@ async fn handle(
     } else {
         None
     };
-    if initialization
-        && state.sessions.sessions.read().await.len() >= state.options.max_sessions
-    {
+    if initialization && state.sessions.sessions.read().await.len() >= state.options.max_sessions {
         return Ok(response(
             StatusCode::TOO_MANY_REQUESTS,
             "Local session capacity reached.",

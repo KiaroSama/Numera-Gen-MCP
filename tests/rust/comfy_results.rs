@@ -1,4 +1,3 @@
-mod common;
 #[path = "common/http.rs"]
 mod http_fixture;
 #[path = "common/image.rs"]
