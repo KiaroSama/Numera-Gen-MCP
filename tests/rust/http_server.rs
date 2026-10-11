@@ -229,10 +229,22 @@ async fn real_http_endpoint_rejects_unsafe_clients_and_serves_the_existing_ten_t
             .await
             .unwrap();
         assert!(response.status().is_success());
-        let mut stream = client.get(&url).bearer_auth(token).header("accept", "text/event-stream").header("mcp-session-id", second_id).header("mcp-protocol-version", "2025-11-25").send().await.unwrap();
+        let mut stream = client
+            .get(&url)
+            .bearer_auth(token)
+            .header("accept", "text/event-stream")
+            .header("mcp-session-id", second_id)
+            .header("mcp-protocol-version", "2025-11-25")
+            .send()
+            .await
+            .unwrap();
         assert_eq!(stream.status(), 200);
         stop.cancel();
-        tokio::time::timeout(Duration::from_secs(2), async {while stream.chunk().await.unwrap().is_some() {}}).await.unwrap();
+        tokio::time::timeout(Duration::from_secs(2), async {
+            while stream.chunk().await.unwrap().is_some() {}
+        })
+        .await
+        .unwrap();
     };
     let client = async {
         let result = tokio::time::timeout(Duration::from_secs(8), action).await;

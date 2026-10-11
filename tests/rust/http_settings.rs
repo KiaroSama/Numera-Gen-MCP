@@ -216,7 +216,7 @@ fn unsafe_roots_directory_targets_corrupt_tokens_and_cli_terminators_fail_closed
 #[cfg(unix)]
 #[test]
 fn settings_lock_and_token_symlinks_or_public_permissions_are_rejected() {
-    use std::os::unix::{fs::symlink, fs::PermissionsExt};
+    use std::os::unix::{fs::PermissionsExt, fs::symlink};
     let workspace = Workspace::new();
     let target = workspace.0.join("original");
     std::fs::write(&target, b"preserve original").unwrap();

@@ -124,6 +124,11 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
             "file:///unowned/image".into(),
             "http://user:password@127.0.0.1/image".into(),
             "not a url".into(),
+            "http://127.0.0.1/image#fragment".into(),
+            "http://127.0.0.1/image?token=fixture".into(),
+            "http://127.0.0.1/%2e%2e/private".into(),
+            "http://127.0.0.1/%2fprivate".into(),
+            "http://[ff02::1]/image".into(),
         ] {
             assert_eq!(
                 assets::fetch(&url, &blocked, 1024, &cancel)

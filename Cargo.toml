@@ -194,6 +194,26 @@ path = "tests/rust/cli_entry.rs"
 name = "comfy_results"
 path = "tests/rust/comfy_results.rs"
 
+[[test]]
+name = "generation_admission"
+path = "tests/rust/generation_admission.rs"
+
+[[test]]
+name = "job_recovery_contracts"
+path = "tests/rust/job_recovery_contracts.rs"
+
+[[test]]
+name = "image_route_contracts"
+path = "tests/rust/image_route_contracts.rs"
+
+[[test]]
+name = "api_contracts"
+path = "tests/rust/api_contracts.rs"
+
+[[test]]
+name = "publication_contracts"
+path = "tests/rust/publication_contracts.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

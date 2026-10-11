@@ -226,22 +226,21 @@ async fn handle(
     };
     let initialization = parts.method == hyper::Method::POST
         && !parts.headers.contains_key("mcp-session-id")
-        && serde_json::from_slice::<serde_json::Value>(&bytes).is_ok_and(|v| {
-            v["method"] == "initialize"
-        });
+        && serde_json::from_slice::<serde_json::Value>(&bytes)
+            .is_ok_and(|v| v["method"] == "initialize");
     // Serialize session creation so concurrent handshakes cannot overshoot the cap.
     let guard = if initialization {
         Some(state.initialize.lock().await)
     } else {
         None
     };
-    if initialization {
-        if state.sessions.sessions.read().await.len() >= state.options.max_sessions {
-            return Ok(response(
-                StatusCode::TOO_MANY_REQUESTS,
-                "Local session capacity reached.",
-            ));
-        }
+    if initialization
+        && state.sessions.sessions.read().await.len() >= state.options.max_sessions
+    {
+        return Ok(response(
+            StatusCode::TOO_MANY_REQUESTS,
+            "Local session capacity reached.",
+        ));
     }
     let wire = Request::from_parts(parts, Full::new(Bytes::from(bytes)));
     let result = state.service.handle(wire).await;

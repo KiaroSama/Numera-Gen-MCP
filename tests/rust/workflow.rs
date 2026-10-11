@@ -303,11 +303,19 @@ fn installed_descriptors_reject_enum_scalar_range_cycle_and_invalid_links() {
                 installed.as_object_mut().unwrap().remove("Source");
             }
             "not-output" => installed["Save"]["output_node"] = json!(false),
-            "string-scalar" => {installed["Source"]["input"]["required"]["mode"] = json!(["STRING"]);graph["a"]["inputs"]["mode"] = json!(true);},
-            "boolean-scalar" => {installed["Source"]["input"]["required"]["mode"] = json!(["BOOLEAN"]);graph["a"]["inputs"]["mode"] = json!("true");},
+            "string-scalar" => {
+                installed["Source"]["input"]["required"]["mode"] = json!(["STRING"]);
+                graph["a"]["inputs"]["mode"] = json!(true);
+            }
+            "boolean-scalar" => {
+                installed["Source"]["input"]["required"]["mode"] = json!(["BOOLEAN"]);
+                graph["a"]["inputs"]["mode"] = json!("true");
+            }
             "descriptor-shape" => installed["Source"]["input"] = json!(2),
             "inputs-shape" => graph["a"]["inputs"] = json!([]),
-            "bounds-shape" => installed["Source"]["input"]["required"]["count"] = json!(["INT", []]),
+            "bounds-shape" => {
+                installed["Source"]["input"]["required"]["count"] = json!(["INT", []])
+            }
             _ => unreachable!(),
         }
         assert_eq!(

@@ -4,7 +4,9 @@
 
 Hosted revision `05ed820` passed selected native runtime suites and actual two-client HTTP SDK
 acceptance on completed targets; strict formatting still blocked publication. Its measured coverage
-was 78.33% executable regions / 70.93% branches, below the unchanged 85% / 80% gates. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
+was 78.33% executable regions / 70.93% branches. The following `b4e466a` runtime fixtures passed,
+including active SSE shutdown; coverage reached 81.87% regions / 76.67% branches, still below the
+unchanged 85% / 80% gates. Formatting and one nested-condition Clippy warning remained. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
 evidence, not proof that the Rust migration passes. Hosted stable jobs run
 rustfmt, strict Clippy, all discovered Rust suites, native release compilation and archive checks on
 Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% executable regions and
@@ -26,7 +28,10 @@ exposed an unwanted `usageMetadata` fallback; that production drift is being rep
 and coverage acceptance remain pending. Direct HTTP/menu adds three further Rust targets and an actual
 two-client HTTP SDK fixture, now exercised in hosted CI. The next expanded tree contains 38 targets,
 including config, expiry, continuation/recovery, native entry-point and Comfy result cases. Those
-additions and extracted-archive verification remain unexecuted until the next exact-SHA CI pass. SQLite fixture stores, loopback
+additions passed selected runtime checks in `b4e466a`; archive verification is still gated by strict
+quality checks. The next tree adds bounded admission/Comfy completion, existing-job recovery, image
+route/deviation, API preflight and real filesystem/SQL publication-gap fixtures (43 Rust targets).
+These newest additions remain unexecuted until their exact-SHA CI pass. SQLite fixture stores, loopback
 services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
