@@ -27,7 +27,8 @@ profiles, native image protocols and configured GPU ComfyUI workflows. No paid P
 uploads, prompt enhancement or automatic provider/model fallback.
 
 **Migration status:** the native Rust replacement is under implementation. No native Release is
-published yet; current Rust code has not passed hosted compilation, parity or coverage gates.
+published yet. Native compilation and selected runtime fixtures have succeeded in hosted CI, but
+complete parity, strict quality checks, coverage floors and packaged distribution remain unverified.
 The previously tested Node implementation remains available until the native replacement is verified.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
 

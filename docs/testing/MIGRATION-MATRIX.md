@@ -1,11 +1,11 @@
 # Native migration acceptance matrix
 
 Baseline: `fc7da25c3b470199949b1b4c67127d77afa0c34a`, 50 discovered suites / 470 cases.
-The Rust implementation is in progress. At revision `3f27fb9`, compilation, release builds, the 15
-then-existing Rust suites and two-host/two-restart SDK acceptance passed on all six native targets.
-Strict formatting/test-helper/Windows Clippy checks and coverage still failed. Measured coverage was
-52.93% executable regions / 46.95% branches, below 85% / 80%. **Packaged execution, complete
-baseline-case migration acceptance and the expanded test tree have not passed.** Old TypeScript
+The Rust implementation is in progress. At revision `219d54e`, the 24 then-existing Rust suites
+passed on all six native targets. The earlier `3f27fb9` two-host/two-restart SDK acceptance also
+passed on all six targets. Strict formatting, one test warning and coverage still failed. Measured
+coverage was 70.55% executable regions / 61.57% branches, below 85% / 80%. **Packaged execution,
+complete baseline-case migration acceptance and the expanded 30-suite test tree have not passed.** Old TypeScript
 production source remains authoritative until hosted differential verification passes.
 A file existing is not a verified mapping.
 
@@ -26,7 +26,7 @@ A file existing is not a verified mapping.
 | Ten tools/stdio/resources/negotiation/bridge          | `native/mcp/`, `native/main.rs`                                       | Real child `bridge` fixture, foreign CWD and EOF                  | Bridge and two-host/two-restart SDK acceptance passed at 3f27fb9; expanded tree pending |
 | Maintenance/readiness/client registration             | Native CLI replacement                                                | Existing maintenance cases not yet migrated                       | Pending; do not retire working scripts yet                                              |
 | Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Distribution checks not yet complete                              | Pending verified downloadable archives                                                  |
-| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Measured 52.93% regions / 46.95% branches; gates failed; no reduced floor or exclusions |
+| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Measured 70.55% regions / 61.57% branches; gates failed; no reduced floor or exclusions |
 
 ## Release blockers
 

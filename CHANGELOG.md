@@ -6,7 +6,8 @@ A complete Rust replacement is in progress, preserving tools, provider protocols
 existing durable image receipts/originals. The target distribution is downloadable native archives
 for Windows/Linux/macOS without user compilation or Node/Rust installation. Direct `bridge` startup
 lets the MCP host run the executable without a manual launcher. Installation/client examples now
-explain that native target; no native Release or successful Rust test/coverage result is claimed yet.
+explain that native target. Selected Rust runtime fixtures have passed hosted CI; complete migration
+acceptance, coverage floors, verified packages and a native Release remain pending.
 Old local runtime/dependencies remain until owner host cutover and verified native reconnection.
 
 ## Unreleased - 2026-10-05
