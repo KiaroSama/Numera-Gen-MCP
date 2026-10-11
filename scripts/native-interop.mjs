@@ -295,6 +295,30 @@ try {
     seeded.close();
   }
   let pair = [await start(file), await start(file)];
+  const templates = await bounded(pair[0].client.listResourceTemplates(), 6000);
+  assert.equal(templates.resourceTemplates.length, 1);
+  const health = await tool(pair[0], "health_check", { probe: false });
+  assert.equal(health.generation_verified, false);
+  const models = await tool(pair[0], "list_models", {
+    connection: "responses-500",
+    refresh: true,
+  });
+  assert.equal(models.complete, false);
+  const capabilities = await tool(pair[0], "get_model_capabilities", {
+    connection: "responses-completed",
+    model: "opaque/image",
+  });
+  assert.equal(capabilities.account_availability, "unknown");
+  for (const args of [{ limit: 0 }, { offset: -1 }, { limit: "25" }]) {
+    const result = await bounded(
+      pair[0].client.callTool(
+        { name: "list_outputs", arguments: args },
+        { timeout: 5000 },
+      ),
+      6000,
+    );
+    assert.equal(result.isError, true);
+  }
   for (const [name] of Object.entries(config.connections)) {
     const mode = name.slice(name.indexOf("-") + 1),
       id = "native-" + name;
@@ -328,6 +352,31 @@ try {
           output_id: output.output_id,
         });
         assert.equal(info.verified, true);
+        const preview = await bounded(
+          pair[1].client.callTool(
+            {
+              name: "get_output_info",
+              arguments: { output_id: output.output_id, preview: true },
+            },
+            { timeout: 5000 },
+          ),
+          6000,
+        );
+        assert.ok(
+          preview.content.some(
+            (item) => item.type === "image" && item.mimeType === "image/png",
+          ),
+        );
+        const resource = await bounded(
+          pair[1].client.readResource({
+            uri: `numera-image://outputs/${output.output_id}`,
+          }),
+          6000,
+        );
+        assert.deepEqual(
+          Buffer.from(resource.contents[0].blob, "base64"),
+          bytes,
+        );
       }
     } else {
       assert.equal(receipt.status, "running");

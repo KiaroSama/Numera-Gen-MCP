@@ -134,6 +134,30 @@ path = "tests/rust/migration.rs"
 name = "journal"
 path = "tests/rust/journal.rs"
 
+[[test]]
+name = "multipart"
+path = "tests/rust/multipart.rs"
+
+[[test]]
+name = "cancellation"
+path = "tests/rust/cancellation.rs"
+
+[[test]]
+name = "generation_contracts"
+path = "tests/rust/generation_contracts.rs"
+
+[[test]]
+name = "streams"
+path = "tests/rust/streams.rs"
+
+[[test]]
+name = "output_recovery"
+path = "tests/rust/output_recovery.rs"
+
+[[test]]
+name = "registration_contracts"
+path = "tests/rust/registration_contracts.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

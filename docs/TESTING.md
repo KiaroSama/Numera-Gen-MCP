@@ -2,11 +2,9 @@
 
 ## Native Rust migration — pending hosted verification
 
-Hosted revision `3f27fb9` compiled the application and release binary on all six OS/CPU targets.
-All 15 then-existing native suites passed (38 cases on POSIX, 39 on Windows), including the repaired
-source-policy oracle. Formatting and remaining test-helper/Windows Clippy issues still blocked the
-stable jobs. Measured coverage was 52.93% executable regions / 46.95% branches, below the unchanged
-85% / 80% gates. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
+Hosted revision `219d54e` ran all 24 then-existing native suites successfully on all six OS/CPU targets.
+Formatting and one test assignment warning still blocked the stable jobs. Measured coverage was
+70.55% executable regions / 61.57% branches, below the unchanged 85% / 80% gates. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
 evidence, not proof that the Rust migration passes. Hosted stable jobs run
 rustfmt, strict Clippy, all discovered Rust suites, native release compilation and archive checks on
 Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% executable regions and
@@ -19,9 +17,11 @@ shutdown. The hosted interoperability fixture also exercises two actual SDK host
 SQLite receipts and restarts both twice, preserving original bytes and asserting that recovery sends
 no generation POST. Transport/auth/poll errors remain distinct from terminal provider states. This
 fixture passed on all six targets at `3f27fb9`, using 25 source-seeded jobs, not live providers.
-The next coverage workflow instruments the same external acceptance path before generating its
-report; a passing external fixture alone does not establish the coverage floor. New discovery,
-network, application and editing fixtures remain pending CI. SQLite fixture stores, loopback
+The coverage workflow instruments the same external acceptance path before generating its report;
+a passing external fixture alone does not establish the coverage floor. The next candidate adds
+source-generated final SSE/result normalization, actual multipart capture, targeted cancellation,
+public generation/editing, output recovery and conservative registration fixtures. These additions
+are unexecuted until hosted CI; suite discovery must match all 30 declared Rust targets. SQLite fixture stores, loopback
 services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with

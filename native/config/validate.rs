@@ -346,9 +346,7 @@ pub(crate) fn absolute(path: &Path) -> bool {
         let s = path.as_os_str().to_string_lossy();
         s.starts_with(['/', '\\'])
             || (s.as_bytes().get(1) == Some(&b':')
-                && s.as_bytes()
-                    .get(2)
-                    .is_some_and(|b| b"/\\".contains(b)))
+                && s.as_bytes().get(2).is_some_and(|b| b"/\\".contains(b)))
     }
     #[cfg(not(windows))]
     {

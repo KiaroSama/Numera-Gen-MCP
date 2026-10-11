@@ -1,8 +1,8 @@
+mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
-mod common;
 use common::Workspace;
 use numera_image_gen_mcp::{
     files::{images::inspect, output},

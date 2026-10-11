@@ -211,7 +211,9 @@ def main() -> None:
             if not Path(instrumented["LLVM_PROFILE_FILE"]).resolve().is_relative_to(ROOT):
                 raise RuntimeError("Coverage profile path escapes workspace")
             instrumented["CARGO_TARGET_DIR"] = instrumented["CARGO_LLVM_COV_TARGET_DIR"]
-            run(coverage + ["clean", "--workspace"], wall=60, idle=30, env=instrumented)
+            profile_root = Path(instrumented["CARGO_LLVM_COV_TARGET_DIR"])
+            if profile_root.exists() and any(profile_root.rglob("*.profraw")):
+                raise RuntimeError("Coverage job requires a fresh workspace without prior profiles")
             run(["cargo", "+nightly-2026-10-10", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], wall=1200, idle=180, env=instrumented)
             run(["cargo", "+nightly-2026-10-10", "build", "--locked"], wall=600, idle=180, env=instrumented)
             instrumented["NUMERA_NATIVE_BINARY"] = str(Path(instrumented["CARGO_LLVM_COV_TARGET_DIR"]) / "debug/numera-image-gen-mcp")
