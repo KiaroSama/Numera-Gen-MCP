@@ -21,4 +21,8 @@ explain-AI.md
 .git/
 config.local.json
 inputs/
+target/
+.runtime/
+bin/
+__pycache__/
 .ai/.cross-project-sync/

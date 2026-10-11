@@ -1,6 +1,20 @@
 # Practical testing
 
-## Prepared checks
+## Native migration checks — pending verification
+
+The target native readiness command calls the same read-only application services directly, not a
+separate SDK child. It does not submit images or change host configuration:
+
+```bash
+./bin/numera-image-gen-mcp readiness --config /absolute/numera/.env --connection default --probe
+```
+
+Omit `--probe` for provider-free checks. The result distinguishes configuration/storage/credentials
+from an optional bounded catalog; `generation_verified` remains false. This direct command is not
+actual host/GUI reconnection evidence. After owner cutover, call the real host's `health_check` and
+`list_connections` before approving cleanup. No native runtime verification is claimed yet.
+
+## Historical Node prepared checks
 
 The readiness command uses a real SDK stdio client and only read-only tools. It never calls
 image generation/editing, uploads, job cancellation or host registration. It creates normal local

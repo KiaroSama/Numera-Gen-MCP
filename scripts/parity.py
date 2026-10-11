@@ -1,0 +1,66 @@
+"""Fail-closed source-suite mapping checks; no claim that source tests prove native behavior."""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import re
+import sys
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def inventory(source: Path) -> list[dict]:
+    result = []
+    for file in sorted((source / "tests").rglob("*.test.ts")):
+        data = file.read_bytes()
+        result.append({"source": file.relative_to(source).as_posix(), "sha256": hashlib.sha256(data).hexdigest(),
+                       "native": [], "status": "pending", "evidence": None})
+    if len(result) != 50:
+        raise RuntimeError("Pinned baseline suite count differs from expected 50")
+    return result
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", type=Path, required=True)
+    parser.add_argument("--manifest", type=Path, default=ROOT / "docs/testing/native-parity.json")
+    parser.add_argument("--inventory", action="store_true")
+    args = parser.parse_args()
+    source = args.source.resolve()
+    expected = inventory(source)
+    if args.inventory:
+        output = ROOT / ".ci-work/parity/source-suites.json"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps({"baseline": "fc7da25c3b470199949b1b4c67127d77afa0c34a", "baseline_case_count": 470, "suites": expected}, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"component": "parity", "discovered_source_suites": len(expected), "acceptance_verified": False}))
+        return
+    actual = json.loads(args.manifest.read_text(encoding="utf-8"))
+    rows = actual["suites"]
+    if len(rows) != len(expected) or {r["source"] for r in rows} != {r["source"] for r in expected}:
+        raise RuntimeError("Every baseline suite must have an explicit mapping")
+    hashes = {r["source"]: r["sha256"] for r in expected}
+    for row in rows:
+        if row["sha256"] != hashes[row["source"]]:
+            raise RuntimeError("Baseline source mapping is stale")
+        if row["status"] != "verified" or not row["native"] or not row["evidence"]:
+            raise RuntimeError("Native migration has pending or unverified source contracts")
+        for mapping in row["native"]:
+            file = ROOT / mapping["file"]
+            if not file.is_relative_to(ROOT / "tests/rust") or not file.is_file():
+                raise RuntimeError("Native mapping must reference an existing Rust test")
+            text = file.read_text(encoding="utf-8")
+            if not re.search(r"\bfn\s+" + re.escape(mapping["test"]) + r"\s*\(", text):
+                raise RuntimeError("Native mapped test is missing")
+    if actual["baseline_case_count"] != 470 or actual.get("case_mapping_complete") is not True:
+        raise RuntimeError("All 470 baseline cases must be mapped; suite grouping alone is insufficient")
+    print(json.dumps({"component": "parity", "source_suites": len(rows), "source_cases": 470, "acceptance_verified": True}))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, ValueError, KeyError, RuntimeError):
+        print(json.dumps({"level": "ERROR", "component": "parity", "message": "Native migration acceptance mapping failed."}), file=sys.stderr)
+        raise SystemExit(1) from None

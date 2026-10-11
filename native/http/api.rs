@@ -1,0 +1,83 @@
+use crate::{error::{NumeraError,Result}, http::{url::operation_url,sse}};
+use reqwest::{Client,Method,header::HeaderValue,multipart::Form};
+use serde_json::Value;
+use std::{collections::HashMap,time::Duration};
+use tokio_util::sync::CancellationToken;
+
+pub enum Body {Json(Value), Multipart(Form), Empty}
+pub struct ApiResponse {pub bytes:Vec<u8>,pub mime:String,pub request_id:Option<String>}
+
+pub fn client(timeout:Duration)->reqwest::ClientBuilder {
+    Client::builder().no_proxy().redirect(reqwest::redirect::Policy::none())
+        .retry(reqwest::retry::never()).timeout(timeout)
+}
+
+pub async fn request(connection:&Value,headers:&HashMap<String,String>,operation:&str,prefix:&str,
+    method:Method,body:Body,query:Option<&Value>,cancel:&CancellationToken,limit:usize)->Result<ApiResponse> {
+    let timeout=if method==Method::POST {connection["requestTimeoutMs"].as_u64().unwrap_or(300000)}else{connection["discoveryTimeoutMs"].as_u64().unwrap_or(15000)};
+    let mut params=connection["query"].as_object().cloned().unwrap_or_default();
+    if let Some(query)=query.and_then(Value::as_object) {params.extend(query.clone());}
+    let mapped=connection["paths"][operation].as_str().unwrap_or(operation);
+    let url=operation_url(connection["baseUrl"].as_str().ok_or_else(NumeraError::runtime)?,
+        connection["baseUrlMode"].as_str().unwrap_or("api-prefix"),mapped,prefix,&Value::Object(params))?;
+    let mut builder=client(Duration::from_millis(timeout));
+    if let Some(proxy)=connection.get("proxy") {
+        let mut proxy_agent=reqwest::Proxy::all(proxy["url"].as_str().ok_or_else(NumeraError::runtime)?)
+            .map_err(|_|NumeraError::new("invalid_configuration","Invalid proxy configuration."))?;
+        if let Some(env)=proxy["secretEnv"].as_str() {
+            if let Ok(value)=std::env::var(env) {
+                let header=HeaderValue::from_str(&value).map_err(|_|NumeraError::new("invalid_configuration","Invalid proxy credential."))?;
+                proxy_agent=proxy_agent.custom_http_auth(header);
+            }
+        }
+        builder=builder.proxy(proxy_agent);
+    }
+    let client=builder.build().map_err(|_|NumeraError::new("invalid_configuration","Cannot initialize configured API transport."))?;
+    let mut request=client.request(method,url);
+    for (name,value) in headers {request=request.header(name,value);}
+    request=match body {Body::Json(value)=>request.json(&value),Body::Multipart(form)=>request.multipart(form),Body::Empty=>request};
+    let operation=async {
+        let mut response=request.send().await.map_err(network_error)?;
+        let status=response.status().as_u16();
+        if (300..400).contains(&status) {
+            return Err(NumeraError::new("unsafe_destination","API redirects are not followed.").stage("submission"));
+        }
+        if !(200..300).contains(&status) {
+            let code=match status {401=>"authentication_error",403=>"permission_denied",429=>"rate_limited",404=>"model_unavailable",_=>"upstream_error"};
+            let mut error=NumeraError::new(code,&format!("Upstream returned HTTP {status}. No automatic resubmission was made.")).stage("upstream");
+            error.http_status=Some(status);
+            error.next_action="Check connection/account/model and inspect its existing job before authorizing a new request.".into();
+            return Err(error);
+        }
+        let mime=response.headers().get("content-type").and_then(|v|v.to_str().ok()).unwrap_or("").to_owned();
+        let request_id=response.headers().get("x-request-id").and_then(|v|v.to_str().ok()).map(str::to_owned);
+        if response.content_length().is_some_and(|n|n>limit as u64) {return Err(byte_limit());}
+        let mut bytes=Vec::new();
+        let mut stream=mime.contains("text/event-stream").then(||sse::Reader::new(limit));
+        while let Some(chunk)=response.chunk().await.map_err(network_error)? {
+            if let Some(stream)=stream.as_mut() {stream.push(&chunk)?;}
+            else {
+                if bytes.len().checked_add(chunk.len()).is_none_or(|n|n>limit) {return Err(byte_limit());}
+                bytes.extend_from_slice(&chunk);
+            }
+        }
+        if let Some(stream)=stream {bytes=stream.finish()?;}
+        Ok(ApiResponse{bytes,mime,request_id})
+    };
+    tokio::select! {
+        _=cancel.cancelled()=>Err(NumeraError::new("cancelled","Waiting stopped; upstream completion and billing may be unknown.").stage("network")),
+        result=tokio::time::timeout(Duration::from_millis(timeout),operation)=>result.map_err(|_|NumeraError::new("request_timeout","Waiting stopped; upstream completion and billing may be unknown.").stage("network"))?,
+    }
+}
+
+pub async fn json(connection:&Value,headers:&HashMap<String,String>,operation:&str,prefix:&str,
+    method:Method,body:Body,query:Option<&Value>,cancel:&CancellationToken)->Result<Value> {
+    let response=request(connection,headers,operation,prefix,method,body,query,cancel,16*1024*1024).await?;
+    serde_json::from_slice(&response.bytes).map_err(|_|NumeraError::new("invalid_response","Upstream returned invalid JSON.").stage("response"))
+}
+
+fn network_error(error:reqwest::Error)->NumeraError {
+    if error.is_timeout() {NumeraError::new("request_timeout","Waiting stopped; upstream completion and billing may be unknown.").stage("network")}
+    else {NumeraError::new("outcome_unknown","Connection interrupted; do not automatically resubmit.").stage("network")}
+}
+fn byte_limit()->NumeraError {NumeraError::new("invalid_response","Response exceeds byte limit.").stage("response")}

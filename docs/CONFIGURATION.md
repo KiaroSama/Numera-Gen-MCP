@@ -2,8 +2,9 @@
 
 ## Simple env setup (Windows, Linux, macOS)
 
-Copy [.env.example](../.env.example) to .env beside package.json. Never overwrite an existing private
-file. Node24 parses this file directly; no dotenv dependency or process environment mutation is needed.
+Copy [.env.example](../.env.example) to .env in the extracted installation root (parent of `bin/`). Never
+overwrite an existing private file. The native Rust parser preserves the established strict dotenv
+contract; no Node runtime, dotenv dependency or process environment mutation is needed.
 
 - API_ENDPOINT: any valid HTTP(S) API prefix, including hosted/custom deployment paths. Do not append
   /images/generations or /responses. No fixed localhost address or port is assumed.
@@ -21,7 +22,7 @@ not local resizing instructions. IDs are unique; labels are never routing aliase
 are omitted. Nonempty slots need ID/name even when disabled.
 
 Duplicate/unknown keys, malformed assignments, invalid flags, invalid UTF-8 and files above1MiB reject
-with safe errors. Comments/quoted Unicode and multiline names are parsed using Node util.parseEnv;
+with safe errors. Comments/quoted Unicode and multiline names retain the Node util.parseEnv contract;
 API keys cannot contain newlines. No raw tools arrays or hidden extra submissions.
 
 Plaintext keys are not encrypted: keep .env ignored, out of archives/packages/sync, private0600 on

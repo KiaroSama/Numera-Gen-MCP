@@ -33,6 +33,12 @@
 *.tsbuildinfo
 /config.local.json
 /inputs/
+/target/
+/.runtime/
+/bin/
+*.profraw
+*.profdata
+__pycache__/
 
 # Hook Maker: local/private files (auto-managed)
 /.env

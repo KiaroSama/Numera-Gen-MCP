@@ -1,0 +1,104 @@
+[package]
+name = "numera-image-gen-mcp"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.99"
+license = "GPL-3.0-only"
+description = "Provider-independent native image orchestration MCP server"
+repository = "https://github.com/KiaroSama/Numera-Image-Gen-MCP"
+publish = false
+
+[lib]
+path = "native/lib.rs"
+
+[[bin]]
+name = "numera-image-gen-mcp"
+path = "native/main.rs"
+
+[dependencies]
+rmcp = { version = "=3.5.1", default-features = false, features = ["server"] }
+base64 = "=0.23.1"
+chrono = { version = "=0.4.45", default-features = false, features = ["clock", "serde"] }
+icu_collator = "=2.3.1"
+icu_locale = "=2.3.1"
+regex = "=1.13.1"
+rusqlite = { version = "=0.40.2", features = ["bundled"] }
+reqwest = { version = "=0.13.5", default-features = false, features = ["rustls", "json", "stream", "multipart", "gzip", "brotli", "deflate"] }
+tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "time", "sync", "net", "io-util", "io-std", "process", "fs", "signal"] }
+tokio-util = { version = "=0.7.20", features = ["rt"] }
+percent-encoding = "=2.3.2"
+jsonschema = { version = "=0.58.6", default-features = false }
+image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg", "webp"] }
+ryu-js = "=1.0.3"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = { version = "=1.0.152", features = ["preserve_order", "unbounded_depth"] }
+serde_stacker = "=0.1.14"
+sha2 = "=0.11.0"
+thiserror = "=2.0.21"
+url = "=2.5.8"
+uuid = { version = "=1.28.0", features = ["v4", "serde"] }
+
+[[test]]
+name = "canonical_parity"
+path = "tests/rust/canonical_parity.rs"
+
+[[test]]
+name = "runtime"
+path = "tests/rust/runtime.rs"
+
+[[test]]
+name = "state"
+path = "tests/rust/state.rs"
+
+[[test]]
+name = "http"
+path = "tests/rust/http.rs"
+
+[[test]]
+name = "images"
+path = "tests/rust/images.rs"
+
+[[test]]
+name = "workflow"
+path = "tests/rust/workflow.rs"
+
+[[test]]
+name = "terminal"
+path = "tests/rust/terminal.rs"
+
+[[test]]
+name = "registration"
+path = "tests/rust/registration.rs"
+
+[[test]]
+name = "recovery"
+path = "tests/rust/recovery.rs"
+
+[[test]]
+name = "generation"
+path = "tests/rust/generation.rs"
+
+[[test]]
+name = "lifecycle"
+path = "tests/rust/lifecycle.rs"
+
+[[test]]
+name = "stdio"
+path = "tests/rust/stdio.rs"
+
+[[test]]
+name = "adapters"
+path = "tests/rust/adapters.rs"
+
+[[test]]
+name = "policy"
+path = "tests/rust/policy.rs"
+
+[[test]]
+name = "config_parity"
+path = "tests/rust/config_parity.rs"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

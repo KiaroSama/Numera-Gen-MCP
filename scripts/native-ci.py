@@ -1,0 +1,194 @@
+"""Hosted-only Rust verification, workspace-contained artifacts and bounded child ownership."""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import os
+from pathlib import Path
+import queue
+import signal
+import subprocess
+import sys
+import threading
+import time
+import tomllib
+import uuid
+
+ROOT = Path(__file__).resolve().parent.parent
+WORK = ROOT / ".ci-work" / "native"
+LOG = None
+
+
+def emit(level: str, message: str, **context) -> None:
+    entry = json.dumps({"timestamp": dt.datetime.now(dt.timezone.utc).isoformat(), "level": level,
+                        "component": "native-ci", "message": message, **context}, ensure_ascii=False)
+    print(entry, file=sys.stderr, flush=True)
+    if LOG is not None and not LOG.closed:
+        LOG.write(entry + "\n")
+        LOG.flush()
+
+
+def environment() -> dict[str, str]:
+    env = os.environ.copy()
+    directories = {"CARGO_HOME": ROOT / ".ci-cache/cargo", "RUSTUP_HOME": ROOT / ".ci-cache/rustup",
+                   "CARGO_TARGET_DIR": ROOT / "target", "TEMP": WORK / "temp", "TMP": WORK / "temp",
+                   "TMPDIR": WORK / "temp", "npm_config_cache": ROOT / ".ci-cache/npm"}
+    for key, directory in directories.items():
+        directory.mkdir(parents=True, exist_ok=True)
+        if not directory.resolve().is_relative_to(ROOT):
+            raise RuntimeError("CI managed directory escapes workspace")
+        env[key] = str(directory)
+    env.update({"CARGO_BUILD_JOBS": "2", "RUST_TEST_THREADS": "2", "NUMERA_TEST_WORKERS": "2",
+                "CARGO_TERM_COLOR": "never", "PYTHONDONTWRITEBYTECODE": "1"})
+    env["PATH"] = str(Path(env["CARGO_HOME"]) / "bin") + os.pathsep + env["PATH"]
+    return env
+
+
+def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT) -> None:
+    started = time.monotonic()
+    events: queue.Queue[tuple[str, bytes | None]] = queue.Queue()
+    kwargs = {"creationflags": subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
+    child = subprocess.Popen(args, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, **kwargs)
+    emit("INFO", "Owned command started.", command=Path(args[0]).name, pid=child.pid, wall_seconds=wall, idle_seconds=idle)
+    readers = []
+    def read(stream, name):
+        try:
+            while chunk := stream.read1(8192):
+                events.put((name, chunk))
+        finally:
+            stream.close()
+            events.put((name, None))
+    for name, stream in [("stdout", child.stdout), ("stderr", child.stderr)]:
+        reader = threading.Thread(target=read, args=(stream, name), daemon=True)
+        reader.start()
+        readers.append(reader)
+    last = started
+    ended = 0
+    failed = False
+    try:
+        while ended < 2:
+            now = time.monotonic()
+            if now - started > wall or now - last > idle:
+                failed = True
+                raise TimeoutError("Owned command exceeded wall/idle ceiling")
+            try:
+                name, chunk = events.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            if chunk is None:
+                ended += 1
+                continue
+            last = time.monotonic()
+            target = sys.stdout.buffer if name == "stdout" else sys.stderr.buffer
+            target.write(chunk)
+            target.flush()
+        code = child.wait(timeout=5)
+        if code:
+            failed = True
+            raise RuntimeError(f"Owned command failed with exit code {code}")
+    finally:
+        if child.poll() is None or failed:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/PID", str(child.pid), "/T", "/F"], stdin=subprocess.DEVNULL,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=8,
+                               creationflags=subprocess.CREATE_NO_WINDOW, check=False)
+            else:
+                try:
+                    os.killpg(child.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            if child.poll() is None:
+                child.kill()
+        child.wait(timeout=8)
+        for reader in readers:
+            reader.join(timeout=5)
+            if reader.is_alive():
+                raise RuntimeError("Owned command output reader did not close")
+        emit("INFO", "Owned command stopped.", command=Path(args[0]).name, pid=child.pid,
+             exit_code=child.returncode, duration_seconds=round(time.monotonic() - started, 3), terminated=failed)
+
+
+def inventory() -> None:
+    manifest = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
+    declared = {item["path"] for item in manifest.get("test", [])}
+    actual = {str(path.relative_to(ROOT)).replace("\\", "/") for path in (ROOT / "tests/rust").glob("*.rs")}
+    if actual != declared:
+        raise RuntimeError("Native suite discovery differs from manifest")
+    for directory in [ROOT / "native", ROOT / "tests/rust"]:
+        for path in directory.rglob("*.rs"):
+            text = path.read_text(encoding="utf-8", errors="strict")
+            if len(text.splitlines()) > 800:
+                raise RuntimeError("Native source exceeds 800 lines")
+    emit("INFO", "Native suite and UTF-8 inventory checked.", suites=len(actual))
+
+
+def coverage_gate() -> None:
+    report = json.loads((WORK / "coverage.json").read_text(encoding="utf-8"))
+    summaries = [item["totals"] for item in report["data"]]
+    for metric, floor in [("regions", 85), ("branches", 80)]:
+        count = sum(s[metric]["count"] for s in summaries)
+        covered = sum(s[metric]["covered"] for s in summaries)
+        percent = covered / count * 100 if count else 0
+        emit("INFO", "Native coverage measured.", metric=metric, count=count, covered=covered, percent=round(percent, 2))
+        if count == 0 or percent < floor:
+            raise RuntimeError(f"Native {metric} coverage is below {floor}%")
+
+
+def main() -> None:
+    global LOG
+    parser = argparse.ArgumentParser()
+    parser.add_argument("phase", choices=["stable", "coverage", "coverage-gate", "inventory"])
+    args = parser.parse_args()
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        raise RuntimeError("Native compilation and verification are hosted CI only")
+    WORK.mkdir(parents=True, exist_ok=True)
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
+    with (WORK / f"native-ci_{stamp}_UTC-{uuid.uuid4()}.log").open("x", encoding="utf-8") as log:
+        LOG = log
+        env = environment()
+        inventory()
+        if args.phase == "inventory":
+            return
+        if args.phase == "coverage-gate":
+            coverage_gate()
+            return
+        if not (ROOT / "Cargo.lock").exists():
+            run(["cargo", "generate-lockfile"], wall=180, idle=90, env=env)
+        if args.phase == "stable":
+            failures = []
+            for command, wall, idle in [
+                (["cargo", "fmt", "--check"], 30, 20),
+                (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),
+                (["cargo", "test", "--locked", "--all-targets", "--", "--test-threads=2"], 900, 180),
+                (["cargo", "build", "--locked", "--release"], 900, 180),
+            ]:
+                try:
+                    run(command, wall=wall, idle=idle, env=env)
+                except (RuntimeError, TimeoutError) as error:
+                    failures.append(command[1])
+                    emit("ERROR", "Required native gate failed.", gate=command[1], error_type=type(error).__name__)
+            if "fmt" in failures:
+                # Keep the failed check failed; generated formatting is reviewed and committed later.
+                run(["cargo", "fmt"], wall=30, idle=20, env=env)
+                import zipfile
+                with zipfile.ZipFile(WORK / "formatting.zip", "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                    for directory in [ROOT / "native", ROOT / "tests/rust"]:
+                        for file in sorted(directory.rglob("*.rs")):
+                            archive.write(file, file.relative_to(ROOT).as_posix())
+            if failures:
+                raise RuntimeError("Required native gates failed: " + ", ".join(failures))
+        else:
+            run(["cargo", "install", "cargo-llvm-cov", "--version", "0.9.1", "--locked", "--root", str(ROOT / ".ci-cache/cargo")], wall=600, idle=180, env=env)
+            run(["cargo", "+nightly-2026-10-10", "llvm-cov", "--locked", "--branch", "--all-targets", "--json",
+                 "--output-path", str(WORK / "coverage.json"), "--fail-under-regions", "85", "--", "--test-threads=2"], wall=1200, idle=180, env=env)
+            coverage_gate()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as error:
+        emit("ERROR", "Native CI failed.", error_type=type(error).__name__)
+        raise SystemExit(1) from None

@@ -1,5 +1,25 @@
 # Testing
 
+## Native Rust migration — pending hosted verification
+
+Native source/tests are authored, not yet compiled or executed. The existing Node test evidence below
+is historical regression evidence, not proof that the Rust migration passes. Hosted stable jobs run
+rustfmt, strict Clippy, all discovered Rust suites, native release compilation and archive checks on
+Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% executable regions and
+80% branches from actual LLVM summaries, with no runtime exclusion or weakened floor.
+
+The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
+Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child
+`bridge` tests launch without a launcher from another CWD, list all ten tools and require bounded EOF
+shutdown. SQLite fixture stores, loopback services and owned child processes must close and clean up.
+
+CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
+two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally
+for this migration. [Acceptance matrix](testing/MIGRATION-MATRIX.md) records incomplete source-case,
+crash/restart, multipart, packaging and live/GUI verification rather than calling them passing.
+
+## Historical Node implementation
+
 The native TypeScript7.0.2 compiler runs build/typecheck single-threaded through an explicit
 @typescript/native npm alias. Type-aware ESLint retains the supported TypeScript6.0.3 API via
 Microsoft's @typescript/typescript6 compatibility alias. Normal npm ci resolves both without forced
