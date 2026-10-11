@@ -78,15 +78,17 @@ pub async fn health(
                 api::json(
                     pinned.value(),
                     &pinned.headers(),
-                    if c["adapter"] == "comfyui" {
-                        "system_stats"
-                    } else {
-                        "models"
+                    api::Operation {
+                        operation: if c["adapter"] == "comfyui" {
+                            "system_stats"
+                        } else {
+                            "models"
+                        },
+                        prefix: super::discovery::prefix(c),
+                        method: Method::GET,
+                        body: Body::Empty,
+                        query: None,
                     },
-                    super::discovery::prefix(c),
-                    Method::GET,
-                    Body::Empty,
-                    None,
                     cancel,
                 )
                 .await

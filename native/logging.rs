@@ -101,20 +101,18 @@ impl Logger {
             for entry in entries.flatten() {
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if name.starts_with("numera-image-gen-mcp_") && name.ends_with(".log") {
-                    if let Ok(info) = std::fs::symlink_metadata(entry.path()) {
-                        if info.is_file()
-                            && info
-                                .modified()
-                                .ok()
-                                .and_then(|t| t.elapsed().ok())
-                                .is_some_and(|elapsed| elapsed > age)
-                        {
-                            if std::fs::remove_file(entry.path()).is_err() {
-                                eprintln!("WARNING: Log retention cleanup failed.");
-                            }
-                        }
-                    }
+                if name.starts_with("numera-image-gen-mcp_")
+                    && name.ends_with(".log")
+                    && let Ok(info) = std::fs::symlink_metadata(entry.path())
+                    && info.is_file()
+                    && info
+                        .modified()
+                        .ok()
+                        .and_then(|t| t.elapsed().ok())
+                        .is_some_and(|elapsed| elapsed > age)
+                    && std::fs::remove_file(entry.path()).is_err()
+                {
+                    eprintln!("WARNING: Log retention cleanup failed.");
                 }
             }
         }
@@ -145,13 +143,12 @@ impl Logger {
             return;
         };
         line.push(b'\n');
-        if let Ok(mut guard) = self.file.lock() {
-            if let Some(file) = guard.as_mut() {
-                if file.write_all(&line).and_then(|_| file.flush()).is_err() {
-                    *guard = None;
-                    eprintln!("WARNING: File logging failed.");
-                }
-            }
+        if let Ok(mut guard) = self.file.lock()
+            && let Some(file) = guard.as_mut()
+            && file.write_all(&line).and_then(|_| file.flush()).is_err()
+        {
+            *guard = None;
+            eprintln!("WARNING: File logging failed.");
         }
         let _ = std::io::stderr().write_all(&line);
     }

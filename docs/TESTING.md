@@ -2,8 +2,10 @@
 
 ## Native Rust migration — pending hosted verification
 
-Native source/tests are authored, not yet compiled or executed. The existing Node test evidence below
-is historical regression evidence, not proof that the Rust migration passes. Hosted stable jobs run
+The first hosted native runs compiled the application and release binary, but strict Clippy and
+source-policy parity failed. Some native fixtures passed; the complete native suite, coverage gates
+and packaged distribution have not passed. Existing Node evidence below is historical regression
+evidence, not proof that the Rust migration passes. Hosted stable jobs run
 rustfmt, strict Clippy, all discovered Rust suites, native release compilation and archive checks on
 Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% executable regions and
 80% branches from actual LLVM summaries, with no runtime exclusion or weakened floor.
@@ -11,7 +13,11 @@ Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% e
 The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
 Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child
 `bridge` tests launch without a launcher from another CWD, list all ten tools and require bounded EOF
-shutdown. SQLite fixture stores, loopback services and owned child processes must close and clean up.
+shutdown. The hosted interoperability fixture also exercises two actual SDK hosts sharing source-seeded
+SQLite receipts and restarts both twice, preserving original bytes and asserting that recovery sends
+no generation POST. Transport/auth/poll errors remain distinct from terminal provider states. This
+fixture is newly authored and has not yet passed. SQLite fixture stores, loopback services and owned
+child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

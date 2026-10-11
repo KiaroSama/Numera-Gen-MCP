@@ -133,7 +133,7 @@ fn node_values(text: &str) -> HashMap<String, String> {
             break;
         }
         let quote = content.as_bytes()[0];
-        if [b'"', b'\'', b'`'].contains(&quote) {
+        if b"\"'`".contains(&quote) {
             let Some(end) = content[1..].find(quote as char).map(|n| n + 1) else {
                 break;
             };

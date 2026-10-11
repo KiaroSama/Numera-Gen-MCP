@@ -5,6 +5,8 @@ use serde_json::{Value, json};
 use std::{collections::HashMap, path::Path};
 use uuid::Uuid;
 
+type StoredRequestRow = (String, String, String, Option<String>, Option<i64>, i64, i64);
+
 #[derive(Clone, Debug)]
 pub struct Receipt {
     pub value: Value,
@@ -96,7 +98,7 @@ impl Store {
     }
 
     pub(super) fn row(&self, id: &str) -> Result<RequestRow> {
-        let row: Option<(String,String,String,Option<String>,Option<i64>,i64,i64)> = self.db.query_row(
+        let row: Option<StoredRequestRow> = self.db.query_row(
             "SELECT receipt,identity,fingerprint,owner,lease,generation,reservation FROM requests WHERE id=?",
             [id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?)))
             .optional().map_err(|_|NumeraError::storage())?;

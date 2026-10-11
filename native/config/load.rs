@@ -216,9 +216,9 @@ pub(crate) fn overrides(
 }
 
 fn replace_field(object: &mut Value, field: &str, value: Value) {
-    if let Some(object) = object.as_object_mut() {
-        if let Some(previous) = object.insert(field.to_owned(), value) {
-            super::drop_json(previous);
-        }
+    if let Some(object) = object.as_object_mut()
+        && let Some(previous) = object.insert(field.to_owned(), value)
+    {
+        super::drop_json(previous);
     }
 }

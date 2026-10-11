@@ -59,7 +59,18 @@ pub async fn validate(
             .collect::<Vec<_>>()
             .join("/")
     );
-    let raw=match api::json(c,headers,&path,"/api/v1",Method::GET,Body::Empty,None,cancel).await.and_then(|v|{object(&v)?;Ok(v)}) {
+    let raw=match api::json(
+        c,
+        headers,
+        api::Operation {
+            operation: &path,
+            prefix: "/api/v1",
+            method: Method::GET,
+            body: Body::Empty,
+            query: None,
+        },
+        cancel,
+    ).await.and_then(|v|{object(&v)?;Ok(v)}) {
         Ok(raw)=>raw,
         Err(_)=>return Ok((request,vec!["Endpoint capability discovery failed; explicit model availability and parameter forwarding remain unknown. No generation fallback will occur.".into()])),
     };

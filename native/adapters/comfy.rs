@@ -33,11 +33,13 @@ pub async fn prepare(
     let info = api::json(
         c,
         headers,
-        "object_info",
-        "",
-        Method::GET,
-        Body::Empty,
-        None,
+        api::Operation {
+            operation: "object_info",
+            prefix: "",
+            method: Method::GET,
+            body: Body::Empty,
+            query: None,
+        },
         cancel,
     )
     .await?;
@@ -47,11 +49,13 @@ pub async fn prepare(
         let stats = api::json(
             c,
             headers,
-            "system_stats",
-            "",
-            Method::GET,
-            Body::Empty,
-            None,
+            api::Operation {
+                operation: "system_stats",
+                prefix: "",
+                method: Method::GET,
+                body: Body::Empty,
+                query: None,
+            },
             cancel,
         )
         .await?;
@@ -94,11 +98,13 @@ pub async fn submit(
         let upload = api::json(
             c,
             headers,
-            "upload/image",
-            "",
-            Method::POST,
-            Body::Multipart(Form::new().part("image", part).text("type", "input")),
-            None,
+            api::Operation {
+                operation: "upload/image",
+                prefix: "",
+                method: Method::POST,
+                body: Body::Multipart(Form::new().part("image", part).text("type", "input")),
+                query: None,
+            },
             cancel,
         )
         .await?;
@@ -113,11 +119,13 @@ pub async fn submit(
         let upload = api::json(
             c,
             headers,
-            "upload/image",
-            "",
-            Method::POST,
-            Body::Multipart(Form::new().part("image", part)),
-            None,
+            api::Operation {
+                operation: "upload/image",
+                prefix: "",
+                method: Method::POST,
+                body: Body::Multipart(Form::new().part("image", part)),
+                query: None,
+            },
             cancel,
         )
         .await?;
@@ -130,11 +138,13 @@ pub async fn submit(
     let value = api::json(
         c,
         headers,
-        "prompt",
-        "",
-        Method::POST,
-        Body::Json(json!({"prompt":graph,"client_id":Uuid::new_v4().to_string()})),
-        None,
+        api::Operation {
+            operation: "prompt",
+            prefix: "",
+            method: Method::POST,
+            body: Body::Json(json!({"prompt":graph,"client_id":Uuid::new_v4().to_string()})),
+            query: None,
+        },
         cancel,
     )
     .await?;
@@ -188,13 +198,17 @@ fn upload_identity(value: &Value, message: &str) -> Result<String> {
     })
 }
 
+pub struct OutputLimits {
+    pub item: usize,
+    pub aggregate: usize,
+}
+
 pub async fn status(
     c: &Value,
     headers: &HashMap<String, String>,
     id: &str,
     cancel: &CancellationToken,
-    max_output: usize,
-    max_aggregate: usize,
+    limits: OutputLimits,
     mut retain: impl FnMut(u32, &[u8]) -> Result<()>,
     mut completed: impl FnMut() -> Result<()>,
 ) -> Result<Status> {
@@ -202,11 +216,13 @@ pub async fn status(
     let history = api::json(
         c,
         headers,
-        &format!("history/{encoded}"),
-        "",
-        Method::GET,
-        Body::Empty,
-        None,
+        api::Operation {
+            operation: &format!("history/{encoded}"),
+            prefix: "",
+            method: Method::GET,
+            body: Body::Empty,
+            query: None,
+        },
         cancel,
     )
     .await?;
@@ -263,19 +279,21 @@ pub async fn status(
             let response = api::request(
                 c,
                 headers,
-                "view",
-                "",
-                Method::GET,
-                Body::Empty,
-                Some(&query),
+                api::Operation {
+                    operation: "view",
+                    prefix: "",
+                    method: Method::GET,
+                    body: Body::Empty,
+                    query: Some(&query),
+                },
                 cancel,
-                max_output,
+                limits.item,
             )
             .await?;
             total = total
                 .checked_add(response.bytes.len())
                 .ok_or_else(|| invalid("Aggregate output bytes exceeded."))?;
-            if total > max_aggregate {
+            if total > limits.aggregate {
                 return Err(invalid("Aggregate output bytes exceeded."));
             }
             retain(images.len() as u32, &response.bytes)?;

@@ -44,9 +44,7 @@ impl ServerHandler for Handler {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> std::result::Result<ListToolsResult, ErrorData> {
-        let mut result = ListToolsResult::default();
-        result.tools = self.tools.clone();
-        Ok(result)
+        Ok(ListToolsResult::with_all_items(self.tools.clone()))
     }
     fn get_tool(&self, name: &str) -> Option<Tool> {
         self.tools.iter().find(|t| t.name == name).cloned()
@@ -73,19 +71,18 @@ impl ServerHandler for Handler {
         );
         let mut return_mode = String::from("files");
         let action = async {
-            if !matches!(name, "generate_image" | "edit_image") {
-                if args.as_object().is_some_and(|a| {
+            if !matches!(name, "generate_image" | "edit_image")
+                && args.as_object().is_some_and(|a| {
                     a.keys().any(|key| {
                         !definition.input_schema["properties"]
                             .as_object()
                             .is_some_and(|p| p.contains_key(key))
                     })
                 }) {
-                    return Err(NumeraError::new(
-                        "invalid_input",
-                        "Tool arguments do not match the public schema.",
-                    ));
-                }
+                return Err(NumeraError::new(
+                    "invalid_input",
+                    "Tool arguments do not match the public schema.",
+                ));
             }
             let snapshot = self.application.current()?;
             return_mode = snapshot.config.value["returnMode"]
@@ -177,13 +174,11 @@ impl ServerHandler for Handler {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> std::result::Result<ListResourceTemplatesResult, ErrorData> {
-        let mut result = ListResourceTemplatesResult::default();
-        result.resource_templates = vec![
+        Ok(ListResourceTemplatesResult::with_all_items(vec![
             ResourceTemplate::new("numera-image://outputs/{id}", "output")
                 .with_description("Validated original bytes of an owned output.")
                 .with_mime_type("application/octet-stream"),
-        ];
-        Ok(result)
+        ]))
     }
     async fn read_resource(
         &self,

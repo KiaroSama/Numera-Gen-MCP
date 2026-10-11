@@ -12,6 +12,14 @@ pub enum Body {
     Multipart(Form),
     Empty,
 }
+pub struct Operation<'a> {
+    pub operation: &'a str,
+    pub prefix: &'a str,
+    pub method: Method,
+    pub body: Body,
+    pub query: Option<&'a Value>,
+}
+
 pub struct ApiResponse {
     pub bytes: Vec<u8>,
     pub mime: String,
@@ -29,14 +37,17 @@ pub fn client(timeout: Duration) -> reqwest::ClientBuilder {
 pub async fn request(
     connection: &Value,
     headers: &HashMap<String, String>,
-    operation: &str,
-    prefix: &str,
-    method: Method,
-    body: Body,
-    query: Option<&Value>,
+    wire: Operation<'_>,
     cancel: &CancellationToken,
     limit: usize,
 ) -> Result<ApiResponse> {
+    let Operation {
+        operation,
+        prefix,
+        method,
+        body,
+        query,
+    } = wire;
     let timeout = if method == Method::POST {
         connection["requestTimeoutMs"].as_u64().unwrap_or(300000)
     } else {
@@ -62,13 +73,13 @@ pub async fn request(
             proxy["url"].as_str().ok_or_else(NumeraError::runtime)?,
         )
         .map_err(|_| NumeraError::new("invalid_configuration", "Invalid proxy configuration."))?;
-        if let Some(env) = proxy["secretEnv"].as_str() {
-            if let Ok(value) = std::env::var(env) {
-                let header = HeaderValue::from_str(&value).map_err(|_| {
-                    NumeraError::new("invalid_configuration", "Invalid proxy credential.")
-                })?;
-                proxy_agent = proxy_agent.custom_http_auth(header);
-            }
+        if let Some(env) = proxy["secretEnv"].as_str()
+            && let Ok(value) = std::env::var(env)
+        {
+            let header = HeaderValue::from_str(&value).map_err(|_| {
+                NumeraError::new("invalid_configuration", "Invalid proxy credential.")
+            })?;
+            proxy_agent = proxy_agent.custom_http_auth(header);
         }
         builder = builder.proxy(proxy_agent);
     }
@@ -163,25 +174,10 @@ pub async fn request(
 pub async fn json(
     connection: &Value,
     headers: &HashMap<String, String>,
-    operation: &str,
-    prefix: &str,
-    method: Method,
-    body: Body,
-    query: Option<&Value>,
+    wire: Operation<'_>,
     cancel: &CancellationToken,
 ) -> Result<Value> {
-    let response = request(
-        connection,
-        headers,
-        operation,
-        prefix,
-        method,
-        body,
-        query,
-        cancel,
-        16 * 1024 * 1024,
-    )
-    .await?;
+    let response = request(connection, headers, wire, cancel, 16 * 1024 * 1024).await?;
     serde_json::from_slice(&response.bytes).map_err(|_| {
         NumeraError::new("invalid_response", "Upstream returned invalid JSON.").stage("response")
     })

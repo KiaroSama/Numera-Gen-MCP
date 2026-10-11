@@ -68,10 +68,12 @@ pub async fn recover_local(
         &generation.store,
         &generation.logger,
         receipt.clone(),
-        None,
-        &request,
-        cancel,
-        true,
+        finalization::Finalization {
+            result: None,
+            request: &request,
+            cancel,
+            recovery: true,
+        },
     )
     .await;
     lease.close().await;
@@ -148,12 +150,14 @@ pub async fn get(
                 &headers,
                 &job.id,
                 &cancel,
-                config["files"]["maxOutputBytes"]
-                    .as_u64()
-                    .unwrap_or(50 * 1024 * 1024) as usize,
-                config["files"]["maxAggregateBytes"]
-                    .as_u64()
-                    .unwrap_or(100 * 1024 * 1024) as usize,
+                adapters::comfy::OutputLimits {
+                    item: config["files"]["maxOutputBytes"]
+                        .as_u64()
+                        .unwrap_or(50 * 1024 * 1024) as usize,
+                    aggregate: config["files"]["maxAggregateBytes"]
+                        .as_u64()
+                        .unwrap_or(100 * 1024 * 1024) as usize,
+                },
                 |index, bytes| {
                     let receipt = current.lock().map_err(|_| NumeraError::storage())?;
                     finalization::retain(
@@ -192,11 +196,13 @@ pub async fn get(
             let raw = api::json(
                 c,
                 &headers,
-                &format!("{}/{}", job.kind, adapters::encode_component(&job.id)),
-                super::discovery::prefix(c),
-                Method::GET,
-                Body::Empty,
-                None,
+                api::Operation {
+                    operation: &format!("{}/{}", job.kind, adapters::encode_component(&job.id)),
+                    prefix: super::discovery::prefix(c),
+                    method: Method::GET,
+                    body: Body::Empty,
+                    query: None,
+                },
                 &cancel,
             )
             .await?;
@@ -302,11 +308,13 @@ pub async fn cancel(
             let value = api::json(
                 c,
                 &headers,
-                &format!("api/jobs/{encoded}/cancel"),
-                "",
-                Method::POST,
-                Body::Json(json!({})),
-                None,
+                api::Operation {
+                    operation: &format!("api/jobs/{encoded}/cancel"),
+                    prefix: "",
+                    method: Method::POST,
+                    body: Body::Json(json!({})),
+                    query: None,
+                },
                 signal,
             )
             .await?;
@@ -321,11 +329,13 @@ pub async fn cancel(
                 let status = api::json(
                     c,
                     &headers,
-                    &format!("api/jobs/{encoded}"),
-                    "",
-                    Method::GET,
-                    Body::Empty,
-                    None,
+                    api::Operation {
+                        operation: &format!("api/jobs/{encoded}"),
+                        prefix: "",
+                        method: Method::GET,
+                        body: Body::Empty,
+                        query: None,
+                    },
                     signal,
                 )
                 .await?;

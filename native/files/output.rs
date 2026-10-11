@@ -21,17 +21,29 @@ impl Drop for Temporary {
     }
 }
 
+pub struct Publication<'a> {
+    pub id: &'a str,
+    pub index: u32,
+    pub subdir: Option<&'a str>,
+    pub prefix: Option<&'a str>,
+    pub deviations: &'a [String],
+    pub expected: Option<&'a Receipt>,
+}
+
 pub fn save(
     image: &Image,
     config: &Value,
     store: &mut Store,
-    id: &str,
-    index: u32,
-    subdir: Option<&str>,
-    prefix: Option<&str>,
-    deviations: &[String],
-    expected: Option<&Receipt>,
+    publication: Publication<'_>,
 ) -> Result<Value> {
+    let Publication {
+        id,
+        index,
+        subdir,
+        prefix,
+        deviations,
+        expected,
+    } = publication;
     let error = || {
         NumeraError::new("output_file_error","Cannot save verified image; retained results can be recovered with get_job. Do not resubmit automatically.").stage("storage")
     };

@@ -64,10 +64,9 @@ impl Store {
             if expected.is_some() {store.fence(id,expected)?;}
             let row=store.row(id)?;
             let mut receipt=row.receipt;
-            if let Some(job)=job {
-                if receipt.value["upstream_job"]["id"]!=job["id"] || receipt.value["upstream_job"]["kind"]!=job["kind"] {
-                    return Err(NumeraError::new("permission_denied","Terminal result does not match the existing job."));
-                }
+            if let Some(job)=job
+                && (receipt.value["upstream_job"]["id"]!=job["id"] || receipt.value["upstream_job"]["kind"]!=job["kind"]) {
+                return Err(NumeraError::new("permission_denied","Terminal result does not match the existing job."));
             }
             if !receipt.value["upstream_terminal"].is_null() || receipt.value["generation_outcome"]=="completed" { return Ok(()); }
             receipt.value["upstream_terminal"]=json!(state);

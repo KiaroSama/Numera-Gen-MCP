@@ -161,8 +161,9 @@ def main() -> None:
             for command, wall, idle in [
                 (["cargo", "fmt", "--check"], 30, 20),
                 (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),
-                (["cargo", "test", "--locked", "--all-targets", "--", "--test-threads=2"], 900, 180),
+                (["cargo", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], 900, 180),
                 (["cargo", "build", "--locked", "--release"], 900, 180),
+                (["node", "scripts/native-interop.mjs"], 180, 45),
             ]:
                 try:
                     run(command, wall=wall, idle=idle, env=env)

@@ -39,16 +39,16 @@ def main() -> None:
                  "docs/PRACTICAL-TESTING.md", "docs/TEST-RESULTS.md", "docs/testing/MIGRATION-MATRIX.md",
                  "docs/assets/logo.png"]:
         entries[name] = (ROOT / name).read_bytes()
-    manifest = {"version": "0.2.0", "target": args.target, "source_sha": os.environ.get("GITHUB_SHA"),
-                "binary_sha256": hashlib.sha256(entries["bin/" + executable]).hexdigest(),
-                "files": [{"path": name, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)} for name, data in sorted(entries.items())]}
-    entries["manifest.json"] = (json.dumps(manifest, indent=2) + "\n").encode("utf-8")
     notices = ROOT / ".ci-work/native/licenses"
     if not notices.is_dir() or not any(notices.iterdir()):
         raise RuntimeError("Resolved native dependency license inventory is required before packaging")
     for file in sorted(notices.rglob("*")):
         if file.is_file() and not file.is_symlink():
             entries["licenses/" + file.relative_to(notices).as_posix()] = file.read_bytes()
+    manifest = {"version": "0.2.0", "target": args.target, "source_sha": os.environ.get("GITHUB_SHA"),
+                "binary_sha256": hashlib.sha256(entries["bin/" + executable]).hexdigest(),
+                "files": [{"path": name, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)} for name, data in sorted(entries.items())]}
+    entries["manifest.json"] = (json.dumps(manifest, indent=2) + "\n").encode("utf-8")
     out = ROOT / ".ci-work/release"
     out.mkdir(parents=True, exist_ok=True)
     if "windows" in args.target:

@@ -16,23 +16,22 @@ pub fn deviations(receipt: &Receipt, image: &Image, index: u32) -> Vec<String> {
         return vec![];
     };
     let mut result = Vec::new();
-    if let Some(format) = expected["output_format"].as_str().filter(|s| !s.is_empty()) {
-        if image.mime != format!("image/{format}") {
-            result.push(format!(
-                "Output {index} format is {}, not requested {format}.",
-                image.mime
-            ));
-        }
+    if let Some(format) = expected["output_format"].as_str().filter(|s| !s.is_empty())
+        && image.mime != format!("image/{format}")
+    {
+        result.push(format!(
+            "Output {index} format is {}, not requested {format}.",
+            image.mime
+        ));
     }
-    if let Some(size) = expected["size"].as_str() {
-        if size.split_once('x').is_some_and(|(w, h)| {
+    if let Some(size) = expected["size"].as_str()
+        && size.split_once('x').is_some_and(|(w, h)| {
             !w.is_empty() && !h.is_empty() && w.bytes().chain(h.bytes()).all(|b| b.is_ascii_digit())
         }) && size != format!("{}x{}", image.width, image.height)
-        {
-            result.push(format!(
-                "Output {index} dimensions differ from requested size."
-            ));
-        }
+    {
+        result.push(format!(
+            "Output {index} dimensions differ from requested size."
+        ));
     }
     let pixels = crate::error::array(&expected["dimension_evidence"]["pixel_sizes"]);
     if let Some(ratio) = expected["aspect_ratio"].as_str().filter(|s| !s.is_empty()) {
@@ -42,16 +41,14 @@ pub fn deviations(receipt: &Receipt, image: &Image, index: u32) -> Vec<String> {
         if let Some((w, h)) = ratio
             .split_once(':')
             .and_then(|(w, h)| Some((w.parse::<f64>().ok()?, h.parse::<f64>().ok()?)))
+            && w != 0.0
+            && h != 0.0
+            && !matches_native
+            && f64::from(image.width) * h != f64::from(image.height) * w
         {
-            if w != 0.0
-                && h != 0.0
-                && !matches_native
-                && f64::from(image.width) * h != f64::from(image.height) * w
-            {
-                result.push(format!(
-                    "Output {index} aspect ratio differs from requested aspect_ratio."
-                ));
-            }
+            result.push(format!(
+                "Output {index} aspect ratio differs from requested aspect_ratio."
+            ));
         }
     }
     if expected["image_size"]
@@ -60,18 +57,16 @@ pub fn deviations(receipt: &Receipt, image: &Image, index: u32) -> Vec<String> {
         && expected["aspect_ratio"]
             .as_str()
             .is_some_and(|s| !s.is_empty())
-    {
-        if let Some(target) = pixels.iter().find(|p| {
+        && let Some(target) = pixels.iter().find(|p| {
             p["aspect_ratio"] == expected["aspect_ratio"]
                 && p["resolution"] == expected["image_size"]
-        }) {
-            if target["width"] != image.width || target["height"] != image.height {
-                result.push(format!(
-                    "Output {index} dimensions differ from requested {} tier.",
-                    expected["image_size"].as_str().unwrap_or("")
-                ));
-            }
-        }
+        })
+        && (target["width"] != image.width || target["height"] != image.height)
+    {
+        result.push(format!(
+            "Output {index} dimensions differ from requested {} tier.",
+            expected["image_size"].as_str().unwrap_or("")
+        ));
     }
     if let Some(source) = expected.get("upscale_source") {
         let w = source["width"].as_u64().unwrap_or(0);

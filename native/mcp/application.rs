@@ -130,25 +130,24 @@ impl Application {
         let mut matches = Vec::new();
         let mut routes = HashSet::new();
         for g in candidates {
-            if let Ok((_, c)) = g.config.select(Some(name)) {
-                if let Ok(pinned) = snapshot_credentials(&c, &g.env, &g.runtime).await {
-                    if connection_identity(name, &pinned)? == identity {
-                        let mut route = json!({"paths":c["paths"],"query":c["query"],"baseUrlMode":c["baseUrlMode"]});
-                        for key in ["proxy", "workflow"] {
-                            if let Some(value) = c.get(key) {
-                                route[key] = value.clone();
-                            }
-                        }
-                        routes.insert(fingerprint(&route)?);
-                        matches.push(g);
+            if let Ok((_, c)) = g.config.select(Some(name))
+                && let Ok(pinned) = snapshot_credentials(&c, &g.env, &g.runtime).await
+                && connection_identity(name, &pinned)? == identity
+            {
+                let mut route = json!({"paths":c["paths"],"query":c["query"],"baseUrlMode":c["baseUrlMode"]});
+                for key in ["proxy", "workflow"] {
+                    if let Some(value) = c.get(key) {
+                        route[key] = value.clone();
                     }
                 }
+                routes.insert(fingerprint(&route)?);
+                matches.push(g);
             }
         }
-        if routes.len() == 1 {
-            if let Some(g) = matches.into_iter().next() {
-                return Ok(g);
-            }
+        if routes.len() == 1
+            && let Some(g) = matches.into_iter().next()
+        {
+            return Ok(g);
         }
         Err(NumeraError::new(
             "permission_denied",

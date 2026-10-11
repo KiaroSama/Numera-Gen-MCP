@@ -31,7 +31,7 @@ pub fn decode_base64(value: &str, limit: usize) -> Result<Vec<u8>> {
     };
     if value.is_empty()
         || value.len() > limit.div_ceil(3).saturating_mul(4).saturating_add(4)
-        || value.len() % 4 != 0
+        || !value.len().is_multiple_of(4)
     {
         return Err(invalid());
     }

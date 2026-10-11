@@ -61,12 +61,14 @@ fn writer_fences_terminal_accounting_and_original_journal_survive_reopen() {
         &image,
         &config,
         &mut two,
-        "output",
-        0,
-        Some("saved"),
-        None,
-        &[],
-        Some(&original),
+        output::Publication {
+            id: "output",
+            index: 0,
+            subdir: Some("saved"),
+            prefix: None,
+            deviations: &[],
+            expected: Some(&original),
+        },
     )
     .unwrap();
     assert_eq!(output["output_id"], stable);

@@ -86,10 +86,10 @@ pub fn image_dimensions(connection: &Value, model: &str, max_pixels: u64) -> Val
     if pro.is_some() {
         for (ratio, sizes) in FLASH.iter().filter(|(ratio, _)| ratios.contains(ratio)) {
             for (i, size) in sizes.iter().enumerate().skip(start) {
-                if let Some((w, h)) = size.split_once('x') {
-                    if let (Ok(width), Ok(height)) = (w.parse::<u64>(), h.parse::<u64>()) {
-                        pixels.push(json!({"aspect_ratio":ratio, "resolution":TIERS[i], "width":width, "height":height}));
-                    }
+                if let Some((w, h)) = size.split_once('x')
+                    && let (Ok(width), Ok(height)) = (w.parse::<u64>(), h.parse::<u64>())
+                {
+                    pixels.push(json!({"aspect_ratio":ratio, "resolution":TIERS[i], "width":width, "height":height}));
                 }
             }
         }
@@ -173,8 +173,8 @@ pub fn validate(connection: &Value, model: &str, request: &Value) -> Result<()> 
     if width > 3840
         || height > 3840
         || !(655360..=8294400).contains(&count)
-        || width % 16 != 0
-        || height % 16 != 0
+        || !width.is_multiple_of(16)
+        || !height.is_multiple_of(16)
         || width * 3 < height
         || width > height * 3
     {

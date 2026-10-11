@@ -14,15 +14,11 @@ use crate::{
     config::{Config, snapshot_credentials},
     error::{NumeraError, Result},
     files::{editing, images, output, paths},
-    http::{
-        api::{self, Body},
-        assets,
-    },
+    http::assets,
     jobs::Receipt,
     logging::Logger,
     runtime_paths::RuntimePaths,
 };
-use reqwest::Method;
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
@@ -331,18 +327,18 @@ impl Generation {
         let lease = Lease::start(self.store.clone(), receipt.clone(), cancel.clone(), true);
         let result = tokio::time::timeout_at(
             deadline,
-            self.submit(
-                &input,
+            self.submit(super::submission::Submission {
+                input: &input,
                 built,
                 workflow,
-                &headers,
-                &cancel,
-                &id,
-                &name,
-                &mut receipt,
-                &lease,
-                &identity,
-            ),
+                headers: &headers,
+                cancel: &cancel,
+                id: &id,
+                name: &name,
+                receipt: &mut receipt,
+                lease: &lease,
+                identity: &identity,
+            }),
         )
         .await;
         let result = match result {
@@ -367,216 +363,6 @@ impl Generation {
             locked(&self.store)?.release(&id, None)?;
         }
         result
-    }
-
-    async fn submit(
-        &self,
-        input: &Input<'_>,
-        built: Option<adapters::types::Prepared>,
-        workflow: Option<Value>,
-        headers: &HashMap<String, String>,
-        cancel: &CancellationToken,
-        id: &str,
-        name: &str,
-        receipt: &mut Receipt,
-        lease: &Lease,
-        identity: &str,
-    ) -> Result<Receipt> {
-        let c = input.connection;
-        let config = &self.config.value;
-        if locked(&self.store)?.queued()? as u64
-            > config["maxQueuedRequests"].as_u64().unwrap_or(16)
-        {
-            return Err(NumeraError::new(
-                "rate_limited",
-                "Local bounded queue is full.",
-            ));
-        }
-        while !locked(&self.store)?.admit(
-            id,
-            name,
-            config["maxConcurrentRequests"].as_u64().unwrap_or(4) as usize,
-            if c["adapter"] == "comfyui" {
-                1
-            } else {
-                c["maxConcurrentRequests"].as_u64().unwrap_or(2) as usize
-            },
-        )? {
-            tokio::select! {_=cancel.cancelled()=>return Err(cancelled()),_=tokio::time::sleep(Duration::from_millis(50))=>{}}
-        }
-        if cancel.is_cancelled() {
-            return Err(cancelled());
-        }
-        locked(&self.store)?.reserve(
-            id,
-            config["files"]["maxAggregateBytes"]
-                .as_i64()
-                .unwrap_or(100 * 1024 * 1024),
-            config["files"]["maxJournalBytes"]
-                .as_i64()
-                .unwrap_or(256 * 1024 * 1024),
-        )?;
-        receipt.value["status"] = json!("submitting");
-        receipt.value["generation_outcome"] = json!("unknown");
-        locked(&self.store)?.update(receipt)?;
-        self.logger.log(
-            "INFO",
-            "generation",
-            "Submission intent persisted.",
-            json!({"requestId":id,"connection":name}),
-        );
-        let mut claimed = false;
-        let result = if let Some(workflow) = workflow {
-            let (job, warnings) = adapters::comfy::submit(input, workflow, headers, cancel).await?;
-            receipt.value["upstream_job"] = json!({"id":job.id,"kind":job.kind});
-            receipt.value["warnings"]
-                .as_array_mut()
-                .ok_or_else(NumeraError::runtime)?
-                .extend(warnings.into_iter().map(Value::String));
-            receipt.value["status"] = json!("running");
-            receipt.value["generation_outcome"] = json!("running");
-            locked(&self.store)?.update(receipt)?;
-            if input.request["wait"] == false {
-                return Ok(receipt.clone());
-            }
-            loop {
-                let shared = Mutex::new(receipt.clone());
-                let status = adapters::comfy::status(
-                    c,
-                    headers,
-                    &job.id,
-                    cancel,
-                    config["files"]["maxOutputBytes"]
-                        .as_u64()
-                        .unwrap_or(50 * 1024 * 1024) as usize,
-                    config["files"]["maxAggregateBytes"]
-                        .as_u64()
-                        .unwrap_or(100 * 1024 * 1024) as usize,
-                    |index, bytes| {
-                        let mut current = shared.lock().map_err(|_| NumeraError::storage())?;
-                        if !claimed {
-                            if !locked(&self.store)?.claim(id, Some(&current), false)? {
-                                return Err(NumeraError::new(
-                                    "outcome_unknown",
-                                    "Another waiter owns output finalization.",
-                                )
-                                .stage("storage"));
-                            }
-                            *current = locked(&self.store)?.get(id)?;
-                            lease.update(&current);
-                            claimed = true;
-                        }
-                        finalization::retain(
-                            config,
-                            &self.store,
-                            id,
-                            index,
-                            bytes.to_vec(),
-                            &current,
-                        )?;
-                        Ok(())
-                    },
-                    || {
-                        let mut current = shared.lock().map_err(|_| NumeraError::storage())?;
-                        current.value["generation_outcome"] = json!("completed");
-                        locked(&self.store)?.update(&mut current)
-                    },
-                )
-                .await;
-                *receipt = shared.into_inner().map_err(|_| NumeraError::storage())?;
-                let status = status?;
-                if let Some(terminal) = status.terminal {
-                    return locked(&self.store)?.terminate(
-                        id,
-                        terminal,
-                        &json!(
-                            NumeraError::new("provider_rejection", "ComfyUI workflow failed.")
-                                .stage("generation")
-                        ),
-                        Some(receipt),
-                        Some(&json!({"id":job.id,"kind":job.kind})),
-                    );
-                }
-                if let Some(result) = status.result {
-                    break result;
-                }
-                wait(cancel, 500).await?;
-            }
-        } else {
-            let built = built.ok_or_else(NumeraError::runtime)?;
-            let response = api::request(
-                c,
-                headers,
-                &built.operation,
-                built.prefix,
-                Method::POST,
-                built.body,
-                None,
-                cancel,
-                config["files"]["maxAggregateBytes"]
-                    .as_u64()
-                    .unwrap_or(100 * 1024 * 1024) as usize,
-            )
-            .await?;
-            if let Some(id) = response.request_id {
-                receipt.value["upstream_request_id"] = json!(id);
-            }
-            let mut normalized = adapters::normalize::response(c, response.bytes, &response.mime)?;
-            if let Some(job) = &normalized.job {
-                receipt.value["upstream_job"] = json!({"id":job.id,"kind":job.kind});
-                receipt.value["status"] = json!("running");
-                locked(&self.store)?.update(receipt)?;
-            }
-            while let Some(job) = normalized.job.take() {
-                wait(cancel, 500).await?;
-                let raw = api::json(
-                    c,
-                    headers,
-                    &format!("{}/{}", job.kind, adapters::encode_component(&job.id)),
-                    built.prefix,
-                    Method::GET,
-                    Body::Empty,
-                    None,
-                    cancel,
-                )
-                .await?;
-                normalized = adapters::normalize::normalize(c, &raw)?;
-                validate_job(&normalized, &job)?;
-            }
-            normalized
-        };
-        if !claimed {
-            if !locked(&self.store)?.claim(id, Some(receipt), false)? {
-                return locked(&self.store)?.get(id);
-            }
-            *receipt = locked(&self.store)?.get(id)?;
-            lease.update(receipt);
-        }
-        let continuation = result.continuation.clone();
-        let mut completed = self
-            .finish(receipt.clone(), result, input.request, cancel, false)
-            .await?;
-        if let Some(value) = continuation {
-            let stored = locked(&self.store)?.save_continuation(
-                id,
-                &fingerprint(&json!({"identity":identity,"model":input.model}))?,
-                &value,
-            );
-            if let Err(error) = stored {
-                if !locked(&self.store)?.owns(id, Some(&completed))? {
-                    return locked(&self.store)?.get(id);
-                }
-                completed.value["warnings"].as_array_mut().ok_or_else(NumeraError::runtime)?.push(json!("Private continuation metadata could not be retained; original outputs remain available."));
-                locked(&self.store)?.update(&mut completed)?;
-                self.logger.log(
-                    "WARNING",
-                    "generation",
-                    "Continuation storage failed after retaining outputs.",
-                    json!({"code":error.code}),
-                );
-            }
-        }
-        Ok(completed)
     }
 
     pub async fn finish(
@@ -615,10 +401,12 @@ impl Generation {
             &self.store,
             &self.logger,
             receipt,
-            Some(result),
-            request,
-            cancel,
-            recovery,
+            finalization::Finalization {
+                result: Some(result),
+                request,
+                cancel,
+                recovery,
+            },
         )
         .await
     }

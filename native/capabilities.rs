@@ -147,10 +147,10 @@ pub fn capabilities(connection: &Value, model: &str) -> Value {
     }
     let overrides = connection["modelOverrides"].get(model);
     let mut forwarding = json!({"text_to_image":"supported", "image_to_image":refs, "masks":masks});
-    if let Some(values) = overrides.and_then(|v| v["capabilities"].as_object()) {
-        if let Some(object) = forwarding.as_object_mut() {
-            object.extend(values.clone());
-        }
+    if let Some(values) = overrides.and_then(|v| v["capabilities"].as_object())
+        && let Some(object) = forwarding.as_object_mut()
+    {
+        object.extend(values.clone());
     }
     let max_refs = overrides
         .and_then(|v| v["maxReferences"].as_u64())
@@ -168,7 +168,7 @@ pub fn capabilities(connection: &Value, model: &str) -> Value {
     json!({"model":{"text_to_image":"unknown","image_to_image":"unknown"}, "gateway_forwarding":forwarding,
         "account_availability":"unknown", "max_references":max_refs,
         "max_count":overrides.and_then(|v| v["maxCount"].as_u64()).unwrap_or(1),
-        "parameters":overrides.and_then(|v| v.get("supportedParameters")).cloned().unwrap_or_else(||json!([])),
+        "parameters":overrides.and_then(|v| v.get("supportedParameters")).cloned().unwrap_or(Value::Null),
         "evidence":[{"kind":if overrides.is_some(){"configured"}else{"documented"}, "gateway_version":connection.get("gatewayVersion"),
             "source":match gateway {Some("9router")=>Some("https://github.com/decolua/9router"),Some("omniroute")=>Some("https://github.com/diegosouzapw/OmniRoute"),_=>None}}],
         "limitations":limitations})
@@ -217,14 +217,12 @@ pub fn effective_request(connection: &Value, request: &Value, model: &str) -> Re
             .clone(),
     );
     for key in COMMON_FIELDS {
-        if request.get(*key).is_none() {
-            if let Some(value) = overrides["defaults"]
+        if request.get(*key).is_none()
+            && let Some(value) = overrides["defaults"]
                 .get(*key)
                 .filter(|v| !v.is_null())
-                .or_else(|| connection["defaults"].get(*key))
-            {
-                merged.insert((*key).into(), value.clone());
-            }
+                .or_else(|| connection["defaults"].get(*key)) {
+            merged.insert((*key).into(), value.clone());
         }
     }
     let mut options = connection["extensions"]

@@ -42,13 +42,13 @@ impl Discovery {
     ) -> Result<Value> {
         let (id, c) = config.select(name)?;
         let old = self.cache.get(&id);
-        if !refresh {
-            if let Some((until, catalog)) = old.filter(|(until, _)| *until > Instant::now()) {
-                let _ = until;
-                let mut catalog = catalog.clone();
-                catalog["cached"] = json!(true);
-                return Ok(catalog);
-            }
+        if !refresh
+            && let Some((until, catalog)) = old.filter(|(until, _)| *until > Instant::now())
+        {
+            let _ = until;
+            let mut catalog = catalog.clone();
+            catalog["cached"] = json!(true);
+            return Ok(catalog);
         }
         let configured=array(&c["configuredModels"]).iter().map(|m|json!({"id":m["id"],"name":m["name"],"configured":true,
             "metadata":{"source":"configured","account_availability":"unknown","generation_verified":false}})).collect::<Vec<_>>();
@@ -79,7 +79,18 @@ impl Discovery {
                 let mut query=json!({});
                 if let Some(cursor)=&cursor {query[if c["adapter"].as_str().is_some_and(|s|s.starts_with("gemini")){"pageToken"}else{"after"}]=json!(cursor);}
                 if c["gateway"]=="omniroute" && operation=="models" {query["limit"]=json!("100");}
-                let value=api::json(pinned.value(),&headers,&operation,prefix(&c),Method::GET,Body::Empty,Some(&query),cancel).await?;
+                let value=api::json(
+                    pinned.value(),
+                    &headers,
+                    api::Operation {
+                        operation: &operation,
+                        prefix: prefix(&c),
+                        method: Method::GET,
+                        body: Body::Empty,
+                        query: Some(&query),
+                    },
+                    cancel,
+                ).await?;
                 object(&value)?;
                 if c["adapter"]=="comfyui" {
                     let mut models=Vec::new();for (id,value) in object(&value)?{object(value)?;models.push(json!({"id":id,"metadata":value}));}
@@ -138,39 +149,41 @@ impl Discovery {
         let (id, c) = config.select(name)?;
         let mut cap = capabilities::capabilities(&c, model);
         let mut advertised = Value::Null;
-        if c["gateway"] == "9router" || c["adapter"] == "openrouter-images" {
-            if let Ok(pinned) = snapshot_credentials(&c, env, runtime).await {
-                let operation = if c["gateway"] == "9router" {
-                    "models/info".into()
-                } else {
-                    format!(
-                        "images/models/{}/endpoints",
-                        model
-                            .split('/')
-                            .map(crate::adapters::encode_component)
-                            .collect::<Vec<_>>()
-                            .join("/")
-                    )
-                };
-                let query = (c["gateway"] == "9router").then(|| json!({"id":model}));
-                if let Ok(value) = api::json(
-                    pinned.value(),
-                    &pinned.headers(),
-                    &operation,
-                    if c["gateway"] == "9router" {
+        if (c["gateway"] == "9router" || c["adapter"] == "openrouter-images")
+            && let Ok(pinned) = snapshot_credentials(&c, env, runtime).await
+        {
+            let operation = if c["gateway"] == "9router" {
+                "models/info".into()
+            } else {
+                format!(
+                    "images/models/{}/endpoints",
+                    model
+                        .split('/')
+                        .map(crate::adapters::encode_component)
+                        .collect::<Vec<_>>()
+                        .join("/")
+                )
+            };
+            let query = (c["gateway"] == "9router").then(|| json!({"id":model}));
+            if let Ok(value) = api::json(
+                pinned.value(),
+                &pinned.headers(),
+                api::Operation {
+                    operation: &operation,
+                    prefix: if c["gateway"] == "9router" {
                         "/v1"
                     } else {
                         "/api/v1"
                     },
-                    Method::GET,
-                    Body::Empty,
-                    query.as_ref(),
-                    cancel,
-                )
-                .await
-                {
-                    advertised = value;
-                }
+                    method: Method::GET,
+                    body: Body::Empty,
+                    query: query.as_ref(),
+                },
+                cancel,
+            )
+            .await
+            {
+                advertised = value;
             }
         }
         let mut dimensions = dimensions::image_dimensions(

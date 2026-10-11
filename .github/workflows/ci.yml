@@ -96,6 +96,8 @@ jobs:
       - name: Install official Rust only inside workspace
         run: python -B scripts/native-setup.py
       - name: Native stable quality, parity, tests and release build
+        env:
+          NUMERA_ORACLE_ROOT: ${{ github.workspace }}/.ci-work/baseline
         run: python -B scripts/native-ci.py stable
       - name: Preserve resolved dependency licenses and bundled notices
         env:

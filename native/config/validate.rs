@@ -76,10 +76,10 @@ fn defaults(value: &mut Value, schema: &Value) {
     if let Some(object) = value.as_object_mut() {
         if let Some(properties) = schema["properties"].as_object() {
             for (key, child) in properties {
-                if !object.contains_key(key) {
-                    if let Some(default) = child.get("default") {
-                        object.insert(key.clone(), default.clone());
-                    }
+                if !object.contains_key(key)
+                    && let Some(default) = child.get("default")
+                {
+                    object.insert(key.clone(), default.clone());
                 }
                 if let Some(value) = object.get_mut(key) {
                     defaults(value, child);
@@ -96,11 +96,11 @@ fn defaults(value: &mut Value, schema: &Value) {
                 }
             }
         }
-    } else if let Some(array) = value.as_array_mut() {
-        if let Some(child) = schema.get("items") {
-            for value in array {
-                defaults(value, child);
-            }
+    } else if let Some(array) = value.as_array_mut()
+        && let Some(child) = schema.get("items")
+    {
+        for value in array {
+            defaults(value, child);
         }
     }
 }
@@ -146,10 +146,10 @@ fn source_lengths(value: &Value, schema: &Value) -> bool {
             }
         }
     }
-    if let (Some(array), Some(child)) = (value.as_array(), schema.get("items")) {
-        if array.iter().any(|value| !source_lengths(value, child)) {
-            return false;
-        }
+    if let (Some(array), Some(child)) = (value.as_array(), schema.get("items"))
+        && array.iter().any(|value| !source_lengths(value, child))
+    {
+        return false;
     }
     if let Some(branches) = schema["anyOf"].as_array() {
         let matching = |branch: &&Value| match branch["type"].as_str() {
@@ -212,10 +212,10 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
             }
         }
         validate_base(connection)?;
-        if let Some(origin) = auth["origin"].as_str().filter(|v| !v.is_empty()) {
-            if url_origin(origin)? != url_origin(connection["baseUrl"].as_str().unwrap_or(""))? {
-                return Err(invalid("Credential destination origin mismatch."));
-            }
+        if let Some(origin) = auth["origin"].as_str().filter(|v| !v.is_empty())
+            && url_origin(origin)? != url_origin(connection["baseUrl"].as_str().unwrap_or(""))?
+        {
+            return Err(invalid("Credential destination origin mismatch."));
         }
         if auth["type"] != "none"
             && ["apiKey", "secretEnv", "secretFile", "secretDpapiFile"]
@@ -279,10 +279,9 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
     if let Some(name) = config["defaultConnection"]
         .as_str()
         .filter(|s| !s.is_empty())
+        && config["connections"].get(name).is_none()
     {
-        if config["connections"].get(name).is_none() {
-            return Err(invalid("Default connection does not exist."));
-        }
+        return Err(invalid("Default connection does not exist."));
     }
     Ok(())
 }

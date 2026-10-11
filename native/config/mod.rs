@@ -110,12 +110,11 @@ impl Config {
 
     pub fn select(&self, name: Option<&str>) -> Result<(String, Value)> {
         let id = name.or_else(|| self.value["defaultConnection"].as_str());
-        if let Some(id) = id.filter(|id| !id.is_empty()) {
-            if let Some(connection) = self.value["connections"].get(id) {
-                if connection["enabled"] == true {
-                    return Ok((id.to_owned(), clone_json(connection)));
-                }
-            }
+        if let Some(id) = id.filter(|id| !id.is_empty())
+            && let Some(connection) = self.value["connections"].get(id)
+            && connection["enabled"] == true
+        {
+            return Ok((id.to_owned(), clone_json(connection)));
         }
         Err(NumeraError::new(
             "invalid_input",

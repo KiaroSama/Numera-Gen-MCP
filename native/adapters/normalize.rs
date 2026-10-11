@@ -176,10 +176,10 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
                 if !malformed(&mut result.images, step) {
                     continue;
                 }
-                if step["type"] == "thought" {
-                    if let Some(signature) = step["signature"].as_str() {
-                        signatures.push(json!({"step_type":"thought","signature":signature}));
-                    }
+                if step["type"] == "thought"
+                    && let Some(signature) = step["signature"].as_str()
+                {
+                    signatures.push(json!({"step_type":"thought","signature":signature}));
                 }
                 if step["type"] != "model_output" {
                     continue;
@@ -291,21 +291,19 @@ pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normal
         return normalize(connection, &value);
     }
     let events = sse::events(&bytes, 16 * 1024 * 1024)?;
-    if connection["adapter"] == "openai-responses" {
-        if let Some(event) = events
+    if connection["adapter"] == "openai-responses"
+        && let Some(event) = events
             .iter()
-            .find(|e| ["response.failed", "response.incomplete"].contains(&e.kind.as_str()))
-        {
-            let result = &event.data["response"];
-            if truthy(result) {
-                if !result.is_object() {
-                    return Err(error("invalid_response", "Expected an object."));
-                }
-                if result["id"].as_str().is_some_and(|s| !s.trim().is_empty())
-                    && ["failed", "incomplete"].contains(&result["status"].as_str().unwrap_or(""))
-                {
-                    return normalize(connection, result);
-                }
+            .find(|e| ["response.failed", "response.incomplete"].contains(&e.kind.as_str())) {
+        let result = &event.data["response"];
+        if truthy(result) {
+            if !result.is_object() {
+                return Err(error("invalid_response", "Expected an object."));
+            }
+            if result["id"].as_str().is_some_and(|s| !s.trim().is_empty())
+                && ["failed", "incomplete"].contains(&result["status"].as_str().unwrap_or(""))
+            {
+                return normalize(connection, result);
             }
         }
     }

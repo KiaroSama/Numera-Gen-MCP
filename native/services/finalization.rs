@@ -39,16 +39,27 @@ pub fn retain(
     Ok(image)
 }
 
+pub struct Finalization<'a> {
+    pub result: Option<Normalized>,
+    pub request: &'a Value,
+    pub cancel: &'a CancellationToken,
+    pub recovery: bool,
+}
+
 pub async fn finalize(
     config: &Value,
     store: &SharedStore,
     logger: &Logger,
-    mut receipt: Receipt,
-    result: Option<Normalized>,
-    request: &Value,
-    cancel: &CancellationToken,
-    recovery: bool,
+    receipt: Receipt,
+    input: Finalization<'_>,
 ) -> Result<Receipt> {
+    let Finalization {
+        result,
+        request,
+        cancel,
+        recovery,
+    } = input;
+    let mut receipt = receipt;
     let id = receipt.id()?.to_owned();
     locked(store)?.reserve(
         &id,
@@ -79,20 +90,19 @@ pub async fn finalize(
                 required[key] = value.clone();
             }
         }
-        if !recovery {
-            if let (Some(connection), Some(model)) = (
+        if !recovery
+            && let (Some(connection), Some(model)) = (
                 receipt.value["connection"]
                     .as_str()
                     .and_then(|s| config["connections"].get(s)),
                 receipt.value["requested_model"].as_str(),
-            ) {
-                if let (Some(object), Some(values)) = (
-                    required.as_object_mut(),
-                    requirements::snapshot(connection, model, request).as_object(),
-                ) {
-                    object.extend(values.clone());
-                }
-            }
+            )
+            && let (Some(object), Some(values)) = (
+                required.as_object_mut(),
+                requirements::snapshot(connection, model, request).as_object(),
+            )
+        {
+            object.extend(values.clone());
         }
         receipt.value["output_requirements"] = required;
     }
@@ -245,12 +255,14 @@ pub async fn finalize(
                 &image,
                 config,
                 &mut *locked(store)?,
-                &id,
-                item.index,
-                receipt.value["output_requirements"]["output_subdirectory"].as_str(),
-                receipt.value["output_requirements"]["filename_prefix"].as_str(),
-                &deviations,
-                Some(&receipt),
+                output::Publication {
+                    id: &id,
+                    index: item.index,
+                    subdir: receipt.value["output_requirements"]["output_subdirectory"].as_str(),
+                    prefix: receipt.value["output_requirements"]["filename_prefix"].as_str(),
+                    deviations: &deviations,
+                    expected: Some(&receipt),
+                },
             )?;
             Ok::<(), NumeraError>(())
         }

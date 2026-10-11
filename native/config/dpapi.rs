@@ -58,11 +58,11 @@ pub(super) fn decrypt(path: &Path) -> std::io::Result<String> {
     }
     let text = String::from_utf8(encrypted).map_err(|_| fail())?;
     let text = text.strip_prefix('\u{FEFF}').unwrap_or(&text);
-    if text.is_empty() || text.len() % 2 != 0 {
+    if text.is_empty() || !text.len().is_multiple_of(2) {
         return Err(fail());
     }
     let mut bytes = Vec::with_capacity(text.len() / 2);
-    for pair in text.as_bytes().chunks_exact(2) {
+    for pair in text.as_bytes().as_chunks::<2>().0 {
         let digit = |b: u8| (b as char).to_digit(16).map(|n| n as u8);
         bytes.push(digit(pair[0]).ok_or_else(fail)? * 16 + digit(pair[1]).ok_or_else(fail)?);
     }
@@ -87,7 +87,7 @@ pub(super) fn decrypt(path: &Path) -> std::io::Result<String> {
             &mut output.0,
         )
     };
-    if success == 0 || output.0.data.is_null() || output.0.length % 2 != 0 {
+    if success == 0 || output.0.data.is_null() || !output.0.length.is_multiple_of(2) {
         return Err(fail());
     }
     if output.0.length > 2 * 65536 {
@@ -96,7 +96,9 @@ pub(super) fn decrypt(path: &Path) -> std::io::Result<String> {
     // SAFETY: successful DPAPI returned non-null output; length is checked and allocation remains live.
     let decrypted = unsafe { std::slice::from_raw_parts(output.0.data, output.0.length as usize) };
     let mut units: Vec<u16> = decrypted
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|b| u16::from_le_bytes([b[0], b[1]]))
         .collect();
     let key = String::from_utf16(&units).map_err(|_| fail());
