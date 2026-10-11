@@ -333,15 +333,17 @@ pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normal
                     "Image stream has no final completion.",
                 ));
             }
-            normalize(
-                connection,
-                &json!({"data":finals.iter().map(|e|&e.data).collect::<Vec<_>>(),"usage":finals.last().map(|e|&e.data["usage"])}),
-            )
+            let mut value = json!({"data":finals.iter().map(|e|&e.data).collect::<Vec<_>>()});
+            if let Some(usage) = finals.last().and_then(|event| event.data.get("usage")) {
+                value["usage"] = usage.clone();
+            }
+            normalize(connection, &value)
         }
         "openai-responses" => {
             let done = events
                 .iter()
-                .find(|e| e.kind == "response.completed" && truthy(&e.data["response"]))
+                .find(|e| e.kind == "response.completed")
+                .filter(|e| truthy(&e.data["response"]))
                 .ok_or_else(|| {
                     error(
                         "outcome_unknown",

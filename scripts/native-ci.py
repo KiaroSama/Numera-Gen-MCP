@@ -45,7 +45,7 @@ def environment() -> dict[str, str]:
     return env
 
 
-def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT, capture: bool = False) -> bytes:
+def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT, capture: bool = False, capture_limit: int = 1048576) -> bytes:
     captured = bytearray()
     started = time.monotonic()
     events: queue.Queue[tuple[str, bytes | None]] = queue.Queue()
@@ -84,7 +84,7 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
             last = time.monotonic()
             if capture and name == "stdout":
                 captured.extend(chunk)
-                if len(captured) > 1048576:
+                if len(captured) > capture_limit:
                     failed = True
                     raise RuntimeError("Owned command captured output exceeds limit")
             else:

@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-import subprocess
+import importlib.util
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -14,10 +14,12 @@ def main() -> None:
     if os.environ.get("GITHUB_ACTIONS") != "true":
         raise RuntimeError("License resolution is hosted CI only")
     command = ["cargo", "metadata", "--locked", "--format-version", "1", "--filter-platform", os.environ["NUMERA_NATIVE_TARGET"]]
-    options = {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
-    response = subprocess.run(command, cwd=ROOT, stdin=subprocess.DEVNULL, capture_output=True, timeout=120,
-                              check=True, **options)
-    metadata = json.loads(response.stdout.decode("utf-8"))
+    spec = importlib.util.spec_from_file_location("native_ci", ROOT / "scripts/native-ci.py")
+    runner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runner)
+    response = runner.run(command, cwd=ROOT, env=runner.environment(), wall=120, idle=45,
+                          capture=True, capture_limit=16 * 1024 * 1024)
+    metadata = json.loads(response.decode("utf-8"))
     packages = {item["id"]: item for item in metadata["packages"]}
     nodes = {item["id"]: item for item in metadata["resolve"]["nodes"]}
     root = metadata["resolve"]["root"]

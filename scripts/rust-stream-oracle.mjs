@@ -55,6 +55,17 @@ export async function streamOracle({ source, emit, plain, images, outcome }) {
   );
   add("openrouter-truncated-final", "openrouter-images", router);
   add(
+    "openrouter-no-usage",
+    "openrouter-images",
+    frame("image_generation.completed", { b64_json: encoded }) +
+      "data: [DONE]\n\n",
+  );
+  add(
+    "responses-first-empty-final",
+    "openai-responses",
+    frame("response.completed", {}) + complete,
+  );
+  add(
     "openrouter-only-preview",
     "openrouter-images",
     frame("image_generation.partial", image) + "data: [DONE]\n\n",
