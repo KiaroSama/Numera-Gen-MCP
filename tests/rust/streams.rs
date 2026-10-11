@@ -48,7 +48,10 @@ fn malformed_nested_results_refusals_and_fallbacks_match_source_error_and_partia
     for case in cases {
         let actual = outcome(normalize(&case["connection"], &case["raw"]).map(normalized));
         if actual != case["expected"] {
-            failures.push(format!("{} / {}: actual={actual}, expected={}", case["connection"]["adapter"], case["raw"], case["expected"]));
+            failures.push(format!(
+                "{} / {}: actual={actual}, expected={}",
+                case["connection"]["adapter"], case["raw"], case["expected"]
+            ));
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));

@@ -241,7 +241,11 @@ try {
       errors.push(error);
     }
   }
-  if (exited) await bounded(exited, 3000);
+  if (exited) {
+    const result = await bounded(exited, 3000);
+    if (process.platform !== "win32")
+      assert.equal(result.code, 0, "HTTP shutdown must be graceful on POSIX");
+  }
   if (started)
     assert.throws(() => process.kill(started, 0), "HTTP child must be reaped");
   if (errors.length)

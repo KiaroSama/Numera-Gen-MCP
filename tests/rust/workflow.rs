@@ -273,6 +273,11 @@ fn installed_descriptors_reject_enum_scalar_range_cycle_and_invalid_links() {
         "link-shape",
         "missing-node",
         "not-output",
+        "string-scalar",
+        "boolean-scalar",
+        "descriptor-shape",
+        "inputs-shape",
+        "bounds-shape",
     ] {
         let mut graph = workflow["graph"].clone();
         let mut installed = info.clone();
@@ -298,12 +303,19 @@ fn installed_descriptors_reject_enum_scalar_range_cycle_and_invalid_links() {
                 installed.as_object_mut().unwrap().remove("Source");
             }
             "not-output" => installed["Save"]["output_node"] = json!(false),
+            "string-scalar" => {installed["Source"]["input"]["required"]["mode"] = json!(["STRING"]);graph["a"]["inputs"]["mode"] = json!(true);},
+            "boolean-scalar" => {installed["Source"]["input"]["required"]["mode"] = json!(["BOOLEAN"]);graph["a"]["inputs"]["mode"] = json!("true");},
+            "descriptor-shape" => installed["Source"]["input"] = json!(2),
+            "inputs-shape" => graph["a"]["inputs"] = json!([]),
+            "bounds-shape" => installed["Source"]["input"]["required"]["count"] = json!(["INT", []]),
             _ => unreachable!(),
         }
         assert_eq!(
             code(workflow::validate(&graph, &workflow, &installed)),
             if mode == "missing-node" {
                 "unsupported_operation"
+            } else if matches!(mode, "descriptor-shape" | "inputs-shape" | "bounds-shape") {
+                "invalid_response"
             } else {
                 "invalid_configuration"
             },

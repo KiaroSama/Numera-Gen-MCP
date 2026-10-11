@@ -45,15 +45,33 @@ fn application(
     }
     let config = config::load_config(&pinned, &env, root)?;
     let logger = Arc::new(Logger::with_retention(
-        Path::new(config.value["logging"]["directory"].as_str().ok_or_else(NumeraError::runtime)?),
+        Path::new(
+            config.value["logging"]["directory"]
+                .as_str()
+                .ok_or_else(NumeraError::runtime)?,
+        ),
         config.value["logging"]["level"].as_str().unwrap_or("INFO"),
-        config.value["logging"]["retentionDays"].as_u64().unwrap_or(14),
+        config.value["logging"]["retentionDays"]
+            .as_u64()
+            .unwrap_or(14),
     ));
     let reload = file.map(|file| ConfigReload::new(config.clone(), file, pinned, env.clone()));
-    Ok(Arc::new(Application::new(config, reload, logger, runtime, env, CancellationToken::new())?))
+    Ok(Arc::new(Application::new(
+        config,
+        reload,
+        logger,
+        runtime,
+        env,
+        CancellationToken::new(),
+    )?))
 }
 
-async fn http(args: Vec<String>, root: &Path, env: HashMap<String, String>, runtime: RuntimePaths) -> Result<()> {
+async fn http(
+    args: Vec<String>,
+    root: &Path,
+    env: HashMap<String, String>,
+    runtime: RuntimePaths,
+) -> Result<()> {
     use numera_image_gen_mcp::{cli::http_settings, mcp::http_server};
     let port = http_settings::port(root, &args, &env)?;
     let (_, args) = http_settings::split_port_args(&args)?;
@@ -62,7 +80,12 @@ async fn http(args: Vec<String>, root: &Path, env: HashMap<String, String>, runt
     let stop = application.stop.clone();
     let listener = http_server::bind(port).await?;
     eprintln!("Local MCP HTTP: http://127.0.0.1:{port}/mcp (authentication required).");
-    let service = http_server::serve(listener, application, http_server::Options::new(port, token), stop.clone());
+    let service = http_server::serve(
+        listener,
+        application,
+        http_server::Options::new(port, token),
+        stop.clone(),
+    );
     tokio::pin!(service);
     tokio::select! {
         result = service.as_mut() => result,
@@ -71,16 +94,32 @@ async fn http(args: Vec<String>, root: &Path, env: HashMap<String, String>, runt
 }
 
 async fn menu(root: &Path, env: &HashMap<String, String>, runtime: &RuntimePaths) -> Result<()> {
-    use numera_image_gen_mcp::cli::menu::{step, MenuAction};
+    use numera_image_gen_mcp::cli::menu::{MenuAction, step};
     let logger = Logger::new(&root.join("logs"), "INFO");
     loop {
-        let action = step(root, env, &mut std::io::stdin().lock(), &mut std::io::stdout().lock())?;
-        logger.log("INFO", "menu", "Native menu action selected.", json!({"action":format!("{action:?}")}));
+        let action = step(
+            root,
+            env,
+            &mut std::io::stdin().lock(),
+            &mut std::io::stdout().lock(),
+        )?;
+        logger.log(
+            "INFO",
+            "menu",
+            "Native menu action selected.",
+            json!({"action":format!("{action:?}")}),
+        );
         match action {
             MenuAction::Exit => return Ok(()),
-            MenuAction::Continue => {},
+            MenuAction::Continue => {}
             MenuAction::StartHttp { port } => {
-                http(vec!["--port".into(), port.to_string()], root, env.clone(), runtime.clone()).await?;
+                http(
+                    vec!["--port".into(), port.to_string()],
+                    root,
+                    env.clone(),
+                    runtime.clone(),
+                )
+                .await?;
             }
         }
     }
@@ -183,7 +222,9 @@ fn main() {
         if args.first().is_some_and(|s| s == "http") {
             return executor.block_on(http(args[1..].to_vec(), &root, env, runtime));
         }
-        if args.first().is_some_and(|s| s == "menu") || (args.is_empty() && std::io::stdin().is_terminal()) {
+        if args.first().is_some_and(|s| s == "menu")
+            || (args.is_empty() && std::io::stdin().is_terminal())
+        {
             return executor.block_on(menu(&root, &env, &runtime));
         }
         let args = if args.first().is_some_and(|s| s == "bridge") {

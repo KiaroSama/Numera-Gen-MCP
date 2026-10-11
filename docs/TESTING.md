@@ -2,9 +2,9 @@
 
 ## Native Rust migration — pending hosted verification
 
-Hosted revision `219d54e` ran all 24 then-existing native suites successfully on all six OS/CPU targets.
-Formatting and one test assignment warning still blocked the stable jobs. Measured coverage was
-70.55% executable regions / 61.57% branches, below the unchanged 85% / 80% gates. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
+Hosted revision `05ed820` passed selected native runtime suites and actual two-client HTTP SDK
+acceptance on completed targets; strict formatting still blocked publication. Its measured coverage
+was 78.33% executable regions / 70.93% branches, below the unchanged 85% / 80% gates. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
 evidence, not proof that the Rust migration passes. Hosted stable jobs run
 rustfmt, strict Clippy, all discovered Rust suites, native release compilation and archive checks on
 Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% executable regions and
@@ -24,7 +24,9 @@ public generation/editing, output recovery and conservative registration fixture
 passed their selected runtime paths in the next hosted candidate, except a new normalization oracle
 exposed an unwanted `usageMetadata` fallback; that production drift is being repaired. Complete parity
 and coverage acceptance remain pending. Direct HTTP/menu adds three further Rust targets and an actual
-two-client HTTP SDK fixture; all 33 targets must be discovered, with new HTTP paths still unexecuted. SQLite fixture stores, loopback
+two-client HTTP SDK fixture, now exercised in hosted CI. The next expanded tree contains 38 targets,
+including config, expiry, continuation/recovery, native entry-point and Comfy result cases. Those
+additions and extracted-archive verification remain unexecuted until the next exact-SHA CI pass. SQLite fixture stores, loopback
 services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
