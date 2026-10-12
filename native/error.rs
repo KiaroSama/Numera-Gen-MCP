@@ -42,12 +42,24 @@ impl NumeraError {
     }
 }
 
-pub fn object(value: &serde_json::Value) -> Result<&serde_json::Map<String, serde_json::Value>> {
+impl crate::compat::value::ToValue for NumeraError {
+    fn to_value(&self) -> crate::compat::value::Value {
+        crate::compat::value::json!({
+            "code": self.code,
+            "message": self.message,
+            "stage": self.stage,
+            "http_status": self.http_status,
+            "next_action": self.next_action
+        })
+    }
+}
+
+pub fn object(value: &crate::compat::value::Value) -> Result<&crate::compat::value::Object> {
     value.as_object().ok_or_else(|| {
         NumeraError::new("invalid_response", "Expected an object.").stage("response")
     })
 }
 
-pub fn array(value: &serde_json::Value) -> &[serde_json::Value] {
+pub fn array(value: &crate::compat::value::Value) -> &[crate::compat::value::Value] {
     value.as_array().map_or(&[], Vec::as_slice)
 }

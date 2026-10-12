@@ -3,7 +3,7 @@ use crate::{
     files::images::{Image, inspect},
 };
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
-use serde_json::{Value, json};
+use crate::compat::value::Value;
 use std::io::Cursor;
 
 pub fn request(mut request: Value, operation: &str) -> Result<Value> {
@@ -37,22 +37,19 @@ pub fn request(mut request: Value, operation: &str) -> Result<Value> {
                 "Upscale requires edit_image, exactly one reference/output, a numeric size and no mask, region or translation.",
             ));
         }
-        request["prompt"] = json!(format!(
-            "{}\n\nUpscale the reference image to {}. Enhance fine details while preserving composition, objects, colors and text. Do not add or remove objects.",
-            request["prompt"].as_str().unwrap_or(""),
-            request["size"].as_str().unwrap_or("")
-        ));
-    } else if let Some(language) = request["target_language"].as_str() {
-        request["prompt"] = json!(format!(
-            "{}\n\nTranslate the text {} into {}. Replace the original text inside the image; preserve panel layout, artwork, speech bubbles and text styling. Return the edited image, not a separate text translation.",
-            request["prompt"].as_str().unwrap_or(""),
-            if request["edit_region"].is_null() {
-                "in the reference image"
-            } else {
-                "inside the selected region"
-            },
-            language
-        ));
+        let mut units = request["prompt"].as_utf16().unwrap_or(&[]).to_vec();
+        units.extend("\n\nUpscale the reference image to ".encode_utf16());
+        units.extend(request["size"].as_utf16().unwrap_or(&[]));
+        units.extend(". Enhance fine details while preserving composition, objects, colors and text. Do not add or remove objects.".encode_utf16());
+        request["prompt"] = Value::String(crate::compat::value::JsString::from_utf16(units));
+    } else if let Some(language) = request["target_language"].as_utf16() {
+        let mut units = request["prompt"].as_utf16().unwrap_or(&[]).to_vec();
+        units.extend("\n\nTranslate the text ".encode_utf16());
+        units.extend(if request["edit_region"].is_null() { "in the reference image" } else { "inside the selected region" }.encode_utf16());
+        units.extend(" into ".encode_utf16());
+        units.extend(language);
+        units.extend(". Replace the original text inside the image; preserve panel layout, artwork, speech bubbles and text styling. Return the edited image, not a separate text translation.".encode_utf16());
+        request["prompt"] = Value::String(crate::compat::value::JsString::from_utf16(units));
     }
     Ok(request)
 }

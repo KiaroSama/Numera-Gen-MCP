@@ -16,7 +16,7 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::{generation::Generation, jobs},
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -123,7 +123,7 @@ async fn source_types_and_edits_keep_originals_and_never_replay_the_same_request
         drop(limited);
         for (name, source) in [
             ("data", data_source(&bytes)),
-            ("path", json!({"type":"path","path":path})),
+            ("path", json!({"type":"path","path":path.to_str().expect("fixture path")})),
             ("owned", json!({"type":"output_id","output_id":output_id})),
             (
                 "url",
@@ -175,7 +175,7 @@ async fn source_types_and_edits_keep_originals_and_never_replay_the_same_request
             error(
                 generation
                     .source(
-                        &json!({"type":"path","path":workspace.0.join("absent")}),
+                        &json!({"type":"path","path":workspace.0.join("absent").to_str().expect("fixture path")}),
                         &signal
                     )
                     .await

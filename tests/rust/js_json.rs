@@ -238,7 +238,7 @@ fn deep_values_clone_serialize_convert_and_drop_on_a_small_stack_even_after_fail
             let converted = to_serde(&cloned).expect("deep serde conversion");
             let back = from_serde(&converted).expect("deep serde source");
             assert_eq!(stringify(&back).expect("converted stringify"), text);
-            numera_image_gen_mcp::config::drop_json(converted);
+            numera_image_gen_mcp::compat::js_json::drop_serde(converted);
             drop(back);
             drop(cloned);
             drop(value);

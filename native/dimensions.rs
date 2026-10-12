@@ -1,5 +1,5 @@
 use crate::error::{NumeraError, Result};
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 
 const SOURCE: &str =
     "https://ai.google.dev/gemini-api/docs/image-generation#aspect-ratios-and-image-size";
@@ -47,8 +47,8 @@ fn known(model: &str) -> Option<bool> {
     }
 }
 
-pub fn image_dimensions(connection: &Value, model: &str, max_pixels: u64) -> Value {
-    let pro = known(model);
+pub fn image_dimensions(connection: &Value, model: &JsString, max_pixels: u64) -> Value {
+    let pro = model.as_str().and_then(known);
     let native =
         ["gemini", "gemini-interactions"].contains(&connection["adapter"].as_str().unwrap_or(""));
     let omni = connection["gateway"] == "omniroute" && model.starts_with("antigravity/");
@@ -104,13 +104,11 @@ pub fn image_dimensions(connection: &Value, model: &str, max_pixels: u64) -> Val
         "account_verified":false,"output_dimensions_must_be_verified":true})
 }
 
-pub fn evidence(connection: &Value, model: &str) -> Value {
+pub fn evidence(connection: &Value, model: &JsString) -> Value {
     let dimensions = image_dimensions(connection, model, 64000000);
     let pixels = &dimensions["model_support"]["pixel_sizes"];
-    let engine = model
-        .strip_prefix("cx/")
-        .or_else(|| model.strip_prefix("codex/"))
-        .unwrap_or(model);
+    let name = model.as_str().unwrap_or("");
+    let engine = name.strip_prefix("cx/").or_else(|| name.strip_prefix("codex/")).unwrap_or(name);
     let gpt = [
         "gpt-image-2",
         "gpt-image-2.5-sunburst",
@@ -127,7 +125,7 @@ pub fn evidence(connection: &Value, model: &str) -> Value {
         "pixel_sizes":pixels,"account_verified":false,"forwarding_guaranteed":false})
 }
 
-pub fn validate(connection: &Value, model: &str, request: &Value) -> Result<()> {
+pub fn validate(connection: &Value, model: &JsString, request: &Value) -> Result<()> {
     let info = evidence(connection, model);
     if let Some(pixels) = info["pixel_sizes"].as_array() {
         for (field, key, message) in [
@@ -142,7 +140,7 @@ pub fn validate(connection: &Value, model: &str, request: &Value) -> Result<()> 
                 "Requested resolution tier is outside the documented model presets.",
             ),
         ] {
-            if request[field].as_str().is_some_and(|s| !s.is_empty())
+            if request[field].as_utf16().is_some_and(|s| !s.is_empty())
                 && !pixels.iter().any(|p| p[key] == request[field])
             {
                 return Err(NumeraError::new("unsupported_parameter", message));

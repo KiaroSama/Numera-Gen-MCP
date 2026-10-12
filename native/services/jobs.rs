@@ -13,7 +13,7 @@ use crate::{
     jobs::Receipt,
 };
 use reqwest::Method;
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::{sync::Mutex, time::Duration};
 use tokio_util::sync::CancellationToken;
 
@@ -21,7 +21,7 @@ fn recovery_request(receipt: &Receipt) -> Result<Value> {
     let mut value = json!({"prompt":"recovered"});
     if let Some(required) = receipt.value["output_requirements"].as_object() {
         for (key, item) in required {
-            if !["upscale_source", "dimension_evidence"].contains(&key.as_str()) {
+            if key.as_str().is_none_or(|key| !["upscale_source", "dimension_evidence"].contains(&key)) {
                 value[key] = item.clone();
             }
         }
@@ -31,7 +31,7 @@ fn recovery_request(receipt: &Receipt) -> Result<Value> {
 fn job(receipt: &Receipt) -> Result<Job> {
     let j = &receipt.value["upstream_job"];
     Ok(Job {
-        id: j["id"].as_str().ok_or_else(NumeraError::runtime)?.into(),
+        id: j["id"].as_utf16().map(|v| crate::compat::value::JsString::from_utf16(v.to_vec())).ok_or_else(NumeraError::runtime)?,
         kind: j["kind"].as_str().ok_or_else(NumeraError::runtime)?.into(),
     })
 }
@@ -197,7 +197,7 @@ pub async fn get(
                 c,
                 &headers,
                 api::Operation {
-                    operation: &format!("{}/{}", job.kind, adapters::encode_component(&job.id)),
+                    operation: &format!("{}/{}", job.kind, adapters::encode_component(job.id.checked_str()?)),
                     prefix: super::discovery::prefix(c),
                     method: Method::GET,
                     body: Body::Empty,
@@ -304,7 +304,7 @@ pub async fn cancel(
         if job.kind == "comfyui" {
             let c = pinned.value();
             let headers = pinned.headers();
-            let encoded = adapters::encode_component(&job.id);
+            let encoded = adapters::encode_component(job.id.checked_str()?);
             let value = api::json(
                 c,
                 &headers,

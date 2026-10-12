@@ -10,7 +10,7 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::{discovery::Discovery, health},
 };
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 use std::{
     collections::HashMap,
     sync::{

@@ -14,7 +14,7 @@ use crate::{
     jobs::Receipt,
 };
 use reqwest::Method;
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::{collections::HashMap, sync::Mutex, time::Duration};
 use tokio_util::sync::CancellationToken;
 
@@ -95,7 +95,7 @@ impl Generation {
             receipt.value["warnings"]
                 .as_array_mut()
                 .ok_or_else(NumeraError::runtime)?
-                .extend(warnings.into_iter().map(Value::String));
+                .extend(warnings.into_iter().map(|value| Value::String(value.into())));
             receipt.value["status"] = json!("running");
             receipt.value["generation_outcome"] = json!("running");
             locked(&self.store)?.update(receipt)?;
@@ -201,7 +201,7 @@ impl Generation {
                     c,
                     headers,
                     api::Operation {
-                        operation: &format!("{}/{}", job.kind, adapters::encode_component(&job.id)),
+                        operation: &format!("{}/{}", job.kind, adapters::encode_component(job.id.checked_str()?)),
                         prefix: built.prefix,
                         method: Method::GET,
                         body: Body::Empty,

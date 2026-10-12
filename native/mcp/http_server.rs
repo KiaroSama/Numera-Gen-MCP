@@ -192,7 +192,7 @@ async fn handle(
             ));
         }
     };
-    let (parts, mut body) = request.into_parts();
+    let (mut parts, mut body) = request.into_parts();
     if body
         .size_hint()
         .upper()
@@ -224,6 +224,31 @@ async fn handle(
         _=state.stop.cancelled()=>return Ok(response(StatusCode::SERVICE_UNAVAILABLE,"Server is stopping.")),
         result=tokio::time::timeout(state.options.read_timeout,read)=>match result {Ok(Ok(bytes))=>bytes,Ok(Err(code))=>return Ok(response(code,"MCP request body refused.")),Err(_)=>return Ok(response(StatusCode::REQUEST_TIMEOUT,"MCP request body deadline exceeded."))},
     };
+    let (bytes, original) = if parts.method == hyper::Method::POST {
+        let decoded = match std::str::from_utf8(&bytes)
+            .ok()
+            .and_then(|text| super::js_envelope::decode(text, state.options.max_body_bytes).ok())
+        {
+            Some(decoded) => decoded,
+            None => return Ok(response(StatusCode::BAD_REQUEST, "Invalid MCP JSON envelope.")),
+        };
+        let expected_id = decoded.metadata.get("id").cloned();
+        let original = decoded.arguments.map(|arguments| {
+            let mut original = super::js_envelope::OriginalArguments::new(arguments);
+            original.expected_id = expected_id;
+            original
+        });
+        if let Some(original) = &original {
+            parts.extensions.insert(original.clone());
+        }
+        let bytes = match serde_json::to_vec(&decoded.metadata) {
+            Ok(bytes) => bytes,
+            Err(_) => return Ok(response(StatusCode::BAD_REQUEST, "Invalid MCP JSON envelope.")),
+        };
+        (bytes, original)
+    } else {
+        (bytes, None)
+    };
     let initialization = parts.method == hyper::Method::POST
         && !parts.headers.contains_key("mcp-session-id")
         && serde_json::from_slice::<serde_json::Value>(&bytes)
@@ -243,7 +268,17 @@ async fn handle(
     let wire = Request::from_parts(parts, Full::new(Bytes::from(bytes)));
     let result = state.service.handle(wire).await;
     drop(guard);
-    let (parts, body) = result.into_parts();
+    let (mut parts, body) = result.into_parts();
+    let successful = parts.status.is_success() && parts.status != StatusCode::ACCEPTED;
+    let sse = parts.headers.get(hyper::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .is_some_and(|v| v.contains("text/event-stream"));
+    let body = if successful {
+        parts.headers.remove(hyper::header::CONTENT_LENGTH);
+        super::js_http_body::JsonBody::new(body, sse, 128 * 1024 * 1024, original).boxed()
+    } else {
+        body
+    };
     Ok(Response::from_parts(
         parts,
         ResponseBody {
@@ -310,7 +345,7 @@ pub async fn serve(
         "INFO",
         "MCP",
         "Local HTTP server ready.",
-        serde_json::json!({"port":state.options.port,"transport":"streamable-http"}),
+        crate::compat::value::json!({"port":state.options.port,"transport":"streamable-http"}),
     );
     let result = loop {
         tokio::select! {
@@ -380,7 +415,7 @@ pub async fn serve(
         "INFO",
         "MCP",
         "Local HTTP server stopped.",
-        serde_json::json!({}),
+        crate::compat::value::json!({}),
     );
     result
 }

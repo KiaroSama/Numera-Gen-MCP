@@ -3,7 +3,7 @@ use numera_image_gen_mcp::{
     dimensions::{evidence, image_dimensions, validate},
     error::Result,
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 
 fn outcome(result: Result<Value>) -> Value {
     match result {
@@ -22,7 +22,7 @@ fn source_oracle_policy_dimensions_and_effective_request_match() {
     }
     for case in oracle["policy"].as_array().unwrap() {
         let c = &case["connection"];
-        let model = case["model"].as_str().unwrap();
+        let model = case["model"].as_js_string().unwrap();
         assert_eq!(
             capabilities(c, model),
             case["capabilities"],
@@ -42,7 +42,7 @@ fn source_oracle_policy_dimensions_and_effective_request_match() {
             outcome(effective_request(
                 &case["connection"],
                 &case["request"],
-                case["model"].as_str().unwrap()
+                case["model"].as_js_string().unwrap()
             )),
             case["expected"],
             "{}",
@@ -60,7 +60,7 @@ fn source_oracle_policy_dimensions_and_effective_request_match() {
             outcome(
                 validate(
                     &case["connection"],
-                    case["model"].as_str().unwrap(),
+                    case["model"].as_js_string().unwrap(),
                     &case["request"]
                 )
                 .map(|()| json!(true))

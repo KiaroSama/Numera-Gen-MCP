@@ -3,7 +3,7 @@ use crate::{
     capabilities::COMMON_FIELDS,
     error::{NumeraError, Result},
 };
-use serde_json::json;
+use crate::compat::value::json;
 
 pub fn request(input: &Input<'_>) -> Result<Prepared> {
     let Input {
@@ -43,7 +43,7 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
         );
         let mut config = json!({});
         for key in ["aspect_ratio", "image_size"] {
-            if r[key].as_str().is_some_and(|s| !s.is_empty()) {
+            if r[key].as_utf16().is_some_and(|s| !s.is_empty()) {
                 config[key] = r[key].clone();
             }
         }
@@ -56,7 +56,7 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
         return Ok(Prepared::json("chat/completions", "/v1", body));
     }
     let orchestration = c["orchestrationModel"]
-        .as_str()
+        .as_js_string()
         .filter(|s| !s.is_empty())
         .ok_or_else(|| {
             NumeraError::new(

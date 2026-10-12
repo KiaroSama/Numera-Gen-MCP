@@ -45,6 +45,19 @@ configuration. `native/cli/menu.rs` supplies native start/port/guidance/exit int
 `bridge` never displays a menu. No OS service, OAuth relay or reference-project account features are
 added. HTTP/menu and their new CI paths remain unverified until the integrated candidate passes.
 
+## JSON compatibility boundary
+
+Native application values use binary64 numbers and exact UTF-16 strings/keys rather than assuming
+`serde_json::Value` can represent every accepted source input. Declared schema fields are validated
+directly; unconstrained records keep their original values. Nonfinite values become `null` only at
+JSON serialization, and lone surrogate units are escaped rather than replaced. SDK protocol metadata
+and bundled schema metadata remain separate from application data. Typed in-process request extensions
+and stdio/HTTP boundary codecs carry exact tool arguments and restore IDs/structured results.
+
+URL and SQLite plain-TEXT boundaries retain the source runtime's documented USVString/UTF-8 coercion;
+JSON receipt text preserves escaped code units. No database schema change, payload sentinel or hidden
+runtime is introduced. This integration is awaiting hosted verification; it is not a full-parity claim.
+
 ## Decisions and recovery
 
 Same request ID plus identical effective inputs/account returns the same durable receipt; a changed

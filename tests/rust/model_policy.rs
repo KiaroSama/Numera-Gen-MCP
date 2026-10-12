@@ -2,7 +2,7 @@
 mod http_fixture;
 use http_fixture::{Reply, Server};
 use numera_image_gen_mcp::services::{model_policy, request};
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 use std::{
     collections::HashMap,
     sync::{
@@ -31,7 +31,7 @@ async fn endpoint_descriptors_pin_compatible_provider_and_refuse_fallback_or_dro
     let action = async {
         let selected = request::parse(json!({"prompt":"draw","image_size":"2K","count":2,"provider_options":{"stream":true,"provider":{"options":{"large-provider":{"strength":0.7}}}}})).unwrap();
         let (effective, warnings) =
-            model_policy::validate(&c, &HashMap::new(), "family/model", selected, &signal)
+            model_policy::validate(&c, &HashMap::new(), &"family/model".into(), selected, &signal)
                 .await
                 .unwrap();
         assert!(warnings.is_empty());
@@ -59,7 +59,7 @@ async fn endpoint_descriptors_pin_compatible_provider_and_refuse_fallback_or_dro
                 model_policy::validate(
                     &c,
                     &HashMap::new(),
-                    "family/model",
+                    &"family/model".into(),
                     request::parse(raw).unwrap(),
                     &signal
                 )
@@ -73,7 +73,7 @@ async fn endpoint_descriptors_pin_compatible_provider_and_refuse_fallback_or_dro
         let (effective, warnings) = model_policy::validate(
             &c,
             &HashMap::new(),
-            "chosen",
+            &"chosen".into(),
             request::parse(json!({"prompt":"draw"})).unwrap(),
             &signal,
         )

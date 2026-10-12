@@ -8,7 +8,7 @@ use numera_image_gen_mcp::{
     config::Config, jobs::Store, logging::Logger, runtime_paths::RuntimePaths,
     services::generation::Generation,
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},

@@ -14,7 +14,7 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::request,
 };
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio_util::sync::CancellationToken;
 

@@ -5,7 +5,7 @@ use crate::{
 };
 use base64::{Engine, engine::general_purpose::STANDARD};
 use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-use serde_json::json;
+use crate::compat::value::json;
 
 const COMPONENT: &AsciiSet = &CONTROLS
     .add(b' ')
@@ -60,7 +60,7 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
             ));
         }
     }
-    let present = |key: &str| r[key].as_str().is_some_and(|s| !s.is_empty());
+    let present = |key: &str| r[key].as_utf16().is_some_and(|s| !s.is_empty());
     if c["adapter"] == "gemini" {
         if present("output_format") {
             return Err(NumeraError::new(
@@ -87,7 +87,8 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
         ) {
             object.extend(options.clone());
         }
-        let engine = model.strip_prefix("models/").unwrap_or(model);
+        let model_text = model.checked_str()?;
+        let engine = model_text.strip_prefix("models/").unwrap_or(model_text);
         return Ok(Prepared::json(
             &format!(
                 "models/{}:generateContent",

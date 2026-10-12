@@ -1,8 +1,17 @@
 use crate::error::{NumeraError, Result};
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 
 /// The same public request contract as schemas/image-request.schema.json, with UTF-16 lengths.
 pub fn parse(mut value: Value) -> Result<Value> {
+    static SCHEMA: std::sync::OnceLock<serde_json::Value> = std::sync::OnceLock::new();
+    let schema = SCHEMA.get_or_init(|| {
+        serde_json::from_str(include_str!("../../schemas/image-request.schema.json"))
+            .expect("bundled request schema")
+    });
+    let mut authoritative = value.to_js();
+    crate::compat::js_schema::Schema::compile(schema)?.default_and_validate(&mut authoritative)
+        .map_err(|_| NumeraError::new("invalid_input", "Image request does not match the public request schema."))?;
+    value = Value::from_js(&authoritative);
     let invalid = || {
         NumeraError::new(
             "invalid_input",
@@ -35,7 +44,7 @@ pub fn parse(mut value: Value) -> Result<Value> {
         "return_mode",
         "wait",
     ];
-    if object.keys().any(|key| !ALLOWED.contains(&key.as_str())) {
+    if object.keys().any(|key| key.as_str().is_none_or(|key| !ALLOWED.contains(&key))) {
         return Err(invalid());
     }
     for (key, default) in [
@@ -46,8 +55,8 @@ pub fn parse(mut value: Value) -> Result<Value> {
     ] {
         object.entry(key).or_insert(default);
     }
-    let prompt = value["prompt"].as_str().ok_or_else(invalid)?;
-    if prompt.encode_utf16().count() > 100000 || crate::config::js_trim(prompt).is_empty() {
+    let prompt = value["prompt"].as_utf16().ok_or_else(invalid)?;
+    if prompt.len() > 100000 || crate::config::js_trim_utf16(prompt).is_empty() {
         return Err(invalid());
     }
     for key in [
@@ -71,8 +80,8 @@ pub fn parse(mut value: Value) -> Result<Value> {
         }
     }
     if value["model"]
-        .as_str()
-        .is_some_and(|s| s.is_empty() || s.encode_utf16().count() > 300)
+        .as_utf16()
+        .is_some_and(|s| s.is_empty() || s.len() > 300)
     {
         return Err(invalid());
     }
@@ -127,7 +136,7 @@ pub fn parse(mut value: Value) -> Result<Value> {
         if object.len() != 4
             || object
                 .keys()
-                .any(|k| !["x", "y", "width", "height"].contains(&k.as_str()))
+                .any(|k| k.as_str().is_none_or(|k| !["x", "y", "width", "height"].contains(&k)))
         {
             return Err(invalid());
         }
@@ -151,8 +160,8 @@ pub fn parse(mut value: Value) -> Result<Value> {
         }
     }
     if value["target_language"]
-        .as_str()
-        .is_some_and(|s| crate::config::js_trim(s).is_empty() || s.encode_utf16().count() > 100)
+        .as_utf16()
+        .is_some_and(|s| crate::config::js_trim_utf16(s).is_empty() || s.len() > 100)
     {
         return Err(invalid());
     }
@@ -173,10 +182,16 @@ pub fn validate_source(value: &Value) -> Result<()> {
         "data_url" => "data_url",
         _ => return Err(invalid()),
     };
-    let text = value[field].as_str().ok_or_else(invalid)?;
+    let text = value[field].as_utf16().ok_or_else(invalid)?;
     match kind {
         "output_id" => {
-            if uuid::Uuid::parse_str(text).is_err() || text.len() != 36 {
+            if text.len() != 36 || String::from_utf16(text).ok().is_none_or(|s| {
+                let bytes = s.as_bytes();
+                uuid::Uuid::parse_str(&s).is_err()
+                    || !(s == "00000000-0000-0000-0000-000000000000"
+                        || s == "ffffffff-ffff-ffff-ffff-ffffffffffff"
+                        || (matches!(bytes[14], b'1'..=b'8') && matches!(bytes[19], b'8' | b'9' | b'a' | b'b' | b'A' | b'B')))
+            }) {
                 return Err(invalid());
             }
         }
@@ -186,12 +201,12 @@ pub fn validate_source(value: &Value) -> Result<()> {
             }
         }
         "url" => {
-            if url::Url::parse(text).is_err() {
+            if url::Url::parse(&String::from_utf16_lossy(text)).is_err() {
                 return Err(invalid());
             }
         }
         "data_url" => {
-            if text.encode_utf16().count() > 30000000 {
+            if text.len() > 30000000 {
                 return Err(invalid());
             }
         }

@@ -7,7 +7,7 @@ use crate::{
     runtime_paths::RuntimePaths,
 };
 use reqwest::Method;
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 use std::{
     collections::{HashMap, HashSet},
     time::{Duration, Instant},
@@ -69,7 +69,7 @@ impl Discovery {
             "models"
         };
         let mut operation = route.to_owned();
-        let mut cursor: Option<String> = None;
+        let mut cursor: Option<JsString> = None;
         let mut seen = HashSet::new();
         let action=async {
             let pinned=snapshot_credentials(&c,env,runtime).await?;
@@ -97,7 +97,7 @@ impl Discovery {
                 }
                 for item in array(value.get("data").filter(|v|!v.is_null()).unwrap_or(&value["models"])) {
                     object(item)?;
-                    let model=item["id"].as_str().or_else(||item["name"].as_str()).unwrap_or("");
+                    let Some(model)=item["id"].as_js_string().or_else(||item["name"].as_js_string()) else {continue;};
                     if model.is_empty() || (c["gateway"]=="omniroute" && operation=="models" && item["type"]!="image"){continue;}
                     let models=result["models"].as_array_mut().ok_or_else(NumeraError::runtime)?;
                     if let Some(existing)=models.iter_mut().find(|v|v["id"]==model) {existing["metadata"]["advertised"]=item.clone();}
@@ -108,7 +108,7 @@ impl Discovery {
                 }
                 let next=value.get("nextPageToken").filter(|v|!v.is_null()).or_else(||value.get("next_page_token").filter(|v|!v.is_null())).or_else(||if value["has_more"]==true{value.get("last_id")}else{None});
                 let Some(next)=next.filter(|v|!v.is_null() && **v!=false && **v!="") else {break;};
-                let token=next.as_str().map(str::to_owned).unwrap_or_else(||next.to_string());
+                let token=next.as_js_string().cloned().unwrap_or_else(||next.to_string().into());
                 if !seen.insert(token.clone()){result["complete"]=json!(false);result["warnings"].as_array_mut().ok_or_else(NumeraError::runtime)?.push(json!("Repeated catalog cursor."));break;}
                 cursor=Some(token);
                 if c["adapter"].as_str().is_some_and(|s|s.starts_with("gemini")){operation=c["paths"]["models"].as_str().unwrap_or("models").into();}
@@ -142,7 +142,7 @@ impl Discovery {
         runtime: &RuntimePaths,
         env: &HashMap<String, String>,
         name: Option<&str>,
-        model: &str,
+        model: &JsString,
         cancel: &CancellationToken,
     ) -> Result<Value> {
         let (id, c) = config.select(name)?;
@@ -156,7 +156,7 @@ impl Discovery {
             } else {
                 format!(
                     "images/models/{}/endpoints",
-                    model
+                    model.checked_str()?
                         .split('/')
                         .map(crate::adapters::encode_component)
                         .collect::<Vec<_>>()

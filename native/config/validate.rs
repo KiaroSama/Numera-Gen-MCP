@@ -1,175 +1,46 @@
 use super::{invalid, js_trim};
 use crate::error::Result;
-use serde_json::{Value, json};
+use crate::compat::{
+    js_schema::Schema,
+    value::{Value, json},
+};
 use std::{collections::HashSet, path::Path, sync::OnceLock};
 use url::Url;
 
-static ADVANCED: OnceLock<
-    std::result::Result<(Value, jsonschema::Validator), crate::error::NumeraError>,
-> = OnceLock::new();
-static SIMPLE: OnceLock<
-    std::result::Result<(Value, jsonschema::Validator), crate::error::NumeraError>,
-> = OnceLock::new();
+static ADVANCED: OnceLock<std::result::Result<serde_json::Value, crate::error::NumeraError>> =
+    OnceLock::new();
+static SIMPLE: OnceLock<std::result::Result<serde_json::Value, crate::error::NumeraError>> =
+    OnceLock::new();
 
 pub(crate) fn default_and_validate(value: &mut Value, simple: bool) -> Result<()> {
     let cached = if simple { &SIMPLE } else { &ADVANCED };
-    let (schema, validator) = cached
+    let schema = cached
         .get_or_init(|| {
             let text = if simple {
                 include_str!("../../schemas/simple-config.schema.json")
             } else {
                 include_str!("../../schemas/config.schema.json")
             };
-            let schema: Value = serde_json::from_str(text)
+            let schema: serde_json::Value = serde_json::from_str(text)
                 .map_err(|_| invalid("Invalid bundled config schema."))?;
-            let mut compiled = schema.clone();
-            // Zod counts UTF-16 code units; JSON Schema counts Unicode scalars. Check source lengths
-            // separately so astral characters neither bypass maxima nor fail valid minima.
-            remove_lengths(&mut compiled);
-            let validator = jsonschema::options()
-                .should_validate_formats(true)
-                .with_format("uri", |text| Url::parse(text).is_ok())
-                .build(&compiled)
-                .map_err(|_| invalid("Cannot initialize bundled config validation."))?;
-            Ok((schema, validator))
+            Schema::compile(&schema)?;
+            Ok(schema)
         })
         .as_ref()
         .map_err(Clone::clone)?;
     if !simple && value.is_object() && value.get("files").is_none() {
         value["files"] = json!({});
     }
-    normalize_numbers(value);
-    defaults(value, schema);
-    if !validator.is_valid(value) || !source_lengths(value, schema) {
-        return Err(invalid(if simple {
+    let mut authoritative = value.to_js();
+    let result = Schema::compile(schema)?.default_and_validate(&mut authoritative);
+    *value = Value::from_js(&authoritative);
+    result.map_err(|_| {
+        invalid(if simple {
             "Simple configuration requires api_endpoint, api_key and models with id/name."
         } else {
             "Configuration does not match schemaVersion 1. Check the generated JSON Schema."
-        }));
-    }
-    Ok(())
-}
-
-fn normalize_numbers(value: &mut Value) {
-    let mut pending = vec![value];
-    while let Some(value) = pending.pop() {
-        match value {
-            Value::Number(number) => {
-                if let Some(n) = number.as_f64() {
-                    *value = if n.fract() == 0.0 && (0.0..18446744073709551616.0).contains(&n) {
-                        json!(n as u64)
-                    } else if n.fract() == 0.0 && (-9223372036854775808.0..0.0).contains(&n) {
-                        json!(n as i64)
-                    } else {
-                        serde_json::Number::from_f64(n).map_or(Value::Null, Value::Number)
-                    };
-                }
-            }
-            Value::Object(object) => pending.extend(object.values_mut()),
-            Value::Array(array) => pending.extend(array.iter_mut()),
-            _ => {}
-        }
-    }
-}
-
-fn defaults(value: &mut Value, schema: &Value) {
-    if let Some(object) = value.as_object_mut() {
-        if let Some(properties) = schema["properties"].as_object() {
-            for (key, child) in properties {
-                if !object.contains_key(key)
-                    && let Some(default) = child.get("default")
-                {
-                    object.insert(key.clone(), default.clone());
-                }
-                if let Some(value) = object.get_mut(key) {
-                    defaults(value, child);
-                }
-            }
-        }
-        if let Some(child) = schema
-            .get("additionalProperties")
-            .filter(|child| child.is_object())
-        {
-            for (key, value) in object {
-                if schema["properties"].get(key).is_none() {
-                    defaults(value, child);
-                }
-            }
-        }
-    } else if let Some(array) = value.as_array_mut()
-        && let Some(child) = schema.get("items")
-    {
-        for value in array {
-            defaults(value, child);
-        }
-    }
-}
-
-fn remove_lengths(schema: &mut Value) {
-    match schema {
-        Value::Object(object) => {
-            object.remove("minLength");
-            object.remove("maxLength");
-            if object.get("pattern").and_then(Value::as_str) == Some("\\S") {
-                object.remove("pattern");
-            }
-            for value in object.values_mut() {
-                remove_lengths(value);
-            }
-        }
-        Value::Array(array) => {
-            for value in array {
-                remove_lengths(value);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn source_lengths(value: &Value, schema: &Value) -> bool {
-    if let Some(string) = value.as_str() {
-        let n = string.encode_utf16().count() as u64;
-        if schema["minLength"].as_u64().is_some_and(|min| n < min)
-            || schema["maxLength"].as_u64().is_some_and(|max| n > max)
-            || (schema["pattern"] == "\\S" && js_trim(string).is_empty())
-        {
-            return false;
-        }
-    }
-    if let Some(object) = value.as_object() {
-        for (key, value) in object {
-            let child = schema["properties"]
-                .get(key)
-                .or_else(|| schema.get("additionalProperties"));
-            if child.is_some_and(|s| !source_lengths(value, s)) {
-                return false;
-            }
-        }
-    }
-    if let (Some(array), Some(child)) = (value.as_array(), schema.get("items"))
-        && array.iter().any(|value| !source_lengths(value, child))
-    {
-        return false;
-    }
-    if let Some(branches) = schema["anyOf"].as_array() {
-        let matching = |branch: &&Value| match branch["type"].as_str() {
-            Some("null") => value.is_null(),
-            Some("string") => value.is_string(),
-            Some("object") => value.is_object(),
-            Some("array") => value.is_array(),
-            Some("boolean") => value.is_boolean(),
-            Some("integer" | "number") => value.is_number(),
-            _ => true,
-        };
-        if !branches
-            .iter()
-            .filter(matching)
-            .any(|branch| source_lengths(value, branch))
-        {
-            return false;
-        }
-    }
-    true
+        })
+    })
 }
 
 pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Result<()> {
@@ -179,8 +50,8 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
     for connection in connections.values_mut() {
         let auth = &connection["auth"];
         if auth["apiKey"]
-            .as_str()
-            .is_some_and(|key| js_trim(key).is_empty() || key.contains(['\r', '\n', '\0']))
+            .as_utf16()
+            .is_some_and(|key| super::js_trim_utf16(key).is_empty() || key.iter().any(|u| matches!(*u, 0 | 10 | 13)))
         {
             return Err(invalid(
                 "Inline credential must be nonempty and cannot contain control characters.",
@@ -192,13 +63,13 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
             .is_some_and(|models| {
                 models
                     .iter()
-                    .any(|m| !ids.insert(m["id"].as_str().unwrap_or("").to_owned()))
+                    .any(|m| !ids.insert(m["id"].as_utf16().unwrap_or(&[]).to_vec()))
             })
         {
             return Err(invalid("Configured model IDs must be unique."));
         }
         if let Some(proxy) = connection.get("proxy") {
-            let url = Url::parse(proxy["url"].as_str().unwrap_or(""))
+            let url = Url::parse(&String::from_utf16_lossy(proxy["url"].as_utf16().ok_or_else(|| invalid("Invalid proxy URL."))?))
                 .map_err(|_| invalid("Invalid proxy URL."))?;
             if !["http", "https"].contains(&url.scheme())
                 || !url.username().is_empty()
@@ -212,15 +83,15 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
             }
         }
         validate_base(connection)?;
-        if let Some(origin) = auth["origin"].as_str().filter(|v| !v.is_empty())
-            && url_origin(origin)? != url_origin(connection["baseUrl"].as_str().unwrap_or(""))?
+        if let Some(origin) = auth["origin"].as_utf16().filter(|v| !v.is_empty())
+            && url_origin(&String::from_utf16_lossy(origin))? != url_origin(&String::from_utf16_lossy(connection["baseUrl"].as_utf16().ok_or_else(|| invalid("Invalid API base URL."))?))?
         {
             return Err(invalid("Credential destination origin mismatch."));
         }
         if auth["type"] != "none"
             && ["apiKey", "secretEnv", "secretFile", "secretDpapiFile"]
                 .iter()
-                .filter(|field| auth[**field].as_str().is_some_and(|v| !v.is_empty()))
+                .filter(|field| auth[**field].as_utf16().is_some_and(|v| !v.is_empty()))
                 .count()
                 != 1
         {
@@ -272,9 +143,12 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
     }
     if paths
         .iter()
-        .any(|v| !absolute(Path::new(v.as_str().unwrap_or(""))))
+        .any(|v| v.as_str().is_none_or(|path| !absolute(Path::new(path))))
     {
         return Err(invalid("Storage and input roots must be absolute paths."));
+    }
+    if config["defaultConnection"].is_string() && config["defaultConnection"].as_str().is_none() {
+        return Err(invalid("Default connection does not exist."));
     }
     if let Some(name) = config["defaultConnection"]
         .as_str()
@@ -287,8 +161,8 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
 }
 
 fn validate_base(connection: &Value) -> Result<()> {
-    let base = connection["baseUrl"].as_str().unwrap_or("");
-    let url = Url::parse(base).map_err(|_| invalid("Invalid API base URL."))?;
+    let base = String::from_utf16_lossy(connection["baseUrl"].as_utf16().ok_or_else(|| invalid("Invalid API base URL."))?);
+    let url = Url::parse(&base).map_err(|_| invalid("Invalid API base URL."))?;
     let lower = base.to_ascii_lowercase();
     if !["http", "https"].contains(&url.scheme())
         || !url.username().is_empty()
@@ -322,11 +196,13 @@ fn validate_base(connection: &Value) -> Result<()> {
     }
     if let Some(query) = connection["query"].as_object() {
         for key in query.keys() {
-            let lower = key.to_ascii_lowercase();
+            let lower: Vec<u16> = key.as_utf16().iter().map(|u| {
+                if (65..=90).contains(u) { *u + 32 } else { *u }
+            }).collect();
             if key != "pageToken"
                 && ["key", "token", "secret", "auth", "signature"]
                     .iter()
-                    .any(|s| lower.contains(s))
+                    .any(|s| lower.windows(s.len()).any(|w| w.iter().copied().eq(s.encode_utf16())))
             {
                 return Err(invalid("Credentials must not be query parameters."));
             }

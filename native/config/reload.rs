@@ -1,6 +1,6 @@
 use super::{Config, read_config_text};
 use crate::{compat::canonical_json::fingerprint, error::Result, logging::Logger};
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -133,10 +133,10 @@ fn fixed(config: &Config) -> Result<String> {
             object
                 .iter()
                 .filter(|(key, _)| {
-                    !["connections", "defaultConnection", "returnMode"].contains(&key.as_str())
+                    key.as_str().is_none_or(|key| !["connections", "defaultConnection", "returnMode"].contains(&key))
                 })
                 .map(|(key, value)| (key.clone(), super::clone_json(value)))
-                .collect::<serde_json::Map<String, Value>>()
+                .collect::<crate::compat::value::Object>()
         })
         .unwrap_or_default();
     let object = super::json::OwnedJson(Value::Object(object));

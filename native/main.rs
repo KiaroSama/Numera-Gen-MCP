@@ -1,4 +1,5 @@
 use numera_image_gen_mcp::{
+    compat::value::json,
     config::{self, ConfigReload},
     error::{NumeraError, Result},
     logging::Logger,
@@ -6,7 +7,6 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
 };
 use rmcp::ServiceExt;
-use serde_json::json;
 use std::{
     collections::HashMap,
     io::IsTerminal,

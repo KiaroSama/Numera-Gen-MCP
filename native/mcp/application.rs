@@ -1,5 +1,8 @@
 use crate::{
-    compat::canonical_json::fingerprint,
+    compat::{
+        canonical_json::fingerprint,
+        value::{JsString, Value, json},
+    },
     config::{Config, ConfigReload, snapshot_credentials},
     error::{NumeraError, Result},
     files::{images, output},
@@ -15,7 +18,6 @@ use crate::{
         jobs,
     },
 };
-use serde_json::{Value, json};
 use std::{
     collections::{HashMap, HashSet},
     sync::{Arc, Mutex},
@@ -220,7 +222,7 @@ impl Application {
                     &generation.runtime,
                     &generation.env,
                     optional_string(&args, "connection")?,
-                    required_string(&args, "model")?,
+                    required_js_string(&args, "model")?,
                     cancel,
                 )
                 .await
@@ -319,7 +321,13 @@ fn invalid() -> NumeraError {
 pub fn optional_string<'a>(args: &'a Value, key: &str) -> Result<Option<&'a str>> {
     match args.get(key) {
         None => Ok(None),
-        Some(Value::String(s)) => Ok(Some(s)),
+        Some(Value::String(s)) => Ok(Some(s.checked_str().map_err(|_| invalid())?)),
+        _ => Err(invalid()),
+    }
+}
+pub fn required_js_string<'a>(args: &'a Value, key: &str) -> Result<&'a JsString> {
+    match args.get(key) {
+        Some(Value::String(value)) if !value.is_empty() => Ok(value),
         _ => Err(invalid()),
     }
 }

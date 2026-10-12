@@ -3,7 +3,7 @@ use crate::{
     http::{sse, url::operation_url},
 };
 use reqwest::{Client, Method, header::HeaderValue, multipart::Form};
-use serde_json::Value;
+use crate::compat::value::Value;
 use std::{collections::HashMap, time::Duration};
 use tokio_util::sync::CancellationToken;
 
@@ -57,20 +57,22 @@ pub async fn request(
     if let Some(query) = query.and_then(Value::as_object) {
         params.extend(query.clone());
     }
-    let mapped = connection["paths"][operation].as_str().unwrap_or(operation);
+    let mapped = match connection["paths"].get(operation) {
+        Some(Value::String(path)) => String::from_utf16_lossy(path.as_utf16()),
+        None => operation.to_owned(),
+        _ => return Err(NumeraError::new("invalid_configuration", "Invalid configured operation path.")),
+    };
     let url = operation_url(
-        connection["baseUrl"]
-            .as_str()
-            .ok_or_else(NumeraError::runtime)?,
+        &String::from_utf16_lossy(connection["baseUrl"].as_utf16().ok_or_else(NumeraError::runtime)?),
         connection["baseUrlMode"].as_str().unwrap_or("api-prefix"),
-        mapped,
+        &mapped,
         prefix,
         &Value::Object(params),
     )?;
     let mut builder = client(Duration::from_millis(timeout));
     if let Some(proxy) = connection.get("proxy") {
         let mut proxy_agent = reqwest::Proxy::all(
-            proxy["url"].as_str().ok_or_else(NumeraError::runtime)?,
+            String::from_utf16_lossy(proxy["url"].as_utf16().ok_or_else(NumeraError::runtime)?),
         )
         .map_err(|_| NumeraError::new("invalid_configuration", "Invalid proxy configuration."))?;
         if let Some(env) = proxy["secretEnv"].as_str()
@@ -94,7 +96,7 @@ pub async fn request(
         request = request.header(name, value);
     }
     request = match body {
-        Body::Json(value) => request.json(&value),
+        Body::Json(value) => request.header("Content-Type", "application/json").body(value.stringify()?),
         Body::Multipart(form) => request.multipart(form),
         Body::Empty => request,
     };
@@ -178,9 +180,9 @@ pub async fn json(
     cancel: &CancellationToken,
 ) -> Result<Value> {
     let response = request(connection, headers, wire, cancel, 16 * 1024 * 1024).await?;
-    serde_json::from_slice(&response.bytes).map_err(|_| {
-        NumeraError::new("invalid_response", "Upstream returned invalid JSON.").stage("response")
-    })
+    std::str::from_utf8(&response.bytes).ok()
+        .and_then(|text| Value::parse_with_limit(text, 16 * 1024 * 1024).ok())
+        .ok_or_else(|| NumeraError::new("invalid_response", "Upstream returned invalid JSON.").stage("response"))
 }
 
 fn network_error(error: reqwest::Error) -> NumeraError {

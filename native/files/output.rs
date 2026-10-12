@@ -6,7 +6,7 @@ use crate::{
     },
     jobs::{Receipt, Store},
 };
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::{
     fs,
     io::{Read, Write},

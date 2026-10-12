@@ -1,5 +1,5 @@
 use numera_image_gen_mcp::adapters::types::Normalized;
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 
 pub fn normalized(value: Normalized) -> Value {
     let mut result = json!({"images":value.images.into_iter().map(|image| {

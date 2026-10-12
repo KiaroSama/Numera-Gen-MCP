@@ -79,4 +79,28 @@ export async function jsonOracle({
     '{"schemaVersion":1,"outputDir":"/tmp/numera-outputs","stateDir":"/tmp/numera-state","connections":{"default":{"adapter":"openai-images","baseUrl":"https://example.com/v1","auth":{"type":"none"},"defaults":{"\\udfff":1e400,"text":"\\ud800"}}}}',
   );
   await emit("raw-js-schema", schemaCases);
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(":memory:");
+  try {
+    db.exec("CREATE TABLE values_table(value TEXT)");
+    const values = [];
+    for (const text of ['"https://example.com/\\ud800"', '"🌍"']) {
+      const value = JSON.parse(text);
+      db.prepare("INSERT INTO values_table VALUES(?)").run(value);
+      const row = db
+        .prepare(
+          "SELECT value,hex(CAST(value AS BLOB)) AS bytes FROM values_table ORDER BY rowid DESC LIMIT 1",
+        )
+        .get();
+      values.push({
+        text,
+        stored: row.value,
+        bytes: row.bytes,
+        utf8_bytes: Buffer.byteLength(value, "utf8"),
+      });
+    }
+    await emit("sqlite-utf16-text", values);
+  } finally {
+    db.close();
+  }
 }

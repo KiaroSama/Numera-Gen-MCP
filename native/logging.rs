@@ -1,7 +1,7 @@
 use crate::runtime_paths::private_directory;
 use chrono::Utc;
 use regex::Regex;
-use serde_json::{Map, Value, json};
+use crate::compat::value::{Object, Value, json};
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::Path;
@@ -25,6 +25,7 @@ pub fn redact(value: &Value, depth: usize) -> Value {
     let (sensitive, urls, bearer) = patterns();
     match value {
         Value::String(text) => {
+            let Some(text) = text.as_str() else { return json!("[REDACTED]") };
             let text = urls.replace_all(text, |capture: &regex::Captures<'_>| {
                 url::Url::parse(&capture[0]).map_or_else(
                     |_| "[REDACTED]".into(),
@@ -36,7 +37,7 @@ pub fn redact(value: &Value, depth: usize) -> Value {
                     },
                 )
             });
-            Value::String(bearer.replace_all(&text, "Bearer [REDACTED]").into_owned())
+            Value::String(bearer.replace_all(&text, "Bearer [REDACTED]").into_owned().into())
         }
         Value::Array(values) => Value::Array(
             values
@@ -51,7 +52,7 @@ pub fn redact(value: &Value, depth: usize) -> Value {
                 .map(|(k, v)| {
                     (
                         k.clone(),
-                        if sensitive.is_match(k) {
+                        if k.as_str().is_none_or(|key| sensitive.is_match(key)) {
                             json!("[REDACTED]")
                         } else {
                             redact(v, depth + 1)
@@ -130,7 +131,7 @@ impl Logger {
         let mut data = redact(&context, 0)
             .as_object()
             .cloned()
-            .unwrap_or_else(Map::new);
+            .unwrap_or_else(Object::new);
         data.insert("run_id".into(), json!(self.run_id));
         data.insert(
             "timestamp".into(),
@@ -139,7 +140,7 @@ impl Logger {
         data.insert("level".into(), json!(level));
         data.insert("component".into(), json!(component));
         data.insert("message".into(), redact(&json!(message), 0));
-        let Ok(mut line) = serde_json::to_vec(&data) else {
+        let Ok(mut line) = serde_json::to_vec(&Value::Object(data)) else {
             return;
         };
         line.push(b'\n');

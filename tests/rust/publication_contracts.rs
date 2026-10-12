@@ -11,7 +11,7 @@ use numera_image_gen_mcp::{
     },
     jobs::{Receipt, Store},
 };
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 
 #[test]
 fn filesystem_sql_gap_reconciles_original_bytes_uuid_and_refuses_a_changed_publication_target() {

@@ -5,7 +5,7 @@ use crate::{
     http::api::Body,
 };
 use reqwest::multipart::{Form, Part};
-use serde_json::json;
+use crate::compat::value::json;
 
 pub fn request(input: &Input<'_>) -> Result<Prepared> {
     let Input {
@@ -52,8 +52,8 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
     if c["gateway"] == "omniroute"
         && model.starts_with("antigravity/")
         && r["image_size"]
-            .as_str()
-            .is_some_and(|s| !s.is_empty() && !["1K", "2K", "4K"].contains(&s))
+            .as_js_string()
+            .is_some_and(|s| !s.is_empty() && !["1K", "2K", "4K"].iter().any(|tier| s == *tier))
     {
         return Err(NumeraError::new(
             "unsupported_parameter",
@@ -86,11 +86,10 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
     if edit["mode"] == "multipart" {
         let mut form = Form::new();
         for (key, value) in fields.as_object().ok_or_else(NumeraError::runtime)? {
-            let text = value
-                .as_str()
-                .map(str::to_owned)
+            // FormData converts strings to USVString only at this multipart boundary.
+            let text = value.as_utf16().map(String::from_utf16_lossy)
                 .unwrap_or_else(|| value.to_string());
-            form = form.text(key.clone(), text);
+            form = form.text(String::from_utf16_lossy(key.as_utf16()), text);
         }
         for (i, image) in references.iter().enumerate() {
             let part = Part::bytes(image.bytes.clone())

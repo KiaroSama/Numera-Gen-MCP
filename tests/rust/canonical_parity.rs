@@ -1,5 +1,5 @@
 use numera_image_gen_mcp::compat::canonical_json::{canonical_json, fingerprint};
-use serde_json::Value;
+use numera_image_gen_mcp::compat::value::Value;
 
 #[test]
 fn sha256_matches_published_known_answer() {

@@ -1,6 +1,6 @@
 use super::{Config, invalid, read_config_text, validate};
 use crate::error::{NumeraError, Result};
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -162,8 +162,8 @@ pub(crate) fn compat_config(env: &HashMap<String, String>) -> Result<Value> {
         connection["defaultModel"] = json!(model);
     }
     Ok(
-        json!({"schemaVersion":1,"defaultConnection":"openai-compat", "outputDir":root.join("outputs"),
-        "stateDir":root.join("state"), "logging":{"directory":root.join("logs")}, "connections":{"openai-compat":connection}}),
+        json!({"schemaVersion":1,"defaultConnection":"openai-compat", "outputDir":root.join("outputs").to_str().ok_or_else(|| invalid("Output path is not Unicode."))?,
+        "stateDir":root.join("state").to_str().ok_or_else(|| invalid("State path is not Unicode."))?, "logging":{"directory":root.join("logs").to_str().ok_or_else(|| invalid("Log path is not Unicode."))?}, "connections":{"openai-compat":connection}}),
     )
 }
 
@@ -217,7 +217,7 @@ pub(crate) fn overrides(
 
 fn replace_field(object: &mut Value, field: &str, value: Value) {
     if let Some(object) = object.as_object_mut()
-        && let Some(previous) = object.insert(field.to_owned(), value)
+        && let Some(previous) = object.insert(field.into(), value)
     {
         super::drop_json(previous);
     }

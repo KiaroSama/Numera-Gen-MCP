@@ -3,16 +3,16 @@ use crate::{
     config::PinnedConnection,
     error::{NumeraError, Result},
 };
-use serde_json::json;
+use crate::compat::value::json;
 
 pub fn connection_identity(name: &str, connection: &PinnedConnection) -> Result<String> {
     let c = connection.value();
-    let origin = url::Url::parse(c["baseUrl"].as_str().ok_or_else(NumeraError::runtime)?)
+    let origin = url::Url::parse(&String::from_utf16_lossy(c["baseUrl"].as_utf16().ok_or_else(NumeraError::runtime)?))
         .map_err(|_| NumeraError::runtime())?
         .origin()
         .ascii_serialization();
     let mut identity = json!({"connection":name,"adapter":c["adapter"],"origin":origin,"base":c["baseUrl"],"auth":c["auth"],
-        "account_fingerprint":fingerprint(&serde_json::to_value(connection.headers()).map_err(|_|NumeraError::runtime())?)?});
+        "account_fingerprint":fingerprint(&json!(connection.headers()))?});
     if let Some(gateway) = c.get("gateway") {
         identity["gateway"] = gateway.clone();
     }

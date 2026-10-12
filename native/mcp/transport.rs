@@ -17,6 +17,7 @@ pub struct Stdio {
     pending: Vec<u8>,
     limit: usize,
     stop: CancellationToken,
+    responses: Arc<Mutex<std::collections::HashMap<String, super::js_envelope::OriginalArguments>>>,
 }
 impl Stdio {
     pub fn new(limit: usize, stop: CancellationToken) -> Self {
@@ -26,6 +27,7 @@ impl Stdio {
             pending: Vec::new(),
             limit,
             stop,
+            responses: Arc::new(Mutex::new(std::collections::HashMap::new())),
         }
     }
 }
@@ -36,9 +38,31 @@ impl Transport<RoleServer> for Stdio {
         item: TxJsonRpcMessage<RoleServer>,
     ) -> impl Future<Output = io::Result<()>> + Send + 'static {
         let output = self.output.clone();
+        let responses = self.responses.clone();
         async move {
-            let mut bytes = serde_json::to_vec(&item)
+            let metadata = serde_json::to_string(&item)
                 .map_err(|_| io::Error::other("Cannot encode protocol response"))?;
+            let mut message = crate::compat::js_json::parse_bounded(&metadata, 128 * 1024 * 1024)
+                .map_err(|_| io::Error::other("Cannot encode protocol response"))?;
+            let key = message
+                .get("id")
+                .map(crate::compat::js_json::stringify)
+                .transpose()
+                .map_err(|_| io::Error::other("Cannot encode protocol identifier"))?;
+            let response = if let Some(key) = key {
+                responses.lock().await.remove(&key)
+            } else {
+                None
+            };
+            if let Some(response) = response {
+                super::js_envelope::restore_result(&mut message, &response)
+                    .map_err(|_| io::Error::other("Cannot restore protocol result"))?;
+            }
+            super::js_envelope::restore_id(&mut message)
+                .map_err(|_| io::Error::other("Cannot restore protocol identifier"))?;
+            let mut bytes = crate::compat::js_json::stringify(&message)
+                .map_err(|_| io::Error::other("Cannot encode protocol response"))?
+                .into_bytes();
             bytes.push(b'\n');
             tokio::time::timeout(Duration::from_secs(30), async {
                 let mut output = output.lock().await;
@@ -77,10 +101,41 @@ impl Transport<RoleServer> for Stdio {
             if !complete {
                 continue;
             }
-            let parsed = serde_json::from_slice(&self.pending);
+            let parsed = std::str::from_utf8(&self.pending)
+                .map_err(|_| ())
+                .and_then(|text| super::js_envelope::decode(text, self.limit).map_err(|_| ()))
+                .and_then(|decoded| {
+                    use rmcp::model::GetExtensions;
+                    let mut message: RxJsonRpcMessage<RoleServer> =
+                        serde_json::from_value(decoded.metadata).map_err(|_| ())?;
+                    let mut registration = None;
+                    if let Some(arguments) = decoded.arguments
+                        && let rmcp::model::JsonRpcMessage::Request(request) = &mut message
+                    {
+                        let mut original = super::js_envelope::OriginalArguments::new(arguments);
+                        original.expected_id =
+                            Some(serde_json::to_value(&request.id).map_err(|_| ())?);
+                        registration = Some((
+                            serde_json::to_string(&request.id).map_err(|_| ())?,
+                            original.clone(),
+                        ));
+                        request.request.extensions_mut().insert(original);
+                    }
+                    Ok((message, registration))
+                });
             self.pending.clear();
             match parsed {
-                Ok(message) => return Some(message),
+                Ok((message, registration)) => {
+                    if let Some((key, original)) = registration {
+                        let mut responses = self.responses.lock().await;
+                        if responses.len() >= 128 || responses.contains_key(&key) {
+                            self.stop.cancel();
+                            return None;
+                        }
+                        responses.insert(key, original);
+                    }
+                    return Some(message);
+                }
                 Err(_) => {
                     self.stop.cancel();
                     return None;
@@ -91,6 +146,7 @@ impl Transport<RoleServer> for Stdio {
     async fn close(&mut self) -> io::Result<()> {
         self.stop.cancel();
         self.pending.clear();
+        self.responses.lock().await.clear();
         tokio::time::timeout(Duration::from_secs(5), self.output.lock().await.shutdown())
             .await
             .map_err(|_| {

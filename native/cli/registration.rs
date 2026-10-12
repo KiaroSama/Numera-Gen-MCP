@@ -400,7 +400,7 @@ pub fn register(
             "INFO",
             "registration",
             "Registration dry-run validated; no host files changed.",
-            json!({"client":client}),
+            crate::compat::value::json!({"client":client}),
         );
         return Ok(());
     }
@@ -496,7 +496,7 @@ pub fn register(
         "INFO",
         "registration",
         "Only Numera registration updated; unrelated settings preserved.",
-        json!({"client":client,"remove":remove}),
+        crate::compat::value::json!({"client":client,"remove":remove}),
     );
     Ok(())
 }

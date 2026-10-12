@@ -3,7 +3,7 @@ use crate::{
     error::{NumeraError, Result},
     http::sse,
 };
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 
 fn error(code: &str, message: &str) -> NumeraError {
     NumeraError::new(code, message).stage("response")
@@ -22,49 +22,53 @@ fn malformed(images: &mut Vec<ResultItem>, value: &Value) -> bool {
 fn array(value: &Value) -> &[Value] {
     value.as_array().map_or(&[], Vec::as_slice)
 }
-fn string(value: &Value) -> Option<String> {
-    value.as_str().map(str::to_owned)
+fn string(value: &Value) -> Option<JsString> {
+    if let Value::String(value) = value { Some(value.clone()) } else { None }
 }
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(v) => *v,
         Value::String(v) => !v.is_empty(),
-        Value::Number(v) => v.as_f64().is_some_and(|v| v != 0.0),
+        Value::Number(v) => v.as_f64().is_some_and(|v| v != 0.0 && !v.is_nan()),
         _ => true,
     }
 }
-fn js_string(value: &Value) -> String {
-    match value {
-        Value::String(s) => s.clone(),
-        Value::Null => "null".into(),
-        Value::Object(_) => "[object Object]".into(),
-        Value::Array(a) => a
-            .iter()
-            .map(|v| {
-                if v.is_null() {
-                    String::new()
-                } else {
-                    js_string(v)
+fn js_string(value: &Value) -> JsString {
+    enum Token<'a> { Value(&'a Value, bool), Comma }
+    let mut units = Vec::new();
+    let mut pending = vec![Token::Value(value, false)];
+    while let Some(token) = pending.pop() {
+        match token {
+            Token::Comma => units.push(44),
+            Token::Value(Value::String(s), _) => units.extend(s.as_utf16()),
+            Token::Value(Value::Null, false) => units.extend("null".encode_utf16()),
+            Token::Value(Value::Null, true) => {},
+            Token::Value(Value::Object(_), _) => units.extend("[object Object]".encode_utf16()),
+            Token::Value(Value::Array(array), _) => {
+                for (index, value) in array.iter().enumerate().rev() {
+                    pending.push(Token::Value(value, true));
+                    if index != 0 { pending.push(Token::Comma); }
                 }
-            })
-            .collect::<Vec<_>>()
-            .join(","),
-        _ => value.to_string(),
+            }
+            Token::Value(Value::Number(number), _) => units.extend(ryu_js::Buffer::new().format(number.0).encode_utf16()),
+            Token::Value(Value::Bool(b), _) => units.extend(if *b { "true" } else { "false" }.encode_utf16()),
+        }
     }
+    JsString::from_utf16(units)
 }
 fn push(images: &mut Vec<ResultItem>, value: &Value) {
     if !malformed(images, value) {
         return;
     }
-    if let Some(encoded) = value["b64_json"].as_str().filter(|s| !s.is_empty()) {
+    if let Some(encoded) = value["b64_json"].as_js_string().filter(|s| !s.is_empty()) {
         images.push(ResultItem {
-            base64: Some(encoded.into()),
+            base64: Some(encoded.clone()),
             ..Default::default()
         });
-    } else if let Some(url) = value["url"].as_str().filter(|s| !s.is_empty()) {
+    } else if let Some(url) = string(&value["url"]).filter(|s| !s.is_empty()) {
         images.push(ResultItem {
-            url: Some(url.into()),
+            url: Some(url),
             ..Default::default()
         });
     } else {
@@ -99,10 +103,10 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
                 continue;
             }
             if truthy(&candidate["finishReason"]) && candidate["finishReason"] != "STOP" {
-                result.warnings.push(format!(
-                    "Candidate ended with {}.",
-                    js_string(&candidate["finishReason"])
-                ));
+                let mut units: Vec<u16> = "Candidate ended with ".encode_utf16().collect();
+                units.extend(js_string(&candidate["finishReason"]).as_utf16());
+                units.push(46);
+                result.warnings.push(JsString::from_utf16(units));
             }
             let content = &candidate["content"];
             if truthy(content) && !malformed(&mut result.images, content) {
@@ -112,8 +116,8 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
                 if !malformed(&mut result.images, part) {
                     continue;
                 }
-                if let Some(signature) = part["thoughtSignature"].as_str() {
-                    signatures.push(json!({"part_index":i,"signature":signature}));
+                if part["thoughtSignature"].is_string() {
+                    signatures.push(json!({"part_index":i,"signature":part["thoughtSignature"]}));
                 }
                 if part["thought"] == true {
                     continue;
@@ -130,8 +134,7 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
     } else if ["gemini-interactions", "openai-responses"].contains(&adapter) {
         let status = value["status"].as_str().unwrap_or("");
         if ["in_progress", "queued"].contains(&status) {
-            let id = value["id"]
-                .as_str()
+            let id = string(&value["id"])
                 .filter(|s| !s.is_empty())
                 .ok_or_else(|| {
                     error(
@@ -176,10 +179,8 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
                 if !malformed(&mut result.images, step) {
                     continue;
                 }
-                if step["type"] == "thought"
-                    && let Some(signature) = step["signature"].as_str()
-                {
-                    signatures.push(json!({"step_type":"thought","signature":signature}));
+                if step["type"] == "thought" && step["signature"].is_string() {
+                    signatures.push(json!({"step_type":"thought","signature":step["signature"]}));
                 }
                 if step["type"] != "model_output" {
                     continue;
@@ -278,7 +279,8 @@ pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normal
         });
     }
     if !mime.contains("text/event-stream") {
-        let value: Value = serde_json::from_slice(&bytes)
+        let text = std::str::from_utf8(&bytes).map_err(|_| error("invalid_response", "Invalid response UTF-8."))?;
+        let value = Value::parse_with_limit(text, 128 * 1024 * 1024)
             .map_err(|_| error("invalid_response", "Image response is not valid JSON."))?;
         return normalize(connection, &value);
     }

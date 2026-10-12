@@ -10,7 +10,7 @@ use crate::{
     jobs::{Receipt, Store},
     logging::Logger,
 };
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::sync::{Arc, Mutex};
 use tokio_util::sync::CancellationToken;
 
@@ -91,11 +91,11 @@ pub async fn finalize(
             }
         }
         if !recovery
-            && let (Some(connection), Some(model)) = (
+            && let (Some(connection), Some(Value::String(model))) = (
                 receipt.value["connection"]
                     .as_str()
                     .and_then(|s| config["connections"].get(s)),
-                receipt.value["requested_model"].as_str(),
+                receipt.value.get("requested_model"),
             )
             && let (Some(object), Some(values)) = (
                 required.as_object_mut(),
@@ -184,7 +184,7 @@ pub async fn finalize(
                         store,
                         &id,
                         index as u32,
-                        images::decode_base64(&value, max)?,
+                        images::decode_base64(value.checked_str().map_err(|_| NumeraError::new("invalid_response", "Invalid Base64 image encoding."))?, max)?,
                         &receipt,
                     )?;
                 } else if let Some(url) = item.url {
@@ -194,7 +194,7 @@ pub async fn finalize(
                             store,
                             &id,
                             index as u32,
-                            images::data_url(&url, max)?,
+                            images::data_url(url.checked_str().map_err(|_| NumeraError::new("invalid_input", "Invalid image data URL."))?, max)?,
                             &receipt,
                         )?;
                     } else {
@@ -238,7 +238,7 @@ pub async fn finalize(
             let bytes = if let Some(bytes) = item.bytes {
                 bytes
             } else {
-                let url = item.url.as_deref().ok_or_else(|| {
+                let url = item.url.as_ref().ok_or_else(|| {
                     NumeraError::new(
                         "output_file_error",
                         "Retained image item has no recoverable bytes or URL.",

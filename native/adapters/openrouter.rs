@@ -3,7 +3,7 @@ use crate::{
     capabilities::COMMON_FIELDS,
     error::{NumeraError, Result},
 };
-use serde_json::json;
+use crate::compat::value::json;
 
 pub fn request(input: &Input<'_>) -> Result<Prepared> {
     let Input {

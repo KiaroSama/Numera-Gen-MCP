@@ -31,12 +31,10 @@ reqwest = { version = "=0.13.5", default-features = false, features = ["rustls",
 tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "time", "sync", "net", "io-util", "io-std", "process", "fs", "signal"] }
 tokio-util = { version = "=0.7.20", features = ["rt"] }
 percent-encoding = "=2.3.2"
-jsonschema = { version = "=0.58.6", default-features = false }
 image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg", "webp"] }
 ryu-js = "=1.0.3"
 serde = { version = "=1.0.229", features = ["derive"] }
-serde_json = { version = "=1.0.152", features = ["preserve_order", "unbounded_depth"] }
-serde_stacker = "=0.1.14"
+serde_json = { version = "=1.0.154", features = ["preserve_order", "unbounded_depth", "raw_value"] }
 sha2 = "=0.11.0"
 thiserror = "=2.0.21"
 url = "=2.5.8"
@@ -225,6 +223,22 @@ path = "tests/rust/js_value_access.rs"
 [[test]]
 name = "js_schema"
 path = "tests/rust/js_schema.rs"
+
+[[test]]
+name = "value"
+path = "tests/rust/value.rs"
+
+[[test]]
+name = "js_envelope"
+path = "tests/rust/js_envelope.rs"
+
+[[test]]
+name = "js_http_body"
+path = "tests/rust/js_http_body.rs"
+
+[[test]]
+name = "js_runtime"
+path = "tests/rust/js_runtime.rs"
 
 [profile.release]
 lto = "thin"

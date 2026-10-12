@@ -282,6 +282,14 @@ pub fn parse(text: &str) -> Result<JsValue> {
     if text.len() > MAX_JSON_BYTES {
         return Err(NumeraError::new("invalid_json", "JSON text exceeds 1 MiB."));
     }
+    parse_bounded(text, MAX_JSON_BYTES)
+}
+
+/// Different trust boundaries have different byte ceilings (config versus image-bearing MCP).
+pub fn parse_bounded(text: &str, limit: usize) -> Result<JsValue> {
+    if text.len() > limit {
+        return Err(NumeraError::new("invalid_json", "JSON text exceeds its byte limit."));
+    }
     let mut parser = Parser { text, position: 0 };
     let mut frames: Vec<Frame> = Vec::new();
     let mut complete = None;
@@ -524,6 +532,17 @@ pub fn from_serde(value: &serde_json::Value) -> Result<JsValue> {
     complete.pop().ok_or_else(unrepresentable)
 }
 
+pub fn drop_serde(value: serde_json::Value) {
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            serde_json::Value::Array(array) => pending.extend(array),
+            serde_json::Value::Object(object) => pending.extend(object.into_iter().map(|(_, value)| value)),
+            _ => {}
+        }
+    }
+}
+
 /// Explicit fallible boundary, never a sentinel or a lossy replacement. The caller owns
 /// serde's result and must use iterative clone/drop for deeply nested returned values.
 pub fn to_serde(value: &JsValue) -> Result<serde_json::Value> {
@@ -571,7 +590,7 @@ pub fn to_serde(value: &JsValue) -> Result<serde_json::Value> {
                     let mut object = serde_json::Map::new();
                     for (key, value) in keys.into_iter().zip(values) {
                         if let Some(previous) = object.insert(key, value) {
-                            crate::config::drop_json(previous);
+                            drop_serde(previous);
                         }
                     }
                     complete.push(Value::Object(object));
@@ -582,7 +601,7 @@ pub fn to_serde(value: &JsValue) -> Result<serde_json::Value> {
     })();
     // An error after a completed deep sibling must not recurse through serde's destructor.
     for value in complete {
-        crate::config::drop_json(value);
+        drop_serde(value);
     }
     result
 }

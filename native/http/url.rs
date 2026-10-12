@@ -1,5 +1,5 @@
 use crate::error::{NumeraError, Result};
-use serde_json::Value;
+use crate::compat::value::Value;
 use url::Url;
 
 pub fn operation_url(
@@ -64,18 +64,18 @@ pub fn operation_url(
     url.set_path(&path);
     if let Some(query) = query.as_object() {
         for (key, value) in query {
-            let lower = key.to_ascii_lowercase();
             if key != "pageToken"
                 && ["key", "token", "secret", "auth", "signature"]
                     .iter()
-                    .any(|word| lower.contains(word))
+                    .any(|word| key.contains_ascii_case_insensitive(word))
             {
                 return Err(error("Credentials must not be query parameters."));
             }
-            let value = value
-                .as_str()
-                .ok_or_else(|| error("Invalid query parameter."))?;
-            url.query_pairs_mut().append_pair(key, value);
+            let value = value.as_utf16().ok_or_else(|| error("Invalid query parameter."))?;
+            // URLSearchParams applies USVString coercion at this URL boundary only.
+            url.query_pairs_mut().append_pair(
+                &String::from_utf16_lossy(key.as_utf16()), &String::from_utf16_lossy(value),
+            );
         }
     }
     Ok(url)

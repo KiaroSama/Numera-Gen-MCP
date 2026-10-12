@@ -6,7 +6,7 @@ use numera_image_gen_mcp::{
     adapters::{types::Input, workflow},
     files::images::{self, Image},
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 mod common;
 
 // Source contracts: tests/contract/{comfyui,reference-preflight}.test.ts and
@@ -44,7 +44,7 @@ fn input<'a>(
         request,
         references,
         mask,
-        model: "workflow",
+        model: { static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> = std::sync::OnceLock::new(); MODEL.get_or_init(|| "workflow".into()) },
         operation: "generate",
     }
 }

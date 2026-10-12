@@ -2,7 +2,7 @@ use crate::{
     dimensions::validate,
     error::{NumeraError, Result},
 };
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 
 pub const COMMON_FIELDS: &[&str] = &[
     "size",
@@ -14,7 +14,7 @@ pub const COMMON_FIELDS: &[&str] = &[
     "seed",
     "negative_prompt",
 ];
-pub fn codex(model: &str) -> bool {
+pub fn codex(model: &JsString) -> bool {
     model.starts_with("codex/") || model.starts_with("cx/")
 }
 
@@ -54,16 +54,15 @@ pub fn safe_options(value: &Value, allowed: Option<&Value>, depth: usize) -> Res
         "constructor",
     ];
     for (key, child) in object {
-        let lower = key.to_ascii_lowercase();
-        let sensitive = ["token", "secret", "password", "upload", "endpoint"]
+        let sensitive = ["token", "secret", "password", "upload", "endpoint", "apikey"]
             .iter()
-            .any(|part| lower.contains(part))
-            || lower.contains("apikey")
-            || lower
-                .as_bytes()
-                .windows(7)
-                .any(|s| s.starts_with(b"api") && s.ends_with(b"key"));
-        if RESERVED.contains(&key.as_str())
+            .any(|part| key.contains_ascii_case_insensitive(part))
+            || key.as_utf16().windows(7).any(|units| {
+                let part = JsString::from_utf16(units.to_vec());
+                JsString::from_utf16(part.as_utf16()[..3].to_vec()).contains_ascii_case_insensitive("api")
+                    && JsString::from_utf16(units[4..].to_vec()).contains_ascii_case_insensitive("key")
+            });
+        if key.as_str().is_some_and(|key| RESERVED.contains(&key))
             || sensitive
             || allowed
                 .and_then(Value::as_array)
@@ -71,7 +70,7 @@ pub fn safe_options(value: &Value, allowed: Option<&Value>, depth: usize) -> Res
         {
             return Err(NumeraError::new(
                 "unsupported_parameter",
-                &format!("Provider option {key} is not allowed."),
+                "An explicit provider option is not allowed.",
             ));
         }
         if let Some(array) = child.as_array() {
@@ -88,7 +87,7 @@ pub fn safe_options(value: &Value, allowed: Option<&Value>, depth: usize) -> Res
     Ok(value.clone())
 }
 
-pub fn capabilities(connection: &Value, model: &str) -> Value {
+pub fn capabilities(connection: &Value, model: &JsString) -> Value {
     let adapter = connection["adapter"].as_str().unwrap_or("");
     let gateway = connection["gateway"].as_str();
     let native = [
@@ -201,7 +200,7 @@ pub fn edit_contract(edit: Option<&Value>, count: usize) -> Result<()> {
     Ok(())
 }
 
-pub fn effective_request(connection: &Value, request: &Value, model: &str) -> Result<Value> {
+pub fn effective_request(connection: &Value, request: &Value, model: &JsString) -> Result<Value> {
     let mut merged = connection["defaults"]
         .as_object()
         .cloned()

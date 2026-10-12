@@ -6,7 +6,7 @@ mod http_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
 use numera_image_gen_mcp::{cli::maintenance, runtime_paths::RuntimePaths};
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 use std::{collections::HashMap, time::Duration};
 
 #[tokio::test]

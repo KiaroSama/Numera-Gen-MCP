@@ -1,6 +1,6 @@
 use super::{invalid, js_trim};
 use crate::error::Result;
-use serde_json::{Map, Value, json};
+use crate::compat::value::{Object, Value, json};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fs::File,
@@ -184,7 +184,7 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
         "EDIT_MAX_REFERENCES",
         "EDIT_MASKS",
     ];
-    let mut slots: BTreeMap<u16, Map<String, Value>> = BTreeMap::new();
+    let mut slots: BTreeMap<u16, Object> = BTreeMap::new();
     for (key, value) in &values {
         if top.contains(&key.as_str()) {
             continue;
@@ -210,7 +210,7 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
         let model = slots.entry(number).or_default();
         if !value.is_empty() {
             model.insert(
-                field.to_ascii_lowercase(),
+                field.to_ascii_lowercase().into(),
                 if field == "ENABLED" {
                     json!(boolean(value)?)
                 } else {
@@ -219,7 +219,7 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
             );
         }
     }
-    let mut raw = Map::new();
+    let mut raw = Object::new();
     for (key, field) in [("API_ENDPOINT", "api_endpoint"), ("API_KEY", "api_key")] {
         if let Some(value) = values.get(key) {
             raw.insert(field.into(), json!(value));
@@ -243,7 +243,7 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
             raw.insert(field.into(), json!(value));
         }
     }
-    let mut edit = Map::new();
+    let mut edit = Object::new();
     for (key, field) in [
         ("EDIT_MODE", "mode"),
         ("EDIT_ENCODING", "encoding"),

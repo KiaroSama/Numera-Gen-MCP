@@ -1,7 +1,7 @@
 use crate::{dimensions, files::images::Image, jobs::Receipt};
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 
-pub fn snapshot(connection: &Value, model: &str, request: &Value) -> Value {
+pub fn snapshot(connection: &Value, model: &JsString, request: &Value) -> Value {
     let mut result = json!({"dimension_evidence":dimensions::evidence(connection,model)});
     for key in ["aspect_ratio", "image_size"] {
         if let Some(value) = request.get(key) {

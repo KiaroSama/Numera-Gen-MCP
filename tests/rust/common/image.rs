@@ -1,4 +1,4 @@
-use serde_json::Value;
+use numera_image_gen_mcp::compat::value::Value;
 use std::path::Path;
 
 pub fn original() -> Vec<u8> {

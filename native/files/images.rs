@@ -5,7 +5,7 @@ use base64::{
     engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig, STANDARD},
 };
 use image::{ImageDecoder, ImageFormat, ImageReader};
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::io::Cursor;
 
 #[derive(Clone)]

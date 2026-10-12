@@ -9,7 +9,7 @@ use numera_image_gen_mcp::{
     },
     runtime_paths::RuntimePaths,
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{collections::HashMap, path::Path};
 
 // Source authority: src/config/{load,env,simple,schema,credentials}.ts and
@@ -442,7 +442,7 @@ async fn inline_header_credentials_pin_independent_copies_and_declared_file_fail
     );
     for path in [workspace.0.clone(), workspace.0.join("absent")] {
         let error = credentials(
-            &json!({"auth":{"type":"bearer","secretFile":path}}),
+            &json!({"auth":{"type":"bearer","secretFile":path.to_str().expect("fixture path")}}),
             &HashMap::new(),
             &runtime,
         )
@@ -476,6 +476,6 @@ async fn inline_header_credentials_pin_independent_copies_and_declared_file_fail
     );
     #[cfg(not(windows))]
     {
-        invalid(credentials(&json!({"auth":{"type":"bearer","secretDpapiFile":workspace.0.join("unsupported")}}),&HashMap::new(),&runtime).await);
+        invalid(credentials(&json!({"auth":{"type":"bearer","secretDpapiFile":workspace.0.join("unsupported").to_str().expect("fixture path")}}),&HashMap::new(),&runtime).await);
     }
 }

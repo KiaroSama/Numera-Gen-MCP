@@ -1,11 +1,11 @@
 use crate::{
+    compat::value::{Value, json},
     config,
     error::{NumeraError, Result},
     logging::Logger,
     runtime_paths::RuntimePaths,
     services::{discovery::Discovery, health},
 };
-use serde_json::{Value, json};
 use std::{collections::HashMap, path::Path, sync::Arc, time::Duration};
 use tokio_util::sync::CancellationToken;
 
@@ -119,7 +119,7 @@ pub async fn readiness(
                 if let Some(model) = f.get("model") {
                     let found = models.iter().take(100).any(|m| m["id"] == model.as_str());
                     report["selected_model_found"] = json!(found);
-                    Discovery::model(&config, runtime, env, Some(&name), model, &stop).await?;
+                    Discovery::model(&config, runtime, env, Some(&name), &model.as_str().into(), &stop).await?;
                     if !found {
                         blockers.push("model_not_in_first_catalog_page");
                     }

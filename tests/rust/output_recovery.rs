@@ -16,7 +16,7 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::{generation::Generation, jobs},
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -214,7 +214,7 @@ async fn retained_continuation_url_is_downloaded_locally_without_credentials_or_
                 .retain_url(
                     "retained-url",
                     0,
-                    &format!("{}/owned/original.png", server.origin),
+                    &format!("{}/owned/original.png", server.origin).into(),
                     Some(&receipt),
                 )
                 .unwrap();

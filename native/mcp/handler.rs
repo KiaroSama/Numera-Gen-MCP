@@ -1,8 +1,10 @@
 use super::{application::Application, tools};
-use crate::error::{NumeraError, Result};
+use crate::{
+    compat::value::{Value, json},
+    error::{NumeraError, Result},
+};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use rmcp::{ErrorData, RoleServer, ServerHandler, model::*, service::RequestContext};
-use serde_json::{Value, json};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -69,7 +71,21 @@ impl ServerHandler for Handler {
             .iter()
             .find(|t| t.name == name)
             .ok_or_else(|| ErrorData::invalid_params("Unknown tool name.", None))?;
-        let args = Value::Object(request.arguments.unwrap_or_default());
+        let original = context
+            .extensions
+            .get::<super::js_envelope::OriginalArguments>()
+            .cloned()
+            .or_else(|| {
+                context.extensions.get::<hyper::http::request::Parts>()
+                    .and_then(|parts| parts.extensions.get::<super::js_envelope::OriginalArguments>())
+                    .cloned()
+            });
+        let args = if let Some(original) = &original {
+            Value::from_js(&original.arguments)
+        } else {
+            Value::from_serde(&serde_json::Value::Object(request.arguments.unwrap_or_default()))
+                .map_err(|_| protocol())?
+        };
         let id = uuid::Uuid::new_v4().to_string();
         let start = std::time::Instant::now();
         self.application.logger.log(
@@ -85,7 +101,7 @@ impl ServerHandler for Handler {
                     a.keys().any(|key| {
                         !definition.input_schema["properties"]
                             .as_object()
-                            .is_some_and(|p| p.contains_key(key))
+                            .is_some_and(|p| key.as_str().is_some_and(|key| p.contains_key(key)))
                     })
                 })
             {
@@ -176,7 +192,13 @@ impl ServerHandler for Handler {
         } else {
             CallToolResult::success(content)
         };
-        result.structured_content = Some(value);
+        if let Some(original) = original {
+            *original.response.lock().map_err(|_| protocol())? = Some(value);
+            // The authoritative result is inserted at this request's actual wire boundary.
+            result.structured_content = None;
+        } else {
+            result.structured_content = Some(value.to_serde().map_err(|_| protocol())?);
+        }
         Ok(result.into())
     }
     async fn list_resource_templates(

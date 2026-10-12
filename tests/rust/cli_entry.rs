@@ -2,7 +2,7 @@ mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
 use common::Workspace;
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{collections::HashMap, time::Duration};
 use tokio::{io::AsyncWriteExt, process::Command};
 

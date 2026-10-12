@@ -8,7 +8,10 @@ Cargo.toml records direct pinned native dependencies. A ready archive must inclu
 resolved dependency licenses/notices and bundled SQLite/codec notices; this document alone is not a
 substitute for those files. No native Release is ready until the lockfile and complete transitive
 license inventory are verified in hosted CI. RMCP, Tokio, reqwest, rusqlite, serde/serde_json,
-serde_stacker, ICU4X, image, Base64, SHA2, chrono, regex, UUID and URL retain their upstream licenses.
+ICU4X, image, Base64, SHA2, chrono, regex, UUID and URL retain their upstream licenses.
+The authoritative JSON implementation uses no embedded JavaScript runtime. Removed validation/parser
+helpers are not native runtime dependencies; the actual archive license inventory follows the resolved
+lockfile, not a historical list.
 The source-side Google dimension table is documented under CC BY 4.0 attribution in the source and
 references. Image/model/asset rights remain separate from the software license.
 

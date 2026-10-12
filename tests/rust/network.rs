@@ -6,7 +6,7 @@ use numera_image_gen_mcp::http::{
     assets,
 };
 use reqwest::Method;
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 use std::{collections::HashMap, time::Duration};
 use tokio_util::sync::CancellationToken;
 
@@ -131,7 +131,7 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
             "http://[ff02::1]/image".into(),
         ] {
             assert_eq!(
-                assets::fetch(&url, &blocked, 1024, &cancel)
+                assets::fetch(&url.into(), &blocked, 1024, &cancel)
                     .await
                     .unwrap_err()
                     .code,
@@ -141,7 +141,7 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
         let allowed =
             json!({"files":{"assetAllowances":[{"origin":server.origin,"pathPrefix":"/owned"}]}});
         let bytes = assets::fetch(
-            &format!("{}/owned/image", server.origin),
+            &format!("{}/owned/image", server.origin).into(),
             &allowed,
             1024,
             &cancel,
@@ -149,12 +149,12 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
         .await
         .unwrap();
         assert_eq!(
-            serde_json::from_slice::<serde_json::Value>(&bytes).unwrap(),
+            serde_json::from_slice::<numera_image_gen_mcp::compat::value::Value>(&bytes).unwrap(),
             json!({"image":"fixture"})
         );
         assert_eq!(
             assets::fetch(
-                &format!("{}/owned-other/image", server.origin),
+                &format!("{}/owned-other/image", server.origin).into(),
                 &allowed,
                 1024,
                 &cancel
@@ -166,7 +166,7 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
         );
         assert_eq!(
             assets::fetch(
-                &format!("{}/owned/missing", server.origin),
+                &format!("{}/owned/missing", server.origin).into(),
                 &allowed,
                 1024,
                 &cancel
@@ -178,7 +178,7 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
         );
         assert_eq!(
             assets::fetch(
-                &format!("{}/owned/redirect", server.origin),
+                &format!("{}/owned/redirect", server.origin).into(),
                 &allowed,
                 1024,
                 &cancel
@@ -190,7 +190,7 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
         );
         assert_eq!(
             assets::fetch(
-                &format!("{}/owned/image", server.origin),
+                &format!("{}/owned/image", server.origin).into(),
                 &allowed,
                 1,
                 &cancel
@@ -203,7 +203,7 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
         cancel.cancel();
         assert_eq!(
             assets::fetch(
-                &format!("{}/owned/image", server.origin),
+                &format!("{}/owned/image", server.origin).into(),
                 &allowed,
                 1024,
                 &cancel

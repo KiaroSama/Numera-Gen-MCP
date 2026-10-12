@@ -4,7 +4,7 @@ use crate::{
     http::api::{self, Body},
 };
 use reqwest::Method;
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
@@ -28,13 +28,13 @@ fn accepts(descriptor: &Value, value: &Value) -> bool {
 pub async fn validate(
     c: &Value,
     headers: &HashMap<String, String>,
-    model: &str,
+    model: &JsString,
     mut request: Value,
     cancel: &CancellationToken,
 ) -> Result<(Value, Vec<String>)> {
     if c["adapter"] != "openrouter-images" {
         let warnings = if c["modelOverrides"][model]["evidence"]
-            .as_str()
+            .as_utf16()
             .is_some_and(|s| !s.is_empty())
         {
             vec![]
@@ -44,7 +44,7 @@ pub async fn validate(
         return Ok((request, warnings));
     }
     for key in object(&request["provider_options"])?.keys() {
-        if !["provider", "stream", "output_compression"].contains(&key.as_str()) {
+        if key.as_str().is_none_or(|key| !["provider", "stream", "output_compression"].contains(&key)) {
             return Err(NumeraError::new(
                 "unsupported_parameter",
                 "Dedicated Image API requires provider-specific settings under provider.options.",
@@ -53,7 +53,7 @@ pub async fn validate(
     }
     let path = format!(
         "images/models/{}/endpoints",
-        model
+        model.checked_str()?
             .split('/')
             .map(crate::adapters::encode_component)
             .collect::<Vec<_>>()
@@ -116,10 +116,9 @@ pub async fn validate(
     let mut compatible = Vec::new();
     for e in endpoints {
         let tag = e["provider_tag"]
-            .as_str()
-            .or_else(|| e["provider_slug"].as_str())
-            .unwrap_or("");
-        if !selected.is_empty() && !selected.iter().any(|v| v == tag) {
+            .as_js_string()
+            .or_else(|| e["provider_slug"].as_js_string());
+        if !selected.is_empty() && !selected.iter().any(|v| tag.is_some_and(|tag| v == tag)) {
             continue;
         }
         let params = e
@@ -153,7 +152,7 @@ pub async fn validate(
         .filter(|v| !v.is_null())
         .unwrap_or(&empty);
     for (provider, options) in object(passthrough)? {
-        if endpoint["provider_slug"] != provider.as_str() {
+        if endpoint["provider_slug"] != provider {
             return Err(NumeraError::new(
                 "unsupported_parameter",
                 "Passthrough options name a different provider than selected endpoint.",
@@ -171,10 +170,7 @@ pub async fn validate(
         }
     }
     let mut routing = routing.clone();
-    routing["only"] = json!([tag
-        .as_str()
-        .map(str::to_owned)
-        .unwrap_or_else(|| tag.to_string())]);
+    routing["only"] = json!([tag.as_js_string().cloned().unwrap_or_else(|| tag.to_string().into())]);
     routing["allow_fallbacks"] = json!(false);
     request["provider_options"]["provider"] = routing;
     Ok((request, vec![]))

@@ -4,7 +4,7 @@ use numera_image_gen_mcp::{
     error::Result,
     jobs::{Receipt, Store},
 };
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 mod common;
 
 // Store-level source contracts: integration/{terminal-lifecycle,reservation-lifecycle}.test.ts

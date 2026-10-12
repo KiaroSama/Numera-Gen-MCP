@@ -1,5 +1,5 @@
 use crate::error::{NumeraError, Result};
-use serde_json::Value;
+use crate::compat::value::{JsString, Value};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     time::Duration,
@@ -42,13 +42,13 @@ fn private_v4(ip: Ipv4Addr) -> bool {
 }
 
 pub async fn fetch(
-    raw: &str,
+    raw: &JsString,
     config: &Value,
     limit: usize,
     cancel: &CancellationToken,
 ) -> Result<Vec<u8>> {
     let operation = async {
-        let mut url = Url::parse(raw)
+        let mut url = Url::parse(&String::from_utf16_lossy(raw.as_utf16()))
             .map_err(|_| NumeraError::new("unsafe_destination", "Invalid image URL."))?;
         for _ in 0..4 {
             if !matches!(url.scheme(), "http" | "https")
@@ -63,8 +63,9 @@ pub async fn fetch(
                 .as_array()
                 .is_some_and(|items| {
                     items.iter().any(|a| {
-                        let prefix = a["pathPrefix"].as_str().unwrap_or("");
-                        Url::parse(a["origin"].as_str().unwrap_or(""))
+                        let Some(prefix) = a["pathPrefix"].as_str() else { return false; };
+                        let Some(origin_units) = a["origin"].as_utf16() else { return false; };
+                        Url::parse(&String::from_utf16_lossy(origin_units))
                             .is_ok_and(|base| base.origin().ascii_serialization() == origin)
                             && (url.path() == prefix
                                 || url

@@ -68,6 +68,7 @@ jobs:
       CARGO_BUILD_JOBS: "2"
       RUST_TEST_THREADS: "2"
       PYTHONDONTWRITEBYTECODE: "1"
+      NUMERA_RESOLVE_HTTP_LOCK: "true"
       npm_config_cache: ${{ github.workspace }}/.ci-cache/npm
       TEMP: ${{ github.workspace }}/.ci-work/temp
       TMP: ${{ github.workspace }}/.ci-work/temp
@@ -140,6 +141,7 @@ jobs:
       CARGO_BUILD_JOBS: "2"
       RUST_TEST_THREADS: "2"
       PYTHONDONTWRITEBYTECODE: "1"
+      NUMERA_RESOLVE_HTTP_LOCK: "true"
       npm_config_cache: ${{ github.workspace }}/.ci-cache/npm
       TEMP: ${{ github.workspace }}/.ci-work/temp
       TMP: ${{ github.workspace }}/.ci-work/temp

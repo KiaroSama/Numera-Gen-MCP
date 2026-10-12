@@ -14,7 +14,7 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::{generation::Generation, identity::connection_identity, jobs},
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -401,7 +401,7 @@ async fn retained_url_failure_keeps_journal_then_recovers_bytes_without_resubmit
                 .retain_url(
                     "retained",
                     0,
-                    &format!("{}/owned/image.png", server.origin),
+                    &format!("{}/owned/image.png", server.origin).into(),
                     Some(&receipt),
                 )
                 .unwrap();

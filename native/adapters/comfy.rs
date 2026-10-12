@@ -10,7 +10,7 @@ use reqwest::{
     Method,
     multipart::{Form, Part},
 };
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
@@ -150,7 +150,7 @@ pub async fn submit(
     .await?;
     object(&value)?;
     let id = value["prompt_id"]
-        .as_str()
+        .as_utf16()
         .filter(|s| !s.is_empty())
         .ok_or_else(|| {
             NumeraError::new(
@@ -171,12 +171,12 @@ pub async fn submit(
     } else {
         vec![format!(
             "ComfyUI accepted only valid workflow branches; rejected node IDs: {}",
-            node_errors.keys().cloned().collect::<Vec<_>>().join(", ")
+            node_errors.keys().map(|key| crate::compat::value::Value::String(key.clone()).to_string()).collect::<Vec<_>>().join(", ")
         )]
     };
     Ok((
         Job {
-            id: id.into(),
+            id: JsString::from_utf16(id.to_vec()),
             kind: "comfyui".into(),
         },
         warnings,
@@ -206,13 +206,13 @@ pub struct OutputLimits {
 pub async fn status(
     c: &Value,
     headers: &HashMap<String, String>,
-    id: &str,
+    id: &JsString,
     cancel: &CancellationToken,
     limits: OutputLimits,
     mut retain: impl FnMut(u32, &[u8]) -> Result<()>,
     mut completed: impl FnMut() -> Result<()>,
 ) -> Result<Status> {
-    let encoded = super::gemini::encode_component(id);
+    let encoded = super::gemini::encode_component(id.checked_str()?);
     let history = api::json(
         c,
         headers,

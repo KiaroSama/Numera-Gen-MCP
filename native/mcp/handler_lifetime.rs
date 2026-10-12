@@ -56,9 +56,8 @@ mod tests {
             let second = first.clone();
             let drained = lifetime.drained();
             tokio::pin!(drained);
-            let pending = std::future::poll_fn(|cx| {
-                Poll::Ready(drained.as_mut().poll(cx).is_pending())
-            });
+            let pending =
+                std::future::poll_fn(|cx| Poll::Ready(drained.as_mut().poll(cx).is_pending()));
             assert!(pending.await);
             drop(first);
             assert_eq!(lifetime.active.load(Ordering::Acquire), 1);

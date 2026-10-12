@@ -198,6 +198,21 @@ async fn real_http_endpoint_rejects_unsafe_clients_and_serves_the_existing_ten_t
             serde_json::from_str(&text).unwrap()
         };
         assert_eq!(value["result"]["tools"].as_array().unwrap().len(), 10);
+        let response = client.post(&url).bearer_auth(token)
+            .header("accept", "application/json, text/event-stream")
+            .header("content-type", "application/json")
+            .header("mcp-session-id", &session)
+            .header("mcp-protocol-version", "2025-11-25")
+            .body(r#"{"jsonrpc":"2.0","id":"\ud800","method":"tools/call","params":{"name":"list_connections","arguments":{}}}"#)
+            .send().await.unwrap();
+        assert_eq!(response.status(), 200);
+        let text = response.text().await.unwrap();
+        let payload = if text.trim_start().starts_with('{') { text.as_str() } else {
+            text.lines().find_map(|line| line.strip_prefix("data: ")).unwrap()
+        };
+        let raw = numera_image_gen_mcp::compat::js_json::parse(payload).expect("exact HTTP JSON");
+        assert_eq!(raw.get("id").and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_utf16), Some([0xd800].as_slice()));
+        assert!(raw.get("result").unwrap().get("structuredContent").is_some());
         let second = client
             .post(&url)
             .bearer_auth(token)

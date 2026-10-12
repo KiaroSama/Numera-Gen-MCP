@@ -3,7 +3,7 @@ mod common;
 mod image_fixture;
 use common::Workspace;
 use numera_image_gen_mcp::jobs::{Receipt, Store};
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 
 fn receipt(id: &str) -> Receipt {
     Receipt::new(

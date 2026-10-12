@@ -1,7 +1,7 @@
 use crate::error::{NumeraError, Result};
 use chrono::Utc;
 use rusqlite::{Connection, OptionalExtension, params};
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 use std::{collections::HashMap, path::Path};
 use uuid::Uuid;
 
@@ -114,7 +114,7 @@ impl Store {
             row.ok_or_else(|| NumeraError::new("invalid_input", "Unknown owned request ID."))?;
         Ok(RequestRow {
             receipt: Receipt {
-                value: serde_json::from_str(&receipt).map_err(|_| NumeraError::storage())?,
+                value: Value::parse_with_limit(&receipt, 128 * 1024 * 1024).map_err(|_| NumeraError::storage())?,
                 generation: Some(generation),
             },
             identity,
@@ -266,8 +266,9 @@ impl Store {
             })
             .optional()
             .map_err(|_| NumeraError::storage())?;
-        serde_json::from_str(
+        Value::parse_with_limit(
             &value.ok_or_else(|| NumeraError::new("invalid_input", "Unknown owned output ID."))?,
+            128 * 1024 * 1024,
         )
         .map_err(|_| NumeraError::storage())
     }
@@ -281,7 +282,7 @@ impl Store {
             .and_then(Iterator::collect)
             .map_err(|_| NumeraError::storage())?;
         rows.into_iter()
-            .map(|v| serde_json::from_str(&v).map_err(|_| NumeraError::storage()))
+            .map(|v| Value::parse_with_limit(&v, 128 * 1024 * 1024).map_err(|_| NumeraError::storage()))
             .collect()
     }
     pub fn save_continuation(&self, id: &str, scope: &str, value: &Value) -> Result<()> {
@@ -309,7 +310,7 @@ impl Store {
         match row {
             None => Ok(Value::Null),
             Some((old, value)) if old == scope => {
-                serde_json::from_str(&value).map_err(|_| NumeraError::storage())
+                Value::parse_with_limit(&value, 1024 * 1024).map_err(|_| NumeraError::storage())
             }
             _ => Err(NumeraError::new(
                 "permission_denied",

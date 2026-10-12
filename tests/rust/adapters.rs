@@ -7,7 +7,7 @@ use numera_image_gen_mcp::{
     files::images::{decode_base64, inspect},
     http::api::Body,
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 
 fn outcome(result: Result<Value>) -> Value {
     match result {
@@ -42,7 +42,7 @@ fn source_generated_wire_and_result_contracts_match() {
         let input = Input {
             connection: &case["connection"],
             request: &case["request"],
-            model: case["model"].as_str().unwrap(),
+            model: case["model"].as_js_string().unwrap(),
             operation: case["operation"].as_str().unwrap(),
             references: &references,
             mask: None,

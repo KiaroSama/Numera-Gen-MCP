@@ -1,11 +1,11 @@
 use crate::{files::images::Image, http::api::Body};
 use base64::{Engine, engine::general_purpose::STANDARD};
-use serde_json::Value;
+use crate::compat::value::{JsString, Value};
 
 pub struct Input<'a> {
     pub connection: &'a Value,
     pub request: &'a Value,
-    pub model: &'a str,
+    pub model: &'a JsString,
     pub operation: &'a str,
     pub references: &'a [Image],
     pub mask: Option<&'a Image>,
@@ -28,15 +28,15 @@ impl Prepared {
 
 #[derive(Default)]
 pub struct ResultItem {
-    pub base64: Option<String>,
-    pub url: Option<String>,
+    pub base64: Option<JsString>,
+    pub url: Option<JsString>,
     pub bytes: Option<Vec<u8>>,
     pub error: Option<String>,
 }
 
 #[derive(Clone)]
 pub struct Job {
-    pub id: String,
+    pub id: JsString,
     pub kind: String,
 }
 
@@ -44,12 +44,12 @@ pub struct Job {
 pub struct Normalized {
     pub images: Vec<ResultItem>,
     pub terminal: Option<String>,
-    pub upstream_model: Option<String>,
-    pub upstream_id: Option<String>,
+    pub upstream_model: Option<JsString>,
+    pub upstream_id: Option<JsString>,
     pub usage: Option<Value>,
     pub job: Option<Job>,
     pub continuation: Option<Value>,
-    pub warnings: Vec<String>,
+    pub warnings: Vec<JsString>,
 }
 
 pub fn mime_data(image: &Image) -> String {

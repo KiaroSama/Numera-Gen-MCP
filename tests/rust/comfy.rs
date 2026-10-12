@@ -6,7 +6,7 @@ mod image_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
 use numera_image_gen_mcp::adapters::{comfy, types::Input};
-use serde_json::json;
+use numera_image_gen_mcp::compat::value::json;
 use std::{
     collections::HashMap,
     sync::{
@@ -50,7 +50,7 @@ async fn installed_comfy_graph_gpu_preflight_upload_submission_and_terminal_hist
     let input = Input {
         connection: &config,
         request: &request,
-        model: "workflow",
+        model: &"workflow".into(),
         operation: "edit",
         references: &references,
         mask: Some(&image),

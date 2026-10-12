@@ -1,7 +1,7 @@
 use super::store::{Receipt, Store, busy, now, terminal};
 use crate::error::{NumeraError, Result};
 use rusqlite::params;
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 
 impl Store {
     pub(super) fn expire(&mut self, id: Option<&str>) -> Result<()> {
@@ -96,7 +96,7 @@ impl Store {
                 let mut stmt=store.db.prepare("SELECT receipt FROM requests WHERE lease>? OR (owner IS NULL AND json_extract(receipt,'$.status')='running' AND json_extract(receipt,'$.upstream_job') IS NOT NULL)").map_err(|_|NumeraError::storage())?;
                 stmt.query_map([now()],|r|r.get(0)).and_then(Iterator::collect).map_err(|_|NumeraError::storage())?
             };
-            let all:Vec<Value>=values.into_iter().map(|v|serde_json::from_str(&v).map_err(|_|NumeraError::storage())).collect::<Result<Vec<Value>>>()?
+            let all:Vec<Value>=values.into_iter().map(|v|Value::parse_with_limit(&v,128*1024*1024).map_err(|_|NumeraError::storage())).collect::<Result<Vec<Value>>>()?
                 .into_iter().filter(|v|matches!(v["status"].as_str(),Some("submitting"|"running"|"finalizing")) && v["upstream_terminal"].is_null() && v["generation_outcome"]!="completed").collect();
             if all.len()>=global || all.iter().filter(|v|v["connection"]==connection).count()>=per_connection {return Ok(false);}
             let mut receipt=store.get(id)?;

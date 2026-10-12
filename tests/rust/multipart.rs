@@ -4,7 +4,7 @@ use numera_image_gen_mcp::{
     http::api::{self, Body},
 };
 use reqwest::Method;
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{collections::HashMap, time::Duration};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -128,7 +128,7 @@ async fn actual_multipart_wire_preserves_source_field_names_order_filenames_and_
             let input = Input {
                 connection: &case["connection"],
                 request: &case["request"],
-                model: case["model"].as_str().unwrap(),
+                model: case["model"].as_js_string().unwrap(),
                 operation: case["operation"].as_str().unwrap(),
                 references: &references,
                 mask: None,

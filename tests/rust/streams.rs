@@ -7,7 +7,7 @@ use numera_image_gen_mcp::{
     files::images::decode_base64,
     http::sse::{self, Reader},
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 
 fn outcome(result: Result<Value>) -> Value {
     match result {

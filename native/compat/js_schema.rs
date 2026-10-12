@@ -107,13 +107,18 @@ fn supported(schema: &Value) -> Result<()> {
     // Bundled refs have no assertion/default siblings. Default merging for refs would otherwise
     // require a defined precedence; fail closed on such schema drift rather than drop siblings.
     if object.contains_key("$ref")
-        && object.keys().any(|k| !["$ref", "$schema", "$defs"].contains(&k.as_str()))
+        && object
+            .keys()
+            .any(|k| !["$ref", "$schema", "$defs"].contains(&k.as_str()))
     {
         return Err(unsupported());
     }
     if let Some(kind) = object.get("type")
         && !kind.as_str().is_some_and(|k| {
-            ["null", "boolean", "number", "integer", "string", "object", "array"].contains(&k)
+            [
+                "null", "boolean", "number", "integer", "string", "object", "array",
+            ]
+            .contains(&k)
         })
     {
         return Err(unsupported());
@@ -133,7 +138,9 @@ fn supported(schema: &Value) -> Result<()> {
         }
     }
     if let Some(values) = object.get("required")
-        && !values.as_array().is_some_and(|a| a.iter().all(Value::is_string))
+        && !values
+            .as_array()
+            .is_some_and(|a| a.iter().all(Value::is_string))
     {
         return Err(unsupported());
     }
@@ -144,13 +151,21 @@ fn supported(schema: &Value) -> Result<()> {
     }
     if let Some(pattern) = object.get("pattern")
         && !pattern.as_str().is_some_and(|p| {
-            ["\\S", "^\\/.*", "^[a-zA-Z0-9_-]{1,64}$", "^[a-zA-Z0-9_-]{1,100}$"].contains(&p)
+            [
+                "\\S",
+                "^\\/.*",
+                "^[a-zA-Z0-9_-]{1,64}$",
+                "^[a-zA-Z0-9_-]{1,100}$",
+            ]
+            .contains(&p)
         })
     {
         return Err(unsupported());
     }
     if let Some(format) = object.get("format")
-        && !format.as_str().is_some_and(|f| ["uri", "uuid", "starts_with"].contains(&f))
+        && !format
+            .as_str()
+            .is_some_and(|f| ["uri", "uuid", "starts_with"].contains(&f))
     {
         return Err(unsupported());
     }
@@ -163,8 +178,16 @@ fn supported(schema: &Value) -> Result<()> {
     if let Some(names) = object.get("propertyNames")
         && !names.as_object().is_some_and(|o| {
             o.keys().all(|k| {
-                ["type", "pattern", "minLength", "maxLength", "format", "enum", "const"]
-                    .contains(&k.as_str())
+                [
+                    "type",
+                    "pattern",
+                    "minLength",
+                    "maxLength",
+                    "format",
+                    "enum",
+                    "const",
+                ]
+                .contains(&k.as_str())
             })
         })
     {
@@ -218,9 +241,10 @@ impl<'a> Schema<'a> {
             }
             for child in schema_children(root, schema)? {
                 let combinator = ["anyOf", "oneOf"].iter().any(|k| {
-                    schema.get(*k).and_then(Value::as_array).is_some_and(|a| {
-                        a.iter().any(|v| std::ptr::eq(v, child))
-                    })
+                    schema
+                        .get(*k)
+                        .and_then(Value::as_array)
+                        .is_some_and(|a| a.iter().any(|v| std::ptr::eq(v, child)))
                 });
                 pending.push((child, union || combinator));
             }
@@ -250,7 +274,10 @@ impl<'a> Schema<'a> {
                     let properties = schema.get("properties").and_then(Value::as_object);
                     if let Some(properties) = properties {
                         for (key, child) in properties {
-                            if entries.iter().any(|(k, _)| k.iter().copied().eq(key.encode_utf16())) {
+                            if entries
+                                .iter()
+                                .any(|(k, _)| k.iter().copied().eq(key.encode_utf16()))
+                            {
                                 continue;
                             }
                             if let Some(default) = child.get("default") {
@@ -296,7 +323,12 @@ impl<'a> Schema<'a> {
         let mut complete = Vec::new();
         while let Some(task) = pending.pop() {
             match task {
-                Task::Combine { base, all, any, one } => {
+                Task::Combine {
+                    base,
+                    all,
+                    any,
+                    one,
+                } => {
                     let values = complete.split_off(complete.len() - all - any - one);
                     let valid = base
                         && values[..all].iter().all(|b| *b)
@@ -315,10 +347,8 @@ impl<'a> Schema<'a> {
                         children.push((value, target));
                     }
                     if let Some(entries) = value.entries() {
-                        let effective: HashMap<&[u16], &JsValue> = entries
-                            .iter()
-                            .map(|(k, v)| (k.as_slice(), v))
-                            .collect();
+                        let effective: HashMap<&[u16], &JsValue> =
+                            entries.iter().map(|(k, v)| (k.as_slice(), v)).collect();
                         let properties = schema.get("properties").and_then(Value::as_object);
                         for (key, child_value) in effective {
                             let child = properties
@@ -338,15 +368,26 @@ impl<'a> Schema<'a> {
                         children.extend(array.iter().map(|v| (v, child)));
                     }
                     let all = children.len();
-                    let any = schema.get("anyOf").and_then(Value::as_array).map_or(0, |branches| {
-                        children.extend(branches.iter().map(|s| (value, s)));
-                        branches.len()
+                    let any = schema
+                        .get("anyOf")
+                        .and_then(Value::as_array)
+                        .map_or(0, |branches| {
+                            children.extend(branches.iter().map(|s| (value, s)));
+                            branches.len()
+                        });
+                    let one = schema
+                        .get("oneOf")
+                        .and_then(Value::as_array)
+                        .map_or(0, |branches| {
+                            children.extend(branches.iter().map(|s| (value, s)));
+                            branches.len()
+                        });
+                    pending.push(Task::Combine {
+                        base,
+                        all,
+                        any,
+                        one,
                     });
-                    let one = schema.get("oneOf").and_then(Value::as_array).map_or(0, |branches| {
-                        children.extend(branches.iter().map(|s| (value, s)));
-                        branches.len()
-                    });
-                    pending.push(Task::Combine { base, all, any, one });
                     pending.extend(children.into_iter().rev().map(|(v, s)| Task::Value(v, s)));
                 }
             }
@@ -364,8 +405,14 @@ fn js_whitespace(unit: u16) -> bool {
 }
 
 fn string_matches(units: &[u16], schema: &Value) -> bool {
-    if schema.get("minLength").and_then(Value::as_u64).is_some_and(|n| (units.len() as u64) < n)
-        || schema.get("maxLength").and_then(Value::as_u64).is_some_and(|n| (units.len() as u64) > n)
+    if schema
+        .get("minLength")
+        .and_then(Value::as_u64)
+        .is_some_and(|n| (units.len() as u64) < n)
+        || schema
+            .get("maxLength")
+            .and_then(Value::as_u64)
+            .is_some_and(|n| (units.len() as u64) > n)
     {
         return false;
     }
@@ -377,7 +424,9 @@ fn string_matches(units: &[u16], schema: &Value) -> bool {
                 let max = if pattern.contains("64") { 64 } else { 100 };
                 !units.is_empty()
                     && units.len() <= max
-                    && units.iter().all(|u| matches!(*u, 45 | 48..=57 | 65..=90 | 95 | 97..=122))
+                    && units
+                        .iter()
+                        .all(|u| matches!(*u, 45 | 48..=57 | 65..=90 | 95 | 97..=122))
             }
             _ => false,
         };
@@ -389,8 +438,14 @@ fn string_matches(units: &[u16], schema: &Value) -> bool {
         // WHATWG URL/URL.canParse take USVString. This disposable validation view is never
         // written into the authoritative instance, and never used by hashing or JSON output.
         Some("uri") => {
-            let start = units.iter().position(|u| !js_whitespace(*u)).unwrap_or(units.len());
-            let end = units.iter().rposition(|u| !js_whitespace(*u)).map_or(start, |i| i + 1);
+            let start = units
+                .iter()
+                .position(|u| !js_whitespace(*u))
+                .unwrap_or(units.len());
+            let end = units
+                .iter()
+                .rposition(|u| !js_whitespace(*u))
+                .map_or(start, |i| i + 1);
             url::Url::parse(&String::from_utf16_lossy(&units[start..end])).is_ok()
         }
         Some("uuid") => checked_utf16(units).is_ok_and(|s| {
@@ -432,7 +487,9 @@ fn shallow(value: &JsValue, schema: &Value) -> bool {
         return false;
     }
     if let Some(expected) = schema.get("enum").and_then(Value::as_array)
-        && !expected.iter().any(|v| from_serde(v).is_ok_and(|v| value.structurally_equal(&v)))
+        && !expected
+            .iter()
+            .any(|v| from_serde(v).is_ok_and(|v| value.structurally_equal(&v)))
     {
         return false;
     }
@@ -462,15 +519,27 @@ fn shallow(value: &JsValue, schema: &Value) -> bool {
         return false;
     }
     if let Some(array) = value.as_array()
-        && (schema.get("minItems").and_then(Value::as_u64).is_some_and(|n| (array.len() as u64) < n)
-            || schema.get("maxItems").and_then(Value::as_u64).is_some_and(|n| (array.len() as u64) > n))
+        && (schema
+            .get("minItems")
+            .and_then(Value::as_u64)
+            .is_some_and(|n| (array.len() as u64) < n)
+            || schema
+                .get("maxItems")
+                .and_then(Value::as_u64)
+                .is_some_and(|n| (array.len() as u64) > n))
     {
         return false;
     }
     if let Some(entries) = value.entries() {
-        if schema.get("required").and_then(Value::as_array).is_some_and(|required| {
-            required.iter().any(|k| k.as_str().is_none_or(|k| value.get(k).is_none()))
-        }) {
+        if schema
+            .get("required")
+            .and_then(Value::as_array)
+            .is_some_and(|required| {
+                required
+                    .iter()
+                    .any(|k| k.as_str().is_none_or(|k| value.get(k).is_none()))
+            })
+        {
             return false;
         }
         if let Some(names) = schema.get("propertyNames") {

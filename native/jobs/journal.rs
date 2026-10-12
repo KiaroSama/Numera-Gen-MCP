@@ -2,7 +2,7 @@ use super::store::{Receipt, Store, terminal};
 use crate::compat::hash::sha256;
 use crate::error::{NumeraError, Result};
 use rusqlite::{OptionalExtension, params};
-use serde_json::{Value, json};
+use crate::compat::value::{JsString, Value, json};
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]
@@ -11,7 +11,7 @@ pub struct ResultItem {
     pub output_id: String,
     pub target: Option<String>,
     pub bytes: Option<Vec<u8>>,
-    pub url: Option<String>,
+    pub url: Option<JsString>,
     pub sha256: Option<String>,
     pub phase: String,
 }
@@ -22,7 +22,7 @@ fn decode(row: &rusqlite::Row<'_>) -> rusqlite::Result<ResultItem> {
         output_id: row.get(1)?,
         target: row.get(2)?,
         bytes: row.get(3)?,
-        url: row.get(4)?,
+        url: row.get::<_, Option<String>>(4)?.map(JsString::from),
         sha256: row.get(5)?,
         phase: row.get(6)?,
     })
@@ -110,9 +110,12 @@ impl Store {
         &mut self,
         id: &str,
         index: u32,
-        url: &str,
+        url: &JsString,
         expected: Option<&Receipt>,
     ) -> Result<()> {
+        // Node SQLite binds JS strings as UTF-8, replacing unpaired surrogates at this
+        // existing TEXT-column boundary. Do not add a marker or change schema2 storage.
+        let url = String::from_utf16_lossy(url.as_utf16());
         self.transaction(|store| {
             let row=store.fence(id,expected)?;
             let old=store.item(id,index)?;

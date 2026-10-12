@@ -7,7 +7,7 @@ use numera_image_gen_mcp::{
     jobs::Receipt,
     services::requirements,
 };
-use serde_json::{Value, json};
+use numera_image_gen_mcp::compat::value::{Value, json};
 fn input<'a>(
     connection: &'a Value,
     request: &'a Value,
@@ -19,7 +19,7 @@ fn input<'a>(
         request,
         references,
         mask,
-        model: "opaque/image",
+        model: { static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> = std::sync::OnceLock::new(); MODEL.get_or_init(|| "opaque/image".into()) },
         operation: "edit",
     }
 }
@@ -88,7 +88,7 @@ fn explicit_native_json_generation_fields_preserve_references_masks_and_reject_u
     let c = json!({"adapter":"openai-images","gateway":"9router"});
     let r = json!({"prompt":"fixture","count":1,"quality":"high","provider_options":{}});
     let raw = Input {
-        model: "antigravity/gemini-3.1-flash-image",
+        model: &"antigravity/gemini-3.1-flash-image".into(),
         operation: "generate",
         references: &[],
         mask: None,

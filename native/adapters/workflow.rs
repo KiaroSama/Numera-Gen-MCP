@@ -1,6 +1,6 @@
 use super::types::Input;
 use crate::error::{NumeraError, Result, object};
-use serde_json::Value;
+use crate::compat::value::{JsString, Value};
 use std::collections::HashSet;
 
 fn invalid(message: &str) -> NumeraError {
@@ -32,10 +32,10 @@ pub fn references(input: &Input<'_>) -> Result<()> {
             )
         })?;
         let node_id = target["node"]
-            .as_str()
+            .as_js_string()
             .ok_or_else(|| invalid("Invalid reference binding node."))?;
         let slot = target["input"]
-            .as_str()
+            .as_js_string()
             .filter(|s| !s.is_empty())
             .ok_or_else(|| {
                 invalid(&format!(
@@ -71,11 +71,12 @@ pub fn references(input: &Input<'_>) -> Result<()> {
 pub fn bind(
     graph: &mut Value,
     workflow: &Value,
-    key: &str,
+    key: impl Into<JsString>,
     value: Value,
     required: bool,
 ) -> Result<()> {
-    let Some(target) = workflow["bindings"].get(key) else {
+    let key = key.into();
+    let Some(target) = workflow["bindings"].get(&key) else {
         return if required {
             Err(NumeraError::new(
                 "unsupported_parameter",
@@ -86,10 +87,10 @@ pub fn bind(
         };
     };
     let id = target["node"]
-        .as_str()
+        .as_js_string()
         .ok_or_else(|| invalid("Invalid workflow node binding."))?;
     let slot = target["input"]
-        .as_str()
+        .as_js_string()
         .ok_or_else(|| invalid("Invalid workflow input binding."))?;
     let node = graph.get_mut(id).ok_or_else(|| {
         invalid(&format!(
@@ -151,7 +152,7 @@ pub fn prepare(input: &Input<'_>) -> Result<Value> {
     for id in crate::error::array(&workflow["outputNodes"]) {
         if graph
             .get(
-                id.as_str()
+                id.as_js_string()
                     .ok_or_else(|| invalid("Invalid output node ID."))?,
             )
             .is_none()
@@ -164,11 +165,11 @@ pub fn prepare(input: &Input<'_>) -> Result<Value> {
 
 pub fn validate(graph: &Value, workflow: &Value, info: &Value) -> Result<()> {
     fn visit<'a>(
-        id: &'a str,
+        id: &'a JsString,
         graph: &'a Value,
         info: &Value,
-        visiting: &mut HashSet<&'a str>,
-        visited: &mut HashSet<&'a str>,
+        visiting: &mut HashSet<&'a JsString>,
+        visited: &mut HashSet<&'a JsString>,
     ) -> Result<()> {
         if visiting.contains(id) {
             return Err(invalid("ComfyUI workflow contains a cycle."));
@@ -182,7 +183,7 @@ pub fn validate(graph: &Value, workflow: &Value, info: &Value) -> Result<()> {
         object(node)?;
         visiting.insert(id);
         let kind = node["class_type"]
-            .as_str()
+            .as_js_string()
             .ok_or_else(|| invalid("Invalid workflow class type."))?;
         let descriptor = info.get(kind).ok_or_else(|| {
             NumeraError::new(
@@ -191,7 +192,7 @@ pub fn validate(graph: &Value, workflow: &Value, info: &Value) -> Result<()> {
             )
         })?;
         object(descriptor)?;
-        let empty = serde_json::json!({});
+        let empty = crate::compat::value::json!({});
         let input_info = descriptor.get("input").unwrap_or(&empty);
         object(input_info)?;
         let required = input_info.get("required").unwrap_or(&empty);
@@ -216,7 +217,7 @@ pub fn validate(graph: &Value, workflow: &Value, info: &Value) -> Result<()> {
             if let Some(link) = value.as_array() {
                 let upstream = link
                     .first()
-                    .and_then(Value::as_str)
+                    .and_then(Value::as_js_string)
                     .filter(|s| graph.get(*s).is_some());
                 let number = link
                     .get(1)
@@ -230,7 +231,7 @@ pub fn validate(graph: &Value, workflow: &Value, info: &Value) -> Result<()> {
                 let upstream = upstream.ok_or_else(|| invalid("Invalid workflow link."))?;
                 visit(upstream, graph, info, visiting, visited)?;
                 let kind = graph[upstream]["class_type"]
-                    .as_str()
+                    .as_js_string()
                     .ok_or_else(|| invalid("Invalid workflow class type."))?;
                 object(&info[kind])?;
                 if info[kind]["output"]
@@ -292,11 +293,11 @@ pub fn validate(graph: &Value, workflow: &Value, info: &Value) -> Result<()> {
     }
     for id in crate::error::array(&workflow["outputNodes"]) {
         let id = id
-            .as_str()
+            .as_js_string()
             .ok_or_else(|| invalid("Invalid output node ID."))?;
         object(&graph[id])?;
         let kind = graph[id]["class_type"]
-            .as_str()
+            .as_js_string()
             .ok_or_else(|| invalid("Invalid workflow class type."))?;
         object(&info[kind])?;
         if info[kind]["output_node"] == false {

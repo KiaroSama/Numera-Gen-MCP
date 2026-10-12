@@ -1,5 +1,5 @@
 use crate::error::{NumeraError, Result};
-use serde_json::{Value, json};
+use crate::compat::value::{Value, json};
 
 #[derive(Clone, Debug)]
 pub struct Event {
@@ -137,7 +137,7 @@ fn frame(text: &str, filtering: bool) -> Result<Option<Event>> {
             data: json!({}),
         }));
     }
-    let value: Value = serde_json::from_str(&data)
+    let value = Value::parse_with_limit(&data, 128 * 1024 * 1024)
         .map_err(|_| error("invalid_response", "Invalid streaming event JSON."))?;
     if !value.is_object() {
         return Err(error("invalid_response", "Invalid streaming event JSON."));
