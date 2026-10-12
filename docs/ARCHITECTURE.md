@@ -35,7 +35,8 @@ owns inference and GPU/model/node installation; Numera does not bundle or silent
 
 The optional `http` command serves the same `Application` and ten-tool `Handler` through official
 RMCP Streamable HTTP. Hyper owns bounded connections; a tracked task set and explicit shutdown close
-owned work. The default endpoint is `127.0.0.1:1969/mcp`, with validated port overrides and no public
+owned work. SDK session handlers have a separate clone-lifetime barrier so connection drain alone
+cannot be mistaken for release of application files and database handles. The default endpoint is `127.0.0.1:1969/mcp`, with validated port overrides and no public
 binding or silent collision fallback. Host/Origin and separate local Bearer authentication guard
 requests before dispatch. SDK-negotiated modern/legacy session and cancellation semantics stay distinct.
 
