@@ -95,11 +95,7 @@ impl Generation {
             receipt.value["warnings"]
                 .as_array_mut()
                 .ok_or_else(NumeraError::runtime)?
-                .extend(
-                    warnings
-                        .into_iter()
-                        .map(Value::String),
-                );
+                .extend(warnings.into_iter().map(Value::String));
             receipt.value["status"] = json!("running");
             receipt.value["generation_outcome"] = json!("running");
             locked(&self.store)?.update(receipt)?;

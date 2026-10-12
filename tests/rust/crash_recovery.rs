@@ -43,7 +43,8 @@ fn crash_checkpoint_child() {
         &root.join("config.json"),
         &[],
         &HashMap::new(),
-    ).unwrap();
+    )
+    .unwrap();
     let mut store = Store::open(Path::new(config.value["stateDir"].as_str().unwrap())).unwrap();
     if phase == "preintent" {
         checkpoint();
@@ -67,30 +68,48 @@ fn crash_checkpoint_child() {
     assert!(store.admit("child-crash", "test", 4, 4).unwrap());
     store.reserve("child-crash", 1048576, 2097152).unwrap();
     let bytes = std::fs::read(root.join("sample.png")).unwrap();
-    store.retain("child-crash", 0, &bytes, Some(&owner)).unwrap();
+    store
+        .retain("child-crash", 0, &bytes, Some(&owner))
+        .unwrap();
     if phase == "retained" {
         checkpoint();
     }
     if phase == "published" {
-        let item = store.publication(
-            "child-crash", 0,
-            |id| Ok(root.join(format!("outputs/crash/{id}.png")).to_str().unwrap().into()),
-            Some(&owner),
-        ).unwrap();
+        let item = store
+            .publication(
+                "child-crash",
+                0,
+                |id| {
+                    Ok(root
+                        .join(format!("outputs/crash/{id}.png"))
+                        .to_str()
+                        .unwrap()
+                        .into())
+                },
+                Some(&owner),
+            )
+            .unwrap();
         let target = std::path::PathBuf::from(item.target.unwrap());
         std::fs::create_dir_all(target.parent().unwrap()).unwrap();
-        std::fs::write(target, bytes).unwrap();
+        std::fs::write(target, &bytes).unwrap();
         checkpoint();
     }
     if phase == "committed" {
         let image = images::inspect(bytes, &config.value, None).unwrap();
         output::save(
-            &image, &config.value, &mut store,
+            &image,
+            &config.value,
+            &mut store,
             output::Publication {
-                id: "child-crash", index: 0, subdir: Some("crash"), prefix: None,
-                deviations: &[], expected: Some(&owner),
+                id: "child-crash",
+                index: 0,
+                subdir: Some("crash"),
+                prefix: None,
+                deviations: &[],
+                expected: Some(&owner),
             },
-        ).unwrap();
+        )
+        .unwrap();
         checkpoint();
     }
     panic!("Unknown fixture checkpoint");
@@ -114,19 +133,34 @@ impl Drop for OwnedChild {
 #[tokio::test]
 async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_replay() {
     tokio::time::timeout(Duration::from_secs(50), async {
-        for phase in ["preintent", "prepared", "submitted", "finalizing", "running", "retained", "published", "committed"] {
+        for phase in [
+            "preintent",
+            "prepared",
+            "submitted",
+            "finalizing",
+            "running",
+            "retained",
+            "published",
+            "committed",
+        ] {
             let workspace = Workspace::new();
             let config_path = workspace.0.join("config.json");
-            let config_text = workspace.config("http://127.0.0.1:1/v1", "openai-images").to_string();
+            let config_text = workspace
+                .config("http://127.0.0.1:1/v1", "openai-images")
+                .to_string();
             std::fs::write(&config_path, &config_text).unwrap();
             let bytes = image_fixture::original();
             std::fs::write(workspace.0.join("sample.png"), &bytes).unwrap();
             let mut command = Command::new(std::env::current_exe().unwrap());
-            command.args(["--exact", "crash_checkpoint_child", "--nocapture"])
+            command
+                .args(["--exact", "crash_checkpoint_child", "--nocapture"])
                 .env("NUMERA_CRASH_FIXTURE_ROOT", &workspace.0)
                 .env("NUMERA_CRASH_FIXTURE_PHASE", phase)
-                .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
-            #[cfg(windows)] {
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null());
+            #[cfg(windows)]
+            {
                 use std::os::windows::process::CommandExt;
                 command.creation_flags(0x08000000);
             }
@@ -141,15 +175,23 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
                     }
                 }
             });
-            let mut child = OwnedChild { child, reader: Some(reader) };
-            receiver.recv_timeout(Duration::from_secs(5)).expect("exact checkpoint reached before kill");
+            let mut child = OwnedChild {
+                child,
+                reader: Some(reader),
+            };
+            receiver
+                .recv_timeout(Duration::from_secs(5))
+                .expect("exact checkpoint reached before kill");
             child.child.kill().unwrap();
             let deadline = std::time::Instant::now() + Duration::from_secs(2);
             loop {
                 if child.child.try_wait().unwrap().is_some() {
                     break;
                 }
-                assert!(std::time::Instant::now() < deadline, "child termination bound");
+                assert!(
+                    std::time::Instant::now() < deadline,
+                    "child termination bound"
+                );
                 tokio::task::yield_now().await;
             }
             drop(child);
@@ -178,25 +220,44 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
                     assert!(pending.is_empty());
                     let outputs = store.list_outputs(0, 25).unwrap();
                     assert_eq!(outputs.len(), 1);
-                    assert_eq!(receipt.value["outputs"][0]["output_id"], outputs[0]["output_id"]);
-                    assert_eq!(std::fs::read(outputs[0]["path"].as_str().unwrap()).unwrap(), bytes);
+                    assert_eq!(
+                        receipt.value["outputs"][0]["output_id"],
+                        outputs[0]["output_id"]
+                    );
+                    assert_eq!(
+                        std::fs::read(outputs[0]["path"].as_str().unwrap()).unwrap(),
+                        bytes
+                    );
                 } else {
                     assert_eq!(pending[0].bytes.as_ref().unwrap(), &bytes);
                     let id = pending[0].output_id.clone();
-                    let config = Config::parse(&config_text, &config_path, &[], &HashMap::new()).unwrap();
+                    let config =
+                        Config::parse(&config_text, &config_path, &[], &HashMap::new()).unwrap();
                     let generation = Generation {
-                        config: Arc::new(config), store: Arc::new(Mutex::new(store)),
+                        config: Arc::new(config),
+                        store: Arc::new(Mutex::new(store)),
                         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
-                        runtime: RuntimePaths::new(&workspace.0).unwrap(), env: HashMap::new(),
+                        runtime: RuntimePaths::new(&workspace.0).unwrap(),
+                        env: HashMap::new(),
                         active: Arc::new(Mutex::new(HashMap::new())),
                     };
                     let receipt = numera_image_gen_mcp::services::jobs::recover_local(
-                        &generation, "child-crash", &CancellationToken::new(),
-                    ).await.unwrap();
+                        &generation,
+                        "child-crash",
+                        &CancellationToken::new(),
+                    )
+                    .await
+                    .unwrap();
                     assert_eq!(receipt.value["outputs"][0]["output_id"], id);
-                    assert_eq!(std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap()).unwrap(), bytes);
+                    assert_eq!(
+                        std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap())
+                            .unwrap(),
+                        bytes
+                    );
                 }
             }
         }
-    }).await.expect("bounded eight-checkpoint crash matrix");
+    })
+    .await
+    .expect("bounded eight-checkpoint crash matrix");
 }

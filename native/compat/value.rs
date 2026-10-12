@@ -409,38 +409,38 @@ impl PartialEq<&str> for Value {
     }
 }
 pub trait ValueIndex {
-    fn get<'a>(self, value: &'a Value) -> Option<&'a Value>;
-    fn get_mut<'a>(self, value: &'a mut Value) -> Option<&'a mut Value>;
+    fn get(self, value: &Value) -> Option<&Value>;
+    fn get_mut(self, value: &mut Value) -> Option<&mut Value>;
 }
 impl ValueIndex for &str {
-    fn get<'a>(self, value: &'a Value) -> Option<&'a Value> {
+    fn get(self, value: &Value) -> Option<&Value> {
         value.as_object()?.get(self)
     }
-    fn get_mut<'a>(self, value: &'a mut Value) -> Option<&'a mut Value> {
+    fn get_mut(self, value: &mut Value) -> Option<&mut Value> {
         value.as_object_mut()?.get_mut(self)
     }
 }
 impl ValueIndex for usize {
-    fn get<'a>(self, value: &'a Value) -> Option<&'a Value> {
+    fn get(self, value: &Value) -> Option<&Value> {
         value.as_array()?.get(self)
     }
-    fn get_mut<'a>(self, value: &'a mut Value) -> Option<&'a mut Value> {
+    fn get_mut(self, value: &mut Value) -> Option<&mut Value> {
         value.as_array_mut()?.get_mut(self)
     }
 }
 impl ValueIndex for &JsString {
-    fn get<'a>(self, value: &'a Value) -> Option<&'a Value> {
+    fn get(self, value: &Value) -> Option<&Value> {
         value.as_object()?.get_utf16(self.as_utf16())
     }
-    fn get_mut<'a>(self, value: &'a mut Value) -> Option<&'a mut Value> {
+    fn get_mut(self, value: &mut Value) -> Option<&mut Value> {
         value.as_object_mut()?.get_utf16_mut(self.as_utf16())
     }
 }
 impl ValueIndex for &&str {
-    fn get<'a>(self, value: &'a Value) -> Option<&'a Value> {
+    fn get(self, value: &Value) -> Option<&Value> {
         value.get(*self)
     }
-    fn get_mut<'a>(self, value: &'a mut Value) -> Option<&'a mut Value> {
+    fn get_mut(self, value: &mut Value) -> Option<&mut Value> {
         value.get_mut(*self)
     }
 }
@@ -456,10 +456,10 @@ impl IndexMut<&&str> for Value {
     }
 }
 impl ValueIndex for &String {
-    fn get<'a>(self, value: &'a Value) -> Option<&'a Value> {
+    fn get(self, value: &Value) -> Option<&Value> {
         value.get(self.as_str())
     }
-    fn get_mut<'a>(self, value: &'a mut Value) -> Option<&'a mut Value> {
+    fn get_mut(self, value: &mut Value) -> Option<&mut Value> {
         value.get_mut(self.as_str())
     }
 }

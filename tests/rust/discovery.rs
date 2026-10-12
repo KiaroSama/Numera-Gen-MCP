@@ -96,7 +96,7 @@ async fn specialty_catalog_routes_cache_health_and_metadata_preserve_evidence() 
             ),
         ] {
             let config = config(&workspace, &server.origin, adapter, gateway);
-            let cap = Discovery::model(&config, &runtime, &HashMap::new(), None, model, &cancel)
+            let cap = Discovery::model(&config, &runtime, &HashMap::new(), None, &model.into(), &cancel)
                 .await
                 .unwrap();
             assert_eq!(cap["account_availability"], "unknown");

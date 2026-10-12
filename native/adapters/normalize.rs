@@ -156,7 +156,7 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
                     )
                 })?;
             result.job = Some(Job {
-                id: id.into(),
+                id,
                 kind: if adapter == "gemini-interactions" {
                     "interactions"
                 } else {

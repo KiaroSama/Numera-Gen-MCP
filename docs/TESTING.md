@@ -48,7 +48,14 @@ native compilation on two shared type-boundary errors; its tests and coverage ar
 Those errors are being repaired together using actual hosted diagnostics and formatter/lock artifacts.
 Further acceptance fixtures cover real killed-child checkpoints, queued credential snapshots, two-process
 journal budgets, captured edit masks, catalog pagination, malformed Comfy uploads and hanging-response
-socket cleanup. Their authored existence is not execution proof or a full 470-case mapping. SQLite
+socket cleanup. Their authored existence is not execution proof or a full 470-case mapping. Revision `4c9e8c7` still
+failed native test compilation and strict linting; its partial instrumentation report is not a complete
+coverage measurement. Those exact type/lint diagnostics are repaired in one replacement batch.
+The Windows source fixture also incorrectly required numeric PIDs never to repeat after reaping;
+process-instance checks now use the actual child's immutable startup-log `run_id`, while simultaneous
+PID distinction, bounded shutdown and every original lifecycle assertion remain required. Native
+stdio negotiation separately preserves the frozen source's legacy/auto behavior and modern-pin
+rejection; the optional HTTP transport retains its SDK-supported modern protocol behavior. SQLite
 fixture stores, loopback services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with

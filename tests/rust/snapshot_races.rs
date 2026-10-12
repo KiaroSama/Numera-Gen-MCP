@@ -28,7 +28,15 @@ use tokio_util::sync::CancellationToken;
 
 fn generation(workspace: &Workspace, raw: &Value, env: HashMap<String, String>) -> Generation {
     Generation {
-        config: Arc::new(Config::parse(&raw.to_string(), &workspace.0.join("config.json"), &[], &env).unwrap()),
+        config: Arc::new(
+            Config::parse(
+                &raw.to_string(),
+                &workspace.0.join("config.json"),
+                &[],
+                &env,
+            )
+            .unwrap(),
+        ),
         store: Arc::new(Mutex::new(Store::open(&workspace.0.join("state")).unwrap())),
         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
@@ -47,15 +55,23 @@ async fn wire(socket: &mut tokio::net::TcpStream) -> (String, Value) {
         assert!(bytes.len() <= 65536, "bounded fixture request");
         if let Some(boundary) = bytes.windows(4).position(|b| b == b"\r\n\r\n") {
             let headers = std::str::from_utf8(&bytes[..boundary]).unwrap();
-            let length = headers.lines().find_map(|line| line.to_ascii_lowercase()
-                .strip_prefix("content-length:").and_then(|v| v.trim().parse::<usize>().ok())).unwrap_or(0);
+            let length = headers
+                .lines()
+                .find_map(|line| {
+                    line.to_ascii_lowercase()
+                        .strip_prefix("content-length:")
+                        .and_then(|v| v.trim().parse::<usize>().ok())
+                })
+                .unwrap_or(0);
             if bytes.len() >= boundary + 4 + length {
                 break boundary;
             }
         }
     };
-    (String::from_utf8(bytes[..boundary].to_vec()).unwrap(),
-        Value::parse(std::str::from_utf8(&bytes[boundary + 4..]).unwrap()).unwrap())
+    (
+        String::from_utf8(bytes[..boundary].to_vec()).unwrap(),
+        Value::parse(std::str::from_utf8(&bytes[boundary + 4..]).unwrap()).unwrap(),
+    )
 }
 
 async fn respond(socket: &mut tokio::net::TcpStream, encoded: &str) {
@@ -70,7 +86,8 @@ async fn queued_file_and_explicit_environment_snapshots_keep_old_headers_until_n
         let workspace = Workspace::new();
         let secret = workspace.0.join("synthetic-key");
         std::fs::write(&secret, b"synthetic-a").unwrap();
-        #[cfg(unix)] {
+        #[cfg(unix)]
+        {
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(&secret, std::fs::Permissions::from_mode(0o600)).unwrap();
         }
@@ -80,66 +97,149 @@ async fn queued_file_and_explicit_environment_snapshots_keep_old_headers_until_n
         raw["maxConcurrentRequests"] = json!(1);
         raw["connections"]["test"]["auth"] = if kind == "file" {
             json!({"type":"bearer","secretFile":secret.to_str().unwrap()})
-        } else { json!({"type":"bearer","secretEnv":"SELECTED"}) };
+        } else {
+            json!({"type":"bearer","secretEnv":"SELECTED"})
+        };
         raw["connections"]["test"]["requestTimeoutMs"] = json!(7000);
-        let env = if kind == "file" { HashMap::new() }
-            else { HashMap::from([("SELECTED".into(), "synthetic-a".into())]) };
+        let env = if kind == "file" {
+            HashMap::new()
+        } else {
+            HashMap::from([("SELECTED".into(), "synthetic-a".into())])
+        };
         let generation = generation(&workspace, &raw, env);
         let store = generation.store.clone();
-        let blocker = Receipt::new(json!({"request_id":"blocker","connection":"test","status":"prepared","outputs":[],"errors":[],"warnings":[],"deviations":[]}));
-        let (_, mut owner) = store.lock().unwrap().prepare(blocker, "blocker", "fixture").unwrap();
-        assert!(store.lock().unwrap().admit("blocker", "test", 1, 1).unwrap());
+        let blocker = Receipt::new(
+            json!({"request_id":"blocker","connection":"test","status":"prepared","outputs":[],"errors":[],"warnings":[],"deviations":[]}),
+        );
+        let (_, mut owner) = store
+            .lock()
+            .unwrap()
+            .prepare(blocker, "blocker", "fixture")
+            .unwrap();
+        assert!(
+            store
+                .lock()
+                .unwrap()
+                .admit("blocker", "test", 1, 1)
+                .unwrap()
+        );
         owner.value["status"] = json!("running");
         owner.value["upstream_job"] = json!({"id":"blocker","kind":"responses"});
         store.lock().unwrap().update(&mut owner).unwrap();
-        store.lock().unwrap().release("blocker", Some(&owner)).unwrap();
-        let encoded = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, image_fixture::original());
+        store
+            .lock()
+            .unwrap()
+            .release("blocker", Some(&owner))
+            .unwrap();
+        let encoded = base64::Engine::encode(
+            &base64::engine::general_purpose::STANDARD,
+            image_fixture::original(),
+        );
         let server = async {
             let mut accounts = Vec::new();
             for _ in 0..2 {
                 let (mut socket, _) = listener.accept().await.unwrap();
                 let (headers, _) = wire(&mut socket).await;
-                accounts.push(headers.to_ascii_lowercase().contains("authorization: bearer synthetic-a"));
+                accounts.push(
+                    headers
+                        .to_ascii_lowercase()
+                        .contains("authorization: bearer synthetic-a"),
+                );
                 respond(&mut socket, &encoded).await;
             }
             accounts
         };
         let queued = async {
-            generation.run(json!({"prompt":"fixture","request_id":"queued"}), "generate", &CancellationToken::new()).await.unwrap()
+            generation
+                .run(
+                    json!({"prompt":"fixture","request_id":"queued"}),
+                    "generate",
+                    &CancellationToken::new(),
+                )
+                .await
+                .unwrap()
         };
         let rotate = async {
             let deadline = Instant::now() + Duration::from_secs(2);
             loop {
-                if store.lock().unwrap().get("queued").is_ok_and(|r| r.status() == "prepared") {
+                if store
+                    .lock()
+                    .unwrap()
+                    .get("queued")
+                    .is_ok_and(|r| r.status() == "prepared")
+                {
                     break;
                 }
-                assert!(Instant::now() < deadline, "actual prepared queue checkpoint");
+                assert!(
+                    Instant::now() < deadline,
+                    "actual prepared queue checkpoint"
+                );
                 tokio::task::yield_now().await;
             }
             let identity = store.lock().unwrap().identity("queued").unwrap();
             std::fs::write(&secret, b"synthetic-b").unwrap();
-            store.lock().unwrap().terminate("blocker", "cancelled", &json!({"code":"fixture"}), None, None).unwrap();
+            store
+                .lock()
+                .unwrap()
+                .terminate(
+                    "blocker",
+                    "cancelled",
+                    &json!({"code":"fixture"}),
+                    None,
+                    None,
+                )
+                .unwrap();
             identity
         };
         let client = async {
             let (first, original_identity) = tokio::join!(queued, rotate);
             let rotated = Generation {
-                config: generation.config.clone(), store: generation.store.clone(), logger: generation.logger.clone(),
-                runtime: generation.runtime.clone(), active: generation.active.clone(),
-                env: if kind == "file" { HashMap::new() }
-                    else { HashMap::from([("SELECTED".into(), "synthetic-b".into())]) },
+                config: generation.config.clone(),
+                store: generation.store.clone(),
+                logger: generation.logger.clone(),
+                runtime: generation.runtime.clone(),
+                active: generation.active.clone(),
+                env: if kind == "file" {
+                    HashMap::new()
+                } else {
+                    HashMap::from([("SELECTED".into(), "synthetic-b".into())])
+                },
             };
             // Environment branch injects the next operation's snapshot, never mutates process env.
-            let next = rotated.run(json!({"prompt":"fixture","request_id":"next"}), "generate", &CancellationToken::new()).await.unwrap();
+            let next = rotated
+                .run(
+                    json!({"prompt":"fixture","request_id":"next"}),
+                    "generate",
+                    &CancellationToken::new(),
+                )
+                .await
+                .unwrap();
             assert_eq!(first.status(), "completed");
             assert_eq!(next.status(), "completed");
-            assert_eq!(store.lock().unwrap().identity("queued").unwrap(), original_identity);
-            assert_ne!(store.lock().unwrap().identity("next").unwrap(), original_identity);
-            assert!(!json!([first.value, next.value, generation.config.value]).to_string().contains("synthetic-a"));
-            assert!(!json!([first.value, next.value, generation.config.value]).to_string().contains("synthetic-b"));
+            assert_eq!(
+                store.lock().unwrap().identity("queued").unwrap(),
+                original_identity
+            );
+            assert_ne!(
+                store.lock().unwrap().identity("next").unwrap(),
+                original_identity
+            );
+            assert!(
+                !json!([first.value, next.value, generation.config.value])
+                    .to_string()
+                    .contains("synthetic-a")
+            );
+            assert!(
+                !json!([first.value, next.value, generation.config.value])
+                    .to_string()
+                    .contains("synthetic-b")
+            );
         };
-        let (accounts, ()) = tokio::time::timeout(Duration::from_secs(8), async { tokio::join!(server, client) })
-            .await.expect("owned file rotation fixture lifetime");
+        let (accounts, ()) = tokio::time::timeout(Duration::from_secs(8), async {
+            tokio::join!(server, client)
+        })
+        .await
+        .expect("owned file rotation fixture lifetime");
         assert_eq!(accounts, [true, false]);
     }
 }
@@ -157,10 +257,18 @@ async fn in_flight_generation_keeps_old_snapshot_while_reload_and_next_request_u
     saved["connections"]["test"]["baseUrl"] = json!(format!("{origin}/new/v1"));
     saved["connections"]["test"]["defaultModel"] = json!("new");
     saved["connections"]["test"]["configuredModels"] = json!([{"id":"new","name":"New"}]);
-    let mut reload = ConfigReload::new((*old.config).clone(), workspace.0.join("config.json"), Vec::new(), HashMap::new());
+    let mut reload = ConfigReload::new(
+        (*old.config).clone(),
+        workspace.0.join("config.json"),
+        Vec::new(),
+        HashMap::new(),
+    );
     let submitted = tokio::sync::Notify::new();
     let release = tokio::sync::Notify::new();
-    let encoded = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, image_fixture::original());
+    let encoded = base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        image_fixture::original(),
+    );
     let server = async {
         let mut wires = Vec::new();
         for index in 0..2 {
@@ -177,11 +285,27 @@ async fn in_flight_generation_keeps_old_snapshot_while_reload_and_next_request_u
     };
     let client = async {
         let signal = CancellationToken::new();
-        let pending = old.run(json!({"prompt":"fixture","request_id":"captured-config"}), "generate", &signal);
+        let pending = old.run(
+            json!({"prompt":"fixture","request_id":"captured-config"}),
+            "generate",
+            &signal,
+        );
         let reload_action = async {
             submitted.notified().await;
-            let accepted = reload.refresh_text(Some(&saved.to_string()), |_| true).unwrap();
-            let list = Discovery::default().list(&accepted.config, &old.runtime, &HashMap::new(), None, false, &CancellationToken::new()).await.unwrap();
+            let accepted = reload
+                .refresh_text(Some(&saved.to_string()), |_| true)
+                .unwrap();
+            let list = Discovery::default()
+                .list(
+                    &accepted.config,
+                    &old.runtime,
+                    &HashMap::new(),
+                    None,
+                    false,
+                    &CancellationToken::new(),
+                )
+                .await
+                .unwrap();
             assert_eq!(list["models"][0]["id"], "new");
             assert_eq!(list["models"][0]["name"], "New");
             release.notify_one();
@@ -190,11 +314,31 @@ async fn in_flight_generation_keeps_old_snapshot_while_reload_and_next_request_u
         let (first, current) = tokio::join!(pending, reload_action);
         let first = first.unwrap();
         assert_eq!(first.value["requested_model"], "old");
-        let next = Generation { config: current, store: old.store.clone(), logger: old.logger.clone(), runtime: old.runtime.clone(), env: HashMap::new(), active: old.active.clone() };
-        assert_eq!(next.run(json!({"prompt":"fixture","request_id":"new-config"}), "generate", &CancellationToken::new()).await.unwrap().value["requested_model"], "new");
+        let next = Generation {
+            config: current,
+            store: old.store.clone(),
+            logger: old.logger.clone(),
+            runtime: old.runtime.clone(),
+            env: HashMap::new(),
+            active: old.active.clone(),
+        };
+        assert_eq!(
+            next.run(
+                json!({"prompt":"fixture","request_id":"new-config"}),
+                "generate",
+                &CancellationToken::new()
+            )
+            .await
+            .unwrap()
+            .value["requested_model"],
+            "new"
+        );
     };
-    let (wires, ()) = tokio::time::timeout(Duration::from_secs(8), async { tokio::join!(server, client) })
-        .await.expect("owned reload fixture lifetime");
+    let (wires, ()) = tokio::time::timeout(Duration::from_secs(8), async {
+        tokio::join!(server, client)
+    })
+    .await
+    .expect("owned reload fixture lifetime");
     assert!(wires[0].0.starts_with("POST /v1/images/generations "));
     assert!(wires[1].0.starts_with("POST /new/v1/images/generations "));
     assert_eq!(wires[0].1, json!({"model":"old","prompt":"fixture","n":1}));
@@ -224,32 +368,57 @@ async fn actual_region_edit_wire_preserves_original_and_mask_polarity_before_sub
         bodies
     };
     let client = async {
-        for (index, polarity) in ["transparent-edit", "white-edit", "black-edit"].into_iter().enumerate() {
+        for (index, polarity) in ["transparent-edit", "white-edit", "black-edit"]
+            .into_iter()
+            .enumerate()
+        {
             let mut raw = workspace.config(&origin, "openai-images");
-            raw["connections"]["test"]["edit"] = json!({"mode":"json","encoding":"image","masks":true,"maskPolarity":polarity});
+            raw["connections"]["test"]["edit"] =
+                json!({"mode":"json","encoding":"image","masks":true,"maskPolarity":polarity});
             let generation = generation(&workspace, &raw, HashMap::new());
             let input = json!({"prompt":"Preserve the comic panels 日本語","request_id":format!("region-{index}"),"target_language":"Persian",
                 "reference_images":[{"type":"data_url","data_url":format!("data:image/png;base64,{encoded}")}],
                 "edit_region":{"x":1,"y":0,"width":1,"height":1}});
-            let receipt = generation.run(input, "edit", &CancellationToken::new()).await.unwrap();
+            let receipt = generation
+                .run(input, "edit", &CancellationToken::new())
+                .await
+                .unwrap();
             assert_eq!(receipt.status(), "completed");
-            assert_eq!(std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap()).unwrap(), original);
+            assert_eq!(
+                std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+                original
+            );
         }
     };
-    let (bodies, ()) = tokio::time::timeout(Duration::from_secs(8), async { tokio::join!(server, client) })
-        .await.expect("owned mask-wire fixture lifetime");
-    for (body, polarity) in bodies.iter().zip(["transparent-edit", "white-edit", "black-edit"]) {
+    let (bodies, ()) = tokio::time::timeout(Duration::from_secs(8), async {
+        tokio::join!(server, client)
+    })
+    .await
+    .expect("owned mask-wire fixture lifetime");
+    for (body, polarity) in bodies
+        .iter()
+        .zip(["transparent-edit", "white-edit", "black-edit"])
+    {
         assert_eq!(body["image"], format!("data:image/png;base64,{encoded}"));
         let prompt = body["prompt"].as_str().unwrap();
         assert!(prompt.contains("Preserve the comic panels 日本語"));
         assert!(prompt.contains("Translate the text inside the selected region into Persian"));
-        let bytes = numera_image_gen_mcp::files::images::data_url(body["mask"].as_str().unwrap(), 1048576).unwrap();
+        let bytes =
+            numera_image_gen_mcp::files::images::data_url(body["mask"].as_str().unwrap(), 1048576)
+                .unwrap();
         let mask = image::load_from_memory(&bytes).unwrap().to_rgba8();
         assert_eq!((mask.width(), mask.height()), (width, height));
         let outside = mask.get_pixel(0, 0).0;
         let inside = mask.get_pixel(1, 0).0;
         assert_eq!(outside[3], 255);
-        assert_eq!(inside[3], if polarity == "transparent-edit" { 0 } else { 255 });
+        assert_eq!(
+            inside[3],
+            if polarity == "transparent-edit" {
+                0
+            } else {
+                255
+            }
+        );
         if polarity != "transparent-edit" {
             assert_eq!(outside[0], if polarity == "white-edit" { 0 } else { 255 });
             assert_eq!(inside[0], if polarity == "white-edit" { 255 } else { 0 });
@@ -271,9 +440,18 @@ fn reservation_process_child() {
     std::io::stdin().lock().read_line(&mut line).unwrap();
     assert_eq!(line.trim(), "reserve");
     let result = store.reserve(&id, 2048, 3072);
-    println!("reservation-result:{}", match result { Ok(()) => "reserved".into(), Err(error) => error.code });
+    println!(
+        "reservation-result:{}",
+        match result {
+            Ok(()) => "reserved".into(),
+            Err(error) => error.code,
+        }
+    );
     std::io::stdout().flush().unwrap();
-    std::io::stdin().lock().read_line(&mut String::new()).unwrap();
+    std::io::stdin()
+        .lock()
+        .read_line(&mut String::new())
+        .unwrap();
     store.release(&id, Some(&owner)).unwrap();
 }
 
@@ -294,10 +472,18 @@ impl Drop for OwnedChild {
 }
 fn child(root: &Path, id: &str) -> OwnedChild {
     let mut command = Command::new(std::env::current_exe().unwrap());
-    command.args(["--exact", "reservation_process_child", "--nocapture"])
-        .env("NUMERA_RESERVATION_FIXTURE_ROOT", root).env("NUMERA_RESERVATION_FIXTURE_ID", id)
-        .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
-    #[cfg(windows)] { use std::os::windows::process::CommandExt; command.creation_flags(0x08000000); }
+    command
+        .args(["--exact", "reservation_process_child", "--nocapture"])
+        .env("NUMERA_RESERVATION_FIXTURE_ROOT", root)
+        .env("NUMERA_RESERVATION_FIXTURE_ID", id)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null());
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x08000000);
+    }
     let mut child = command.spawn().unwrap();
     let stdout = child.stdout.take().unwrap();
     let (sender, events) = mpsc::channel();
@@ -309,7 +495,11 @@ fn child(root: &Path, id: &str) -> OwnedChild {
             }
         }
     });
-    OwnedChild { child, reader: Some(reader), events }
+    OwnedChild {
+        child,
+        reader: Some(reader),
+        events,
+    }
 }
 
 #[test]
@@ -320,10 +510,19 @@ fn two_actual_store_processes_serialize_shared_budget_reservations() {
     let mut first = child(&state, "one");
     let mut second = child(&state, "two");
     for process in [&mut first, &mut second] {
-        assert_eq!(process.events.recv_timeout(Duration::from_secs(3)).unwrap(), "reservation-ready");
+        assert_eq!(
+            process.events.recv_timeout(Duration::from_secs(3)).unwrap(),
+            "reservation-ready"
+        );
     }
     for process in [&mut first, &mut second] {
-        process.child.stdin.as_mut().unwrap().write_all(b"reserve\n").unwrap();
+        process
+            .child
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_all(b"reserve\n")
+            .unwrap();
         process.child.stdin.as_mut().unwrap().flush().unwrap();
     }
     let mut results = Vec::new();
@@ -331,13 +530,27 @@ fn two_actual_store_processes_serialize_shared_budget_reservations() {
         results.push(process.events.recv_timeout(Duration::from_secs(3)).unwrap());
     }
     results.sort();
-    assert_eq!(results, ["reservation-result:rate_limited", "reservation-result:reserved"]);
+    assert_eq!(
+        results,
+        [
+            "reservation-result:rate_limited",
+            "reservation-result:reserved"
+        ]
+    );
     let database = rusqlite::Connection::open(state.join("receipts.sqlite")).unwrap();
-    let used: i64 = database.query_row("SELECT SUM(reservation) FROM requests", [], |r| r.get(0)).unwrap();
+    let used: i64 = database
+        .query_row("SELECT SUM(reservation) FROM requests", [], |r| r.get(0))
+        .unwrap();
     assert_eq!(used, 2048);
     drop(database);
     for process in [&mut first, &mut second] {
-        process.child.stdin.as_mut().unwrap().write_all(b"close\n").unwrap();
+        process
+            .child
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_all(b"close\n")
+            .unwrap();
         process.child.stdin.take();
         let deadline = Instant::now() + Duration::from_secs(2);
         loop {

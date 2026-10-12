@@ -21,12 +21,12 @@ fn generated_source_canonicalization_cases_are_nonempty_and_exact() {
         let input = &case["input"];
         assert_eq!(
             canonical_json(input).expect("canonical input"),
-            case["canonical"],
+            case["canonical"].as_str().expect("canonical oracle string"),
             "{name}"
         );
         assert_eq!(
             fingerprint(input).expect("source-compatible hash"),
-            case["fingerprint"],
+            case["fingerprint"].as_str().expect("fingerprint oracle string"),
             "{name}"
         );
     }

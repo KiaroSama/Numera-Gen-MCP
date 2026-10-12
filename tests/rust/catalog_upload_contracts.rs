@@ -59,18 +59,28 @@ where
                     assert!(bytes.len() <= 1048576, "bounded multipart fixture");
                     if let Some(boundary) = bytes.windows(4).position(|v| v == b"\r\n\r\n") {
                         let headers = std::str::from_utf8(&bytes[..boundary]).unwrap();
-                        let length = headers.lines().find_map(|line| {
-                            line.to_ascii_lowercase().strip_prefix("content-length:")
-                                .and_then(|v| v.trim().parse::<usize>().ok())
-                        }).unwrap_or(0);
+                        let length = headers
+                            .lines()
+                            .find_map(|line| {
+                                line.to_ascii_lowercase()
+                                    .strip_prefix("content-length:")
+                                    .and_then(|v| v.trim().parse::<usize>().ok())
+                            })
+                            .unwrap_or(0);
                         if bytes.len() >= boundary + 4 + length {
                             break (boundary, length);
                         }
                     }
                 };
                 let headers = String::from_utf8(bytes[..boundary].to_vec()).unwrap();
-                let path = headers.lines().next().unwrap().split_whitespace().nth(1)
-                    .unwrap().to_owned();
+                let path = headers
+                    .lines()
+                    .next()
+                    .unwrap()
+                    .split_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_owned();
                 let request = Request {
                     path,
                     headers,
@@ -79,11 +89,16 @@ where
                 let value = reply(&request);
                 captured.lock().unwrap().push(request);
                 let body = value.to_string();
-                let response = format!("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
+                let response = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
                 socket.write_all(response.as_bytes()).await.unwrap();
                 socket.shutdown().await.unwrap();
             };
-            tokio::time::timeout(Duration::from_secs(3), operation).await.unwrap();
+            tokio::time::timeout(Duration::from_secs(3), operation)
+                .await
+                .unwrap();
         }
     };
     let client = async {
@@ -91,16 +106,30 @@ where
         stop.cancel();
         result.expect("bounded contract action");
     };
-    tokio::time::timeout(Duration::from_secs(12), async { tokio::join!(server, client) })
-        .await.expect("owned server/action lifetime");
+    tokio::time::timeout(Duration::from_secs(12), async {
+        tokio::join!(server, client)
+    })
+    .await
+    .expect("owned server/action lifetime");
 }
 
 fn config(workspace: &Workspace, raw: Value) -> Config {
-    Config::parse(&raw.to_string(), &workspace.0.join("config.json"), &[], &HashMap::new()).unwrap()
+    Config::parse(
+        &raw.to_string(),
+        &workspace.0.join("config.json"),
+        &[],
+        &HashMap::new(),
+    )
+    .unwrap()
 }
 
 fn ids(value: &Value) -> Vec<&str> {
-    value["models"].as_array().unwrap().iter().map(|item| item["id"].as_str().unwrap()).collect()
+    value["models"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["id"].as_str().unwrap())
+        .collect()
 }
 
 #[tokio::test]
@@ -130,24 +159,55 @@ async fn omniroute_specialty_catalog_is_supplemented_by_paginated_image_only_ded
 #[tokio::test]
 async fn gemini_page_tokens_do_not_mutate_configuration_or_leak_into_fresh_refresh() {
     let workspace = Workspace::new();
-    serve(|request| {
-        if request.path.contains("pageToken=") { json!({"models":[{"name":"second"}]}) }
-        else { json!({"models":[{"name":"first"}],"nextPageToken":"token-2"}) }
-    }, |origin, requests| async move {
-        let mut raw = workspace.config(&format!("{origin}/v1beta"), "gemini");
-        raw["connections"]["test"]["query"] = json!({"scope":"images"});
-        let config = config(&workspace, raw);
-        let runtime = RuntimePaths::new(&workspace.0).unwrap();
-        let mut discovery = Discovery::default();
-        for refresh in [false, true] {
-            let result = discovery.list(&config, &runtime, &HashMap::new(), None, refresh, &CancellationToken::new()).await.unwrap();
-            assert_eq!(ids(&result), ["first", "second"]);
-        }
-        assert_eq!(config.value["connections"]["test"]["query"], json!({"scope":"images"}));
-        let requests = requests.lock().unwrap();
-        let paths: Vec<_> = requests.iter().map(|request| request.path.as_str()).collect();
-        assert_eq!(paths, ["/v1beta/models?scope=images", "/v1beta/models?scope=images&pageToken=token-2", "/v1beta/models?scope=images", "/v1beta/models?scope=images&pageToken=token-2"]);
-    }).await;
+    serve(
+        |request| {
+            if request.path.contains("pageToken=") {
+                json!({"models":[{"name":"second"}]})
+            } else {
+                json!({"models":[{"name":"first"}],"nextPageToken":"token-2"})
+            }
+        },
+        |origin, requests| async move {
+            let mut raw = workspace.config(&format!("{origin}/v1beta"), "gemini");
+            raw["connections"]["test"]["query"] = json!({"scope":"images"});
+            let config = config(&workspace, raw);
+            let runtime = RuntimePaths::new(&workspace.0).unwrap();
+            let mut discovery = Discovery::default();
+            for refresh in [false, true] {
+                let result = discovery
+                    .list(
+                        &config,
+                        &runtime,
+                        &HashMap::new(),
+                        None,
+                        refresh,
+                        &CancellationToken::new(),
+                    )
+                    .await
+                    .unwrap();
+                assert_eq!(ids(&result), ["first", "second"]);
+            }
+            assert_eq!(
+                config.value["connections"]["test"]["query"],
+                json!({"scope":"images"})
+            );
+            let requests = requests.lock().unwrap();
+            let paths: Vec<_> = requests
+                .iter()
+                .map(|request| request.path.as_str())
+                .collect();
+            assert_eq!(
+                paths,
+                [
+                    "/v1beta/models?scope=images",
+                    "/v1beta/models?scope=images&pageToken=token-2",
+                    "/v1beta/models?scope=images",
+                    "/v1beta/models?scope=images&pageToken=token-2"
+                ]
+            );
+        },
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -181,34 +241,108 @@ fn comfy_config(origin: &str) -> Value {
 }
 
 #[tokio::test]
-async fn malformed_image_and_mask_upload_identity_prevent_prompt_submission_and_unknown_ids_never_retry() {
+async fn malformed_image_and_mask_upload_identity_prevent_prompt_submission_and_unknown_ids_never_retry()
+ {
     let image = images::inspect(image_fixture::original(), &json!({}), None).unwrap();
-    serve(|request| {
-        if request.path == "/upload/image" { json!({"name":42,"subfolder":""}) } else { json!({}) }
-    }, |origin, requests| async move {
-        let connection = comfy_config(&origin);
-        let request = json!({"prompt":"draw","count":1,"provider_options":{}});
-        let model = "workflow".into();
-        for mask in [false, true] {
-            let references = if mask { Vec::new() } else { vec![image.clone()] };
-            let input = Input { connection:&connection, request:&request, model:&model, operation:"generate", references:&references, mask:mask.then_some(&image) };
-            let error = comfy::submit(&input, workflow::prepare(&input).unwrap(), &HashMap::new(), &CancellationToken::new()).await.err().unwrap();
-            assert_eq!(error.code, "invalid_response");
-            assert_eq!(error.stage, "upload");
-            assert!(requests.lock().unwrap().iter().all(|request| request.path == "/upload/image"));
-        }
-        let input = Input { connection:&connection, request:&request, model:&model, operation:"generate", references:&[], mask:None };
-        let error = comfy::submit(&input, workflow::prepare(&input).unwrap(), &HashMap::new(), &CancellationToken::new()).await.err().unwrap();
-        assert_eq!(error.code, "outcome_unknown");
-        assert_eq!(error.stage, "submission");
-        let requests = requests.lock().unwrap();
-        assert_eq!(requests.iter().filter(|request| request.path == "/upload/image").count(), 2);
-        assert_eq!(requests.iter().filter(|request| request.path == "/prompt").count(), 1);
-        for request in requests.iter().filter(|request| request.path == "/upload/image") {
-            assert!(request.headers.to_ascii_lowercase().contains("multipart/form-data"));
-            assert!(request.body.windows(image.bytes.len()).any(|window| window == image.bytes));
-        }
-    }).await;
+    serve(
+        |request| {
+            if request.path == "/upload/image" {
+                json!({"name":42,"subfolder":""})
+            } else {
+                json!({})
+            }
+        },
+        |origin, requests| async move {
+            let connection = comfy_config(&origin);
+            let request = json!({"prompt":"draw","count":1,"provider_options":{}});
+            let model = "workflow".into();
+            for mask in [false, true] {
+                let references = if mask {
+                    Vec::new()
+                } else {
+                    vec![image.clone()]
+                };
+                let input = Input {
+                    connection: &connection,
+                    request: &request,
+                    model: &model,
+                    operation: "generate",
+                    references: &references,
+                    mask: mask.then_some(&image),
+                };
+                let error = comfy::submit(
+                    &input,
+                    workflow::prepare(&input).unwrap(),
+                    &HashMap::new(),
+                    &CancellationToken::new(),
+                )
+                .await
+                .err()
+                .unwrap();
+                assert_eq!(error.code, "invalid_response");
+                assert_eq!(error.stage, "upload");
+                assert!(
+                    requests
+                        .lock()
+                        .unwrap()
+                        .iter()
+                        .all(|request| request.path == "/upload/image")
+                );
+            }
+            let input = Input {
+                connection: &connection,
+                request: &request,
+                model: &model,
+                operation: "generate",
+                references: &[],
+                mask: None,
+            };
+            let error = comfy::submit(
+                &input,
+                workflow::prepare(&input).unwrap(),
+                &HashMap::new(),
+                &CancellationToken::new(),
+            )
+            .await
+            .err()
+            .unwrap();
+            assert_eq!(error.code, "outcome_unknown");
+            assert_eq!(error.stage, "submission");
+            let requests = requests.lock().unwrap();
+            assert_eq!(
+                requests
+                    .iter()
+                    .filter(|request| request.path == "/upload/image")
+                    .count(),
+                2
+            );
+            assert_eq!(
+                requests
+                    .iter()
+                    .filter(|request| request.path == "/prompt")
+                    .count(),
+                1
+            );
+            for request in requests
+                .iter()
+                .filter(|request| request.path == "/upload/image")
+            {
+                assert!(
+                    request
+                        .headers
+                        .to_ascii_lowercase()
+                        .contains("multipart/form-data")
+                );
+                assert!(
+                    request
+                        .body
+                        .windows(image.bytes.len())
+                        .any(|window| window == image.bytes)
+                );
+            }
+        },
+    )
+    .await;
 }
 
 #[tokio::test]

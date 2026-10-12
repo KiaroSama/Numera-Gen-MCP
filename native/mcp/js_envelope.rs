@@ -63,7 +63,9 @@ pub fn decode_id(value: &serde_json::Value) -> Result<JsValue> {
     }
     let units = encoded
         .as_bytes()
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .map(|chunk| {
             std::str::from_utf8(chunk)
                 .ok()

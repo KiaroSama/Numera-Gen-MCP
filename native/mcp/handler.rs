@@ -12,6 +12,7 @@ pub struct Handler {
     pub application: Arc<Application>,
     pub tools: Vec<Tool>,
     _lifetime: Option<super::handler_lifetime::HandlerLease>,
+    modern_http: bool,
 }
 impl Handler {
     pub fn new(application: Arc<Application>) -> Result<Self> {
@@ -19,6 +20,7 @@ impl Handler {
             application,
             tools: tools::definitions()?,
             _lifetime: None,
+            modern_http: false,
         })
     }
     pub(super) fn tracked(
@@ -26,6 +28,7 @@ impl Handler {
         lifetime: &Arc<super::handler_lifetime::HandlerLifetime>,
     ) -> Self {
         self._lifetime = Some(lifetime.acquire());
+        self.modern_http = true;
         self
     }
 }
@@ -37,6 +40,17 @@ fn protocol() -> ErrorData {
 }
 
 impl ServerHandler for Handler {
+    fn supported_protocol_versions(&self) -> std::borrow::Cow<'static, [ProtocolVersion]> {
+        if self.modern_http {
+            std::borrow::Cow::Borrowed(ProtocolVersion::KNOWN_VERSIONS)
+        } else {
+            let versions = serde_json::from_str::<Vec<ProtocolVersion>>(
+                r#"["2025-11-25","2025-06-18","2025-03-26","2024-11-05","2024-10-07"]"#,
+            )
+            .expect("fixed source protocol versions");
+            std::borrow::Cow::Owned(versions)
+        }
+    }
     fn get_info(&self) -> ServerConfig {
         ServerConfig::new(
             ServerCapabilities::builder()

@@ -147,7 +147,7 @@ async function bounded(promise, ms = 5000) {
     clearTimeout(timer);
   }
 }
-async function start(configFile) {
+async function start(configFile, mode = "auto") {
   const transport = new StdioClientTransport({
     command: binary,
     args: ["bridge", "--config", configFile],
@@ -168,7 +168,10 @@ async function start(configFile) {
     stderr += chunk.toString("utf8").slice(0, 4096);
     if (stderr.length > 65536) stderr = stderr.slice(-65536);
   });
-  const client = new Client({ name: "native-differential-host", version: "1" });
+  const client = new Client(
+    { name: "native-differential-host", version: "1" },
+    { versionNegotiation: { mode } },
+  );
   let signalClosed;
   const closed = new Promise((accept) => {
     signalClosed = accept;
@@ -249,6 +252,15 @@ try {
   });
   const file = join(workspace, "config.json");
   await writeFile(file, JSON.stringify(config), "utf8");
+  for (const mode of ["legacy", "auto"]) {
+    const host = await start(file, mode);
+    assert.equal(host.client.getProtocolEra(), "legacy");
+    assert.equal((await bounded(host.client.listTools())).tools.length, 10);
+    await closeHost(host);
+  }
+  await assert.rejects(start(file, { pin: "2026-07-28" }), {
+    code: "ERA_NEGOTIATION_FAILED",
+  });
   const seeded = new Store(config.stateDir);
   try {
     for (const [name, connection] of Object.entries(config.connections)) {

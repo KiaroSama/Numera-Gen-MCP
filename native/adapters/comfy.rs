@@ -2,6 +2,7 @@ use super::{
     types::{Input, Job, Normalized, ResultItem},
     workflow,
 };
+use crate::compat::value::{JsString, Value, json};
 use crate::{
     error::{NumeraError, Result, array, object},
     http::api::{self, Body},
@@ -10,7 +11,6 @@ use reqwest::{
     Method,
     multipart::{Form, Part},
 };
-use crate::compat::value::{JsString, Value, json};
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
