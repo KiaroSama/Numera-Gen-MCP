@@ -1,5 +1,5 @@
-use numera_image_gen_mcp::{logging::redact, runtime_paths::RuntimePaths};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::{logging::redact, runtime_paths::RuntimePaths};
 mod common;
 
 #[test]

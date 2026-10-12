@@ -9,7 +9,9 @@ Authoritative JSON integration now changes configuration, adapters, requests, re
 and MCP boundary codecs; prior module-only success is not acceptance of this new integrated tree. **Packaged execution,
 complete baseline-case migration acceptance and authoritative JSON integration have not passed.**
 Old TypeScript production source remains authoritative until hosted differential verification passes.
-A file existing is not a verified mapping.
+A file existing is not a verified mapping. The integrated `da6056f` run passed the three Node jobs
+but still failed native runtime/quality gates; its failed instrumented 83.51% regions / 80.40%
+branches report is partial evidence, not an accepted replacement for the last complete report.
 
 | Boundary                                              | Native implementation                                                 | Authored verification                                             | Status                                                                                                 |
 | ----------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |

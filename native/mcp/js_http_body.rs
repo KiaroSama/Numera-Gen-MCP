@@ -50,7 +50,9 @@ impl JsonBody {
         let end = self.pending.iter().rposition(|b| *b == b'\n')? + 1;
         let mut output = Vec::new();
         for line in self.pending[..end].split_inclusive(|b| *b == b'\n') {
-            if let Some(data) = line.strip_prefix(b"data:") {
+            if let Some(data) = line.strip_prefix(b"data:")
+                && data.iter().any(|b| !b.is_ascii_whitespace())
+            {
                 output.extend_from_slice(b"data: ");
                 output.extend(self.json(data.strip_prefix(b" ").unwrap_or(data)));
                 output.push(b'\n');

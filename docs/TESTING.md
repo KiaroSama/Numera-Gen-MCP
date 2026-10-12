@@ -57,6 +57,11 @@ PID distinction, bounded shutdown and every original lifecycle assertion remain 
 stdio negotiation separately preserves the frozen source's legacy/auto behavior and modern-pin
 rejection; the optional HTTP transport retains its SDK-supported modern protocol behavior. SQLite
 fixture stores, loopback services and owned child processes must close and clean up.
+Revision `da6056f` passed all three Node jobs but failed native quality/runtime gates. Its failed
+instrumented run measured 83.51% regions / 80.40% branches, not a complete acceptance measurement.
+Repairs preserve empty SSE priming events, select the actual response by ID, restore the source's
+method-not-found bootstrap fallback, compare canonical Windows paths and construct crash/provider
+fixtures through their real admission and allowlist contracts. Full hosted verification remains pending.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

@@ -23,8 +23,8 @@ use std::{
 };
 use tokio_util::sync::CancellationToken;
 
-fn checkpoint() {
-    println!("checkpoint-ready");
+fn checkpoint(phase: &str) {
+    println!("checkpoint-ready:{phase}");
     std::io::stdout().flush().unwrap();
     let mut line = String::new();
     std::io::stdin().lock().read_line(&mut line).unwrap();
@@ -46,14 +46,16 @@ fn crash_checkpoint_child() {
     )
     .unwrap();
     let mut store = Store::open(Path::new(config.value["stateDir"].as_str().unwrap())).unwrap();
+    println!("checkpoint-start:{phase}");
+    std::io::stdout().flush().unwrap();
     if phase == "preintent" {
-        checkpoint();
+        checkpoint(&phase);
     }
     let mut receipt = Receipt::new(json!({
         "request_id":"child-crash","connection":"test","adapter":"openai-images","operation":"generate",
-        "status":if phase=="prepared"{"prepared"}else if phase=="finalizing"{"finalizing"}else if phase=="running"{"running"}else{"submitting"},
+        "status":if ["prepared","retained","published","committed"].contains(&phase.as_str()){"prepared"}else if phase=="finalizing"{"finalizing"}else if phase=="running"{"running"}else{"submitting"},
         "requested_model":"opaque/image","upstream_model":null,"outputs":[],"warnings":[],"deviations":[],"errors":[],
-        "generation_outcome":if phase=="prepared"{"not_submitted"}else if phase=="running"{"running"}else if phase=="submitted"||phase=="finalizing"{"unknown"}else{"completed"},
+        "generation_outcome":if ["prepared","retained","published","committed"].contains(&phase.as_str()){"not_submitted"}else if phase=="running"{"running"}else{"unknown"},
         "storage_outcome":"writing","another_submission_may_charge":true,
         "output_requirements":{"count":1,"output_subdirectory":"crash"},
         "created_at":"2026-10-05T00:00:00.000Z","updated_at":"2026-10-05T00:00:00.000Z"
@@ -63,16 +65,20 @@ fn crash_checkpoint_child() {
     }
     let (_, owner) = store.prepare(receipt, "hash", "identity").unwrap();
     if ["prepared", "submitted", "finalizing", "running"].contains(&phase.as_str()) {
-        checkpoint();
+        checkpoint(&phase);
     }
     assert!(store.admit("child-crash", "test", 4, 4).unwrap());
+    let mut completed = store.get("child-crash").unwrap();
+    completed.value["status"] = json!("finalizing");
+    completed.value["generation_outcome"] = json!("completed");
+    store.update(&mut completed).unwrap();
     store.reserve("child-crash", 1048576, 2097152).unwrap();
     let bytes = std::fs::read(root.join("sample.png")).unwrap();
     store
         .retain("child-crash", 0, &bytes, Some(&owner))
         .unwrap();
     if phase == "retained" {
-        checkpoint();
+        checkpoint(&phase);
     }
     if phase == "published" {
         let item = store
@@ -92,7 +98,7 @@ fn crash_checkpoint_child() {
         let target = std::path::PathBuf::from(item.target.unwrap());
         std::fs::create_dir_all(target.parent().unwrap()).unwrap();
         std::fs::write(target, &bytes).unwrap();
-        checkpoint();
+        checkpoint(&phase);
     }
     if phase == "committed" {
         let image = images::inspect(bytes, &config.value, None).unwrap();
@@ -110,7 +116,7 @@ fn crash_checkpoint_child() {
             },
         )
         .unwrap();
-        checkpoint();
+        checkpoint(&phase);
     }
     panic!("Unknown fixture checkpoint");
 }
@@ -118,6 +124,8 @@ fn crash_checkpoint_child() {
 struct OwnedChild {
     child: Child,
     reader: Option<std::thread::JoinHandle<()>>,
+    errors: Option<std::thread::JoinHandle<()>>,
+    diagnostics: Arc<Mutex<Vec<u8>>>,
 }
 impl Drop for OwnedChild {
     fn drop(&mut self) {
@@ -126,6 +134,9 @@ impl Drop for OwnedChild {
         let _ = self.child.wait();
         if let Some(reader) = self.reader.take() {
             reader.join().expect("checkpoint reader cleanup");
+        }
+        if let Some(errors) = self.errors.take() {
+            errors.join().expect("checkpoint diagnostic cleanup");
         }
     }
 }
@@ -158,7 +169,7 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
                 .env("NUMERA_CRASH_FIXTURE_PHASE", phase)
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
-                .stderr(Stdio::null());
+                .stderr(Stdio::piped());
             #[cfg(windows)]
             {
                 use std::os::windows::process::CommandExt;
@@ -166,10 +177,30 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
             }
             let mut child = command.spawn().unwrap();
             let stdout = child.stdout.take().unwrap();
+            let stderr = child.stderr.take().unwrap();
+            let diagnostics = Arc::new(Mutex::new(Vec::new()));
+            let captured = diagnostics.clone();
+            let errors = std::thread::spawn(move || {
+                use std::io::Read;
+                let mut stderr = stderr;
+                let mut buffer = [0u8; 1024];
+                while let Ok(length) = stderr.read(&mut buffer) {
+                    if length == 0 {
+                        break;
+                    }
+                    let mut bytes = captured.lock().unwrap();
+                    bytes.extend_from_slice(&buffer[..length]);
+                    if bytes.len() > 4096 {
+                        let excess = bytes.len() - 4096;
+                        bytes.drain(..excess);
+                    }
+                }
+            });
+            let expected = format!("checkpoint-ready:{phase}");
             let (sender, receiver) = mpsc::sync_channel(1);
             let reader = std::thread::spawn(move || {
                 for line in std::io::BufReader::new(stdout).lines() {
-                    if line.unwrap().contains("checkpoint-ready") {
+                    if line.unwrap() == expected {
                         let _ = sender.send(());
                         break;
                     }
@@ -178,10 +209,17 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
             let mut child = OwnedChild {
                 child,
                 reader: Some(reader),
+                errors: Some(errors),
+                diagnostics,
             };
-            receiver
-                .recv_timeout(Duration::from_secs(5))
-                .expect("exact checkpoint reached before kill");
+            if let Err(error) = receiver.recv_timeout(Duration::from_secs(5)) {
+                let status = child.child.try_wait().unwrap();
+                let bytes = child.diagnostics.lock().unwrap().clone();
+                let diagnostics = String::from_utf8(bytes).unwrap_or_else(|_| {
+                    "Child diagnostic tail contains incomplete or invalid UTF-8.".into()
+                });
+                panic!("Checkpoint {phase} was not reached: {error}; status={status:?}; child stderr={diagnostics}");
+            }
             child.child.kill().unwrap();
             let deadline = std::time::Instant::now() + Duration::from_secs(2);
             loop {

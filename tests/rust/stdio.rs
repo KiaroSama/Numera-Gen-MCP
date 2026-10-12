@@ -121,12 +121,8 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
         response["result"]["structuredContent"]["connections"][0]["name"],
         "offline"
     );
-    writeln!(
-        host.child.stdin.as_mut().unwrap(),
-        "{}",
-        r#"{"jsonrpc":"2.0","id":"\ud800","method":"tools/call","params":{"name":"generate_image","arguments":{"prompt":"\udfff","provider_options":{"\ud800":1e400},"reference_images":[{"type":"path","path":"missing-fixture"}]}}}"#
-    )
-    .unwrap();
+    let request = r#"{"jsonrpc":"2.0","id":"\ud800","method":"tools/call","params":{"name":"generate_image","arguments":{"prompt":"\udfff","provider_options":{"\ud800":1e400},"reference_images":[{"type":"path","path":"missing-fixture"}]}}}"#;
+    writeln!(host.child.stdin.as_mut().unwrap(), "{request}").unwrap();
     let text = host
         .lines
         .recv_timeout(Duration::from_secs(8))

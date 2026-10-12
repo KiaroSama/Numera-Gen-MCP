@@ -1,5 +1,6 @@
 use rmcp::{
     RoleServer,
+    model::{ClientRequest, ErrorCode, JsonRpcMessage},
     service::{RxJsonRpcMessage, TxJsonRpcMessage},
     transport::Transport,
 };
@@ -126,6 +127,21 @@ impl Transport<RoleServer> for Stdio {
             self.pending.clear();
             match parsed {
                 Ok((message, registration)) => {
+                    // The frozen source has no modern bootstrap handler. Let the client fall back
+                    // to legacy initialization instead of RMCP rejecting its inline version first.
+                    if let JsonRpcMessage::Request(request) = &message
+                        && matches!(&request.request, ClientRequest::DiscoverRequest(_))
+                    {
+                        let error = JsonRpcMessage::error(
+                            rmcp::ErrorData::new(ErrorCode::METHOD_NOT_FOUND, "Method not found", None),
+                            Some(request.id.clone()),
+                        );
+                        if self.send(error).await.is_err() {
+                            self.stop.cancel();
+                            return None;
+                        }
+                        continue;
+                    }
                     if let Some((key, original)) = registration {
                         let mut responses = self.responses.lock().await;
                         if responses.len() >= 128 || responses.contains_key(&key) {

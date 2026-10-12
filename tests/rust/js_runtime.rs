@@ -5,7 +5,7 @@ mod config_fixture;
 mod image_fixture;
 use common::Workspace;
 use numera_image_gen_mcp::{
-    compat::value::{JsString, Value, json},
+    compat::value::{JsString, Value},
     config::{Config, ConfigReload, ReloadEvent},
     jobs::Store,
     logging::Logger,
@@ -126,10 +126,11 @@ async fn generation_wire_receipt_restart_and_dedup_preserve_raw_utf16_without_an
                 .unwrap();
         }
     };
+    let mut raw_config = workspace.config(&format!("http://{address}/v1"), "openai-images");
+    raw_config["connections"]["test"]["providerOptionKeys"] =
+        Value::parse(r#"["\ud800","overflow"]"#).unwrap();
     let config = Config::parse(
-        &workspace
-            .config(&format!("http://{address}/v1"), "openai-images")
-            .to_string(),
+        &raw_config.to_string(),
         &workspace.0.join("config.json"),
         &[],
         &HashMap::new(),

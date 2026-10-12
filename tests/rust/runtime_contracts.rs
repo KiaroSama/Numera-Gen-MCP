@@ -141,8 +141,11 @@ fn concurrent_output_directory_creation_and_file_collision_fail_closed() {
             paths::output_directory(b_root, Some("batch/nested"))
         });
         barrier.wait();
-        assert_eq!(first.join().unwrap().unwrap(), root.join("batch/nested"));
-        assert_eq!(second.join().unwrap().unwrap(), root.join("batch/nested"));
+        let first = first.join().unwrap().unwrap();
+        let second = second.join().unwrap().unwrap();
+        let expected = fs::canonicalize(root.join("batch").join("nested")).unwrap();
+        assert_eq!(first, expected);
+        assert_eq!(second, expected);
     });
     fs::write(root.join("file"), b"fixture").unwrap();
     assert_eq!(

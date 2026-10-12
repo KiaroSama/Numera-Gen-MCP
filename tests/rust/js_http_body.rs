@@ -24,7 +24,7 @@ async fn json_and_sse_restore_this_request_exact_id_and_structured_result() {
                 Some(Value::parse(r#"{"text":"\udfff","usage":{"n":1e400}}"#).expect("result"));
             let text = format!(r#"{{"jsonrpc":"2.0","id":{encoded},"result":{{"content":[]}}}}"#);
             let text = if sse {
-                format!("event: message\ndata:{text}\n\n")
+                format!("id: primer\nretry: 3000\ndata:\n\nevent: message\ndata:{text}\n\n")
             } else {
                 text
             };
@@ -37,6 +37,8 @@ async fn json_and_sse_restore_this_request_exact_id_and_structured_result() {
             let output = body.collect().await.expect("body").to_bytes();
             let text = std::str::from_utf8(&output).expect("UTF-8");
             let json = if sse {
+                assert!(text.starts_with("id: primer\nretry: 3000\ndata:\n\n"));
+                assert!(!text.contains("Cannot encode the protocol response."));
                 text.lines()
                     .find_map(|line| line.strip_prefix("data: "))
                     .expect("event")

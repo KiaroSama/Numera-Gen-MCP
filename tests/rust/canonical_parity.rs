@@ -26,7 +26,9 @@ fn generated_source_canonicalization_cases_are_nonempty_and_exact() {
         );
         assert_eq!(
             fingerprint(input).expect("source-compatible hash"),
-            case["fingerprint"].as_str().expect("fingerprint oracle string"),
+            case["fingerprint"]
+                .as_str()
+                .expect("fingerprint oracle string"),
             "{name}"
         );
     }
