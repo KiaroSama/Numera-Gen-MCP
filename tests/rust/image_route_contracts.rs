@@ -52,9 +52,12 @@ fn explicit_native_json_generation_fields_preserve_references_masks_and_reject_u
                 .starts_with("data:image/png;base64,")
         );
     }
+    // Builder preserves explicit masks; capability policy rejects unverified forwarding before it.
+    let generic = json!({"adapter":"openai-images"});
+    assert!(matches!(build_request(&input(&generic, &request, &refs[..1], Some(&image))).unwrap().body, Body::Multipart(_)));
     for (c, code, reference_count) in [
         (
-            json!({"adapter":"openai-images"}),
+            json!({"adapter":"openai-images","gateway":"9router"}),
             "unsupported_operation",
             1,
         ),
@@ -66,11 +69,6 @@ fn explicit_native_json_generation_fields_preserve_references_masks_and_reject_u
         (
             json!({"adapter":"openai-images","edit":{"mode":"json","encoding":"image[]","maxReferences":2,"masks":true,"maskPolarity":"transparent-edit"}}),
             "invalid_configuration",
-            1,
-        ),
-        (
-            json!({"adapter":"openai-images","edit":{"mode":"json","encoding":"image","maxReferences":1}}),
-            "unsupported_operation",
             1,
         ),
     ] {
