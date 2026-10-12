@@ -7,6 +7,7 @@ mod http_fixture;
 mod image_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
+use numera_image_gen_mcp::compat::value::json;
 use numera_image_gen_mcp::{
     config::{Config, ConfigReload},
     logging::Logger,
@@ -14,7 +15,6 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::request,
 };
-use numera_image_gen_mcp::compat::value::json;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio_util::sync::CancellationToken;
 

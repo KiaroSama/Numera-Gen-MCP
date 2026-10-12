@@ -1,5 +1,5 @@
-use crate::error::{NumeraError, Result};
 use crate::compat::value::{JsString, Value};
+use crate::error::{NumeraError, Result};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     time::Duration,
@@ -63,8 +63,12 @@ pub async fn fetch(
                 .as_array()
                 .is_some_and(|items| {
                     items.iter().any(|a| {
-                        let Some(prefix) = a["pathPrefix"].as_str() else { return false; };
-                        let Some(origin_units) = a["origin"].as_utf16() else { return false; };
+                        let Some(prefix) = a["pathPrefix"].as_str() else {
+                            return false;
+                        };
+                        let Some(origin_units) = a["origin"].as_utf16() else {
+                            return false;
+                        };
                         Url::parse(&String::from_utf16_lossy(origin_units))
                             .is_ok_and(|base| base.origin().ascii_serialization() == origin)
                             && (url.path() == prefix

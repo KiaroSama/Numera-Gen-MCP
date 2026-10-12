@@ -1,8 +1,8 @@
+use numera_image_gen_mcp::compat::value::Value;
 use numera_image_gen_mcp::config::{
     Config, ConfigReload, ReloadEvent, credentials, parse_env_config, snapshot_credentials,
 };
 use numera_image_gen_mcp::runtime_paths::RuntimePaths;
-use numera_image_gen_mcp::compat::value::Value;
 use std::{collections::HashMap, path::Path};
 
 fn oracle() -> Value {
@@ -13,8 +13,11 @@ fn oracle() -> Value {
         data.len() <= 16 * 1024 * 1024,
         "source fixture bundle must stay bounded"
     );
-    let cases = Value::parse_with_limit(std::str::from_utf8(&data).expect("UTF8 oracle"), 16 * 1024 * 1024)
-        .expect("valid generated config oracle");
+    let cases = Value::parse_with_limit(
+        std::str::from_utf8(&data).expect("UTF8 oracle"),
+        16 * 1024 * 1024,
+    )
+    .expect("valid generated config oracle");
     for group in ["parse", "select", "dotenv"] {
         assert!(
             !cases[group]
@@ -28,9 +31,12 @@ fn oracle() -> Value {
 }
 
 fn parse(case: &Value) -> numera_image_gen_mcp::error::Result<Config> {
-    let args: Vec<String> = serde_json::from_value(case["args"].to_serde().expect("Unicode fixture args")).expect("fixture args");
+    let args: Vec<String> =
+        serde_json::from_value(case["args"].to_serde().expect("Unicode fixture args"))
+            .expect("fixture args");
     let env: HashMap<String, String> =
-        serde_json::from_value(case["env"].to_serde().expect("Unicode fixture env")).expect("fixture env");
+        serde_json::from_value(case["env"].to_serde().expect("Unicode fixture env"))
+            .expect("fixture env");
     Config::parse(
         case["text"].as_str().expect("source text"),
         Path::new(case["file"].as_str().expect("source path")),
@@ -113,7 +119,9 @@ fn source_generated_connection_selection_matches() {
             .expect("named config fixture exists");
         let result = parse(input).and_then(|config| config.select(case["connection"].as_str()));
         let actual = match result {
-            Ok((id, value)) => numera_image_gen_mcp::compat::value::json!({"id": id, "value": value}),
+            Ok((id, value)) => {
+                numera_image_gen_mcp::compat::value::json!({"id": id, "value": value})
+            }
             Err(error) => numera_image_gen_mcp::compat::value::json!({"error": error.code}),
         };
         assert_eq!(actual, case["expected"], "{}", case["name"]);
@@ -181,7 +189,9 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
     );
     assert_eq!(reload.snapshots().len(), 1);
     let mut fixed = original.value.clone();
-    fixed["stateDir"] = numera_image_gen_mcp::compat::value::json!(workspace.0.join("changed").to_str().expect("fixture path"));
+    fixed["stateDir"] = numera_image_gen_mcp::compat::value::json!(
+        workspace.0.join("changed").to_str().expect("fixture path")
+    );
     assert_eq!(
         reload
             .refresh_text(Some(&fixed.to_string()), |_| true)
@@ -196,7 +206,8 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
             .unwrap()
             .values_mut()
             .next()
-            .unwrap()["gatewayVersion"] = numera_image_gen_mcp::compat::value::json!(index.to_string());
+            .unwrap()["gatewayVersion"] =
+            numera_image_gen_mcp::compat::value::json!(index.to_string());
         assert_eq!(
             reload
                 .refresh_text(Some(&candidate.to_string()), |_| true)
@@ -271,8 +282,7 @@ async fn declared_secret_files_are_bounded_private_and_pinned_across_changes() {
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
     }
-    let connection =
-        numera_image_gen_mcp::compat::value::json!({"auth":{"type":"header", "header":"x-api-key", "secretFile":path.to_str().expect("fixture path")}});
+    let connection = numera_image_gen_mcp::compat::value::json!({"auth":{"type":"header", "header":"x-api-key", "secretFile":path.to_str().expect("fixture path")}});
     let pinned = snapshot_credentials(&connection, &HashMap::new(), &runtime)
         .await
         .unwrap();
@@ -333,7 +343,10 @@ async fn source_generated_current_user_dpapi_format_round_trips_without_a_shell(
     let actual = credentials(&connection, &HashMap::new(), &runtime)
         .await
         .unwrap();
-    assert_eq!(numera_image_gen_mcp::compat::value::json!(actual), case["expected"]);
+    assert_eq!(
+        numera_image_gen_mcp::compat::value::json!(actual),
+        case["expected"]
+    );
     let corrupt = workspace.0.join("corrupt-dpapi.txt");
     std::fs::write(&corrupt, "not-dpapi").unwrap();
     let connection = numera_image_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretDpapiFile":corrupt.to_str().expect("fixture path")}});

@@ -7,13 +7,13 @@ mod load;
 mod reload;
 mod validate;
 
+use crate::compat::value::{Object, Value, json};
 use crate::error::{NumeraError, Result};
 pub use credentials::{PinnedConnection, credentials, snapshot_credentials};
 pub use env::{MAX_CONFIG_BYTES, parse_env_config, read_config_text};
 pub use json::{clone_json, drop_json};
 pub use load::{config_file, load_config, user_root};
 pub use reload::{ConfigReload, ReloadEvent, ReloadResult};
-use crate::compat::value::{Object, Value, json};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -109,9 +109,14 @@ impl Config {
     }
 
     pub fn select(&self, name: Option<&str>) -> Result<(String, Value)> {
-        if name.is_none() && self.value["defaultConnection"].is_string()
-            && self.value["defaultConnection"].as_str().is_none() {
-            return Err(NumeraError::new("invalid_input", "Select an enabled configured connection."));
+        if name.is_none()
+            && self.value["defaultConnection"].is_string()
+            && self.value["defaultConnection"].as_str().is_none()
+        {
+            return Err(NumeraError::new(
+                "invalid_input",
+                "Select an enabled configured connection.",
+            ));
         }
         let id = name.or_else(|| self.value["defaultConnection"].as_str());
         if let Some(id) = id.filter(|id| !id.is_empty())
@@ -137,14 +142,22 @@ pub(crate) fn js_trim(text: &str) -> &str {
 
 pub(crate) fn js_trim_utf16(units: &[u16]) -> &[u16] {
     let whitespace = |unit: &u16| matches!(*unit, 0x9..=0xd | 0x20 | 0xa0 | 0x1680 | 0x2000..=0x200a | 0x2028 | 0x2029 | 0x202f | 0x205f | 0x3000 | 0xfeff);
-    let start = units.iter().position(|u| !whitespace(u)).unwrap_or(units.len());
-    let end = units.iter().rposition(|u| !whitespace(u)).map_or(start, |i| i + 1);
+    let start = units
+        .iter()
+        .position(|u| !whitespace(u))
+        .unwrap_or(units.len());
+    let end = units
+        .iter()
+        .rposition(|u| !whitespace(u))
+        .map_or(start, |i| i + 1);
     &units[start..end]
 }
 
 fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
     validate::default_and_validate(raw, true)?;
-    let key = raw["api_key"].as_utf16().ok_or_else(|| invalid("Invalid key."))?;
+    let key = raw["api_key"]
+        .as_utf16()
+        .ok_or_else(|| invalid("Invalid key."))?;
     let models = raw["models"]
         .as_array()
         .ok_or_else(|| invalid("Invalid models."))?;
@@ -152,8 +165,12 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
     if js_trim_utf16(key).is_empty()
         || key.iter().any(|u| matches!(*u, 0 | 10 | 13))
         || models.iter().any(|m| {
-            m["id"].as_utf16().is_none_or(|v| js_trim_utf16(v).is_empty())
-                || m["name"].as_utf16().is_none_or(|v| js_trim_utf16(v).is_empty())
+            m["id"]
+                .as_utf16()
+                .is_none_or(|v| js_trim_utf16(v).is_empty())
+                || m["name"]
+                    .as_utf16()
+                    .is_none_or(|v| js_trim_utf16(v).is_empty())
                 || !ids.insert(m["id"].as_utf16().unwrap_or(&[]))
         })
     {
@@ -172,7 +189,11 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
         return Err(invalid("Enable at least one configured model."));
     }
     let root = file.parent().unwrap_or(Path::new(""));
-    let origin = validate::url_origin(&String::from_utf16_lossy(raw["api_endpoint"].as_utf16().ok_or_else(|| invalid("Invalid API endpoint."))?))?;
+    let origin = validate::url_origin(&String::from_utf16_lossy(
+        raw["api_endpoint"]
+            .as_utf16()
+            .ok_or_else(|| invalid("Invalid API endpoint."))?,
+    ))?;
     let mut auth = json!({"type": if profile.starts_with("gemini") { "header" } else { "bearer" }, "apiKey":raw["api_key"], "origin":origin});
     if profile.starts_with("gemini") {
         auth["header"] = json!("x-goog-api-key");
@@ -186,7 +207,9 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
             }
         }
         overrides.insert(
-            model["id"].as_utf16().map(|v| crate::compat::value::JsString::from_utf16(v.to_vec()))
+            model["id"]
+                .as_utf16()
+                .map(|v| crate::compat::value::JsString::from_utf16(v.to_vec()))
                 .ok_or_else(|| invalid("Invalid model ID."))?,
             json!({"defaults":defaults}),
         );

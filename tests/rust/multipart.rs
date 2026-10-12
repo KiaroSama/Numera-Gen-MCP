@@ -1,10 +1,10 @@
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     adapters::{build_request, types::Input},
     files::images::{decode_base64, inspect},
     http::api::{self, Body},
 };
 use reqwest::Method;
-use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{collections::HashMap, time::Duration};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},

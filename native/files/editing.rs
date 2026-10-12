@@ -1,9 +1,9 @@
+use crate::compat::value::Value;
 use crate::{
     error::{NumeraError, Result},
     files::images::{Image, inspect},
 };
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
-use crate::compat::value::Value;
 use std::io::Cursor;
 
 pub fn request(mut request: Value, operation: &str) -> Result<Value> {
@@ -45,7 +45,14 @@ pub fn request(mut request: Value, operation: &str) -> Result<Value> {
     } else if let Some(language) = request["target_language"].as_utf16() {
         let mut units = request["prompt"].as_utf16().unwrap_or(&[]).to_vec();
         units.extend("\n\nTranslate the text ".encode_utf16());
-        units.extend(if request["edit_region"].is_null() { "in the reference image" } else { "inside the selected region" }.encode_utf16());
+        units.extend(
+            if request["edit_region"].is_null() {
+                "in the reference image"
+            } else {
+                "inside the selected region"
+            }
+            .encode_utf16(),
+        );
         units.extend(" into ".encode_utf16());
         units.extend(language);
         units.extend(". Replace the original text inside the image; preserve panel layout, artwork, speech bubbles and text styling. Return the edited image, not a separate text translation.".encode_utf16());

@@ -1,6 +1,6 @@
 use super::types::Input;
-use crate::error::{NumeraError, Result, object};
 use crate::compat::value::{JsString, Value};
+use crate::error::{NumeraError, Result, object};
 use std::collections::HashSet;
 
 fn invalid(message: &str) -> NumeraError {

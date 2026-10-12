@@ -2,6 +2,7 @@ mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
 use common::Workspace;
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     config::{
         Config, config_file, credentials, load_config, parse_env_config, read_config_text,
@@ -9,7 +10,6 @@ use numera_image_gen_mcp::{
     },
     runtime_paths::RuntimePaths,
 };
-use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{collections::HashMap, path::Path};
 
 // Source authority: src/config/{load,env,simple,schema,credentials}.ts and

@@ -44,13 +44,22 @@ impl Object {
         self.0.iter().find(|(k, _)| key.matches(k)).map(|(_, v)| v)
     }
     pub fn get_mut<K: ObjectKey + ?Sized>(&mut self, key: &K) -> Option<&mut Value> {
-        self.0.iter_mut().find(|(k, _)| key.matches(k)).map(|(_, v)| v)
+        self.0
+            .iter_mut()
+            .find(|(k, _)| key.matches(k))
+            .map(|(_, v)| v)
     }
     pub fn get_utf16(&self, key: &[u16]) -> Option<&Value> {
-        self.0.iter().find(|(k, _)| k.as_utf16() == key).map(|(_, v)| v)
+        self.0
+            .iter()
+            .find(|(k, _)| k.as_utf16() == key)
+            .map(|(_, v)| v)
     }
     pub fn get_utf16_mut(&mut self, key: &[u16]) -> Option<&mut Value> {
-        self.0.iter_mut().find(|(k, _)| k.as_utf16() == key).map(|(_, v)| v)
+        self.0
+            .iter_mut()
+            .find(|(k, _)| k.as_utf16() == key)
+            .map(|(_, v)| v)
     }
     pub fn contains_key<K: ObjectKey + ?Sized>(&self, key: &K) -> bool {
         self.get(key).is_some()
@@ -71,12 +80,17 @@ impl Object {
         Some(self.0.remove(index).1)
     }
     pub fn entry(&mut self, key: impl Into<JsString>) -> Entry<'_> {
-        Entry { object: self, key: key.into() }
+        Entry {
+            object: self,
+            key: key.into(),
+        }
     }
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&JsString, &Value)> + ExactSizeIterator {
         self.0.iter().map(|(k, v)| (k, v))
     }
-    pub fn iter_mut(&mut self) -> impl DoubleEndedIterator<Item = (&JsString, &mut Value)> + ExactSizeIterator {
+    pub fn iter_mut(
+        &mut self,
+    ) -> impl DoubleEndedIterator<Item = (&JsString, &mut Value)> + ExactSizeIterator {
         self.0.iter_mut().map(|(k, v)| (&*k, v))
     }
     pub fn keys(&self) -> impl DoubleEndedIterator<Item = &JsString> + ExactSizeIterator {
@@ -85,7 +99,9 @@ impl Object {
     pub fn values(&self) -> impl DoubleEndedIterator<Item = &Value> + ExactSizeIterator {
         self.0.iter().map(|(_, v)| v)
     }
-    pub fn values_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut Value> + ExactSizeIterator {
+    pub fn values_mut(
+        &mut self,
+    ) -> impl DoubleEndedIterator<Item = &mut Value> + ExactSizeIterator {
         self.0.iter_mut().map(|(_, v)| v)
     }
 }
@@ -119,7 +135,8 @@ impl<'a> Entry<'a> {
 impl<K: Into<JsString>> FromIterator<(K, Value)> for Object {
     fn from_iter<T: IntoIterator<Item = (K, Value)>>(iter: T) -> Self {
         let mut object = Self::new();
-        let mut positions: std::collections::HashMap<JsString, usize> = std::collections::HashMap::new();
+        let mut positions: std::collections::HashMap<JsString, usize> =
+            std::collections::HashMap::new();
         for (key, value) in iter {
             let key = key.into();
             if let Some(&position) = positions.get(&key) {
@@ -134,7 +151,9 @@ impl<K: Into<JsString>> FromIterator<(K, Value)> for Object {
 }
 impl<K: Into<JsString>> Extend<(K, Value)> for Object {
     fn extend<T: IntoIterator<Item = (K, Value)>>(&mut self, iter: T) {
-        for (key, value) in iter { self.insert(key.into(), value); }
+        for (key, value) in iter {
+            self.insert(key.into(), value);
+        }
     }
 }
 impl IntoIterator for Object {
@@ -152,14 +171,20 @@ fn pair_mut(pair: &mut (JsString, Value)) -> (&JsString, &mut Value) {
 }
 impl<'a> IntoIterator for &'a Object {
     type Item = (&'a JsString, &'a Value);
-    type IntoIter = std::iter::Map<std::slice::Iter<'a, (JsString, Value)>, fn(&'a (JsString, Value)) -> Self::Item>;
+    type IntoIter = std::iter::Map<
+        std::slice::Iter<'a, (JsString, Value)>,
+        fn(&'a (JsString, Value)) -> Self::Item,
+    >;
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter().map(pair_ref)
     }
 }
 impl<'a> IntoIterator for &'a mut Object {
     type Item = (&'a JsString, &'a mut Value);
-    type IntoIter = std::iter::Map<std::slice::IterMut<'a, (JsString, Value)>, fn(&'a mut (JsString, Value)) -> Self::Item>;
+    type IntoIter = std::iter::Map<
+        std::slice::IterMut<'a, (JsString, Value)>,
+        fn(&'a mut (JsString, Value)) -> Self::Item,
+    >;
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter_mut().map(pair_mut)
     }

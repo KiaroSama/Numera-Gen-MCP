@@ -1,11 +1,11 @@
 use super::types::{Input, Prepared, mime_data};
+use crate::compat::value::json;
 use crate::{
     capabilities::{COMMON_FIELDS, codex, edit_contract},
     error::{NumeraError, Result},
     http::api::Body,
 };
 use reqwest::multipart::{Form, Part};
-use crate::compat::value::json;
 
 pub fn request(input: &Input<'_>) -> Result<Prepared> {
     let Input {
@@ -87,7 +87,9 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
         let mut form = Form::new();
         for (key, value) in fields.as_object().ok_or_else(NumeraError::runtime)? {
             // FormData converts strings to USVString only at this multipart boundary.
-            let text = value.as_utf16().map(String::from_utf16_lossy)
+            let text = value
+                .as_utf16()
+                .map(String::from_utf16_lossy)
                 .unwrap_or_else(|| value.to_string());
             form = form.text(String::from_utf16_lossy(key.as_utf16()), text);
         }

@@ -1,9 +1,9 @@
 use super::{invalid, js_trim, validate};
+use crate::compat::value::Value;
 use crate::{
     error::{NumeraError, Result},
     runtime_paths::RuntimePaths,
 };
-use crate::compat::value::Value;
 use std::{collections::HashMap, fs::File, io::Read, path::Path};
 
 /// Operation-only object: no Serialize or Debug implementation can expose pinned headers.
@@ -57,7 +57,13 @@ pub async fn credentials(
         return Ok(HashMap::new());
     }
     let key = if let Some(key) = auth["apiKey"].as_js_string() {
-        Some(key.checked_str().map_err(|_| missing("The selected connection secret cannot be used in an HTTP header."))?.to_owned())
+        Some(
+            key.checked_str()
+                .map_err(|_| {
+                    missing("The selected connection secret cannot be used in an HTTP header.")
+                })?
+                .to_owned(),
+        )
     } else if let Some(name) = auth["secretEnv"].as_str().filter(|s| !s.is_empty()) {
         env.get(name).cloned()
     } else if let Some(path) = auth["secretFile"].as_str().filter(|s| !s.is_empty()) {

@@ -1,5 +1,5 @@
-use crate::error::{NumeraError, Result};
 use crate::compat::value::{Value, json};
+use crate::error::{NumeraError, Result};
 
 #[derive(Clone, Debug)]
 pub struct Event {

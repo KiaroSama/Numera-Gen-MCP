@@ -2,8 +2,8 @@ mod common;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::jobs::{Receipt, Store};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::jobs::{Receipt, Store};
 
 fn receipt(id: &str) -> Receipt {
     Receipt::new(
@@ -24,9 +24,9 @@ struct TextOracle {
 fn sqlite_text_url_binding_matches_hosted_utf16_replacement_oracle() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join(".ci-work/parity/sqlite-utf16-text.json");
-    let cases: Vec<TextOracle> = serde_json::from_slice(
-        &std::fs::read(path).expect("hosted SQLite text oracle required"),
-    ).expect("outer oracle envelope");
+    let cases: Vec<TextOracle> =
+        serde_json::from_slice(&std::fs::read(path).expect("hosted SQLite text oracle required"))
+            .expect("outer oracle envelope");
     assert_eq!(cases.len(), 2, "both UTF16 text boundary cases required");
     let workspace = Workspace::new();
     let mut store = Store::open(&workspace.0.join("state")).unwrap();
@@ -35,12 +35,21 @@ fn sqlite_text_url_binding_matches_hosted_utf16_replacement_oracle() {
         let (_, owner) = store.prepare(receipt(&id), &id, "account").unwrap();
         assert!(store.admit(&id, "test", 4, 4).unwrap());
         store.reserve(&id, case.utf8_bytes as i64, 1048576).unwrap();
-        let value = numera_image_gen_mcp::compat::value::Value::parse(&case.text)
-            .expect("raw UTF16 text");
-        store.retain_url(&id, 0, value.as_js_string().expect("string"), Some(&owner)).unwrap();
+        let value =
+            numera_image_gen_mcp::compat::value::Value::parse(&case.text).expect("raw UTF16 text");
+        store
+            .retain_url(&id, 0, value.as_js_string().expect("string"), Some(&owner))
+            .unwrap();
         let stored = store.pending(&id).unwrap()[0].url.clone().unwrap();
         assert_eq!(stored.checked_str().unwrap(), case.stored);
-        assert_eq!(case.stored.as_bytes().iter().map(|b| format!("{b:02X}")).collect::<String>(), case.byteshex);
+        assert_eq!(
+            case.stored
+                .as_bytes()
+                .iter()
+                .map(|b| format!("{b:02X}"))
+                .collect::<String>(),
+            case.byteshex
+        );
         assert_eq!(case.stored.len(), case.utf8_bytes);
         store.release(&id, Some(&owner)).unwrap();
     }
@@ -87,7 +96,12 @@ fn journal_reservations_urls_and_stable_publication_fail_closed_under_writer_fen
     store.retain("first", 0, &bytes, Some(&original)).unwrap();
     let stable = store.pending("first").unwrap()[0].output_id.clone();
     store
-        .retain_url("first", 0, &"https://fixture.example/other".into(), Some(&original))
+        .retain_url(
+            "first",
+            0,
+            &"https://fixture.example/other".into(),
+            Some(&original),
+        )
         .unwrap();
     assert_eq!(store.pending("first").unwrap()[0].output_id, stable);
     assert!(store.pending("first").unwrap()[0].url.is_none());

@@ -1,11 +1,11 @@
 use crate::compat::hash::sha256;
+use crate::compat::value::{Value, json};
 use crate::error::{NumeraError, Result};
 use base64::{
     Engine, alphabet,
     engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig, STANDARD},
 };
 use image::{ImageDecoder, ImageFormat, ImageReader};
-use crate::compat::value::{Value, json};
 use std::io::Cursor;
 
 #[derive(Clone)]

@@ -91,7 +91,8 @@ impl fmt::Display for JsString {
             f.write_str(value)
         } else {
             f.write_str(
-                &js_json::stringify(&JsValue::String(self.units.clone())).map_err(|_| fmt::Error)?,
+                &js_json::stringify(&JsValue::String(self.units.clone()))
+                    .map_err(|_| fmt::Error)?,
             )
         }
     }
@@ -139,4 +140,6 @@ macro_rules! numbers {
         }
     )*};
 }
-numbers!(f64, f32, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, i128, u128);
+numbers!(
+    f64, f32, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, i128, u128
+);

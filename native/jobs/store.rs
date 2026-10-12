@@ -1,7 +1,7 @@
+use crate::compat::value::{Value, json};
 use crate::error::{NumeraError, Result};
 use chrono::Utc;
 use rusqlite::{Connection, OptionalExtension, params};
-use crate::compat::value::{Value, json};
 use std::{collections::HashMap, path::Path};
 use uuid::Uuid;
 
@@ -114,7 +114,8 @@ impl Store {
             row.ok_or_else(|| NumeraError::new("invalid_input", "Unknown owned request ID."))?;
         Ok(RequestRow {
             receipt: Receipt {
-                value: Value::parse_with_limit(&receipt, 128 * 1024 * 1024).map_err(|_| NumeraError::storage())?,
+                value: Value::parse_with_limit(&receipt, 128 * 1024 * 1024)
+                    .map_err(|_| NumeraError::storage())?,
                 generation: Some(generation),
             },
             identity,
@@ -282,7 +283,9 @@ impl Store {
             .and_then(Iterator::collect)
             .map_err(|_| NumeraError::storage())?;
         rows.into_iter()
-            .map(|v| Value::parse_with_limit(&v, 128 * 1024 * 1024).map_err(|_| NumeraError::storage()))
+            .map(|v| {
+                Value::parse_with_limit(&v, 128 * 1024 * 1024).map_err(|_| NumeraError::storage())
+            })
             .collect()
     }
     pub fn save_continuation(&self, id: &str, scope: &str, value: &Value) -> Result<()> {

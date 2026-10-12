@@ -1,5 +1,6 @@
 #[path = "common/image.rs"]
 mod image_fixture;
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     adapters::{build_request, types::Input},
     files::images::inspect,
@@ -7,7 +8,6 @@ use numera_image_gen_mcp::{
     jobs::Receipt,
     services::requirements,
 };
-use numera_image_gen_mcp::compat::value::{Value, json};
 fn input<'a>(
     connection: &'a Value,
     request: &'a Value,
@@ -19,7 +19,11 @@ fn input<'a>(
         request,
         references,
         mask,
-        model: { static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> = std::sync::OnceLock::new(); MODEL.get_or_init(|| "opaque/image".into()) },
+        model: {
+            static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> =
+                std::sync::OnceLock::new();
+            MODEL.get_or_init(|| "opaque/image".into())
+        },
         operation: "edit",
     }
 }

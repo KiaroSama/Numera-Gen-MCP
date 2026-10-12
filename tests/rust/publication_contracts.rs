@@ -4,6 +4,7 @@ mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
+use numera_image_gen_mcp::compat::value::json;
 use numera_image_gen_mcp::{
     files::{
         images::inspect,
@@ -11,7 +12,6 @@ use numera_image_gen_mcp::{
     },
     jobs::{Receipt, Store},
 };
-use numera_image_gen_mcp::compat::value::json;
 
 #[test]
 fn filesystem_sql_gap_reconciles_original_bytes_uuid_and_refuses_a_changed_publication_target() {

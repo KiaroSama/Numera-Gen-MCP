@@ -1,5 +1,5 @@
-use crate::error::{NumeraError, Result};
 use crate::compat::value::Value;
+use crate::error::{NumeraError, Result};
 use url::Url;
 
 pub fn operation_url(
@@ -71,10 +71,13 @@ pub fn operation_url(
             {
                 return Err(error("Credentials must not be query parameters."));
             }
-            let value = value.as_utf16().ok_or_else(|| error("Invalid query parameter."))?;
+            let value = value
+                .as_utf16()
+                .ok_or_else(|| error("Invalid query parameter."))?;
             // URLSearchParams applies USVString coercion at this URL boundary only.
             url.query_pairs_mut().append_pair(
-                &String::from_utf16_lossy(key.as_utf16()), &String::from_utf16_lossy(value),
+                &String::from_utf16_lossy(key.as_utf16()),
+                &String::from_utf16_lossy(value),
             );
         }
     }

@@ -4,6 +4,7 @@ use super::{
     lease::Lease,
     model_policy, request, requirements,
 };
+use crate::compat::value::{Value, json};
 use crate::{
     adapters::{
         self,
@@ -19,7 +20,6 @@ use crate::{
     logging::Logger,
     runtime_paths::RuntimePaths,
 };
-use crate::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -67,8 +67,14 @@ impl Generation {
                 source["path"].as_str().ok_or_else(NumeraError::runtime)?,
                 &crate::error::array(&config["files"]["allowedInputRoots"])
                     .iter()
-                    .map(|value| value.as_str().map(PathBuf::from)
-                        .ok_or_else(|| NumeraError::new("invalid_configuration", "An input root cannot be represented as a filesystem path.")))
+                    .map(|value| {
+                        value.as_str().map(PathBuf::from).ok_or_else(|| {
+                            NumeraError::new(
+                                "invalid_configuration",
+                                "An input root cannot be represented as a filesystem path.",
+                            )
+                        })
+                    })
                     .collect::<Result<Vec<_>>>()?,
                 limit,
             )?,
@@ -80,7 +86,9 @@ impl Generation {
             )?,
             Some("url") => {
                 assets::fetch(
-                    source["url"].as_js_string().ok_or_else(NumeraError::runtime)?,
+                    source["url"]
+                        .as_js_string()
+                        .ok_or_else(NumeraError::runtime)?,
                     config,
                     limit,
                     cancel,
@@ -105,9 +113,16 @@ impl Generation {
     ) -> Result<Receipt> {
         let original = editing::request(request::parse(raw)?, operation)?;
         let requested_connection = match original.get("connection") {
-            Some(Value::String(value)) => Some(value.checked_str().map_err(|_| NumeraError::new("invalid_input", "Select an enabled configured connection."))?),
+            Some(Value::String(value)) => Some(value.checked_str().map_err(|_| {
+                NumeraError::new("invalid_input", "Select an enabled configured connection.")
+            })?),
             None => None,
-            _ => return Err(NumeraError::new("invalid_input", "Select an enabled configured connection.")),
+            _ => {
+                return Err(NumeraError::new(
+                    "invalid_input",
+                    "Select an enabled configured connection.",
+                ));
+            }
         };
         let (name, selected) = self.config.select(requested_connection)?;
         let pinned = snapshot_credentials(&selected, &self.env, &self.runtime).await?;
@@ -115,7 +130,10 @@ impl Generation {
         let headers = pinned.headers();
         let model = original.get("model").or_else(|| c.get("defaultModel"));
         let Some(Value::String(model)) = model else {
-            return Err(NumeraError::new("invalid_input", "Select a model or configure this connection defaultModel."));
+            return Err(NumeraError::new(
+                "invalid_input",
+                "Select a model or configure this connection defaultModel.",
+            ));
         };
         let preliminary = capabilities::effective_request(c, &original, model)?;
         let (request, policy_warnings) =
@@ -138,9 +156,15 @@ impl Generation {
                 "edit_image requires at least one reference.",
             ));
         }
-        if request["output_subdirectory"].is_string() && request["output_subdirectory"].as_str().is_none()
-            || request["filename_prefix"].is_string() && request["filename_prefix"].as_str().is_none() {
-            return Err(NumeraError::new("invalid_input", "The output path cannot be represented as a filesystem path."));
+        if request["output_subdirectory"].is_string()
+            && request["output_subdirectory"].as_str().is_none()
+            || request["filename_prefix"].is_string()
+                && request["filename_prefix"].as_str().is_none()
+        {
+            return Err(NumeraError::new(
+                "invalid_input",
+                "The output path cannot be represented as a filesystem path.",
+            ));
         }
         if let Some(path) = request["output_subdirectory"]
             .as_str()
@@ -314,7 +338,11 @@ impl Generation {
         let mut warnings = vec![json!(
             "Gateway/provider internal retries and fallback are outside Numera control."
         )];
-        warnings.extend(policy_warnings.into_iter().map(|value| Value::String(value.into())));
+        warnings.extend(
+            policy_warnings
+                .into_iter()
+                .map(|value| Value::String(value.into())),
+        );
         let initial = Receipt::new(
             json!({"request_id":id,"connection":name,"adapter":c["adapter"],"operation":operation,"status":"prepared","requested_model":model,
             "upstream_model":null,"outputs":[],"warnings":warnings,"deviations":[],"errors":[],"generation_outcome":"not_submitted","storage_outcome":"not_started",

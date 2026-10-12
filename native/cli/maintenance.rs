@@ -85,7 +85,7 @@ pub async fn readiness(
     let local = health["configuration_valid"] == true
         && health["storage"]
             .as_object()
-            .is_some_and(|s| s.len() == 3 && s.values().all(|v| v == true));
+            .is_some_and(|s| s.len() == 3 && s.values().all(|v| *v == true));
     if !local {
         blockers.push("local_storage_or_configuration_blocked");
     }
@@ -119,7 +119,15 @@ pub async fn readiness(
                 if let Some(model) = f.get("model") {
                     let found = models.iter().take(100).any(|m| m["id"] == model.as_str());
                     report["selected_model_found"] = json!(found);
-                    Discovery::model(&config, runtime, env, Some(&name), &model.as_str().into(), &stop).await?;
+                    Discovery::model(
+                        &config,
+                        runtime,
+                        env,
+                        Some(&name),
+                        &model.as_str().into(),
+                        &stop,
+                    )
+                    .await?;
                     if !found {
                         blockers.push("model_not_in_first_catalog_page");
                     }

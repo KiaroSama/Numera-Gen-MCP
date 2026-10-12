@@ -54,13 +54,19 @@ pub fn decode_id(value: &serde_json::Value) -> Result<JsValue> {
     {
         return Ok(JsValue::Number(number));
     }
-    let encoded = value.as_str().and_then(|s| s.strip_prefix(STRING_ID)).ok_or_else(invalid)?;
+    let encoded = value
+        .as_str()
+        .and_then(|s| s.strip_prefix(STRING_ID))
+        .ok_or_else(invalid)?;
     if !encoded.len().is_multiple_of(4) || !encoded.bytes().all(|b| b.is_ascii_hexdigit()) {
         return Err(invalid());
     }
-    let units = encoded.as_bytes().chunks_exact(4)
+    let units = encoded
+        .as_bytes()
+        .chunks_exact(4)
         .map(|chunk| {
-            std::str::from_utf8(chunk).ok()
+            std::str::from_utf8(chunk)
+                .ok()
                 .and_then(|s| u16::from_str_radix(s, 16).ok())
                 .ok_or_else(invalid)
         })
@@ -85,8 +91,14 @@ pub fn decode(text: &str, limit: usize) -> Result<Decoded> {
         let encoded = js_json::from_serde(&encode_id(id)?)?;
         raw.set("id", encoded)?;
     }
-    if raw.get("method").and_then(JsValue::as_utf16)
-        .is_some_and(|s| s.iter().copied().eq("notifications/cancelled".encode_utf16()))
+    if raw
+        .get("method")
+        .and_then(JsValue::as_utf16)
+        .is_some_and(|s| {
+            s.iter()
+                .copied()
+                .eq("notifications/cancelled".encode_utf16())
+        })
         && let Some(params) = raw.get_mut("params")
         && let Some(id) = params.get("requestId")
     {
@@ -94,21 +106,32 @@ pub fn decode(text: &str, limit: usize) -> Result<Decoded> {
         params.set("requestId", encoded)?;
     }
     let call = raw.get("id").is_some()
-        && raw.get("method").and_then(JsValue::as_utf16)
+        && raw
+            .get("method")
+            .and_then(JsValue::as_utf16)
             .is_some_and(|s| s.iter().copied().eq("tools/call".encode_utf16()));
     let arguments = if call {
-        Some(raw.get_mut("params").and_then(|p| p.remove("arguments"))
-            .unwrap_or_else(|| JsValue::Object(Vec::new())))
+        Some(
+            raw.get_mut("params")
+                .and_then(|p| p.remove("arguments"))
+                .unwrap_or_else(|| JsValue::Object(Vec::new())),
+        )
     } else {
         None
     };
     if arguments.as_ref().is_some_and(|args| !args.is_object()) {
-        return Err(NumeraError::new("invalid_request", "Tool arguments must be a JSON object."));
+        return Err(NumeraError::new(
+            "invalid_request",
+            "Tool arguments must be a JSON object.",
+        ));
     }
     // JS wire spelling keeps integral SDK IDs as integers rather than serde's distinct 1.0.
     js_json::drop_serde(js_json::to_serde(&raw)?);
     let metadata = serde_json::from_str(&js_json::stringify(&raw)?).map_err(|_| invalid())?;
-    Ok(Decoded { metadata, arguments })
+    Ok(Decoded {
+        metadata,
+        arguments,
+    })
 }
 pub fn restore_result(message: &mut JsValue, original: &OriginalArguments) -> Result<()> {
     let Some(id) = message.get("id") else {
@@ -120,7 +143,11 @@ pub fn restore_result(message: &mut JsValue, original: &OriginalArguments) -> Re
         return Ok(());
     }
     if let Some(result) = message.get_mut("result") {
-        let value = original.response.lock().map_err(|_| NumeraError::runtime())?.take();
+        let value = original
+            .response
+            .lock()
+            .map_err(|_| NumeraError::runtime())?
+            .take();
         if let Some(value) = value {
             result.set("structuredContent", value.to_js())?;
         }

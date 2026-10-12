@@ -1,3 +1,4 @@
+use crate::compat::value::{Value, json};
 use crate::{
     config::{Config, credentials, snapshot_credentials},
     error::{NumeraError, Result},
@@ -5,7 +6,6 @@ use crate::{
     runtime_paths::{RuntimePaths, private_directory},
 };
 use reqwest::Method;
-use crate::compat::value::{Value, json};
 use std::{collections::HashMap, path::Path};
 use tokio_util::sync::CancellationToken;
 

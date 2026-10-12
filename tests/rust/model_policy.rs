@@ -1,8 +1,8 @@
 #[path = "common/http.rs"]
 mod http_fixture;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::services::{model_policy, request};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::services::{model_policy, request};
 use std::{
     collections::HashMap,
     sync::{
@@ -30,10 +30,15 @@ async fn endpoint_descriptors_pin_compatible_provider_and_refuse_fallback_or_dro
     let signal = CancellationToken::new();
     let action = async {
         let selected = request::parse(json!({"prompt":"draw","image_size":"2K","count":2,"provider_options":{"stream":true,"provider":{"options":{"large-provider":{"strength":0.7}}}}})).unwrap();
-        let (effective, warnings) =
-            model_policy::validate(&c, &HashMap::new(), &"family/model".into(), selected, &signal)
-                .await
-                .unwrap();
+        let (effective, warnings) = model_policy::validate(
+            &c,
+            &HashMap::new(),
+            &"family/model".into(),
+            selected,
+            &signal,
+        )
+        .await
+        .unwrap();
         assert!(warnings.is_empty());
         assert_eq!(
             effective["provider_options"]["provider"]["only"],

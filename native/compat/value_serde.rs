@@ -6,7 +6,8 @@ use std::collections::{BTreeMap, HashMap};
 impl Serialize for Value {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let text = self.stringify().map_err(serde::ser::Error::custom)?;
-        let raw = serde_json::value::RawValue::from_string(text).map_err(serde::ser::Error::custom)?;
+        let raw =
+            serde_json::value::RawValue::from_string(text).map_err(serde::ser::Error::custom)?;
         raw.serialize(serializer)
     }
 }
@@ -92,12 +93,20 @@ impl ToValue for Object {
 }
 impl<K: Clone + Into<JsString>, T: ToValue, S> ToValue for HashMap<K, T, S> {
     fn to_value(&self) -> Value {
-        Value::Object(self.iter().map(|(k, v)| (k.clone().into(), v.to_value())).collect())
+        Value::Object(
+            self.iter()
+                .map(|(k, v)| (k.clone().into(), v.to_value()))
+                .collect(),
+        )
     }
 }
 impl<K: Clone + Into<JsString>, T: ToValue> ToValue for BTreeMap<K, T> {
     fn to_value(&self) -> Value {
-        Value::Object(self.iter().map(|(k, v)| (k.clone().into(), v.to_value())).collect())
+        Value::Object(
+            self.iter()
+                .map(|(k, v)| (k.clone().into(), v.to_value()))
+                .collect(),
+        )
     }
 }
 macro_rules! numbers {
@@ -114,7 +123,9 @@ macro_rules! numbers {
         }
     )*};
 }
-numbers!(f64, f32, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, i128, u128);
+numbers!(
+    f64, f32, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, i128, u128
+);
 impl From<String> for Value {
     fn from(value: String) -> Self {
         Self::String(value.into())

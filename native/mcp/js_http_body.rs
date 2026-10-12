@@ -83,18 +83,25 @@ impl Body for JsonBody {
                 Poll::Pending => return Poll::Pending,
                 Poll::Ready(Some(Ok(frame))) => {
                     if let Ok(data) = frame.into_data() {
-                        if self.pending.len().checked_add(data.len()).is_none_or(|n| n > self.limit) {
+                        if self
+                            .pending
+                            .len()
+                            .checked_add(data.len())
+                            .is_none_or(|n| n > self.limit)
+                        {
                             self.done = true;
                             let error = self.json(b"invalid");
                             let bytes = if self.sse {
-                                [b"data: ".as_slice(), error.as_slice(), b"\n\n".as_slice()].concat()
+                                [b"data: ".as_slice(), error.as_slice(), b"\n\n".as_slice()]
+                                    .concat()
                             } else {
                                 error
                             };
                             return Poll::Ready(Some(Ok(Frame::data(Bytes::from(bytes)))));
                         }
                         self.pending.extend_from_slice(&data);
-                        if self.sse && self.pending.contains(&b'\n')
+                        if self.sse
+                            && self.pending.contains(&b'\n')
                             && let Some(bytes) = self.lines()
                         {
                             return Poll::Ready(Some(Ok(Frame::data(Bytes::from(bytes)))));
@@ -107,7 +114,12 @@ impl Body for JsonBody {
                         return Poll::Ready(None);
                     }
                     let bytes = if self.sse {
-                        [b"data: ".as_slice(), self.json(b"invalid").as_slice(), b"\n\n".as_slice()].concat()
+                        [
+                            b"data: ".as_slice(),
+                            self.json(b"invalid").as_slice(),
+                            b"\n\n".as_slice(),
+                        ]
+                        .concat()
                     } else {
                         self.json(&self.pending)
                     };

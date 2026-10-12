@@ -8,6 +8,7 @@ mod image_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
 use http_fixture::{Reply, Server};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     config::Config,
     files::output,
@@ -16,7 +17,6 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::{generation::Generation, jobs},
 };
-use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},

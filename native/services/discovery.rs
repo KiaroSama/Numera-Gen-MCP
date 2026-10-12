@@ -1,3 +1,4 @@
+use crate::compat::value::{JsString, Value, json};
 use crate::{
     capabilities,
     config::{Config, snapshot_credentials},
@@ -7,7 +8,6 @@ use crate::{
     runtime_paths::RuntimePaths,
 };
 use reqwest::Method;
-use crate::compat::value::{JsString, Value, json};
 use std::{
     collections::{HashMap, HashSet},
     time::{Duration, Instant},
@@ -156,7 +156,8 @@ impl Discovery {
             } else {
                 format!(
                     "images/models/{}/endpoints",
-                    model.checked_str()?
+                    model
+                        .checked_str()?
                         .split('/')
                         .map(crate::adapters::encode_component)
                         .collect::<Vec<_>>()

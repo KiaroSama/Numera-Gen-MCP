@@ -2,8 +2,8 @@ mod common;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::jobs::{Receipt, Store};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::jobs::{Receipt, Store};
 
 fn receipt(id: &str) -> Receipt {
     Receipt::new(

@@ -1,5 +1,5 @@
-use numera_image_gen_mcp::jobs::{Receipt, Store};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::jobs::{Receipt, Store};
 mod common;
 
 #[test]

@@ -1,6 +1,6 @@
 use super::{invalid, js_trim};
-use crate::error::Result;
 use crate::compat::value::{Object, Value, json};
+use crate::error::Result;
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fs::File,

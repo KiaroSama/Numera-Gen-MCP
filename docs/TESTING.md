@@ -43,8 +43,13 @@ requests, adapter payloads, provider results and persistence. Typed request exte
 tool arguments outside SDK serde metadata; boundary codecs restore UTF-16 request IDs and structured
 results for both stdio and HTTP. These integration paths and new raw SQLite TEXT compatibility cases
 remain pending hosted verification. Coverage reports are retained even after instrumented test
-failures; those failures still fail the required gate.
-SQLite fixture stores, loopback services and owned child processes must close and clean up.
+failures; those failures still fail the required gate. The first integrated revision `ed07460` failed
+native compilation on two shared type-boundary errors; its tests and coverage are not passing evidence.
+Those errors are being repaired together using actual hosted diagnostics and formatter/lock artifacts.
+Further acceptance fixtures cover real killed-child checkpoints, queued credential snapshots, two-process
+journal budgets, captured edit masks, catalog pagination, malformed Comfy uploads and hanging-response
+socket cleanup. Their authored existence is not execution proof or a full 470-case mapping. SQLite
+fixture stores, loopback services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

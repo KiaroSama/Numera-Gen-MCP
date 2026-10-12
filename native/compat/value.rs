@@ -212,14 +212,27 @@ impl Value {
         std::mem::take(self)
     }
     pub fn checked_index_mut(&mut self, key: &str) -> Result<&mut Value> {
-        if self.is_null() { *self = Self::Object(Object::new()); }
+        if self.is_null() {
+            *self = Self::Object(Object::new());
+        }
         self.as_object_mut()
             .map(|object| object.entry(key).or_default())
-            .ok_or_else(|| NumeraError::new("invalid_json_type", "Object mutation requires an object or null."))
+            .ok_or_else(|| {
+                NumeraError::new(
+                    "invalid_json_type",
+                    "Object mutation requires an object or null.",
+                )
+            })
     }
     pub fn checked_array_index_mut(&mut self, index: usize) -> Result<&mut Value> {
-        self.as_array_mut().and_then(|values| values.get_mut(index))
-            .ok_or_else(|| NumeraError::new("invalid_json_type", "Array mutation requires an existing array item."))
+        self.as_array_mut()
+            .and_then(|values| values.get_mut(index))
+            .ok_or_else(|| {
+                NumeraError::new(
+                    "invalid_json_type",
+                    "Array mutation requires an existing array item.",
+                )
+            })
     }
 
     pub fn parse(text: &str) -> Result<Self> {
@@ -259,7 +272,12 @@ impl Value {
                     pending.extend(values.iter().rev().map(Task::Value));
                 }
                 Task::Value(JsValue::Object(entries)) => {
-                    pending.push(Task::Object(entries.iter().map(|(k, _)| JsString::from_utf16(k.clone())).collect()));
+                    pending.push(Task::Object(
+                        entries
+                            .iter()
+                            .map(|(k, _)| JsString::from_utf16(k.clone()))
+                            .collect(),
+                    ));
                     pending.extend(entries.iter().rev().map(|(_, v)| Task::Value(v)));
                 }
                 Task::Value(value) => complete.push(match value {
@@ -296,7 +314,9 @@ impl Value {
                     pending.extend(values.iter().rev().map(Task::Value));
                 }
                 Task::Value(Self::Object(object)) => {
-                    pending.push(Task::Object(object.keys().map(|k| k.as_utf16().to_vec()).collect()));
+                    pending.push(Task::Object(
+                        object.keys().map(|k| k.as_utf16().to_vec()).collect(),
+                    ));
                     pending.extend(object.values().rev().map(Task::Value));
                 }
                 Task::Value(value) => complete.push(match value {
@@ -326,10 +346,14 @@ impl Value {
                 (Self::Bool(a), Self::Bool(b)) if a == b => {}
                 (Self::Number(a), Self::Number(b)) if a == b => {}
                 (Self::String(a), Self::String(b)) if a == b => {}
-                (Self::Array(a), Self::Array(b)) if a.len() == b.len() => pending.extend(a.iter().zip(b)),
+                (Self::Array(a), Self::Array(b)) if a.len() == b.len() => {
+                    pending.extend(a.iter().zip(b))
+                }
                 (Self::Object(a), Self::Object(b)) if a.len() == b.len() => {
-                    let values: std::collections::HashMap<&[u16], &Value> = b.iter()
-                        .map(|(key, value)| (key.as_utf16(), value)).collect();
+                    let values: std::collections::HashMap<&[u16], &Value> = b
+                        .iter()
+                        .map(|(key, value)| (key.as_utf16(), value))
+                        .collect();
                     for (key, value) in a {
                         match values.get(key.as_utf16()) {
                             Some(&other) => pending.push((value, other)),
@@ -355,7 +379,8 @@ impl PartialEq<bool> for Value {
 }
 impl PartialEq<str> for Value {
     fn eq(&self, other: &str) -> bool {
-        self.as_utf16().is_some_and(|v| v.iter().copied().eq(other.encode_utf16()))
+        self.as_utf16()
+            .is_some_and(|v| v.iter().copied().eq(other.encode_utf16()))
     }
 }
 impl PartialEq<JsString> for Value {
@@ -447,7 +472,8 @@ impl Index<&str> for Value {
 }
 impl IndexMut<&str> for Value {
     fn index_mut(&mut self, key: &str) -> &mut Self::Output {
-        self.checked_index_mut(key).expect("object index requires object or null")
+        self.checked_index_mut(key)
+            .expect("object index requires object or null")
     }
 }
 impl Index<usize> for Value {
@@ -458,7 +484,8 @@ impl Index<usize> for Value {
 }
 impl IndexMut<usize> for Value {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.checked_array_index_mut(index).expect("array index must exist")
+        self.checked_array_index_mut(index)
+            .expect("array index must exist")
     }
 }
 impl Index<&JsString> for Value {
@@ -469,9 +496,13 @@ impl Index<&JsString> for Value {
 }
 impl IndexMut<&JsString> for Value {
     fn index_mut(&mut self, key: &JsString) -> &mut Self::Output {
-        if self.is_null() { *self = Self::Object(Object::new()); }
-        self.as_object_mut().expect("object index requires object or null")
-            .entry(key.clone()).or_default()
+        if self.is_null() {
+            *self = Self::Object(Object::new());
+        }
+        self.as_object_mut()
+            .expect("object index requires object or null")
+            .entry(key.clone())
+            .or_default()
     }
 }
 impl Index<&String> for Value {

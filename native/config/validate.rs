@@ -1,9 +1,9 @@
 use super::{invalid, js_trim};
-use crate::error::Result;
 use crate::compat::{
     js_schema::Schema,
     value::{Value, json},
 };
+use crate::error::Result;
 use std::{collections::HashSet, path::Path, sync::OnceLock};
 use url::Url;
 
@@ -49,10 +49,9 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
         .ok_or_else(|| invalid("Invalid connections."))?;
     for connection in connections.values_mut() {
         let auth = &connection["auth"];
-        if auth["apiKey"]
-            .as_utf16()
-            .is_some_and(|key| super::js_trim_utf16(key).is_empty() || key.iter().any(|u| matches!(*u, 0 | 10 | 13)))
-        {
+        if auth["apiKey"].as_utf16().is_some_and(|key| {
+            super::js_trim_utf16(key).is_empty() || key.iter().any(|u| matches!(*u, 0 | 10 | 13))
+        }) {
             return Err(invalid(
                 "Inline credential must be nonempty and cannot contain control characters.",
             ));
@@ -69,8 +68,12 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
             return Err(invalid("Configured model IDs must be unique."));
         }
         if let Some(proxy) = connection.get("proxy") {
-            let url = Url::parse(&String::from_utf16_lossy(proxy["url"].as_utf16().ok_or_else(|| invalid("Invalid proxy URL."))?))
-                .map_err(|_| invalid("Invalid proxy URL."))?;
+            let url = Url::parse(&String::from_utf16_lossy(
+                proxy["url"]
+                    .as_utf16()
+                    .ok_or_else(|| invalid("Invalid proxy URL."))?,
+            ))
+            .map_err(|_| invalid("Invalid proxy URL."))?;
             if !["http", "https"].contains(&url.scheme())
                 || !url.username().is_empty()
                 || url.password().is_some_and(|p| !p.is_empty())
@@ -84,7 +87,12 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
         }
         validate_base(connection)?;
         if let Some(origin) = auth["origin"].as_utf16().filter(|v| !v.is_empty())
-            && url_origin(&String::from_utf16_lossy(origin))? != url_origin(&String::from_utf16_lossy(connection["baseUrl"].as_utf16().ok_or_else(|| invalid("Invalid API base URL."))?))?
+            && url_origin(&String::from_utf16_lossy(origin))?
+                != url_origin(&String::from_utf16_lossy(
+                    connection["baseUrl"]
+                        .as_utf16()
+                        .ok_or_else(|| invalid("Invalid API base URL."))?,
+                ))?
         {
             return Err(invalid("Credential destination origin mismatch."));
         }
@@ -161,7 +169,11 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
 }
 
 fn validate_base(connection: &Value) -> Result<()> {
-    let base = String::from_utf16_lossy(connection["baseUrl"].as_utf16().ok_or_else(|| invalid("Invalid API base URL."))?);
+    let base = String::from_utf16_lossy(
+        connection["baseUrl"]
+            .as_utf16()
+            .ok_or_else(|| invalid("Invalid API base URL."))?,
+    );
     let url = Url::parse(&base).map_err(|_| invalid("Invalid API base URL."))?;
     let lower = base.to_ascii_lowercase();
     if !["http", "https"].contains(&url.scheme())
@@ -196,13 +208,19 @@ fn validate_base(connection: &Value) -> Result<()> {
     }
     if let Some(query) = connection["query"].as_object() {
         for key in query.keys() {
-            let lower: Vec<u16> = key.as_utf16().iter().map(|u| {
-                if (65..=90).contains(u) { *u + 32 } else { *u }
-            }).collect();
+            let lower: Vec<u16> = key
+                .as_utf16()
+                .iter()
+                .map(|u| if (65..=90).contains(u) { *u + 32 } else { *u })
+                .collect();
             if key != "pageToken"
                 && ["key", "token", "secret", "auth", "signature"]
                     .iter()
-                    .any(|s| lower.windows(s.len()).any(|w| w.iter().copied().eq(s.encode_utf16())))
+                    .any(|s| {
+                        lower
+                            .windows(s.len())
+                            .any(|w| w.iter().copied().eq(s.encode_utf16()))
+                    })
             {
                 return Err(invalid("Credentials must not be query parameters."));
             }

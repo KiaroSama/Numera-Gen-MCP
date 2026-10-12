@@ -1,3 +1,4 @@
+use crate::compat::value::{Value, json};
 use crate::{
     error::{NumeraError, Result},
     files::{
@@ -6,7 +7,6 @@ use crate::{
     },
     jobs::{Receipt, Store},
 };
-use crate::compat::value::{Value, json};
 use std::{
     fs,
     io::{Read, Write},
@@ -138,7 +138,7 @@ pub fn save(
             NumeraError::new("output_file_error", "Saved image hash mismatch.").stage("storage"),
         );
     }
-    let output = json!({"output_id":item.output_id,"request_id":id,"path":target.to_string_lossy(),
+    let output = json!({"output_id":item.output_id,"request_id":id,"path":target.to_str().ok_or_else(error)?,
         "mime_type":saved.mime,"width":saved.width,"height":saved.height,"has_alpha":saved.alpha,"bytes":saved.bytes.len(),"sha256":saved.sha256});
     store.commit(id, index, &output, deviations, expected)?;
     Ok(output)

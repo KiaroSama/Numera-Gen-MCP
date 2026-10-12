@@ -1,5 +1,5 @@
-use numera_image_gen_mcp::http::{assets::private_address, sse::events, url::operation_url};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::http::{assets::private_address, sse::events, url::operation_url};
 
 #[test]
 fn operation_prefix_and_sensitive_query_are_preserved() {

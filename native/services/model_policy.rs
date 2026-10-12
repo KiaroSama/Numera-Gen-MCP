@@ -1,10 +1,10 @@
+use crate::compat::value::{JsString, Value, json};
 use crate::{
     capabilities::COMMON_FIELDS,
     error::{NumeraError, Result, array, object},
     http::api::{self, Body},
 };
 use reqwest::Method;
-use crate::compat::value::{JsString, Value, json};
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
@@ -44,7 +44,10 @@ pub async fn validate(
         return Ok((request, warnings));
     }
     for key in object(&request["provider_options"])?.keys() {
-        if key.as_str().is_none_or(|key| !["provider", "stream", "output_compression"].contains(&key)) {
+        if key
+            .as_str()
+            .is_none_or(|key| !["provider", "stream", "output_compression"].contains(&key))
+        {
             return Err(NumeraError::new(
                 "unsupported_parameter",
                 "Dedicated Image API requires provider-specific settings under provider.options.",
@@ -53,7 +56,8 @@ pub async fn validate(
     }
     let path = format!(
         "images/models/{}/endpoints",
-        model.checked_str()?
+        model
+            .checked_str()?
             .split('/')
             .map(crate::adapters::encode_component)
             .collect::<Vec<_>>()
@@ -170,7 +174,10 @@ pub async fn validate(
         }
     }
     let mut routing = routing.clone();
-    routing["only"] = json!([tag.as_js_string().cloned().unwrap_or_else(|| tag.to_string().into())]);
+    routing["only"] = json!([tag
+        .as_js_string()
+        .cloned()
+        .unwrap_or_else(|| tag.to_string().into())]);
     routing["allow_fallbacks"] = json!(false);
     request["provider_options"]["provider"] = routing;
     Ok((request, vec![]))

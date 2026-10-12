@@ -82,7 +82,7 @@ pub async fn submit(
     mut graph: Value,
     headers: &HashMap<String, String>,
     cancel: &CancellationToken,
-) -> Result<(Job, Vec<String>)> {
+) -> Result<(Job, Vec<JsString>)> {
     workflow::references(input)?;
     let c = input.connection;
     for (index, image) in input.references.iter().enumerate() {
@@ -169,10 +169,17 @@ pub async fn submit(
     let warnings = if node_errors.is_empty() {
         vec![]
     } else {
-        vec![format!(
-            "ComfyUI accepted only valid workflow branches; rejected node IDs: {}",
-            node_errors.keys().map(|key| crate::compat::value::Value::String(key.clone()).to_string()).collect::<Vec<_>>().join(", ")
-        )]
+        let mut units: Vec<u16> =
+            "ComfyUI accepted only valid workflow branches; rejected node IDs: "
+                .encode_utf16()
+                .collect();
+        for (index, key) in node_errors.keys().enumerate() {
+            if index != 0 {
+                units.extend(", ".encode_utf16());
+            }
+            units.extend(key.as_utf16());
+        }
+        vec![JsString::from_utf16(units)]
     };
     Ok((
         Job {

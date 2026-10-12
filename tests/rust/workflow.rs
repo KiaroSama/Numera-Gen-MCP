@@ -2,11 +2,11 @@
 mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     adapters::{types::Input, workflow},
     files::images::{self, Image},
 };
-use numera_image_gen_mcp::compat::value::{Value, json};
 mod common;
 
 // Source contracts: tests/contract/{comfyui,reference-preflight}.test.ts and
@@ -44,7 +44,11 @@ fn input<'a>(
         request,
         references,
         mask,
-        model: { static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> = std::sync::OnceLock::new(); MODEL.get_or_init(|| "workflow".into()) },
+        model: {
+            static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> =
+                std::sync::OnceLock::new();
+            MODEL.get_or_init(|| "workflow".into())
+        },
         operation: "generate",
     }
 }

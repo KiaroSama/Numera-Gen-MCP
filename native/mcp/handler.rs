@@ -76,15 +76,23 @@ impl ServerHandler for Handler {
             .get::<super::js_envelope::OriginalArguments>()
             .cloned()
             .or_else(|| {
-                context.extensions.get::<hyper::http::request::Parts>()
-                    .and_then(|parts| parts.extensions.get::<super::js_envelope::OriginalArguments>())
+                context
+                    .extensions
+                    .get::<hyper::http::request::Parts>()
+                    .and_then(|parts| {
+                        parts
+                            .extensions
+                            .get::<super::js_envelope::OriginalArguments>()
+                    })
                     .cloned()
             });
         let args = if let Some(original) = &original {
             Value::from_js(&original.arguments)
         } else {
-            Value::from_serde(&serde_json::Value::Object(request.arguments.unwrap_or_default()))
-                .map_err(|_| protocol())?
+            Value::from_serde(&serde_json::Value::Object(
+                request.arguments.unwrap_or_default(),
+            ))
+            .map_err(|_| protocol())?
         };
         let id = uuid::Uuid::new_v4().to_string();
         let start = std::time::Instant::now();

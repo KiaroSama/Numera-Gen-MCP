@@ -230,7 +230,12 @@ async fn handle(
             .and_then(|text| super::js_envelope::decode(text, state.options.max_body_bytes).ok())
         {
             Some(decoded) => decoded,
-            None => return Ok(response(StatusCode::BAD_REQUEST, "Invalid MCP JSON envelope.")),
+            None => {
+                return Ok(response(
+                    StatusCode::BAD_REQUEST,
+                    "Invalid MCP JSON envelope.",
+                ));
+            }
         };
         let expected_id = decoded.metadata.get("id").cloned();
         let original = decoded.arguments.map(|arguments| {
@@ -243,7 +248,12 @@ async fn handle(
         }
         let bytes = match serde_json::to_vec(&decoded.metadata) {
             Ok(bytes) => bytes,
-            Err(_) => return Ok(response(StatusCode::BAD_REQUEST, "Invalid MCP JSON envelope.")),
+            Err(_) => {
+                return Ok(response(
+                    StatusCode::BAD_REQUEST,
+                    "Invalid MCP JSON envelope.",
+                ));
+            }
         };
         (bytes, original)
     } else {
@@ -270,7 +280,9 @@ async fn handle(
     drop(guard);
     let (mut parts, body) = result.into_parts();
     let successful = parts.status.is_success() && parts.status != StatusCode::ACCEPTED;
-    let sse = parts.headers.get(hyper::header::CONTENT_TYPE)
+    let sse = parts
+        .headers
+        .get(hyper::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .is_some_and(|v| v.contains("text/event-stream"));
     let body = if successful {

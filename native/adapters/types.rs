@@ -1,6 +1,6 @@
+use crate::compat::value::{JsString, Value};
 use crate::{files::images::Image, http::api::Body};
 use base64::{Engine, engine::general_purpose::STANDARD};
-use crate::compat::value::{JsString, Value};
 
 pub struct Input<'a> {
     pub connection: &'a Value,

@@ -1,13 +1,13 @@
 #[path = "common/normalized.rs"]
 mod normalized_fixture;
 use normalized_fixture::normalized;
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     adapters::normalize::{normalize, response},
     error::Result,
     files::images::decode_base64,
     http::sse::{self, Reader},
 };
-use numera_image_gen_mcp::compat::value::{Value, json};
 
 fn outcome(result: Result<Value>) -> Value {
     match result {

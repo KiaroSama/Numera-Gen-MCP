@@ -5,6 +5,7 @@ mod config_fixture;
 mod http_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
+use numera_image_gen_mcp::compat::value::json;
 use numera_image_gen_mcp::{
     config::{Config, snapshot_credentials},
     jobs::{Receipt, Store},
@@ -12,7 +13,6 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::{generation::Generation, identity::connection_identity, jobs},
 };
-use numera_image_gen_mcp::compat::value::json;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},

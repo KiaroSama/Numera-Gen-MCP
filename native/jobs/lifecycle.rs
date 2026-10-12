@@ -1,7 +1,7 @@
 use super::store::{Receipt, Store, busy, now, terminal};
+use crate::compat::value::{Value, json};
 use crate::error::{NumeraError, Result};
 use rusqlite::params;
-use crate::compat::value::{Value, json};
 
 impl Store {
     pub(super) fn expire(&mut self, id: Option<&str>) -> Result<()> {

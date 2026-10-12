@@ -1,11 +1,11 @@
 mod common;
 use common::Workspace;
+use numera_image_gen_mcp::compat::value::json;
 use numera_image_gen_mcp::{
     compat::hash::sha256,
     jobs::{Receipt, Store},
 };
 use rusqlite::Connection;
-use numera_image_gen_mcp::compat::value::json;
 
 #[test]
 fn legacy_wal_snapshot_preserves_receipts_and_refuses_future_or_incomplete_schemas() {

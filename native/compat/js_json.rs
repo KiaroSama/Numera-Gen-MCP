@@ -288,7 +288,10 @@ pub fn parse(text: &str) -> Result<JsValue> {
 /// Different trust boundaries have different byte ceilings (config versus image-bearing MCP).
 pub fn parse_bounded(text: &str, limit: usize) -> Result<JsValue> {
     if text.len() > limit {
-        return Err(NumeraError::new("invalid_json", "JSON text exceeds its byte limit."));
+        return Err(NumeraError::new(
+            "invalid_json",
+            "JSON text exceeds its byte limit.",
+        ));
     }
     let mut parser = Parser { text, position: 0 };
     let mut frames: Vec<Frame> = Vec::new();
@@ -537,7 +540,9 @@ pub fn drop_serde(value: serde_json::Value) {
     while let Some(value) = pending.pop() {
         match value {
             serde_json::Value::Array(array) => pending.extend(array),
-            serde_json::Value::Object(object) => pending.extend(object.into_iter().map(|(_, value)| value)),
+            serde_json::Value::Object(object) => {
+                pending.extend(object.into_iter().map(|(_, value)| value))
+            }
             _ => {}
         }
     }

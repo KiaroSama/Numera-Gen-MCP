@@ -9,6 +9,7 @@ mod image_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
 use http_fixture::{Reply, Server};
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     config::Config,
     jobs::{Receipt, Store},
@@ -16,7 +17,6 @@ use numera_image_gen_mcp::{
     runtime_paths::RuntimePaths,
     services::{generation::Generation, jobs},
 };
-use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -123,7 +123,10 @@ async fn source_types_and_edits_keep_originals_and_never_replay_the_same_request
         drop(limited);
         for (name, source) in [
             ("data", data_source(&bytes)),
-            ("path", json!({"type":"path","path":path.to_str().expect("fixture path")})),
+            (
+                "path",
+                json!({"type":"path","path":path.to_str().expect("fixture path")}),
+            ),
             ("owned", json!({"type":"output_id","output_id":output_id})),
             (
                 "url",

@@ -412,6 +412,8 @@ await emit("policy", { policy, effective, options, dimensionValidation });
 const sharp = baselineRequire("sharp");
 const { inspectImage, decodeBase64 } = await source("files/images.js");
 const imageConfig = configSchema.parse(advanced);
+const { imageEdgeOracle } = await import("./rust-image-edge-oracle.mjs");
+await imageEdgeOracle({ sharp, inspectImage, config: imageConfig, emit });
 const images = [];
 for (const format of ["png", "jpeg", "webp"]) {
   for (const alpha of format === "jpeg" ? [false] : [false, true]) {

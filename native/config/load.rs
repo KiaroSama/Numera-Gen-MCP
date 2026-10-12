@@ -1,6 +1,6 @@
 use super::{Config, invalid, read_config_text, validate};
-use crate::error::{NumeraError, Result};
 use crate::compat::value::{Value, json};
+use crate::error::{NumeraError, Result};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},

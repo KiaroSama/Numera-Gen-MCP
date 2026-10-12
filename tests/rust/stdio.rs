@@ -127,14 +127,37 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
         r#"{"jsonrpc":"2.0","id":"\ud800","method":"tools/call","params":{"name":"generate_image","arguments":{"prompt":"\udfff","provider_options":{"\ud800":1e400},"reference_images":[{"type":"path","path":"missing-fixture"}]}}}"#
     )
     .unwrap();
-    let text = host.lines.recv_timeout(Duration::from_secs(8)).expect("raw tool response");
+    let text = host
+        .lines
+        .recv_timeout(Duration::from_secs(8))
+        .expect("raw tool response");
     let raw = numera_image_gen_mcp::compat::js_json::parse_bounded(&text, 128 * 1024 * 1024)
         .expect("authoritative response");
-    assert_eq!(raw.get("id").and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_utf16), Some([0xd800].as_slice()));
+    assert_eq!(
+        raw.get("id")
+            .and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_utf16),
+        Some([0xd800].as_slice())
+    );
     let result = raw.get("result").expect("tool result");
-    let error = result.get("structuredContent").expect("structured result").get("error").expect("preflight failure");
-    assert_ne!(error.get("message").expect("error message").checked_string().expect("message"), "Image request does not match the public request schema.");
-    assert_eq!(result.get("isError").and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_bool), Some(true));
+    let error = result
+        .get("structuredContent")
+        .expect("structured result")
+        .get("error")
+        .expect("preflight failure");
+    assert_ne!(
+        error
+            .get("message")
+            .expect("error message")
+            .checked_string()
+            .expect("message"),
+        "Image request does not match the public request schema."
+    );
+    assert_eq!(
+        result
+            .get("isError")
+            .and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_bool),
+        Some(true)
+    );
     assert!(host.root.join(".runtime/temp").is_dir());
     assert!(host.root.join(".runtime/cache").is_dir());
     host.child.stdin.take();

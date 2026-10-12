@@ -3,8 +3,8 @@ mod common;
 mod image_fixture;
 use common::Workspace;
 use image::GenericImageView;
-use numera_image_gen_mcp::files::{editing, images, paths};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::files::{editing, images, paths};
 
 #[test]
 fn request_seed_matches_source_safe_integer_domain_before_submission() {

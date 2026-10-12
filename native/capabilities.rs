@@ -1,8 +1,8 @@
+use crate::compat::value::{JsString, Value, json};
 use crate::{
     dimensions::validate,
     error::{NumeraError, Result},
 };
-use crate::compat::value::{JsString, Value, json};
 
 pub const COMMON_FIELDS: &[&str] = &[
     "size",
@@ -54,13 +54,17 @@ pub fn safe_options(value: &Value, allowed: Option<&Value>, depth: usize) -> Res
         "constructor",
     ];
     for (key, child) in object {
-        let sensitive = ["token", "secret", "password", "upload", "endpoint", "apikey"]
-            .iter()
-            .any(|part| key.contains_ascii_case_insensitive(part))
+        let sensitive = [
+            "token", "secret", "password", "upload", "endpoint", "apikey",
+        ]
+        .iter()
+        .any(|part| key.contains_ascii_case_insensitive(part))
             || key.as_utf16().windows(7).any(|units| {
                 let part = JsString::from_utf16(units.to_vec());
-                JsString::from_utf16(part.as_utf16()[..3].to_vec()).contains_ascii_case_insensitive("api")
-                    && JsString::from_utf16(units[4..].to_vec()).contains_ascii_case_insensitive("key")
+                JsString::from_utf16(part.as_utf16()[..3].to_vec())
+                    .contains_ascii_case_insensitive("api")
+                    && JsString::from_utf16(units[4..].to_vec())
+                        .contains_ascii_case_insensitive("key")
             });
         if key.as_str().is_some_and(|key| RESERVED.contains(&key))
             || sensitive

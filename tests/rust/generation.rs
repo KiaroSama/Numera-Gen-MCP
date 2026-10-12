@@ -4,11 +4,11 @@ mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
+use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     config::Config, jobs::Store, logging::Logger, runtime_paths::RuntimePaths,
     services::generation::Generation,
 };
-use numera_image_gen_mcp::compat::value::{Value, json};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},

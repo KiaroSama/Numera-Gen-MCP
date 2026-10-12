@@ -1,4 +1,5 @@
 use super::requirements;
+use crate::compat::value::{Value, json};
 use crate::{
     adapters::types::Normalized,
     error::{NumeraError, Result},
@@ -10,7 +11,6 @@ use crate::{
     jobs::{Receipt, Store},
     logging::Logger,
 };
-use crate::compat::value::{Value, json};
 use std::sync::{Arc, Mutex};
 use tokio_util::sync::CancellationToken;
 
@@ -184,7 +184,15 @@ pub async fn finalize(
                         store,
                         &id,
                         index as u32,
-                        images::decode_base64(value.checked_str().map_err(|_| NumeraError::new("invalid_response", "Invalid Base64 image encoding."))?, max)?,
+                        images::decode_base64(
+                            value.checked_str().map_err(|_| {
+                                NumeraError::new(
+                                    "invalid_response",
+                                    "Invalid Base64 image encoding.",
+                                )
+                            })?,
+                            max,
+                        )?,
                         &receipt,
                     )?;
                 } else if let Some(url) = item.url {
@@ -194,7 +202,12 @@ pub async fn finalize(
                             store,
                             &id,
                             index as u32,
-                            images::data_url(url.checked_str().map_err(|_| NumeraError::new("invalid_input", "Invalid image data URL."))?, max)?,
+                            images::data_url(
+                                url.checked_str().map_err(|_| {
+                                    NumeraError::new("invalid_input", "Invalid image data URL.")
+                                })?,
+                                max,
+                            )?,
                             &receipt,
                         )?;
                     } else {

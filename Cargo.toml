@@ -240,6 +240,22 @@ path = "tests/rust/js_http_body.rs"
 name = "js_runtime"
 path = "tests/rust/js_runtime.rs"
 
+[[test]]
+name = "crash_recovery"
+path = "tests/rust/crash_recovery.rs"
+
+[[test]]
+name = "runtime_contracts"
+path = "tests/rust/runtime_contracts.rs"
+
+[[test]]
+name = "catalog_upload_contracts"
+path = "tests/rust/catalog_upload_contracts.rs"
+
+[[test]]
+name = "snapshot_races"
+path = "tests/rust/snapshot_races.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

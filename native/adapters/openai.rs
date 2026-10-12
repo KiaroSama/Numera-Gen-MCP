@@ -1,9 +1,9 @@
 use super::types::{Input, Prepared, mime_data};
+use crate::compat::value::json;
 use crate::{
     capabilities::COMMON_FIELDS,
     error::{NumeraError, Result},
 };
-use crate::compat::value::json;
 
 pub fn request(input: &Input<'_>) -> Result<Prepared> {
     let Input {

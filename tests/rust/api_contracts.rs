@@ -1,9 +1,9 @@
 #[path = "common/http.rs"]
 mod http_fixture;
 use http_fixture::{Reply, Server};
+use numera_image_gen_mcp::compat::value::json;
 use numera_image_gen_mcp::http::api::{self, Body, Operation};
 use reqwest::Method;
-use numera_image_gen_mcp::compat::value::json;
 use std::{collections::HashMap, time::Duration};
 use tokio_util::sync::CancellationToken;
 

@@ -1,7 +1,7 @@
+use crate::compat::value::{Object, Value, json};
 use crate::runtime_paths::private_directory;
 use chrono::Utc;
 use regex::Regex;
-use crate::compat::value::{Object, Value, json};
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::Path;
@@ -25,7 +25,9 @@ pub fn redact(value: &Value, depth: usize) -> Value {
     let (sensitive, urls, bearer) = patterns();
     match value {
         Value::String(text) => {
-            let Some(text) = text.as_str() else { return json!("[REDACTED]") };
+            let Some(text) = text.as_str() else {
+                return json!("[REDACTED]");
+            };
             let text = urls.replace_all(text, |capture: &regex::Captures<'_>| {
                 url::Url::parse(&capture[0]).map_or_else(
                     |_| "[REDACTED]".into(),
@@ -37,7 +39,12 @@ pub fn redact(value: &Value, depth: usize) -> Value {
                     },
                 )
             });
-            Value::String(bearer.replace_all(&text, "Bearer [REDACTED]").into_owned().into())
+            Value::String(
+                bearer
+                    .replace_all(&text, "Bearer [REDACTED]")
+                    .into_owned()
+                    .into(),
+            )
         }
         Value::Array(values) => Value::Array(
             values

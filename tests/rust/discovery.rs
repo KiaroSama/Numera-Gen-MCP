@@ -5,12 +5,12 @@ mod config_fixture;
 mod http_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
+use numera_image_gen_mcp::compat::value::json;
 use numera_image_gen_mcp::{
     config::Config,
     runtime_paths::RuntimePaths,
     services::{discovery::Discovery, health},
 };
-use numera_image_gen_mcp::compat::value::json;
 use std::{
     collections::HashMap,
     sync::{

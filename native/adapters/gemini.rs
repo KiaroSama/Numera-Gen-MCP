@@ -1,11 +1,11 @@
 use super::types::{Input, Prepared};
+use crate::compat::value::json;
 use crate::{
     capabilities::COMMON_FIELDS,
     error::{NumeraError, Result},
 };
 use base64::{Engine, engine::general_purpose::STANDARD};
 use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-use crate::compat::value::json;
 
 const COMPONENT: &AsciiSet = &CONTROLS
     .add(b' ')

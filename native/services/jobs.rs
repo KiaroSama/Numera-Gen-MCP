@@ -5,6 +5,7 @@ use super::{
     lease::Lease,
     request,
 };
+use crate::compat::value::{Value, json};
 use crate::{
     adapters::{self, types::Job},
     config::{PinnedConnection, snapshot_credentials},
@@ -13,7 +14,6 @@ use crate::{
     jobs::Receipt,
 };
 use reqwest::Method;
-use crate::compat::value::{Value, json};
 use std::{sync::Mutex, time::Duration};
 use tokio_util::sync::CancellationToken;
 
@@ -21,7 +21,10 @@ fn recovery_request(receipt: &Receipt) -> Result<Value> {
     let mut value = json!({"prompt":"recovered"});
     if let Some(required) = receipt.value["output_requirements"].as_object() {
         for (key, item) in required {
-            if key.as_str().is_none_or(|key| !["upscale_source", "dimension_evidence"].contains(&key)) {
+            if key
+                .as_str()
+                .is_none_or(|key| !["upscale_source", "dimension_evidence"].contains(&key))
+            {
                 value[key] = item.clone();
             }
         }
@@ -31,7 +34,10 @@ fn recovery_request(receipt: &Receipt) -> Result<Value> {
 fn job(receipt: &Receipt) -> Result<Job> {
     let j = &receipt.value["upstream_job"];
     Ok(Job {
-        id: j["id"].as_utf16().map(|v| crate::compat::value::JsString::from_utf16(v.to_vec())).ok_or_else(NumeraError::runtime)?,
+        id: j["id"]
+            .as_utf16()
+            .map(|v| crate::compat::value::JsString::from_utf16(v.to_vec()))
+            .ok_or_else(NumeraError::runtime)?,
         kind: j["kind"].as_str().ok_or_else(NumeraError::runtime)?.into(),
     })
 }
@@ -197,7 +203,11 @@ pub async fn get(
                 c,
                 &headers,
                 api::Operation {
-                    operation: &format!("{}/{}", job.kind, adapters::encode_component(job.id.checked_str()?)),
+                    operation: &format!(
+                        "{}/{}",
+                        job.kind,
+                        adapters::encode_component(job.id.checked_str()?)
+                    ),
                     prefix: super::discovery::prefix(c),
                     method: Method::GET,
                     body: Body::Empty,

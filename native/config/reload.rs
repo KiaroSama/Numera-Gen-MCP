@@ -1,6 +1,6 @@
 use super::{Config, read_config_text};
-use crate::{compat::canonical_json::fingerprint, error::Result, logging::Logger};
 use crate::compat::value::{Value, json};
+use crate::{compat::canonical_json::fingerprint, error::Result, logging::Logger};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -133,7 +133,9 @@ fn fixed(config: &Config) -> Result<String> {
             object
                 .iter()
                 .filter(|(key, _)| {
-                    key.as_str().is_none_or(|key| !["connections", "defaultConnection", "returnMode"].contains(&key))
+                    key.as_str().is_none_or(|key| {
+                        !["connections", "defaultConnection", "returnMode"].contains(&key)
+                    })
                 })
                 .map(|(key, value)| (key.clone(), super::clone_json(value)))
                 .collect::<crate::compat::value::Object>()

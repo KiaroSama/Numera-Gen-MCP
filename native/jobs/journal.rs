@@ -1,8 +1,8 @@
 use super::store::{Receipt, Store, terminal};
 use crate::compat::hash::sha256;
+use crate::compat::value::{JsString, Value, json};
 use crate::error::{NumeraError, Result};
 use rusqlite::{OptionalExtension, params};
-use crate::compat::value::{JsString, Value, json};
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]

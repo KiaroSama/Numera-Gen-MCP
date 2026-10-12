@@ -1,5 +1,5 @@
-use crate::error::{NumeraError, Result};
 use crate::compat::value::{JsString, Value, json};
+use crate::error::{NumeraError, Result};
 
 const SOURCE: &str =
     "https://ai.google.dev/gemini-api/docs/image-generation#aspect-ratios-and-image-size";
@@ -108,7 +108,10 @@ pub fn evidence(connection: &Value, model: &JsString) -> Value {
     let dimensions = image_dimensions(connection, model, 64000000);
     let pixels = &dimensions["model_support"]["pixel_sizes"];
     let name = model.as_str().unwrap_or("");
-    let engine = name.strip_prefix("cx/").or_else(|| name.strip_prefix("codex/")).unwrap_or(name);
+    let engine = name
+        .strip_prefix("cx/")
+        .or_else(|| name.strip_prefix("codex/"))
+        .unwrap_or(name);
     let gpt = [
         "gpt-image-2",
         "gpt-image-2.5-sunburst",

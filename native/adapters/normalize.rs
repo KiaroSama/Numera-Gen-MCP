@@ -1,9 +1,9 @@
 use super::types::{Job, Normalized, ResultItem};
+use crate::compat::value::{JsString, Value, json};
 use crate::{
     error::{NumeraError, Result},
     http::sse,
 };
-use crate::compat::value::{JsString, Value, json};
 
 fn error(code: &str, message: &str) -> NumeraError {
     NumeraError::new(code, message).stage("response")
@@ -23,7 +23,11 @@ fn array(value: &Value) -> &[Value] {
     value.as_array().map_or(&[], Vec::as_slice)
 }
 fn string(value: &Value) -> Option<JsString> {
-    if let Value::String(value) = value { Some(value.clone()) } else { None }
+    if let Value::String(value) = value {
+        Some(value.clone())
+    } else {
+        None
+    }
 }
 fn truthy(value: &Value) -> bool {
     match value {
@@ -35,7 +39,10 @@ fn truthy(value: &Value) -> bool {
     }
 }
 fn js_string(value: &Value) -> JsString {
-    enum Token<'a> { Value(&'a Value, bool), Comma }
+    enum Token<'a> {
+        Value(&'a Value, bool),
+        Comma,
+    }
     let mut units = Vec::new();
     let mut pending = vec![Token::Value(value, false)];
     while let Some(token) = pending.pop() {
@@ -43,16 +50,22 @@ fn js_string(value: &Value) -> JsString {
             Token::Comma => units.push(44),
             Token::Value(Value::String(s), _) => units.extend(s.as_utf16()),
             Token::Value(Value::Null, false) => units.extend("null".encode_utf16()),
-            Token::Value(Value::Null, true) => {},
+            Token::Value(Value::Null, true) => {}
             Token::Value(Value::Object(_), _) => units.extend("[object Object]".encode_utf16()),
             Token::Value(Value::Array(array), _) => {
                 for (index, value) in array.iter().enumerate().rev() {
                     pending.push(Token::Value(value, true));
-                    if index != 0 { pending.push(Token::Comma); }
+                    if index != 0 {
+                        pending.push(Token::Comma);
+                    }
                 }
             }
-            Token::Value(Value::Number(number), _) => units.extend(ryu_js::Buffer::new().format(number.0).encode_utf16()),
-            Token::Value(Value::Bool(b), _) => units.extend(if *b { "true" } else { "false" }.encode_utf16()),
+            Token::Value(Value::Number(number), _) => {
+                units.extend(ryu_js::Buffer::new().format(number.0).encode_utf16())
+            }
+            Token::Value(Value::Bool(b), _) => {
+                units.extend(if *b { "true" } else { "false" }.encode_utf16())
+            }
         }
     }
     JsString::from_utf16(units)
@@ -279,7 +292,8 @@ pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normal
         });
     }
     if !mime.contains("text/event-stream") {
-        let text = std::str::from_utf8(&bytes).map_err(|_| error("invalid_response", "Invalid response UTF-8."))?;
+        let text = std::str::from_utf8(&bytes)
+            .map_err(|_| error("invalid_response", "Invalid response UTF-8."))?;
         let value = Value::parse_with_limit(text, 128 * 1024 * 1024)
             .map_err(|_| error("invalid_response", "Image response is not valid JSON."))?;
         return normalize(connection, &value);
