@@ -9,13 +9,22 @@ use std::sync::Arc;
 pub struct Handler {
     pub application: Arc<Application>,
     pub tools: Vec<Tool>,
+    _lifetime: Option<super::handler_lifetime::HandlerLease>,
 }
 impl Handler {
     pub fn new(application: Arc<Application>) -> Result<Self> {
         Ok(Self {
             application,
             tools: tools::definitions()?,
+            _lifetime: None,
         })
+    }
+    pub(super) fn tracked(
+        mut self,
+        lifetime: &Arc<super::handler_lifetime::HandlerLifetime>,
+    ) -> Self {
+        self._lifetime = Some(lifetime.acquire());
+        self
     }
 }
 fn protocol() -> ErrorData {

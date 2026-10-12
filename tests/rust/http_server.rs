@@ -254,4 +254,10 @@ async fn real_http_endpoint_rejects_unsafe_clients_and_serves_the_existing_ten_t
     let (server, ()) = tokio::join!(server, client);
     server.unwrap();
     app.shutdown();
+    assert_eq!(
+        Arc::strong_count(&app),
+        1,
+        "SDK handlers must be released before serve returns"
+    );
+    drop(app);
 }

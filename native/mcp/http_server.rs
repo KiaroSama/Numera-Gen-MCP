@@ -281,7 +281,8 @@ pub async fn serve(
             "Invalid local HTTP server options.",
         ));
     }
-    let handler = Handler::new(application.clone())?;
+    let lifetime = Arc::new(super::handler_lifetime::HandlerLifetime::default());
+    let handler = Handler::new(application.clone())?.tracked(&lifetime);
     let mut manager = LocalSessionManager::default();
     manager.session_config.init_timeout = Some(Duration::from_secs(8));
     let sessions = Arc::new(manager);
@@ -350,20 +351,31 @@ pub async fn serve(
         }
         Ok::<(), NumeraError>(())
     };
-    match tokio::time::timeout(shutdown_timeout, drain).await {
-        Ok(Ok(())) => {}
+    let cleanup = match tokio::time::timeout(shutdown_timeout, drain).await {
+        Ok(Ok(())) => Ok(()),
         outcome => {
             tasks.abort_all();
             while tasks.join_next().await.is_some() {}
-            return match outcome {
+            match outcome {
                 Ok(Err(error)) => Err(error),
                 _ => Err(NumeraError::new(
                     "request_timeout",
                     "Local HTTP shutdown deadline exceeded.",
                 )),
-            };
+            }
         }
-    }
+    };
+    drop(state);
+    drop(sessions);
+    tokio::time::timeout(shutdown_timeout, lifetime.drained())
+        .await
+        .map_err(|_| {
+            NumeraError::new(
+                "request_timeout",
+                "Local HTTP handler cleanup deadline exceeded.",
+            )
+        })?;
+    cleanup?;
     application.logger.log(
         "INFO",
         "MCP",

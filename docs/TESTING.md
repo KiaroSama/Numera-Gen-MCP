@@ -33,9 +33,15 @@ quality checks. The next tree adds bounded admission/Comfy completion, existing-
 route/deviation, API preflight and real filesystem/SQL publication-gap fixtures (43 Rust targets).
 These newest additions remain pending exact-SHA acceptance. Raw-text JSON oracle checks now cover
 JavaScript nonfinite numbers, lone UTF-16 values/keys, duplicate insertion order and binary64 rounding.
+Eight of its nine tests passed on all six targets at `19c4f77`; the remaining fixture compared an
+integer serde representation with the module's intentional binary64 representation and is being
+corrected. That revision also exposed Windows HTTP fixture cleanup failing after successful protocol
+assertions. The repair adds an actual handler-release barrier, not a cleanup retry or longer sleep.
 The isolated compatibility module is not yet integrated into configuration, transport or persistence;
-passing its tests alone cannot establish full migration parity. SQLite fixture stores, loopback
-services and owned child processes must close and clean up.
+passing its tests alone cannot establish full migration parity. Exact UTF-16 access and direct
+schema validation are being added, with independent raw-text source validation cases. Coverage reports
+are now retained even after instrumented test failures; those failures still fail the required gate.
+SQLite fixture stores, loopback services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

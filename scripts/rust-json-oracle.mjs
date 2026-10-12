@@ -1,5 +1,10 @@
 // Keep raw JSON text: serializing the parsed input would erase nonfinite numbers before comparison.
-export async function jsonOracle({ emit, fingerprint }) {
+export async function jsonOracle({
+  emit,
+  fingerprint,
+  configSchema,
+  requestSchema,
+}) {
   const texts = [
     ["overflow-values", '{"a":1e400,"b":-1e400,"c":1e-400}'],
     ["lone-surrogate-value", '{"text":"\\ud800"}'],
@@ -29,4 +34,49 @@ export async function jsonOracle({ emit, fingerprint }) {
     };
   });
   await emit("raw-json", cases);
+  const schemaCases = [];
+  const add = (name, schema, text) => {
+    const parsed = (
+      schema === "config" ? configSchema : requestSchema
+    ).safeParse(JSON.parse(text));
+    schemaCases.push({
+      name,
+      schema,
+      text,
+      valid: parsed.success,
+      serialized: parsed.success ? JSON.stringify(parsed.data) : null,
+    });
+  };
+  add(
+    "request-opaque-utf16-and-overflow",
+    "image-request",
+    '{"prompt":"\\ud800","provider_options":{"\\udfff":1e400,"nested":[-1e400]}}',
+  );
+  add(
+    "request-url-surrogate-validation",
+    "image-request",
+    '{"prompt":"draw","reference_images":[{"type":"url","url":"https://example.com/\\ud800"}]}',
+  );
+  for (const id of [
+    "00000000-0000-0000-0000-000000000000",
+    "ffffffff-ffff-ffff-ffff-ffffffffffff",
+    "12345678-1234-4234-8234-123456789abc",
+    "12345678-1234-4234-1234-123456789abc",
+    "12345678-1234-9234-8234-123456789abc",
+  ]) {
+    add(
+      "request-uuid-" + id,
+      "image-request",
+      JSON.stringify({
+        prompt: "draw",
+        reference_images: [{ type: "output_id", output_id: id }],
+      }),
+    );
+  }
+  add(
+    "config-opaque-utf16-and-overflow",
+    "config",
+    '{"schemaVersion":1,"outputDir":"/tmp/numera-outputs","stateDir":"/tmp/numera-state","connections":{"default":{"adapter":"openai-images","baseUrl":"https://example.com/v1","auth":{"type":"none"},"defaults":{"\\udfff":1e400,"text":"\\ud800"}}}}',
+  );
+  await emit("raw-js-schema", schemaCases);
 }

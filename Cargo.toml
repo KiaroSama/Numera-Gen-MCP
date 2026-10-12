@@ -218,6 +218,14 @@ path = "tests/rust/publication_contracts.rs"
 name = "js_json"
 path = "tests/rust/js_json.rs"
 
+[[test]]
+name = "js_value_access"
+path = "tests/rust/js_value_access.rs"
+
+[[test]]
+name = "js_schema"
+path = "tests/rust/js_schema.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

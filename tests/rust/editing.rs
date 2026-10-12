@@ -7,6 +7,22 @@ use numera_image_gen_mcp::files::{editing, images, paths};
 use serde_json::json;
 
 #[test]
+fn request_seed_matches_source_safe_integer_domain_before_submission() {
+    use numera_image_gen_mcp::services::request;
+    for seed in [-9007199254740991.0, -0.0, 9007199254740991.0] {
+        assert!(request::parse(json!({"prompt":"draw","seed":seed})).is_ok());
+    }
+    for seed in [-9007199254740992.0, 1.5, 9007199254740992.0] {
+        assert_eq!(
+            request::parse(json!({"prompt":"draw","seed":seed}))
+                .unwrap_err()
+                .code,
+            "invalid_input"
+        );
+    }
+}
+
+#[test]
 fn region_masks_preserve_polarity_pixels_and_reject_outside_bounds() {
     let config = json!({"files":{"maxPixels":64000000}});
     let source = images::inspect(image_fixture::original(), &config, None).unwrap();

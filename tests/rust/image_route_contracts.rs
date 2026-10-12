@@ -54,7 +54,12 @@ fn explicit_native_json_generation_fields_preserve_references_masks_and_reject_u
     }
     // Builder preserves explicit masks; capability policy rejects unverified forwarding before it.
     let generic = json!({"adapter":"openai-images"});
-    assert!(matches!(build_request(&input(&generic, &request, &refs[..1], Some(&image))).unwrap().body, Body::Multipart(_)));
+    assert!(matches!(
+        build_request(&input(&generic, &request, &refs[..1], Some(&image)))
+            .unwrap()
+            .body,
+        Body::Multipart(_)
+    ));
     for (c, code, reference_count) in [
         (
             json!({"adapter":"openai-images","gateway":"9router"}),

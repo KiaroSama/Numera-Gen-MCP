@@ -215,13 +215,24 @@ def main() -> None:
             profile_root = Path(instrumented["CARGO_LLVM_COV_TARGET_DIR"])
             if profile_root.exists() and any(profile_root.rglob("*.profraw")):
                 raise RuntimeError("Coverage job requires a fresh workspace without prior profiles")
-            run(["cargo", "+nightly-2026-10-10", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], wall=1200, idle=180, env=instrumented)
-            run(["cargo", "+nightly-2026-10-10", "build", "--locked"], wall=600, idle=180, env=instrumented)
+            failures = []
             instrumented["NUMERA_NATIVE_BINARY"] = str(Path(instrumented["CARGO_LLVM_COV_TARGET_DIR"]) / "debug/numera-image-gen-mcp")
-            run(["node", "scripts/native-interop.mjs"], wall=180, idle=45, env=instrumented)
-            run(["node", "scripts/native-http-interop.mjs"], wall=90, idle=30, env=instrumented)
-            run(coverage + ["report", "--branch", "--json", "--output-path", str(WORK / "coverage.json")], wall=60, idle=30, env=instrumented)
+            for command, wall, idle in [
+                (["cargo", "+nightly-2026-10-10", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], 1200, 180),
+                (["cargo", "+nightly-2026-10-10", "build", "--locked"], 600, 180),
+                (["node", "scripts/native-interop.mjs"], 180, 45),
+                (["node", "scripts/native-http-interop.mjs"], 90, 30),
+                (coverage + ["report", "--branch", "--json", "--output-path", str(WORK / "coverage.json")], 60, 30),
+            ]:
+                try:
+                    run(command, wall=wall, idle=idle, env=instrumented)
+                except (RuntimeError, TimeoutError) as error:
+                    failures.append(command[1])
+                    emit("ERROR", "Required instrumented gate failed.", gate=command[1], error_type=type(error).__name__)
+            # Preserve measured evidence after a failed suite; it never makes that suite passing.
             coverage_gate()
+            if failures:
+                raise RuntimeError("Required instrumented gates failed: " + ", ".join(failures))
 
 
 if __name__ == "__main__":

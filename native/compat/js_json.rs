@@ -69,7 +69,9 @@ impl Clone for JsValue {
                     tasks.extend(array.iter().rev().map(Build::Value));
                 }
                 Build::Value(Self::Object(object)) => {
-                    tasks.push(Build::Object(object.iter().map(|(k, _)| k.clone()).collect()));
+                    tasks.push(Build::Object(
+                        object.iter().map(|(k, _)| k.clone()).collect(),
+                    ));
                     tasks.extend(object.iter().rev().map(|(_, v)| Build::Value(v)));
                 }
                 Build::Value(value) => complete.push(match value {
@@ -115,7 +117,11 @@ struct Frame {
 impl Frame {
     fn new(object: bool) -> Self {
         Self {
-            value: if object { JsValue::Object(Vec::new()) } else { JsValue::Array(Vec::new()) },
+            value: if object {
+                JsValue::Object(Vec::new())
+            } else {
+                JsValue::Array(Vec::new())
+            },
             state: State::Initial,
             key: Vec::new(),
             positions: HashMap::new(),
@@ -172,7 +178,10 @@ impl Parser<'_> {
         let mut units = Vec::new();
         loop {
             let start = self.position;
-            while self.peek().is_some_and(|b| b >= 0x20 && b != b'"' && b != b'\\') {
+            while self
+                .peek()
+                .is_some_and(|b| b >= 0x20 && b != b'"' && b != b'\\')
+            {
                 self.position += 1;
             }
             // ASCII delimiters cannot split the UTF-8 input's scalar sequences.
@@ -241,7 +250,9 @@ impl Parser<'_> {
                 return Err(invalid());
             }
         }
-        let number = self.text[start..self.position].parse::<f64>().map_err(|_| invalid())?;
+        let number = self.text[start..self.position]
+            .parse::<f64>()
+            .map_err(|_| invalid())?;
         Ok(JsValue::Number(number))
     }
 
@@ -280,7 +291,11 @@ pub fn parse(text: &str) -> Result<JsValue> {
             if let Some(frame) = frames.last_mut() {
                 frame.insert(value);
             } else {
-                return if parser.position == text.len() { Ok(value) } else { Err(invalid()) };
+                return if parser.position == text.len() {
+                    Ok(value)
+                } else {
+                    Err(invalid())
+                };
             }
             continue;
         }
@@ -336,7 +351,9 @@ fn array_index(key: &[u16]) -> Option<u32> {
         if !(u16::from(b'0')..=u16::from(b'9')).contains(&unit) {
             return None;
         }
-        index = index.checked_mul(10)?.checked_add(u32::from(unit - u16::from(b'0')))?;
+        index = index
+            .checked_mul(10)?
+            .checked_add(u32::from(unit - u16::from(b'0')))?;
     }
     (index != u32::MAX).then_some(index)
 }
@@ -482,7 +499,9 @@ pub fn from_serde(value: &serde_json::Value) -> Result<JsValue> {
                 tasks.extend(array.iter().rev().map(Task::Value));
             }
             Task::Value(Value::Object(object)) => {
-                tasks.push(Task::Object(object.keys().map(|k| k.encode_utf16().collect()).collect()));
+                tasks.push(Task::Object(
+                    object.keys().map(|k| k.encode_utf16().collect()).collect(),
+                ));
                 tasks.extend(object.values().rev().map(Task::Value));
             }
             Task::Value(value) => complete.push(match value {
@@ -524,7 +543,9 @@ pub fn to_serde(value: &JsValue) -> Result<serde_json::Value> {
                     tasks.extend(array.iter().rev().map(Task::Value));
                 }
                 Task::Value(JsValue::Object(object)) => {
-                    let keys = object.iter().map(|(k, _)| String::from_utf16(k))
+                    let keys = object
+                        .iter()
+                        .map(|(k, _)| String::from_utf16(k))
                         .collect::<std::result::Result<Vec<_>, _>>()
                         .map_err(|_| unrepresentable())?;
                     tasks.push(Task::Object(keys));
@@ -533,12 +554,12 @@ pub fn to_serde(value: &JsValue) -> Result<serde_json::Value> {
                 Task::Value(value) => complete.push(match value {
                     JsValue::Null => Value::Null,
                     JsValue::Bool(b) => Value::Bool(*b),
-                    JsValue::Number(n) => Value::Number(
-                        serde_json::Number::from_f64(*n).ok_or_else(unrepresentable)?,
-                    ),
-                    JsValue::String(s) => Value::String(
-                        String::from_utf16(s).map_err(|_| unrepresentable())?,
-                    ),
+                    JsValue::Number(n) => {
+                        Value::Number(serde_json::Number::from_f64(*n).ok_or_else(unrepresentable)?)
+                    }
+                    JsValue::String(s) => {
+                        Value::String(String::from_utf16(s).map_err(|_| unrepresentable())?)
+                    }
                     _ => unreachable!("containers are assembled separately"),
                 }),
                 Task::Array(length) => {

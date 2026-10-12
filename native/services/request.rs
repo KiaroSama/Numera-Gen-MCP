@@ -106,7 +106,9 @@ pub fn parse(mut value: Value) -> Result<Value> {
     value["count"] = json!(count as u64);
     if value.get("seed").is_some_and(|v| {
         v.as_f64()
-            .is_none_or(|n| !n.is_finite() || n.fract() != 0.0)
+            .is_none_or(|n| {
+                n.fract() != 0.0 || !(-9007199254740991.0..=9007199254740991.0).contains(&n)
+            })
     }) {
         return Err(invalid());
     }
