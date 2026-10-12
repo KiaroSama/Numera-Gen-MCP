@@ -584,6 +584,8 @@ for (const adapter of [
 await emit("adapters", { wires, normalization });
 const { streamOracle } = await import("./rust-stream-oracle.mjs");
 await streamOracle({ source, emit, plain, images, outcome });
+const { jsonOracle } = await import("./rust-json-oracle.mjs");
+await jsonOracle({ emit, fingerprint });
 if (process.platform === "win32") {
   const { spawn } = await import("node:child_process");
   const file = join(output, "current-user-dpapi.txt");

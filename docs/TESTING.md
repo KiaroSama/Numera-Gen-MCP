@@ -31,7 +31,10 @@ including config, expiry, continuation/recovery, native entry-point and Comfy re
 additions passed selected runtime checks in `b4e466a`; archive verification is still gated by strict
 quality checks. The next tree adds bounded admission/Comfy completion, existing-job recovery, image
 route/deviation, API preflight and real filesystem/SQL publication-gap fixtures (43 Rust targets).
-These newest additions remain unexecuted until their exact-SHA CI pass. SQLite fixture stores, loopback
+These newest additions remain pending exact-SHA acceptance. Raw-text JSON oracle checks now cover
+JavaScript nonfinite numbers, lone UTF-16 values/keys, duplicate insertion order and binary64 rounding.
+The isolated compatibility module is not yet integrated into configuration, transport or persistence;
+passing its tests alone cannot establish full migration parity. SQLite fixture stores, loopback
 services and owned child processes must close and clean up.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
