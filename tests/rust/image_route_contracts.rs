@@ -177,7 +177,8 @@ fn all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway
     };
     assert_eq!(body["image"], encoded[0]);
     for gateway in ["omniroute", "9router"] {
-        let mut connection = json!({"adapter":"openai-images","gateway":gateway,"modelOverrides":{}});
+        let mut connection =
+            json!({"adapter":"openai-images","gateway":gateway,"modelOverrides":{}});
         for prefix in ["codex", "cx"] {
             let model = format!("{prefix}/fixture").into();
             let built = build_request(&Input {

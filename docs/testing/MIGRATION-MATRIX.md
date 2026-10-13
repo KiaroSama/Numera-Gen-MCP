@@ -11,14 +11,18 @@ failed in one test file. Complete instrumented coverage measured 84.72% regions 
 the region floor still failed against unchanged 85% / 80% gates. At `bc34fbf`, all 56 native runtime
 targets, strict Clippy and SDK stdio/HTTP acceptance passed on all six targets. Complete coverage was
 84.86% regions / 81.42% branches; formatting in two test files and the region floor still failed.
-The Node macOS maintenance cleanup-verification record also failed. No archive or Release is accepted.
+The Node macOS maintenance cleanup-verification record also failed. At `3c5958f`, all 56 native targets,
+strict Clippy and SDK stdio/HTTP acceptance passed on all six targets, all three Node jobs passed,
+and coverage passed at 85.25% regions / 82.18% branches. Dynamic collection produced the same 470
+case identities on all three OSes, including platform skips. One native formatting correction still
+failed; archive checks did not run. No archive or Release is accepted.
 
 **Packaged execution and complete baseline-case migration acceptance have not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery
 regressions passed at `bc34fbf`; new reference-encoding assertions and cleanup/case-collector repairs
-still require their replacement hosted run. The [pending ledger](native-parity.json) preserves all
+passed at `3c5958f`. The [pending ledger](native-parity.json) preserves all
 50 frozen suite hashes and concrete source-authored mappings, with incomplete case equivalence.
 Actual expanded collection retains platform-skipped cases; no suite grouping is promoted to 470-case acceptance.
 
@@ -39,7 +43,7 @@ Actual expanded collection retains platform-skipped cases; no suite grouping is 
 | Ten tools/stdio/resources/negotiation/bridge          | `native/mcp/`, `native/main.rs`                                       | Real child `bridge` fixture, foreign CWD and EOF                  | Bridge/two-host/two-restart/legacy-auto-pin and HTTP outputs/resources passed at 8271b81; active race case ledger pending |
 | Maintenance/readiness/client registration             | Native CLI replacement                                                | Existing maintenance cases not yet migrated                       | Pending; do not retire working scripts yet                                                                                |
 | Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Distribution checks not yet complete                              | Pending verified downloadable archives                                                                                    |
-| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Latest complete report: 84.86% regions / 81.42% branches; regions failed; no reduced floor or exclusions                  |
+| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete 3c5958f report: 85.25% regions / 82.18% branches; both unchanged floors passed                                   |
 
 ## Release blockers
 

@@ -91,8 +91,13 @@ native counterparts and unresolved assertion gaps; it explicitly does not mark f
 Hosted case collection uses the frozen Vitest runtime to expand declaration loops without running test
 bodies. Unlike CLI `list` JSON, it retains skipped platform cases with their names/locations/modes.
 Collection must produce exactly 50 suites / 470 cases and close its pool under a 60-second wall /
-30-second idle ceiling with two workers. Raw collection is evidence for mapping, not native acceptance.
-Full case-ledger, coverage and archive acceptance are still required.
+30-second idle ceiling with two workers. At `3c5958f`, collection produced all 470 cases on Windows,
+Linux and macOS with identical case identities and the expected three/one/one platform skips. All
+56 native targets, strict Clippy and SDK stdio/HTTP acceptance passed on all six targets; the three
+Node jobs also passed, including the cleanup regression. Complete coverage passed unchanged floors
+at 85.25% regions / 82.18% branches. One native test-file formatting correction still failed and
+prevented archive checks. Raw collection is evidence for mapping, not native assertion equivalence.
+Full case-ledger and archive acceptance are still required.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally
