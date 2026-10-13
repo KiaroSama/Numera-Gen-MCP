@@ -236,19 +236,40 @@ async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_w
             "new/model"
         );
         let signal = CancellationToken::new();
-        let job = app.call("get_job", json!({"request_id":"retained-route","refresh":true}), &signal).await.unwrap();
+        let job = app
+            .call(
+                "get_job",
+                json!({"request_id":"retained-route","refresh":true}),
+                &signal,
+            )
+            .await
+            .unwrap();
         assert_eq!(job["status"], "running");
         assert_eq!(job["upstream_job"]["id"], "owned-remote");
         assert_eq!(
             server.requests.lock().unwrap().as_slice(),
             ["/v1/responses/owned-remote"]
         );
-        let rejected = app.call("get_job", json!({"request_id":"unknown-route","refresh":true}), &signal).await.unwrap_err();
+        let rejected = app
+            .call(
+                "get_job",
+                json!({"request_id":"unknown-route","refresh":true}),
+                &signal,
+            )
+            .await
+            .unwrap_err();
         assert_eq!(rejected.code, "permission_denied");
         let mut ambiguous = raw.clone();
         ambiguous["connections"]["test"]["paths"] = json!({"responses":"changed-responses"});
         std::fs::write(&file, ambiguous.to_string()).unwrap();
-        let rejected = app.call("get_job", json!({"request_id":"retained-route","refresh":true}), &signal).await.unwrap_err();
+        let rejected = app
+            .call(
+                "get_job",
+                json!({"request_id":"retained-route","refresh":true}),
+                &signal,
+            )
+            .await
+            .unwrap_err();
         assert_eq!(rejected.code, "permission_denied");
         assert_eq!(
             server.requests.lock().unwrap().len(),
@@ -256,7 +277,12 @@ async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_w
             "ambiguous routes never dispatch"
         );
         assert_eq!(
-            app.store.lock().unwrap().get("retained-route").unwrap().value["upstream_job"]["id"],
+            app.store
+                .lock()
+                .unwrap()
+                .get("retained-route")
+                .unwrap()
+                .value["upstream_job"]["id"],
             "owned-remote"
         );
         let original = image_fixture::original();
@@ -280,7 +306,14 @@ async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_w
                 .unwrap();
             store.release("local-retained", Some(&receipt)).unwrap();
         }
-        let recovered = app.call("get_job", json!({"request_id":"local-retained","refresh":true}), &signal).await.unwrap();
+        let recovered = app
+            .call(
+                "get_job",
+                json!({"request_id":"local-retained","refresh":true}),
+                &signal,
+            )
+            .await
+            .unwrap();
         assert_eq!(recovered["status"], "completed");
         assert_eq!(
             std::fs::read(recovered["outputs"][0]["path"].as_str().unwrap()).unwrap(),

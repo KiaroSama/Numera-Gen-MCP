@@ -260,6 +260,10 @@ path = "tests/rust/snapshot_races.rs"
 name = "http_output_contracts"
 path = "tests/rust/http_output_contracts.rs"
 
+[[test]]
+name = "comfy_recovery_contracts"
+path = "tests/rust/comfy_recovery_contracts.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

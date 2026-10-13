@@ -68,9 +68,16 @@ regions / 80.91% branches. The next tree uses the real canonical publication pat
 HTTP output/preview/resource/error/existing-handle contracts. At `3655fdc`, all 55 native targets, strict Clippy and actual stdio/HTTP SDK acceptance passed on
 all six targets, including the Windows crash fixture and public output/resource test. Formatting
 still failed in two test files. Complete coverage reached 84.63% regions / 81.10% branches, still
-below the region floor. The next scoped regression exercises retained original routes, ambiguous
-history refusal and credential-free local recovery through `Application`; it remains source-only.
-Full case-ledger, coverage and archive acceptance are still required.
+below the region floor. At `8271b81`, the retained original-route, ambiguous-history refusal and
+credential-free recovery regression passed. Five stable platforms passed all 55 runtime targets;
+Linux x86_64 hit the existing eight-variant asynchronous polling fixture's aggregate eight-second
+deadline. All six targets passed strict Clippy and actual SDK stdio/HTTP acceptance. Formatting
+failed in one test file. Complete nightly coverage measured 84.72% regions / 81.17% branches: the
+region floor still failed. The repair isolates every adapter/state variant as a named harness case
+without changing the real polling interval, eight-second per-case ceiling or two-worker cap. New
+Comfy fixtures capture distinct reference/mask bytes and workflow targets, zero-upload preflight
+failures, GPU refusal/opt-out and completed-original download recovery; they remain unexecuted until
+the replacement hosted run. Full case-ledger, coverage and archive acceptance are still required.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

@@ -456,8 +456,10 @@ async fn bounded_local_queue_and_missing_credentials_create_no_provider_submissi
     result.unwrap();
 }
 
-#[tokio::test]
-async fn responses_and_interactions_poll_one_existing_handle_and_persist_terminal_results() {
+async fn responses_and_interactions_poll_one_existing_handle_and_persist_terminal_results(
+    adapter: &str,
+    mode: &str,
+) {
     let bytes = image_fixture::original();
     let encoded = STANDARD.encode(&bytes);
     let server = Server::new(move |path| {
@@ -470,49 +472,66 @@ async fn responses_and_interactions_poll_one_existing_handle_and_persist_termina
         if status == "completed" || (terminal && status == "incomplete") {value.as_object_mut().unwrap().extend(image.as_object().unwrap().clone());}
         Reply {status:200,value,bytes:None}
     }).await;
+    let signal = CancellationToken::new();
     let action = async {
-        for adapter in ["openai-responses", "gemini-interactions"] {
-            for mode in ["complete", "failed", "incomplete", "wrong"] {
-                let workspace = Workspace::new();
-                let raw = workspace.config(&format!("{}/{mode}/v1", server.origin), adapter);
-                let generation = make_generation(&workspace, &raw);
-                let signal = CancellationToken::new();
-                let request = json!({"prompt":"fixture","request_id":format!("{adapter}-{mode}")});
-                let before = server.requests.lock().unwrap().len();
-                let result = generation
-                    .run(request.clone(), "generate", &signal)
-                    .await
-                    .unwrap();
-                let status = match mode {
-                    "complete" => "completed",
-                    "failed" => "failed",
-                    "incomplete" => "partial",
-                    "wrong" => "running",
-                    _ => unreachable!(),
-                };
-                assert_eq!(result.status(), status, "{adapter}-{mode}");
-                assert_eq!(result.value["upstream_job"]["id"], "job");
-                if matches!(mode, "complete" | "incomplete") {
-                    saved(&result, &bytes);
-                }
-                if mode == "wrong" {
-                    assert_eq!(result.value["errors"][0]["code"], "invalid_response");
-                }
-                let repeat = generation.run(request, "generate", &signal).await.unwrap();
-                assert_eq!(repeat.value["outputs"], result.value["outputs"]);
-                assert_eq!(
-                    server.requests.lock().unwrap().len() - before,
-                    2,
-                    "one POST then one GET, no new submission"
-                );
-                assert!(generation.active.lock().unwrap().is_empty());
-            }
+        let workspace = Workspace::new();
+        let raw = workspace.config(&format!("{}/{mode}/v1", server.origin), adapter);
+        let generation = make_generation(&workspace, &raw);
+        let request = json!({"prompt":"fixture","request_id":format!("{adapter}-{mode}")});
+        let result = generation
+            .run(request.clone(), "generate", &signal)
+            .await
+            .unwrap();
+        let status = match mode {
+            "complete" => "completed",
+            "failed" => "failed",
+            "incomplete" => "partial",
+            "wrong" => "running",
+            _ => unreachable!(),
+        };
+        assert_eq!(result.status(), status, "{adapter}-{mode}");
+        assert_eq!(result.value["upstream_job"]["id"], "job");
+        if matches!(mode, "complete" | "incomplete") {
+            saved(&result, &bytes);
         }
+        if mode == "wrong" {
+            assert_eq!(result.value["errors"][0]["code"], "invalid_response");
+        }
+        let repeat = generation.run(request, "generate", &signal).await.unwrap();
+        assert_eq!(repeat.value["outputs"], result.value["outputs"]);
+        assert_eq!(
+            server.requests.lock().unwrap().len(),
+            2,
+            "one POST then one GET, no new submission"
+        );
+        assert!(generation.active.lock().unwrap().is_empty());
     };
     let result = tokio::time::timeout(Duration::from_secs(8), action).await;
+    signal.cancel();
     server.close().await;
-    result.unwrap();
+    result.unwrap_or_else(|_| panic!("{adapter}-{mode} exceeded its polling deadline"));
 }
+
+macro_rules! polling_case {
+    ($name:ident, $adapter:literal, $mode:literal) => {
+        #[tokio::test]
+        async fn $name() {
+            responses_and_interactions_poll_one_existing_handle_and_persist_terminal_results(
+                $adapter, $mode,
+            )
+            .await;
+        }
+    };
+}
+
+polling_case!(responses_completed, "openai-responses", "complete");
+polling_case!(responses_failed, "openai-responses", "failed");
+polling_case!(responses_incomplete, "openai-responses", "incomplete");
+polling_case!(responses_wrong_handle, "openai-responses", "wrong");
+polling_case!(interactions_completed, "gemini-interactions", "complete");
+polling_case!(interactions_failed, "gemini-interactions", "failed");
+polling_case!(interactions_incomplete, "gemini-interactions", "incomplete");
+polling_case!(interactions_wrong_handle, "gemini-interactions", "wrong");
 
 #[tokio::test]
 async fn comfy_wait_false_retains_one_handle_and_get_job_recovers_original_bytes() {

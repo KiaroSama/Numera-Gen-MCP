@@ -16,7 +16,10 @@ use numera_image_gen_mcp::{
 use std::{
     collections::HashMap,
     future::Future,
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
     time::Duration,
 };
 use tokio::{
@@ -339,6 +342,246 @@ async fn malformed_image_and_mask_upload_identity_prevent_prompt_submission_and_
                         .windows(image.bytes.len())
                         .any(|window| window == image.bytes)
                 );
+            }
+        },
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn distinct_reference_and_mask_uploads_preserve_bytes_targets_and_gpu_preflight() {
+    let first = images::inspect(image_fixture::original(), &json!({}), None).unwrap();
+    let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/images.json");
+    let fixtures: Vec<Value> = serde_json::from_slice(&std::fs::read(file).unwrap()).unwrap();
+    let jpeg = fixtures
+        .iter()
+        .find(|fixture| fixture["metadata"]["mime"] == "image/jpeg")
+        .unwrap();
+    let second = images::inspect(
+        images::decode_base64(jpeg["base64"].as_str().unwrap(), 1048576).unwrap(),
+        &json!({}),
+        None,
+    )
+    .unwrap();
+    assert_ne!(first.sha256, second.sha256);
+    let uploads = Arc::new(AtomicUsize::new(0));
+    let mode = Arc::new(AtomicUsize::new(0));
+    let (uploaded, scenario) = (uploads.clone(), mode.clone());
+    serve(
+        move |request| match request.path.as_str() {
+            "/object_info" if scenario.load(Ordering::SeqCst) == 1 => json!({}),
+            "/object_info" => json!({"Text":{}}),
+            "/system_stats" if scenario.load(Ordering::SeqCst) == 3 => json!({"devices":[]}),
+            "/system_stats" => json!({"devices":[{"type":if scenario.load(Ordering::SeqCst)==2 {"cpu"}else{"cuda"}}]}),
+            "/upload/image" => {
+                let index = uploaded.fetch_add(1, Ordering::SeqCst) + 1;
+                json!({"name":format!("reference-{index}"),"subfolder":"owned"})
+            }
+            "/prompt" => json!({"prompt_id":"owned","node_errors":{}}),
+            _ => panic!("unexpected Comfy upload path"),
+        },
+        |origin, requests| async move {
+            let mut connection = comfy_config(&origin);
+            connection["workflow"]["graph"]["text"]["inputs"]["image2"] = json!("");
+            connection["workflow"]["bindings"]["image_2"] = json!({"node":"text","input":"image2"});
+            connection["workflow"]["requireGpu"] = json!(true);
+            let before = connection.clone();
+            let request = json!({"prompt":"Draw a café","count":1,"provider_options":{}});
+            let model = "workflow".into();
+            let references = [first.clone(), second.clone()];
+            let input = Input {
+                connection: &connection,
+                request: &request,
+                model: &model,
+                operation: "edit",
+                references: &references,
+                mask: Some(&first),
+            };
+            let signal = CancellationToken::new();
+            let graph = comfy::prepare(&input, &HashMap::new(), &signal)
+                .await
+                .unwrap();
+            let (job, warnings) = comfy::submit(&input, graph, &HashMap::new(), &signal)
+                .await
+                .unwrap();
+            assert_eq!(job.id, "owned");
+            assert!(warnings.is_empty());
+            assert_eq!(connection, before);
+            {
+                let captured = requests.lock().unwrap();
+                let paths: Vec<_> = captured.iter().map(|item| item.path.as_str()).collect();
+                assert_eq!(
+                    paths,
+                    [
+                        "/object_info",
+                        "/system_stats",
+                        "/upload/image",
+                        "/upload/image",
+                        "/upload/image",
+                        "/prompt"
+                    ]
+                );
+                assert!(captured[..2].iter().all(|item| item.headers.starts_with("GET ")));
+                let uploaded: Vec<_> = captured
+                    .iter()
+                    .filter(|item| item.path == "/upload/image")
+                    .collect();
+                for (upload, image) in uploaded.iter().zip([&first, &second, &first]) {
+                    assert!(upload.headers.starts_with("POST "));
+                    assert!(
+                        upload
+                            .body
+                            .windows(image.bytes.len())
+                            .any(|bytes| bytes == image.bytes)
+                    );
+                    let mime = format!("Content-Type: {}", image.mime);
+                    assert!(
+                        upload
+                            .body
+                            .windows(mime.len())
+                            .any(|bytes| bytes.eq_ignore_ascii_case(mime.as_bytes()))
+                    );
+                }
+                let prompt = captured.last().unwrap();
+                assert!(prompt.headers.starts_with("POST "));
+                let body = Value::parse(std::str::from_utf8(&prompt.body).unwrap()).unwrap();
+                assert!(uuid::Uuid::parse_str(body["client_id"].as_str().unwrap()).is_ok());
+                assert_eq!(body["prompt"]["text"]["inputs"], json!({"text":"Draw a café","image":"owned/reference-1","image2":"owned/reference-2","mask":"owned/reference-3"}));
+            }
+            for scenario in 1..=3 {
+                let before = requests.lock().unwrap().len();
+                mode.store(scenario, Ordering::SeqCst);
+                let error = comfy::prepare(&input, &HashMap::new(), &signal)
+                    .await
+                    .unwrap_err();
+                assert_eq!(error.code, "unsupported_operation");
+                assert_eq!(uploads.load(Ordering::SeqCst), 3);
+                let captured = requests.lock().unwrap();
+                let paths: Vec<_> = captured[before..]
+                    .iter()
+                    .map(|item| item.path.as_str())
+                    .collect();
+                assert_eq!(
+                    paths,
+                    if scenario == 1 {
+                        vec!["/object_info"]
+                    } else {
+                        vec!["/object_info", "/system_stats"]
+                    }
+                );
+            }
+            connection["workflow"]["requireGpu"] = json!(false);
+            let input = Input {
+                connection: &connection,
+                request: &request,
+                model: &model,
+                operation: "edit",
+                references: &references,
+                mask: Some(&first),
+            };
+            let before = requests.lock().unwrap().len();
+            comfy::prepare(&input, &HashMap::new(), &signal)
+                .await
+                .unwrap();
+            assert_eq!(
+                requests.lock().unwrap()[before..]
+                    .iter()
+                    .map(|item| item.path.as_str())
+                    .collect::<Vec<_>>(),
+                ["/object_info"]
+            );
+        },
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn invalid_reference_bindings_refuse_all_six_source_variants_before_any_upload() {
+    let image = images::inspect(image_fixture::original(), &json!({}), None).unwrap();
+    serve(
+        |_| panic!("invalid reference bindings must not reach HTTP"),
+        |origin, requests| async move {
+            let request = json!({"prompt":"draw","count":1,"provider_options":{}});
+            let model = "workflow".into();
+            let references = [image.clone(), image.clone()];
+            for mode in [
+                "second",
+                "mask",
+                "node",
+                "slot",
+                "collision",
+                "changed-after-preflight",
+            ] {
+                let mut connection = comfy_config(&origin);
+                connection["workflow"]["graph"]["text"]["inputs"]["image2"] = json!("");
+                connection["workflow"]["bindings"]["image_2"] = json!({"node":"text","input":"image2"});
+                let prepared = if mode == "changed-after-preflight" {
+                    Some(
+                        workflow::prepare(&Input {
+                            connection: &connection,
+                            request: &request,
+                            model: &model,
+                            operation: "edit",
+                            references: &references,
+                            mask: None,
+                        })
+                        .unwrap(),
+                    )
+                } else {
+                    None
+                };
+                match mode {
+                    "second" | "changed-after-preflight" => {
+                        connection["workflow"]["bindings"]
+                            .as_object_mut()
+                            .unwrap()
+                            .remove("image_2");
+                    }
+                    "mask" => {
+                        connection["workflow"]["bindings"]
+                            .as_object_mut()
+                            .unwrap()
+                            .remove("mask");
+                    }
+                    "node" => {
+                        connection["workflow"]["bindings"]["image_2"]["node"] = json!("missing")
+                    }
+                    "slot" => {
+                        connection["workflow"]["bindings"]["image_2"]["input"] = json!("imagge")
+                    }
+                    "collision" => {
+                        connection["workflow"]["bindings"]["image_2"] =
+                            connection["workflow"]["bindings"]["image"].clone()
+                    }
+                    _ => unreachable!(),
+                }
+                let input = Input {
+                    connection: &connection,
+                    request: &request,
+                    model: &model,
+                    operation: "edit",
+                    references: &references,
+                    mask: (mode == "mask").then_some(&image),
+                };
+                let result = match prepared.map(Ok).unwrap_or_else(|| workflow::prepare(&input)) {
+                    Ok(graph) => {
+                        comfy::submit(&input, graph, &HashMap::new(), &CancellationToken::new())
+                            .await
+                            .map(|_| ())
+                    }
+                    Err(error) => Err(error),
+                };
+                let error = result.unwrap_err();
+                assert_eq!(
+                    error.code,
+                    if matches!(mode, "second" | "mask" | "changed-after-preflight") {
+                        "unsupported_operation"
+                    } else {
+                        "invalid_configuration"
+                    },
+                    "{mode}"
+                );
+                assert!(requests.lock().unwrap().is_empty(), "{mode}");
             }
         },
     )
