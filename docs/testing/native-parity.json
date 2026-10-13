@@ -13,7 +13,7 @@
     "alias_policy": "Source reference-preflight lines 136-188 checks codex/cx unchanged wire IDs, negative cxx and OmniRoute batch rejection; explicit oracle-row assignment remains pending.",
     "discovery_isolation": "Source discovery cross-profile cache isolation and malformed first-page completeness are distinct from generic stale/repeated-cursor tests.",
     "image_specifics": "Source images exact preview geometry/no enlargement/stage, large Base64 regression, input symlinks and owned-output tamper/missing/collision variants need individual assertions.",
-    "directory_toctou": "Source output-directory-race lines 12-79 forces two ENOENT observations before file/link creation. Native barrier plus pre-existing file/link is a weaker schedule; Windows junction is not the Unix-only link case.",
+    "directory_toctou": "Source output-directory-race lines 12-79 forces two ENOENT observations before file/link creation. Three private-seam native unit tests now stage the actual schedule, including a Windows junction; hosted execution and assertion acceptance are pending.",
     "active_waiter_races": "Source async-waiter-race and stdio-terminal-races hold actual generation polls/downloads while another public caller refreshes/cancels. Seeded recovery and direct store fencing do not establish those schedules.",
     "cancelled_mixed_results": "Source cancelled-results combines URL and inline bytes, requires zero downloads and two retained entries; inline-only cancellation recovery is not the same assertion.",
     "comfy_download_recovery": "At bc34fbf both real completed-history download failure/reopen fixtures passed; source-case/assertion reconciliation remains pending.",
@@ -594,7 +594,10 @@
       "sha256": "03f025c76d9532f5f5cf0c660e6df1b2fa3e1b774e3d6549bcac982391f0a26b",
       "native": [
         "tests/rust/runtime_contracts.rs::concurrent_output_directory_creation_and_file_collision_fail_closed",
-        "tests/rust/runtime_contracts.rs::linked_output_directory_is_rejected_without_writing_outside"
+        "tests/rust/runtime_contracts.rs::linked_output_directory_is_rejected_without_writing_outside",
+        "native/files/paths_races.rs::two_real_missing_observations_accept_concurrent_directory_creation",
+        "native/files/paths_races.rs::two_real_missing_observations_reject_a_concurrent_regular_file",
+        "native/files/paths_races.rs::two_real_missing_observations_reject_a_concurrent_link_or_windows_junction"
       ],
       "status": "pending",
       "evidence": null,

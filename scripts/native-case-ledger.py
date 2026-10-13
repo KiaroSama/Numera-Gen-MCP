@@ -60,12 +60,14 @@ def validate(source: Path, collection: dict, ledger_root: Path, acceptance: bool
         native_files = {}
         for mapping in row["native"]:
             path, separator, symbol = mapping.partition("::")
-            if not separator or not path.startswith("tests/rust/"):
+            if not separator or not path.startswith(("tests/rust/", "native/")) or not path.endswith(".rs"):
                 raise RuntimeError("Native case mapping requires a Rust test identity")
             target = contained(ROOT, path)
             text = target.read_text(encoding="utf-8")
             if not re.search(r"\bfn\s+" + re.escape(symbol) + r"\s*\(", text):
                 raise RuntimeError("Mapped native test is missing")
+            if path.startswith("native/") and not re.search(r"#\[test\]\s*fn\s+" + re.escape(symbol) + r"\s*\(", text):
+                raise RuntimeError("Library mapping must identify an actual unit test")
             native_files[path] = text
         for assertion in row["assertions"]:
             text = native_files.get(assertion["native_file"])

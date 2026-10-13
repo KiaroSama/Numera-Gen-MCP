@@ -85,26 +85,29 @@ class NativeTooling(unittest.TestCase):
         self.assertEqual(error.exception.code, "declared_notice_path")
 
     def test_reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash(self):
-        identity = "alloc-stdlib@0.3.0"
-        supplement = json.loads((ROOT / "docs/licenses/supplements.json").read_text(encoding="utf-8"))[identity]
-        original = (ROOT / supplement["file"]).read_bytes()
-        file = self.root / supplement["file"]
-        file.parent.mkdir(parents=True)
-        file.write_bytes(original)
-        self.package.update(name="alloc-stdlib", version="0.3.0", license=supplement["license"])
-        vcs = self.package_root / ".cargo_vcs_info.json"
-        vcs.write_text(json.dumps({"git": {"sha1": supplement["source_revision"]}}), encoding="utf-8")
-        lock = {identity: {"checksum": supplement["crate_sha256"]}}
-        result = notices.notices(self.package, self.output, lock, {identity: supplement})
-        self.assertEqual((self.output / "alloc-stdlib-0.3.0/LICENSE").read_bytes(), original)
-        self.assertEqual(result["supplement"]["source_revision"], supplement["source_revision"])
-        self.assertEqual(result["notice_sha256"]["LICENSE"], hashlib.sha256(original).hexdigest())
-        for field in ["crate_sha256", "source_revision", "license", "sha256"]:
-            with self.subTest(field=field):
-                changed = {**supplement, field: "changed"}
-                with self.assertRaises(notices.NoticeError) as error:
-                    notices.notices(self.package, self.output, lock, {identity: changed})
-                self.assertEqual(error.exception.code, "supplement_hash" if field == "sha256" else "supplement_identity")
+        supplements = json.loads((ROOT / "docs/licenses/supplements.json").read_text(encoding="utf-8"))
+        self.assertEqual(set(supplements), {"alloc-stdlib@0.3.0", "rmcp@3.5.1"})
+        for identity, supplement in supplements.items():
+            with self.subTest(package=identity):
+                original = (ROOT / supplement["file"]).read_bytes()
+                file = self.root / supplement["file"]
+                file.parent.mkdir(parents=True)
+                file.write_bytes(original)
+                name, version = identity.split("@")
+                self.package.update(name=name, version=version, license=supplement["license"])
+                vcs = self.package_root / ".cargo_vcs_info.json"
+                vcs.write_text(json.dumps({"git": {"sha1": supplement["source_revision"]}}), encoding="utf-8")
+                lock = {identity: {"checksum": supplement["crate_sha256"]}}
+                result = notices.notices(self.package, self.output, lock, {identity: supplement})
+                self.assertEqual((self.output / (name + "-" + version) / "LICENSE").read_bytes(), original)
+                self.assertEqual(result["supplement"]["source_revision"], supplement["source_revision"])
+                self.assertEqual(result["notice_sha256"]["LICENSE"], hashlib.sha256(original).hexdigest())
+                for field in ["crate_sha256", "source_revision", "license", "sha256"]:
+                    with self.subTest(field=field):
+                        changed = {**supplement, field: "changed"}
+                        with self.assertRaises(notices.NoticeError) as error:
+                            notices.notices(self.package, self.output, lock, {identity: changed})
+                        self.assertEqual(error.exception.code, "supplement_hash" if field == "sha256" else "supplement_identity")
 
     def test_timeout_retry_discards_partial_bytes_and_keeps_idle_bound(self):
         first = Response([b"partial", TimeoutError()], 20)

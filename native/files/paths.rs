@@ -138,6 +138,14 @@ pub fn input(raw: &str, roots: &[PathBuf], limit: usize) -> Result<Vec<u8>> {
 }
 
 pub fn output_directory(root: &Path, subdirectory: Option<&str>) -> Result<PathBuf> {
+    output_directory_observed(root, subdirectory, |path| fs::symlink_metadata(path))
+}
+
+fn output_directory_observed(
+    root: &Path,
+    subdirectory: Option<&str>,
+    mut metadata: impl FnMut(&Path) -> std::io::Result<fs::Metadata>,
+) -> Result<PathBuf> {
     private_directory(root)?;
     let base = fs::canonicalize(root).map_err(|_| NumeraError::storage())?;
     let subdirectory = subdirectory
@@ -148,7 +156,7 @@ pub fn output_directory(root: &Path, subdirectory: Option<&str>) -> Result<PathB
     let mut current = base.clone();
     for part in subdirectory.split(['/', '\\']) {
         current.push(part);
-        match fs::symlink_metadata(&current) {
+        match metadata(&current) {
             Ok(info) if info.is_symlink() || !info.is_dir() => {
                 return Err(NumeraError::new(
                     "output_file_error",
@@ -163,7 +171,7 @@ pub fn output_directory(root: &Path, subdirectory: Option<&str>) -> Result<PathB
             Err(_) => return Err(NumeraError::storage()),
             _ => {}
         }
-        let info = fs::symlink_metadata(&current).map_err(|_| NumeraError::storage())?;
+        let info = metadata(&current).map_err(|_| NumeraError::storage())?;
         if info.is_symlink() || !info.is_dir() {
             return Err(NumeraError::new(
                 "output_file_error",
@@ -181,3 +189,7 @@ pub fn output_directory(root: &Path, subdirectory: Option<&str>) -> Result<PathB
     }
     Ok(current)
 }
+
+#[cfg(test)]
+#[path = "paths_races.rs"]
+mod races;

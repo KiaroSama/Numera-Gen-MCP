@@ -25,7 +25,12 @@ plus six actual provider-HTTP fixtures, were published at `0f80e3b`. All six pro
 passed on all six targets; complete coverage remained 85.25% regions / 82.18% branches. One test
 formatting correction blocked packaging. Linux's Node PowerShell fixture hit its ten-second idle
 bound; the other Node jobs passed. The actual notice collector and archives remain unverified.
-No archive or Release is accepted.
+At `3d79621`, formatting, all 57 native targets, strict Clippy, release builds and SDK acceptance
+passed on all six targets. All three Node jobs and unchanged coverage floors passed. Fresh 470-case
+structural validation passed on three OSes without accepting assertion parity. Actual notice
+collection identified only `rmcp 3.5.1` missing its packaged license; its complete pinned upstream
+notice is being preserved. Archive and extraction checks remained skipped. No archive or Release
+is accepted.
 
 **Packaged execution and complete baseline-case migration acceptance have not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

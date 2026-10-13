@@ -123,7 +123,18 @@ frozen source hashes and three-platform modes. All remain pending. Seventeen cas
 source/native assertion ranges and explicit schedule gaps; neither a passing suite nor a completed
 boolean can close them. Hosted structural validation compares the ledger with fresh frozen runtime
 collection. Full acceptance requires reviewed assertions, no gaps, unchanged native source hashes
-and actual applicable native execution evidence.
+and actual applicable native execution evidence. At `3d79621`, formatting and every stable native
+quality/runtime/SDK gate passed on all six targets; all three Node jobs and unchanged coverage floors
+also passed. The 470-case structural ledger matched fresh collection on all three OSes, while all
+470 assertion dispositions remained pending. All eight offline tooling contracts passed on six
+targets. Actual notice collection reported only `rmcp 3.5.1` missing its packaged license; its
+complete exact-revision upstream notice is now preserved, including the licensing-transition terms.
+Archives and extracted execution still wait for successful notice preservation. Seventy configuration
+cases now have individually recorded oracle-row/direct-test navigation and exact gaps, rather than
+suite-wide coverage claims. Three newly authored directory race unit tests hold two real missing-path
+observations before regular-file or link insertion, including an actual Windows junction. They retain
+the production metadata, mkdir and containment checks through a private observation seam; no public
+test switch, wider path permission or new dependency is added. Their hosted execution is pending.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

@@ -37,7 +37,9 @@ def main() -> None:
                  "docs/WINDOWS-WSL.md", "docs/COMPATIBILITY.md", "docs/IMAGE-EDITING.md", "docs/LINUX-MACOS.md",
                  "docs/REQUIREMENTS.md", "docs/REFERENCES.md", "SECURITY.md", "docs/TESTING.md",
                  "docs/PRACTICAL-TESTING.md", "docs/TEST-RESULTS.md", "docs/testing/MIGRATION-MATRIX.md",
-                 "docs/assets/logo.png", "docs/licenses/supplements.json", "docs/licenses/alloc-stdlib-0.3.0/LICENSE"]:
+                 "docs/testing/native-parity.json", "docs/testing/native-cases/index.json",
+                 "docs/testing/native-cases/unit.jsonl", "docs/testing/native-cases/contract.jsonl", "docs/testing/native-cases/integration.jsonl",
+                 "docs/assets/logo.png", "docs/licenses/supplements.json", "docs/licenses/alloc-stdlib-0.3.0/LICENSE", "docs/licenses/rmcp-3.5.1/LICENSE"]:
         entries[name] = (ROOT / name).read_bytes()
     notices = ROOT / ".ci-work/native/licenses"
     if not notices.is_dir() or not any(notices.iterdir()):
