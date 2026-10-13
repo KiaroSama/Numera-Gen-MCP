@@ -90,13 +90,7 @@ fn crash_checkpoint_child() {
             .publication(
                 "child-crash",
                 0,
-                |id| {
-                    Ok(directory
-                        .join(format!("{id}.png"))
-                        .to_str()
-                        .unwrap()
-                        .into())
-                },
+                |id| Ok(directory.join(format!("{id}.png")).to_str().unwrap().into()),
                 Some(&owner),
             )
             .unwrap();

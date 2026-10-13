@@ -65,8 +65,12 @@ fixtures through their real admission and allowlist contracts. Revision `ed07a39
 all 54 native targets on POSIX and actual stdio/HTTP SDK acceptance; Windows exposed a published-target
 fixture path mismatch. Formatting still failed, and a complete instrumented run measured 84.15%
 regions / 80.91% branches. The next tree uses the real canonical publication path and adds actual
-HTTP output/preview/resource/error/existing-handle contracts. These additions remain unverified;
-full case-ledger, coverage and archive acceptance are still required.
+HTTP output/preview/resource/error/existing-handle contracts. At `3655fdc`, all 55 native targets, strict Clippy and actual stdio/HTTP SDK acceptance passed on
+all six targets, including the Windows crash fixture and public output/resource test. Formatting
+still failed in two test files. Complete coverage reached 84.63% regions / 81.10% branches, still
+below the region floor. The next scoped regression exercises retained original routes, ambiguous
+history refusal and credential-free local recovery through `Application`; it remains source-only.
+Full case-ledger, coverage and archive acceptance are still required.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

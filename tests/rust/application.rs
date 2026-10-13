@@ -167,6 +167,138 @@ async fn public_tools_validate_arguments_store_outputs_and_reload_last_good_conf
     result.unwrap();
 }
 
+#[tokio::test]
+async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_without_network() {
+    let workspace = Workspace::new();
+    let server = Server::new(|_| Reply {
+        status: 200,
+        bytes: None,
+        value: json!({"id":"owned-remote","status":"in_progress","data":[]}),
+    })
+    .await;
+    let file = workspace.0.join("config.json");
+    let raw = workspace.config(&format!("{}/v1", server.origin), "openai-responses");
+    std::fs::write(&file, raw.to_string()).unwrap();
+    let config = Config::parse(&raw.to_string(), &file, &[], &HashMap::new()).unwrap();
+    let reload = ConfigReload::new(
+        config.clone(),
+        file.clone(),
+        vec!["--config".into(), file.to_str().unwrap().into()],
+        HashMap::new(),
+    );
+    let app = Application::new(
+        config,
+        Some(reload),
+        Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
+        RuntimePaths::new(&workspace.0).unwrap(),
+        HashMap::new(),
+        CancellationToken::new(),
+    )
+    .unwrap();
+    let action = async {
+        let first = app.current().unwrap();
+        let (_, connection) = first.config.select(Some("test")).unwrap();
+        let pinned = numera_image_gen_mcp::config::snapshot_credentials(
+            &connection,
+            &first.env,
+            &first.runtime,
+        )
+        .await
+        .unwrap();
+        let identity =
+            numera_image_gen_mcp::services::identity::connection_identity("test", &pinned).unwrap();
+        {
+            let mut store = app.store.lock().unwrap();
+            for (id, identity) in [
+                ("retained-route", identity.as_str()),
+                ("unknown-route", "unavailable-identity"),
+            ] {
+                let receipt = numera_image_gen_mcp::jobs::Receipt::new(json!({
+                    "request_id":id,"connection":"test","adapter":"openai-responses","operation":"generate",
+                    "status":"prepared","requested_model":"opaque/image","outputs":[],"errors":[],"deviations":[],"warnings":[],
+                    "generation_outcome":"not_submitted","storage_outcome":"not_started",
+                    "upstream_job":{"id":"owned-remote","kind":"responses"},"created_at":"2026-10-13T00:00:00.000Z"
+                }));
+                let (_, mut receipt) = store.prepare(receipt, id, identity).unwrap();
+                assert!(store.admit(id, "test", 8, 8).unwrap());
+                receipt.value["status"] = json!("running");
+                receipt.value["generation_outcome"] = json!("running");
+                store.update(&mut receipt).unwrap();
+                store.release(id, Some(&receipt)).unwrap();
+            }
+        }
+        let mut changed = raw.clone();
+        changed["connections"]["test"]["baseUrl"] = json!(format!("{}/changed", server.origin));
+        changed["connections"]["test"]["defaultModel"] = json!("new/model");
+        std::fs::write(&file, changed.to_string()).unwrap();
+        assert_eq!(
+            app.current().unwrap().config.value["connections"]["test"]["defaultModel"],
+            "new/model"
+        );
+        let signal = CancellationToken::new();
+        let job = app.call("get_job", json!({"request_id":"retained-route","refresh":true}), &signal).await.unwrap();
+        assert_eq!(job["status"], "running");
+        assert_eq!(job["upstream_job"]["id"], "owned-remote");
+        assert_eq!(
+            server.requests.lock().unwrap().as_slice(),
+            ["/v1/responses/owned-remote"]
+        );
+        let rejected = app.call("get_job", json!({"request_id":"unknown-route","refresh":true}), &signal).await.unwrap_err();
+        assert_eq!(rejected.code, "permission_denied");
+        let mut ambiguous = raw.clone();
+        ambiguous["connections"]["test"]["paths"] = json!({"responses":"changed-responses"});
+        std::fs::write(&file, ambiguous.to_string()).unwrap();
+        let rejected = app.call("get_job", json!({"request_id":"retained-route","refresh":true}), &signal).await.unwrap_err();
+        assert_eq!(rejected.code, "permission_denied");
+        assert_eq!(
+            server.requests.lock().unwrap().len(),
+            1,
+            "ambiguous routes never dispatch"
+        );
+        assert_eq!(
+            app.store.lock().unwrap().get("retained-route").unwrap().value["upstream_job"]["id"],
+            "owned-remote"
+        );
+        let original = image_fixture::original();
+        {
+            let mut store = app.store.lock().unwrap();
+            let seeded = numera_image_gen_mcp::jobs::Receipt::new(json!({
+                "request_id":"local-retained","connection":"removed","adapter":"openai-images",
+                "operation":"generate","status":"prepared","requested_model":"opaque/image",
+                "outputs":[],"errors":[],"deviations":[],"warnings":[],
+                "generation_outcome":"not_submitted","storage_outcome":"writing",
+                "created_at":"2026-10-13T00:00:00.000Z","output_requirements":{"count":1}
+            }));
+            let (_, mut receipt) = store.prepare(seeded, "local", "removed-identity").unwrap();
+            assert!(store.admit("local-retained", "removed", 8, 8).unwrap());
+            receipt.value["status"] = json!("finalizing");
+            receipt.value["generation_outcome"] = json!("completed");
+            store.update(&mut receipt).unwrap();
+            store.reserve("local-retained", 1048576, 268435456).unwrap();
+            store
+                .retain("local-retained", 0, &original, Some(&receipt))
+                .unwrap();
+            store.release("local-retained", Some(&receipt)).unwrap();
+        }
+        let recovered = app.call("get_job", json!({"request_id":"local-retained","refresh":true}), &signal).await.unwrap();
+        assert_eq!(recovered["status"], "completed");
+        assert_eq!(
+            std::fs::read(recovered["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+            original
+        );
+        assert_eq!(
+            server.requests.lock().unwrap().len(),
+            1,
+            "retained bytes need no credentials or network"
+        );
+    };
+    let result = tokio::time::timeout(Duration::from_secs(5), action).await;
+    app.shutdown();
+    drop(app);
+    server.close().await;
+    result.unwrap();
+}
+
 #[test]
 fn public_request_schema_rejects_invalid_inputs_without_coercion() {
     assert_eq!(

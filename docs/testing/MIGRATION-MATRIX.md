@@ -9,11 +9,12 @@ Authoritative JSON integration now changes configuration, adapters, requests, re
 and MCP boundary codecs; prior module-only success is not acceptance of this new integrated tree. **Packaged execution,
 complete baseline-case migration acceptance and authoritative JSON integration have not passed.**
 Old TypeScript production source remains authoritative until hosted differential verification passes.
-A file existing is not a verified mapping. The integrated `ed07a39` run passed all 54 native targets
-on POSIX and actual SDK interoperability, but Windows exposed a published-path fixture mismatch.
-Formatting failed. Complete instrumented coverage measured 84.15% regions / 80.91% branches: the
-region floor still failed. Actual public HTTP output/resource/preview acceptance is being added;
-authored tests do not establish the missing full-case ledger or packaged execution.
+A file existing is not a verified mapping. The integrated `3655fdc` run passed all 55 native targets,
+strict Clippy and actual SDK stdio/HTTP acceptance on all six OS/CPU targets, including the repaired
+Windows crash fixture and public HTTP output/resource/preview test. Formatting still failed in two
+test files. Complete instrumented coverage measured 84.63% regions / 81.10% branches: the region floor
+still failed. A scoped retained-route/ambiguity/local-recovery regression remains source-only.
+Passing these suites does not establish the missing full-case ledger or packaged execution.
 
 | Boundary                                              | Native implementation                                                 | Authored verification                                             | Status                                                                                                   |
 | ----------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -32,7 +33,7 @@ authored tests do not establish the missing full-case ledger or packaged executi
 | Ten tools/stdio/resources/negotiation/bridge          | `native/mcp/`, `native/main.rs`                                       | Real child `bridge` fixture, foreign CWD and EOF                  | Bridge and two-host/two-restart SDK acceptance passed at 3f27fb9; expanded tree pending                  |
 | Maintenance/readiness/client registration             | Native CLI replacement                                                | Existing maintenance cases not yet migrated                       | Pending; do not retire working scripts yet                                                               |
 | Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Distribution checks not yet complete                              | Pending verified downloadable archives                                                                   |
-| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Latest complete report: 84.15% regions / 80.91% branches; regions failed; no reduced floor or exclusions |
+| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Latest complete report: 84.63% regions / 81.10% branches; regions failed; no reduced floor or exclusions |
 
 ## Release blockers
 

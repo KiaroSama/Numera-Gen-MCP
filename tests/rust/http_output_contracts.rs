@@ -165,7 +165,12 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
             .tool(3, "get_output_info", json!({"output_id":id,"preview":true}))
             .await;
         assert_eq!(info["result"]["structuredContent"]["verified"], true);
-        assert!(info["result"]["structuredContent"]["preview"]["width"].as_u64().unwrap() > 0);
+        assert!(
+            info["result"]["structuredContent"]["preview"]["width"]
+                .as_u64()
+                .unwrap()
+                > 0
+        );
         assert!(
             info["result"]["content"]
                 .as_array()
@@ -219,7 +224,10 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
         std::fs::rename(path, format!("{path}.held")).unwrap();
         let repeated = client.tool(40, "generate_image", args).await;
         assert_ne!(repeated["result"]["isError"], true);
-        assert_eq!(repeated["result"]["structuredContent"]["outputs"], receipt["outputs"]);
+        assert_eq!(
+            repeated["result"]["structuredContent"]["outputs"],
+            receipt["outputs"]
+        );
         assert!(
             !repeated["result"]["content"]
                 .as_array()
@@ -254,12 +262,24 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
             let (_, mut receipt) = store.prepare(seeded, "seed", &identity).unwrap();
             assert!(store.admit("public-http-owned-job", "test", 8, 8).unwrap());
             receipt.value["status"] = numera_image_gen_mcp::compat::value::json!("running");
-            receipt.value["generation_outcome"] = numera_image_gen_mcp::compat::value::json!("running");
+            receipt.value["generation_outcome"] =
+                numera_image_gen_mcp::compat::value::json!("running");
             store.update(&mut receipt).unwrap();
-            store.release("public-http-owned-job", Some(&receipt)).unwrap();
+            store
+                .release("public-http-owned-job", Some(&receipt))
+                .unwrap();
         }
-        let recovered = client.tool(50, "get_job", json!({"request_id":"public-http-owned-job","refresh":true})).await;
-        assert_eq!(recovered["result"]["structuredContent"]["status"], "completed");
+        let recovered = client
+            .tool(
+                50,
+                "get_job",
+                json!({"request_id":"public-http-owned-job","refresh":true}),
+            )
+            .await;
+        assert_eq!(
+            recovered["result"]["structuredContent"]["status"],
+            "completed"
+        );
         assert_eq!(
             recovered["result"]["structuredContent"]["outputs"]
                 .as_array()
@@ -267,8 +287,17 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
                 .len(),
             1
         );
-        let cancelled = client.tool(51, "cancel_job", json!({"request_id":"public-http-owned-job"})).await;
-        assert_eq!(cancelled["result"]["structuredContent"]["upstream_requested"], false);
+        let cancelled = client
+            .tool(
+                51,
+                "cancel_job",
+                json!({"request_id":"public-http-owned-job"}),
+            )
+            .await;
+        assert_eq!(
+            cancelled["result"]["structuredContent"]["upstream_requested"],
+            false
+        );
         assert!(
             upstream
                 .requests
