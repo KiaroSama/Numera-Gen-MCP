@@ -15,7 +15,12 @@ The Node macOS maintenance cleanup-verification record also failed. At `3c5958f`
 strict Clippy and SDK stdio/HTTP acceptance passed on all six targets, all three Node jobs passed,
 and coverage passed at 85.25% regions / 82.18% branches. Dynamic collection produced the same 470
 case identities on all three OSes, including platform skips. One native formatting correction still
-failed; archive checks did not run. No archive or Release is accepted.
+failed; archive checks did not run. At `0870b9e`, five native targets passed formatting, strict Clippy,
+all 56 runtime targets, release builds and SDK stdio/HTTP acceptance. Intel macOS stopped on a
+30-second toolchain-download timeout before native checks. All three Node jobs and complete native
+coverage passed at 85.25% regions / 82.18% branches. Five actual-notice preservation steps failed;
+archive/extraction checks remained skipped. Exact upstream-notice and bounded public-download repairs,
+plus six actual provider-HTTP fixtures, are authored but unexecuted. No archive or Release is accepted.
 
 **Packaged execution and complete baseline-case migration acceptance have not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

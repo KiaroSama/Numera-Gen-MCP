@@ -12,6 +12,10 @@ ICU4X, image, Base64, SHA2, chrono, regex, UUID and URL retain their upstream li
 The authoritative JSON implementation uses no embedded JavaScript runtime. Removed validation/parser
 helpers are not native runtime dependencies; the actual archive license inventory follows the resolved
 lockfile, not a historical list.
+The published `alloc-stdlib 0.3.0` crate omits its BSD-3-Clause notice. The distribution preserves
+[the original upstream notice](docs/licenses/alloc-stdlib-0.3.0/LICENSE) from the archive's exact
+source revision. [Supplement provenance](docs/licenses/supplements.json) pins the crate checksum,
+source revision and notice hash; an unknown missing notice or mismatched supplement fails packaging.
 The source-side Google dimension table is documented under CC BY 4.0 attribution in the source and
 references. Image/model/asset rights remain separate from the software license.
 

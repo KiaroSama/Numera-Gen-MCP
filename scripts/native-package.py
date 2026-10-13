@@ -37,7 +37,7 @@ def main() -> None:
                  "docs/WINDOWS-WSL.md", "docs/COMPATIBILITY.md", "docs/IMAGE-EDITING.md", "docs/LINUX-MACOS.md",
                  "docs/REQUIREMENTS.md", "docs/REFERENCES.md", "SECURITY.md", "docs/TESTING.md",
                  "docs/PRACTICAL-TESTING.md", "docs/TEST-RESULTS.md", "docs/testing/MIGRATION-MATRIX.md",
-                 "docs/assets/logo.png"]:
+                 "docs/assets/logo.png", "docs/licenses/supplements.json", "docs/licenses/alloc-stdlib-0.3.0/LICENSE"]:
         entries[name] = (ROOT / name).read_bytes()
     notices = ROOT / ".ci-work/native/licenses"
     if not notices.is_dir() or not any(notices.iterdir()):

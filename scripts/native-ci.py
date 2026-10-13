@@ -176,6 +176,7 @@ def main() -> None:
                     failures.append("case-inventory")
                     emit("ERROR", "Expanded source case collection failed.", error_type=type(error).__name__)
             for command, wall, idle in [
+                ([sys.executable, "-I", "-B", "tests/tooling/native_ci_contracts.py"], 30, 15),
                 (["cargo", "fmt", "--check"], 30, 20),
                 (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),
                 (["cargo", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], 900, 180),
@@ -186,8 +187,9 @@ def main() -> None:
                 try:
                     run(command, wall=wall, idle=idle, env=env)
                 except (RuntimeError, TimeoutError) as error:
-                    failures.append(command[1])
-                    emit("ERROR", "Required native gate failed.", gate=command[1], error_type=type(error).__name__)
+                    gate = command[-1] if command[0] == sys.executable else command[1]
+                    failures.append(gate)
+                    emit("ERROR", "Required native gate failed.", gate=gate, error_type=type(error).__name__)
             if "fmt" in failures:
                 # Keep the failed check failed; generated formatting is reviewed and committed later.
                 run(["cargo", "fmt"], wall=30, idle=20, env=env)

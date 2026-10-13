@@ -1,0 +1,10 @@
+{
+  "alloc-stdlib@0.3.0": {
+    "license": "BSD-3-Clause",
+    "crate_sha256": "0b5c1865780388bfa186411ab5f247819487fc4864c6e9c3106611fa347586e1",
+    "source_revision": "0a81fd6928ea3b33c8cd484aa4575d50ffb98012",
+    "source_url": "https://raw.githubusercontent.com/dropbox/rust-alloc-no-stdlib/0a81fd6928ea3b33c8cd484aa4575d50ffb98012/LICENSE",
+    "file": "docs/licenses/alloc-stdlib-0.3.0/LICENSE",
+    "sha256": "c0c56f26d9c051cac4d200c34c84e7ae9aaa853e01a982a1df08b09931e518ae"
+  }
+}

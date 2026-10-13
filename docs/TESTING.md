@@ -97,7 +97,18 @@ Linux and macOS with identical case identities and the expected three/one/one pl
 Node jobs also passed, including the cleanup regression. Complete coverage passed unchanged floors
 at 85.25% regions / 82.18% branches. One native test-file formatting correction still failed and
 prevented archive checks. Raw collection is evidence for mapping, not native assertion equivalence.
-Full case-ledger and archive acceptance are still required.
+Full case-ledger and archive acceptance are still required. At `0870b9e`, formatting, strict Clippy,
+all 56 native targets, release builds and SDK stdio/HTTP acceptance passed on five targets. Intel
+macOS stopped before those checks when the official toolchain download hit its 30-second socket
+read timeout. All three Node jobs and complete 85.25% / 82.18% native coverage passed. Five native
+jobs then failed actual dependency-notice preservation; archives and extraction remained unexecuted.
+A locked `alloc-stdlib 0.3.0` archive deterministically omits its upstream BSD notice. The repair
+pins the exact original notice and provenance, retains all normal notices, and fails unknown missing
+notices with sanitized package/code evidence. Official public downloads retain the 30-second socket
+idle bound, discard partial timeout attempts, and run under 90-second wall / 35-second idle ownership;
+checksums remain mandatory before execution. Offline tooling contracts are run in hosted stable jobs.
+Six independent provider HTTP cases are now authored for exact POST/path/auth/Unicode body and original
+normalization; they are not yet runtime evidence or complete source-case equivalence.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

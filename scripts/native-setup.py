@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import platform
 import sys
+import time
+import urllib.error
 import urllib.request
 
 import importlib.util
@@ -17,17 +19,49 @@ environment, run, emit, ROOT = _ci.environment, _ci.run, _ci.emit, _ci.ROOT
 
 
 def fetch(url: str, limit: int) -> bytes:
-    with urllib.request.urlopen(url, timeout=30) as response:
-        data = response.read(limit + 1)
-    if len(data) > limit:
-        raise RuntimeError("Official download exceeds bound")
-    return data
+    deadline = time.monotonic() + 90
+    for attempt in range(1, 4):
+        data = bytearray()
+        try:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise RuntimeError("Official download exceeded its wall ceiling")
+            with urllib.request.urlopen(url, timeout=min(30, remaining)) as response:
+                length = response.headers.get("Content-Length")
+                if length is not None and (not length.isdecimal() or int(length) > limit):
+                    raise RuntimeError("Official download has an invalid or oversized length")
+                while chunk := response.read1(min(65536, limit + 1 - len(data))):
+                    data.extend(chunk)
+                    if len(data) > limit:
+                        raise RuntimeError("Official download exceeds bound")
+                    if len(data) // (1024 * 1024) != (len(data) - len(chunk)) // (1024 * 1024):
+                        emit("INFO", "Official download progress.", attempt=attempt, bytes=len(data))
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError("Official download exceeded its wall ceiling")
+                if length is not None and len(data) != int(length):
+                    raise RuntimeError("Official download is incomplete")
+            emit("INFO", "Official download received; checksum validation is still required.",
+                 attempt=attempt, bytes=len(data))
+            return bytes(data)
+        except (TimeoutError, urllib.error.URLError) as error:
+            retryable = isinstance(error, TimeoutError) or isinstance(getattr(error, "reason", None), TimeoutError)
+            emit("WARNING", "Official download transport failed.", attempt=attempt,
+                 received_bytes=len(data), retryable=retryable, error_type=type(error).__name__)
+            if not retryable or attempt == 3 or time.monotonic() >= deadline:
+                raise RuntimeError("Official download transport failed within its bounds") from None
+    raise RuntimeError("Official download attempts exhausted")
 
 
 def main() -> None:
     if os.environ.get("GITHUB_ACTIONS") != "true":
         raise RuntimeError("Rust toolchain installation is hosted CI only")
+    if len(sys.argv) == 4 and sys.argv[1] == "--fetch":
+        sys.stdout.buffer.write(fetch(sys.argv[2], int(sys.argv[3])))
+        return
     env = environment()
+    def download(url: str, limit: int) -> bytes:
+        return run([sys.executable, "-I", "-B", str(Path(__file__).resolve()), "--fetch", url, str(limit)],
+                   wall=90, idle=35, env=env, capture=True, capture_limit=limit)
     machine = platform.machine().lower()
     arch = "aarch64" if machine in ["arm64", "aarch64"] else "x86_64" if machine in ["amd64", "x86_64"] else None
     system = {"Windows": "pc-windows-msvc", "Linux": "unknown-linux-gnu", "Darwin": "apple-darwin"}.get(platform.system())
@@ -36,15 +70,15 @@ def main() -> None:
     target = arch + "-" + system
     name = "rustup-init.exe" if os.name == "nt" else "rustup-init"
     url = f"https://static.rust-lang.org/rustup/archive/1.29.1/{target}/{name}"
-    data = fetch(url, 64 * 1024 * 1024)
-    expected = fetch(url + ".sha256", 4096).decode("ascii").split()[0]
+    data = download(url, 64 * 1024 * 1024)
+    expected = download(url + ".sha256", 4096).decode("ascii").split()[0]
     if len(expected) != 64 or hashlib.sha256(data).hexdigest() != expected:
         raise RuntimeError("Official rustup checksum mismatch")
-    download = ROOT / ".ci-work/native/toolchain" / name
-    download.parent.mkdir(parents=True, exist_ok=True)
-    download.write_bytes(data)
-    download.chmod(0o700)
-    run([str(download), "-y", "--no-modify-path", "--profile", "minimal", "--default-toolchain", "1.99.0"], wall=600, idle=180, env=env)
+    installer = ROOT / ".ci-work/native/toolchain" / name
+    installer.parent.mkdir(parents=True, exist_ok=True)
+    installer.write_bytes(data)
+    installer.chmod(0o700)
+    run([str(installer), "-y", "--no-modify-path", "--profile", "minimal", "--default-toolchain", "1.99.0"], wall=600, idle=180, env=env)
     rustup = str(Path(env["CARGO_HOME"]) / "bin" / ("rustup.exe" if os.name == "nt" else "rustup"))
     run([rustup, "component", "add", "rustfmt", "clippy", "--toolchain", "1.99.0"], wall=180, idle=90, env=env)
     if "--coverage" in sys.argv:

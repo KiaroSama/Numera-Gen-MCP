@@ -6,7 +6,7 @@
   "runtime_evidence": "docs/TESTING.md",
   "gap_definitions": {
     "parameterized_accounting": "Assign source declaration, parameter row and native oracle/assertion ID individually. Aggregate suite counts and nonempty oracle minima do not account for all 470 cases.",
-    "six_adapter_http": "Source wire-contracts lines 16-149 checks actual path, POST, authorization and body for six adapters. Builder/normalizer replay plus Images loopback is not actual HTTP capture for every adapter.",
+    "six_adapter_http": "Source wire-contracts lines 16-149 checks actual path, POST, authorization and body for six adapters. Six independently named native HTTP captures are authored; hosted execution and source-case assignment remain pending.",
     "reference_encodings": "Source recovery-requirements lines 19-105 checks json/generation, scalar rejection, images/image_urls/input_references and multipart. Complete exact encoding/body assignment remains pending.",
     "comfy_preflight_wire": "At bc34fbf actual distinct-reference/mask and six zero-upload preflight fixtures passed; individual expanded source-case assignment remains pending.",
     "alias_policy": "Source reference-preflight lines 136-188 checks codex/cx unchanged wire IDs, negative cxx and OmniRoute batch rejection; explicit oracle-row assignment remains pending.",
@@ -150,7 +150,13 @@
       "native": [
         "tests/rust/adapters.rs::source_generated_wire_and_result_contracts_match",
         "tests/rust/multipart.rs::actual_multipart_wire_preserves_source_field_names_order_filenames_and_original_bytes",
-        "tests/rust/generation.rs::actual_loopback_generation_preserves_bytes_and_deduplicates_paid_post"
+        "tests/rust/generation.rs::actual_loopback_generation_preserves_bytes_and_deduplicates_paid_post",
+        "tests/rust/provider_wire_contracts.rs::openai_images_posts_exact_utf8_json_and_normalizes_original",
+        "tests/rust/provider_wire_contracts.rs::gemini_posts_encoded_model_path_and_exact_modalities_and_normalizes_original",
+        "tests/rust/provider_wire_contracts.rs::gemini_interactions_posts_stateless_image_format_and_normalizes_original",
+        "tests/rust/provider_wire_contracts.rs::responses_posts_separate_orchestrator_and_image_tool_and_normalizes_original",
+        "tests/rust/provider_wire_contracts.rs::openrouter_posts_dedicated_images_route_without_fallback_and_normalizes_original",
+        "tests/rust/provider_wire_contracts.rs::chat_images_posts_opted_in_image_modalities_and_normalizes_original"
       ],
       "status": "pending",
       "evidence": null,

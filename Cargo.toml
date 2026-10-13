@@ -264,6 +264,10 @@ path = "tests/rust/http_output_contracts.rs"
 name = "comfy_recovery_contracts"
 path = "tests/rust/comfy_recovery_contracts.rs"
 
+[[test]]
+name = "provider_wire_contracts"
+path = "tests/rust/provider_wire_contracts.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1
