@@ -355,7 +355,10 @@ fn explicit_compatibility_and_file_errors_never_silently_fall_back() {
     let workspace = Workspace::new();
     let env = HashMap::from([
         ("LOCALAPPDATA".into(), workspace.0.to_str().unwrap().into()),
-        ("XDG_CONFIG_HOME".into(), workspace.0.to_str().unwrap().into()),
+        (
+            "XDG_CONFIG_HOME".into(),
+            workspace.0.to_str().unwrap().into(),
+        ),
         ("USERPROFILE".into(), workspace.0.to_str().unwrap().into()),
         ("HOME".into(), workspace.0.to_str().unwrap().into()),
         ("OPENAI_BASE_URL".into(), "https://compat.example/v1".into()),
@@ -526,7 +529,9 @@ async fn exact_bearer_file_credential_trims_private_bytes_and_rejects_source_fai
         let runtime = RuntimePaths::new(&workspace.0).unwrap();
         let profile = json!({"auth": {"type": "bearer", "secretFile": path.to_str().unwrap()}});
         assert_eq!(
-            credentials(&profile, &HashMap::new(), &runtime).await.unwrap(),
+            credentials(&profile, &HashMap::new(), &runtime)
+                .await
+                .unwrap(),
             HashMap::from([("Authorization".into(), "Bearer fixture-secret".into())])
         );
         std::fs::write(&path, vec![b'x'; 65537]).unwrap();

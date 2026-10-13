@@ -226,11 +226,18 @@ async fn exact_source_two_item_partial_receipt_saves_original_and_repeated_reque
                 std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
                 bytes
             );
-            assert!(receipt.value["errors"].as_array().unwrap().iter().any(|error| {
-                error["code"] == "invalid_response"
-            }));
+            assert!(
+                receipt.value["errors"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|error| { error["code"] == "invalid_response" })
+            );
             assert_eq!(
-                g.run(request, "generate", &CancellationToken::new()).await.unwrap().value["outputs"],
+                g.run(request, "generate", &CancellationToken::new())
+                    .await
+                    .unwrap()
+                    .value["outputs"],
                 receipt.value["outputs"]
             );
             assert!(g.active.lock().unwrap().is_empty());
@@ -246,10 +253,14 @@ async fn exact_source_two_item_partial_receipt_saves_original_and_repeated_reque
                 assert!(wire.len() <= 65536, "partial-result fixture request bound");
                 if let Some(boundary) = wire.windows(4).position(|bytes| bytes == b"\r\n\r\n") {
                     let headers = std::str::from_utf8(&wire[..boundary]).unwrap();
-                    let length = headers.lines().find_map(|line| {
-                        line.to_ascii_lowercase().strip_prefix("content-length:")
-                            .and_then(|value| value.trim().parse::<usize>().ok())
-                    }).expect("Images fixture must declare its JSON body length");
+                    let length = headers
+                        .lines()
+                        .find_map(|line| {
+                            line.to_ascii_lowercase()
+                                .strip_prefix("content-length:")
+                                .and_then(|value| value.trim().parse::<usize>().ok())
+                        })
+                        .expect("Images fixture must declare its JSON body length");
                     assert!(length <= 65536 - boundary - 4);
                     if wire.len() >= boundary + 4 + length {
                         assert_eq!(wire.len(), boundary + 4 + length);
@@ -258,10 +269,13 @@ async fn exact_source_two_item_partial_receipt_saves_original_and_repeated_reque
                 }
             };
             let headers = std::str::from_utf8(&wire[..boundary]).unwrap();
-            assert_eq!(headers.lines().next().unwrap(), "POST /v1/images/generations HTTP/1.1");
-            let body = Value::parse_with_limit(
-                std::str::from_utf8(&wire[boundary + 4..]).unwrap(), 65536
-            ).unwrap();
+            assert_eq!(
+                headers.lines().next().unwrap(),
+                "POST /v1/images/generations HTTP/1.1"
+            );
+            let body =
+                Value::parse_with_limit(std::str::from_utf8(&wire[boundary + 4..]).unwrap(), 65536)
+                    .unwrap();
             assert_eq!(body["prompt"], "fixture");
             assert_eq!(body["model"], "fixture");
             assert_eq!(body["n"], 2);
@@ -275,11 +289,14 @@ async fn exact_source_two_item_partial_receipt_saves_original_and_repeated_reque
             // queued and is detected directly, without a sleep or a permissive retry.
             listener
         };
-        let ((), listener) = tokio::join!(
-            client,
-            async { tokio::time::timeout(Duration::from_secs(3), server).await.unwrap() }
+        let ((), listener) = tokio::join!(client, async {
+            tokio::time::timeout(Duration::from_secs(3), server)
+                .await
+                .unwrap()
+        });
+        assert!(
+            matches!(listener.into_std().unwrap().accept(), Err(error) if error.kind() == std::io::ErrorKind::WouldBlock)
         );
-        assert!(matches!(listener.into_std().unwrap().accept(), Err(error) if error.kind() == std::io::ErrorKind::WouldBlock));
     };
     tokio::time::timeout(Duration::from_secs(8), action)
         .await

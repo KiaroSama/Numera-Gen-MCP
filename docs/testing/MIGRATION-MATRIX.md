@@ -48,6 +48,11 @@ and exact wire/malformed-result/continuation fixtures bring the authored tree to
 they are not covered by that green SHA. A new actual count2 partial-publication fixture retains original
 bytes and proves one POST after same-instance repeat. All new literal mappings remain pending hosted
 execution and final review; an older local runtime cannot supply the frozen normalization expectations.
+At `7f7b800`, all 61 native targets, strict Clippy, release builds and SDK stdio/HTTP checks passed on
+all six platforms; all three Node jobs and full 85.65% regions / 83.02% branches coverage passed.
+Only formatting in four test files failed. Actual notices/archives/extracted execution were skipped
+on that revision. Exact hosted formatting and assertion-range corrections still need replacement CI;
+130 assignments and all 470 pending dispositions do not establish full source-case acceptance.
 
 **All-six packaged execution passed at `76d32e9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

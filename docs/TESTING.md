@@ -181,6 +181,12 @@ retains the 15-second discovery default; the scenario and fixture socket are bou
 seconds respectively. A local helper check against the retained older `dist` failed because that runtime
 predates sibling isolation; it is not frozen-baseline or native evidence. The old runtime was not rebuilt
 or changed. No extra paid request, live host edit or old-runtime cleanup is part of these fixtures.
+At `7f7b800`, all 61 native targets, strict Clippy, release builds and actual SDK stdio/HTTP checks
+passed on all six platforms. The new config, policy, normalization and count2 partial-publication
+cases passed, as did all three Node jobs. Complete nightly coverage passed at 85.65% regions / 83.02%
+branches. Formatting in four test files alone failed the six stable jobs, so notice/archive/extraction
+steps were skipped. The replacement applies the exact hosted formatter and rebases assertion ranges;
+no assertion or timeout changes. All 470 case dispositions remain pending, with 130 assignments.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

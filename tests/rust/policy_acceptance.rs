@@ -56,7 +56,10 @@ fn exact_profile_model_request_precedence_keeps_shared_defaults_and_extensions_i
     assert_eq!(result["quality"], "high");
     assert_eq!(result["count"], 2);
     assert_eq!(result["provider_options"], json!({"strength": 0.8}));
-    assert_eq!(profile["defaults"], json!({"quality": "low", "size": "small"}));
+    assert_eq!(
+        profile["defaults"],
+        json!({"quality": "low", "size": "small"})
+    );
     assert_eq!(profile["extensions"], json!({"strength": 0.2}));
     assert_eq!(profile, before);
 }
@@ -84,8 +87,7 @@ fn all_six_source_reserved_option_names_reject_at_the_nested_boundary() {
 fn exact_scalar_allowlist_array_object_and_depth_limits_preserve_the_source_options_contract() {
     let value = json!({"strength": 0.5, "choices": [1, "two", null], "nested": {"enabled": false}});
     assert_eq!(
-        safe_options(&value, Some(&json!(["strength", "choices", "nested"])), 0)
-        .unwrap(),
+        safe_options(&value, Some(&json!(["strength", "choices", "nested"])), 0).unwrap(),
         value
     );
     assert!(safe_options(&json!({"strength": 0.5}), Some(&json!([])), 0).is_err());

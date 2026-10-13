@@ -24,8 +24,8 @@ const ADAPTERS: [&str; 6] = [
 ];
 
 fn oracle() -> Value {
-    let file = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join(".ci-work/parity/normalization-acceptance.json");
+    let file =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/normalization-acceptance.json");
     let bytes = std::fs::read(file).expect("exact frozen normalization oracle required");
     assert!(bytes.len() <= 4 * 1024 * 1024, "bounded oracle bundle");
     Value::parse_with_limit(std::str::from_utf8(&bytes).unwrap(), 4 * 1024 * 1024).unwrap()
@@ -83,10 +83,8 @@ fn six_exact_persian_prompt_only_wires_match_source_body_and_distinct_protocol_f
             built.operation,
             case["expected"]["value"]["operation"].as_str().unwrap()
         );
-        let source_body = Value::parse(
-            case["expected"]["value"]["serialized"].as_str().unwrap(),
-        )
-        .unwrap();
+        let source_body =
+            Value::parse(case["expected"]["value"]["serialized"].as_str().unwrap()).unwrap();
         assert_eq!(body, source_body);
     }
     assert_eq!(names, ADAPTERS.into_iter().collect::<HashSet<_>>());
