@@ -24,10 +24,21 @@ fn link(target: &Path, source: &Path) {
         .enable_all()
         .build()
         .unwrap();
+    let directory = source
+        .parent()
+        .expect("owned fixture root")
+        .join(
+            target
+                .parent()
+                .expect("owned junction parent")
+                .file_name()
+                .unwrap(),
+        );
     runtime.block_on(async {
         let mut child = tokio::process::Command::new("cmd.exe")
             .args(["/D", "/C", "mklink", "/J"])
-            .arg(target)
+            .current_dir(directory)
+            .arg(target.file_name().expect("owned junction basename"))
             .arg(source)
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())
@@ -37,7 +48,14 @@ fn link(target: &Path, source: &Path) {
             .spawn()
             .unwrap();
         match tokio::time::timeout(Duration::from_secs(2), child.wait()).await {
-            Ok(status) => assert!(status.unwrap().success(), "owned junction creation failed"),
+            Ok(status) => {
+                let status = status.unwrap();
+                assert!(
+                    status.success(),
+                    "owned junction creation failed with {:?}",
+                    status.code()
+                );
+            }
             Err(_) => {
                 tokio::time::timeout(Duration::from_secs(2), child.kill())
                     .await

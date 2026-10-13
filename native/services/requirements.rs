@@ -65,8 +65,7 @@ pub fn deviations(receipt: &Receipt, image: &Image, index: u32) -> Vec<String> {
         && (target["width"] != image.width || target["height"] != image.height)
     {
         result.push(format!(
-            "Output {index} dimensions differ from requested {} tier.",
-            expected["image_size"].as_str().unwrap_or("")
+            "Output {index} dimensions differ from the documented requested resolution tier."
         ));
     }
     if let Some(source) = expected.get("upscale_source") {
@@ -89,14 +88,15 @@ pub fn deviations(receipt: &Receipt, image: &Image, index: u32) -> Vec<String> {
 
 pub fn warnings(receipt: &Receipt) -> Vec<String> {
     let r = &receipt.value["output_requirements"];
-    if let Some(tier) = r["image_size"].as_str().filter(|s| {
-        !s.is_empty()
-            && r["dimension_evidence"]["pixel_sizes"].is_array()
-            && r["aspect_ratio"].as_str().is_none_or(|s| s.is_empty())
-    }) {
-        vec![format!(
-            "Requested {tier} tier cannot be verified without an aspect_ratio; inspect the original returned dimensions."
-        )]
+    let target = crate::error::array(&r["dimension_evidence"]["pixel_sizes"])
+        .iter()
+        .any(|size| {
+            size["aspect_ratio"] == r["aspect_ratio"] && size["resolution"] == r["image_size"]
+        });
+    if r["image_size"].as_str().is_some_and(|s| !s.is_empty()) && !target {
+        vec![
+            "Requested resolution tier could not be verified: exact model/tier/aspect evidence is unavailable.".into(),
+        ]
     } else {
         vec![]
     }

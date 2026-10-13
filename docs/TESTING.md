@@ -119,7 +119,7 @@ bounded parse/action phase evidence instead of withholding all progress behind `
 12-second wall / 10-second idle ceilings and all syntax, WhatIf and no-mutation assertions remain.
 The original slow phase is unproven; replacement three-OS execution is required.
 The [case ledger](testing/native-cases/index.json) now retains every one of the 470 actual identities,
-frozen source hashes and three-platform modes. All remain pending. Seventeen cases have literal
+frozen source hashes and three-platform modes. All remain pending. Targeted cases have literal
 source/native assertion ranges and explicit schedule gaps; neither a passing suite nor a completed
 boolean can close them. Hosted structural validation compares the ledger with fresh frozen runtime
 collection. Full acceptance requires reviewed assertions, no gaps, unchanged native source hashes
@@ -134,7 +134,25 @@ cases now have individually recorded oracle-row/direct-test navigation and exact
 suite-wide coverage claims. Three newly authored directory race unit tests hold two real missing-path
 observations before regular-file or link insertion, including an actual Windows junction. They retain
 the production metadata, mkdir and containment checks through a private observation seam; no public
-test switch, wider path permission or new dependency is added. Their hosted execution is pending.
+test switch, wider path permission or new dependency is added. At `ec60ae3`, all three race cases
+passed on four POSIX targets. Both Windows jobs failed only the junction-creation command: the fixture
+passed a canonical verbatim path to the shell, but the exact command failure cause remains unproven.
+The correction uses its owned non-verbatim parent CWD
+and relative junction basename without changing production containment or the two-second child bound.
+All three Node jobs passed. Complete coverage passed at 85.37% regions / 82.20% branches. Actual
+notice preservation, allowlisted archives, checksums and extracted stdio/HTTP SDK execution passed
+on all four POSIX targets; Windows packaging remained gated by that fixture failure. These are hosted
+artifacts, not a verified Release or complete 470-case assertion acceptance.
+
+The next tree explicitly registers 59 integration targets. New configuration acceptance cases preserve
+exact frozen invalid-input/profile/precedence/compact-default assertions. A pinned-source requirements
+oracle covers six edge scenarios and all 56 Flash / 30 Pro documented pixel pairs. Native comparisons
+retain exact deviation/warning strings; normal finalization and real SQLite commit-failure recovery
+verify original bytes, stable output identity, persisted requirements and repeated public reads.
+An opaque-tier recovery case requires exactly one source warning. Recovery deliberately retains
+`storage_error` and `partial_or_failed` storage outcome, rather than implying clean storage. These
+new cases and the Windows command correction are source-only until replacement hosted verification.
+Metadata comparisons and JSON round trips are not image inference or process-restart evidence.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

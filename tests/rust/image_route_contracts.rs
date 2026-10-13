@@ -304,7 +304,11 @@ fn requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_an
     assert!(
         deviations.contains(&"Output 0 aspect ratio differs from requested aspect_ratio.".into())
     );
-    assert!(deviations.contains(&"Output 0 dimensions differ from requested 4K tier.".into()));
+    assert!(
+        deviations.contains(
+            &"Output 0 dimensions differ from the documented requested resolution tier.".into()
+        )
+    );
     for ratio in ["7:5", "not-ratio", "0:1", "1:0"] {
         let receipt = Receipt::new(json!({"output_requirements":{"aspect_ratio":ratio}}));
         assert!(requirements::deviations(&receipt, &image, 0).is_empty());

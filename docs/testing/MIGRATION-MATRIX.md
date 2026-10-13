@@ -29,10 +29,15 @@ At `3d79621`, formatting, all 57 native targets, strict Clippy, release builds a
 passed on all six targets. All three Node jobs and unchanged coverage floors passed. Fresh 470-case
 structural validation passed on three OSes without accepting assertion parity. Actual notice
 collection identified only `rmcp 3.5.1` missing its packaged license; its complete pinned upstream
-notice is being preserved. Archive and extraction checks remained skipped. No archive or Release
-is accepted.
+notice was subsequently preserved. At `ec60ae3`, actual notices, allowlisted archives, checksums and
+extracted stdio/HTTP SDK execution passed on all four POSIX targets. All three Node jobs and full
+85.37% regions / 82.20% branches coverage passed. Both Windows jobs failed only the new junction
+fixture's shell command; their archive/extraction steps did not run. The fixture correction uses an
+owned normal CWD and relative basename, retaining real junction/containment assertions and time bounds.
+New config acceptance and source-exact requirement warning/deviation/finalization/recovery cases bring
+the authored tree to 59 integration targets; these newest changes await hosted execution.
 
-**Packaged execution and complete baseline-case migration acceptance have not passed.** Passing
+**All-six packaged execution and complete baseline-case migration acceptance have not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery
@@ -41,7 +46,7 @@ passed at `3c5958f`. The [pending ledger](native-parity.json) preserves all
 50 frozen suite hashes and concrete source-authored mappings, with incomplete case equivalence.
 Actual expanded collection retains platform-skipped cases; no suite grouping is promoted to 470-case acceptance.
 The [case ledger](native-cases/index.json) has all 470 identities and remains entirely pending.
-Seventeen cases have concrete assertion ranges; explicit gaps include same-instance recovery versus
+Targeted cases have concrete assertion ranges; explicit gaps include same-instance recovery versus
 reopen, unmasked versus mask upload counts, and the Omni multipart model field. Structural validation
 and full assertion acceptance are separate gates; setting a completion flag alone cannot pass.
 
@@ -61,8 +66,8 @@ and full assertion acceptance are separate gates; setting a completion flag alon
 | Generation/dedup/finalization/local recovery          | `native/services/`                                                    | Tiny loopback, original hash, recovery fixtures                   | Pending exhaustive original lifecycle contracts                                                                           |
 | Ten tools/stdio/resources/negotiation/bridge          | `native/mcp/`, `native/main.rs`                                       | Real child `bridge` fixture, foreign CWD and EOF                  | Bridge/two-host/two-restart/legacy-auto-pin and HTTP outputs/resources passed at 8271b81; active race case ledger pending |
 | Maintenance/readiness/client registration             | Native CLI replacement                                                | Existing maintenance cases not yet migrated                       | Pending; do not retire working scripts yet                                                                                |
-| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Distribution checks not yet complete                              | Pending verified downloadable archives                                                                                    |
-| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete 3c5958f report: 85.25% regions / 82.18% branches; both unchanged floors passed                                   |
+| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed four POSIX targets at ec60ae3; Windows gated by junction fixture; no Release                                       |
+| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete ec60ae3 report: 85.37% regions / 82.20% branches; both unchanged floors passed                                   |
 
 ## Release blockers
 

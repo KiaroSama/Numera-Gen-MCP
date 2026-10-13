@@ -13,7 +13,7 @@
     "alias_policy": "Source reference-preflight lines 136-188 checks codex/cx unchanged wire IDs, negative cxx and OmniRoute batch rejection; explicit oracle-row assignment remains pending.",
     "discovery_isolation": "Source discovery cross-profile cache isolation and malformed first-page completeness are distinct from generic stale/repeated-cursor tests.",
     "image_specifics": "Source images exact preview geometry/no enlargement/stage, large Base64 regression, input symlinks and owned-output tamper/missing/collision variants need individual assertions.",
-    "directory_toctou": "Source output-directory-race lines 12-79 forces two ENOENT observations before file/link creation. Three private-seam native unit tests now stage the actual schedule, including a Windows junction; hosted execution and assertion acceptance are pending.",
+    "directory_toctou": "Three exact two-ENOENT schedules passed four POSIX targets at ec60ae3. Both Windows jobs failed junction shell creation; corrected owned normal CWD/relative basename is source-only. All-platform final assertion acceptance remains pending.",
     "active_waiter_races": "Source async-waiter-race and stdio-terminal-races hold actual generation polls/downloads while another public caller refreshes/cancels. Seeded recovery and direct store fencing do not establish those schedules.",
     "cancelled_mixed_results": "Source cancelled-results combines URL and inline bytes, requires zero downloads and two retained entries; inline-only cancellation recovery is not the same assertion.",
     "comfy_download_recovery": "At bc34fbf both real completed-history download failure/reopen fixtures passed; source-case/assertion reconciliation remains pending.",
@@ -24,7 +24,7 @@
     "dns_hostname": "Source HTTP cleanup tests DNS-pinned hostname with both autoSelectFamily values; numeric loopback tests do not prove that resolution contract.",
     "public_sql_recovery": "Source journal-sql-failures invokes Generation.finish then getJob and asserts public receipt state; output::save SQL-gap test alone is a narrower seam.",
     "two_host_generation_dedup": "Source mcp generates the same request across two actual hosts and proves one POST. One-host HTTP generation/direct Generation dedup and seeded two-host recovery are not equivalent.",
-    "normal_recovered_requirements": "Source output-requirements runs normal and forced commit-failure recovery, requiring identical exact deviations and retained aspect/tier requirements.",
+    "normal_recovered_requirements": "New output_requirements.rs normal and real SQL commit-failure/public local recovery cases assert exact source deviations, original bytes, stable UUID, persisted aspect/tier, retained storage_error and repeated reads. Source-only pending hosted execution and final literal review.",
     "posix_symlinks": "Source posix-platform checks both escaping link rejection and safe in-root link acceptance; plain contained-file tests do not establish both.",
     "retained_tooling": "Source setup/POSIX process-tree bounds, PowerShell WhatIf, protector and actual registration mutation/rollback cases need explicit retained-tooling disposition; no silent retirement.",
     "readiness_variants": "Missing credential/no network, unavailable catalog and public SDK checks need separate assignment beyond generic ready/missing-model.",
@@ -335,7 +335,9 @@
       "native": [
         "tests/rust/image_route_contracts.rs::requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_and_evidence",
         "tests/rust/generation_results.rs::cancelled_publication_retains_completed_originals_and_recovery_preserves_deviations",
-        "tests/rust/output_recovery.rs::received_bytes_survive_output_directory_failure_and_recover_with_the_same_uuid_after_reopen"
+        "tests/rust/output_recovery.rs::received_bytes_survive_output_directory_failure_and_recover_with_the_same_uuid_after_reopen",
+        "tests/rust/output_requirements.rs::normal_finalization_preserves_exact_source_aspect_tier_deviations_and_original_bytes",
+        "tests/rust/output_requirements.rs::real_sql_commit_failure_recovers_identical_source_requirements_without_network"
       ],
       "status": "pending",
       "evidence": null,
