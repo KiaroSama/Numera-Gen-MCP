@@ -288,6 +288,10 @@ path = "tests/rust/normalization_acceptance.rs"
 name = "env_acceptance"
 path = "tests/rust/env_acceptance.rs"
 
+[[test]]
+name = "readiness_acceptance"
+path = "tests/rust/readiness_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

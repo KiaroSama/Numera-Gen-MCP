@@ -239,6 +239,6 @@ fn main() {
             "{}",
             json!({"level":"ERROR","component":"startup","message":"Server cannot start.","error":error})
         );
-        std::process::exit(1);
+        std::process::exit(if error.code == "readiness_blocked" { 2 } else { 1 });
     }
 }

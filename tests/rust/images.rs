@@ -26,7 +26,10 @@ fn exact_source_four_mebibyte_base64_preserves_all_bytes_and_strict_boundaries()
     }
     assert!(decode_base64(&encoded, bytes.len() - 1).is_err());
     for invalid in ["", "%%%%", "YQ", "YQ===", "Y Q==", "YQ==\n"] {
-        assert_eq!(decode_base64(invalid, 20).unwrap_err().code, "invalid_response");
+        assert_eq!(
+            decode_base64(invalid, 20).unwrap_err().code,
+            "invalid_response"
+        );
     }
     for invalid in [
         "data:image/svg+xml;base64,YQ==",
@@ -57,7 +60,10 @@ fn exact_source_eight_by_six_png_jpeg_webp_metadata_hash_and_base64_round_trips_
         assert_eq!(image.mime, format!("image/{format}"));
         assert_eq!((image.width, image.height), (8, 6));
         assert_eq!(image.alpha, format != "jpeg");
-        assert_eq!(image.extension, if format == "jpeg" { "jpg" } else { format });
+        assert_eq!(
+            image.extension,
+            if format == "jpeg" { "jpg" } else { format }
+        );
         assert_eq!(image.sha256, sha256(&bytes));
         assert_eq!(image.bytes, bytes);
         assert_eq!(
@@ -103,21 +109,32 @@ fn exact_source_png_byte_pixel_truncation_and_real_mask_dimension_inputs_reject(
     };
     let source = decode("png");
     assert_eq!(
-        inspect(source.bytes.clone(), &json!({}), Some(source.bytes.len() - 1))
-            .err()
-            .unwrap()
-            .code,
+        inspect(
+            source.bytes.clone(),
+            &json!({}),
+            Some(source.bytes.len() - 1)
+        )
+        .err()
+        .unwrap()
+        .code,
         "invalid_input"
     );
     assert_eq!(
-        inspect(source.bytes.clone(), &json!({"files": {"maxPixels": 47}}), None)
-            .err()
-            .unwrap()
-            .code,
+        inspect(
+            source.bytes.clone(),
+            &json!({"files": {"maxPixels": 47}}),
+            None
+        )
+        .err()
+        .unwrap()
+        .code,
         "invalid_input"
     );
     for invalid in [vec![], b"<svg/>".to_vec(), source.bytes[..20].to_vec()] {
-        assert_eq!(inspect(invalid, &json!({}), None).err().unwrap().code, "invalid_input");
+        assert_eq!(
+            inspect(invalid, &json!({}), None).err().unwrap().code,
+            "invalid_input"
+        );
     }
     validate_mask(&source, &source).unwrap();
     for name in ["jpeg", "opaque-png", "width-mask", "height-mask"] {
@@ -159,7 +176,11 @@ fn exact_source_preview_geometry_no_enlargement_and_error_stage_are_preserved() 
     assert_eq!(decoded.mime, "image/png");
     let original = decode("png");
     for (dimension, width, height) in [(100, 8, 6), (1, 1, 1)] {
-        let result = preview(&original, &json!({"files": {"previewMaxDimension": dimension}})).unwrap();
+        let result = preview(
+            &original,
+            &json!({"files": {"previewMaxDimension": dimension}}),
+        )
+        .unwrap();
         assert_eq!(result["width"], width);
         assert_eq!(result["height"], height);
     }

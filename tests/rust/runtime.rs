@@ -22,14 +22,18 @@ fn scratch_is_project_owned_and_escape_is_rejected() {
 
 #[test]
 fn exact_source_nested_signed_query_redaction_preserves_status_without_private_values() {
-    let result = redact(&json!({
-        "status": 401,
-        "nested": {
-            "authorization": "Bearer private",
-            "prompt": "private prompt",
-            "url": "https://a.example/img?signature=private"
-        }
-    }), 0).to_string();
+    let result = redact(
+        &json!({
+            "status": 401,
+            "nested": {
+                "authorization": "Bearer private",
+                "prompt": "private prompt",
+                "url": "https://a.example/img?signature=private"
+            }
+        }),
+        0,
+    )
+    .to_string();
     assert!(!result.contains("private"));
     assert!(result.contains("401"));
 }

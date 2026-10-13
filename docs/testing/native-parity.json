@@ -359,11 +359,15 @@
       "sha256": "4fb869c7592e7c4a9aa0f53437350490578915c3e29e039e58b7ca0a880ee044",
       "native": [
         "tests/rust/maintenance.rs::readiness_reports_local_probe_and_model_blockers_without_generation",
-        "tests/rust/cli_entry.rs::actual_native_menu_maintenance_and_invalid_http_flags_preserve_host_config"
+        "tests/rust/cli_entry.rs::actual_native_menu_maintenance_and_invalid_http_flags_preserve_host_config",
+        "tests/rust/readiness_acceptance.rs::executable_readiness_probes_get_only_and_never_discloses_the_exact_catalog_id",
+        "tests/rust/readiness_acceptance.rs::executable_readiness_missing_declared_credential_exits_two_without_provider_calls",
+        "tests/rust/readiness_acceptance.rs::executable_readiness_local_only_has_null_connection_and_relative_config_exits_one",
+        "tests/rust/readiness_acceptance.rs::executable_readiness_unlisted_model_and_failed_catalog_exit_two_without_post_or_error_leak"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["readiness_variants"]
+      "gaps": ["source_inner_stdio_and_wrapper_cleanup_marker"]
     },
     {
       "source": "tests/integration/recovery.test.ts",

@@ -60,6 +60,16 @@ case assignments, all still pending native execution and final literal acceptanc
 original codecs, Base64, masks/previews, Unicode paths, actual input/output links and owned-output
 failures are now authored. Legacy fresh-UUID same-index publication/public addOutput, pure containment
 and the exact bounded-stream/cancellation case remain gaps, not silently retired contracts.
+At `9e6e234`, five completed platforms passed all 62 native targets, strict Clippy, release and SDK
+checks; complete nightly coverage passed at 85.80% regions / 83.55% branches. Both macOS ARM jobs
+were cancelled. Only six Rust-file layouts and the JavaScript import formatting failed completed
+jobs; packaging was skipped. Actual hosted formatting is applied without weaker assertions.
+A source-confirmed readiness exit1/exit2 drift is corrected with four source-faithful executable
+fixtures and exact invalid-request literals. This repair is source-only pending its own hosted run;
+direct native maintenance does not establish the old inner-stdio/cleanup-marker assertion.
+The integrated repair registers 63 native targets and records 216 case assignments, all 470
+pending. Independent source review found no additional confirmed readiness defects, not proof
+of compilation or execution.
 
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

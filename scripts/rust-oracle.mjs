@@ -586,7 +586,8 @@ for (const adapter of [
 await emit("adapters", { wires, normalization });
 const { normalizationOracle } = await import("./rust-normalization-oracle.mjs");
 await normalizationOracle({ source, emit, sharp });
-const { imageAcceptanceOracle } = await import("./rust-image-acceptance-oracle.mjs");
+const { imageAcceptanceOracle } =
+  await import("./rust-image-acceptance-oracle.mjs");
 await imageAcceptanceOracle({ source, emit, sharp });
 const { requirementsOracle } = await import("./rust-requirements-oracle.mjs");
 await requirementsOracle({ source, emit, plain, images });

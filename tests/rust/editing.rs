@@ -83,31 +83,73 @@ fn exact_source_absolute_unicode_file_urls_limits_and_invalid_inputs_are_enforce
     let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join(".ci-work/parity/image-acceptance.json");
     let oracle = numera_image_gen_mcp::compat::value::Value::parse_with_limit(
-        &std::fs::read_to_string(file).expect("exact source image oracle"), 1048576,
-    ).unwrap();
-    let original = oracle.as_array().unwrap().iter().find(|case| case["name"] == "png").unwrap();
+        &std::fs::read_to_string(file).expect("exact source image oracle"),
+        1048576,
+    )
+    .unwrap();
+    let original = oracle
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|case| case["name"] == "png")
+        .unwrap();
     let bytes = images::decode_base64(original["base64"].as_str().unwrap(), 1048576).unwrap();
     let inputs = workspace.0.join("inputs");
     std::fs::create_dir(&inputs).unwrap();
     let path = inputs.join("café image.png");
     std::fs::write(&path, &bytes).unwrap();
     let roots = std::slice::from_ref(&inputs);
-    assert_eq!(paths::input(path.to_str().unwrap(), roots, bytes.len()).unwrap(), bytes);
-    assert_eq!(paths::input(url::Url::from_file_path(&path).unwrap().as_str(), roots, bytes.len()).unwrap(), bytes);
-    assert_eq!(paths::input(path.to_str().unwrap(), &[workspace.0.join("not-created")], bytes.len()).unwrap_err().code, "permission_denied");
-    assert_eq!(paths::input(path.to_str().unwrap(), roots, bytes.len() - 1).unwrap_err().code, "input_file_error");
-    assert_eq!(paths::input(inputs.to_str().unwrap(), roots, bytes.len()).unwrap_err().code, "input_file_error");
+    assert_eq!(
+        paths::input(path.to_str().unwrap(), roots, bytes.len()).unwrap(),
+        bytes
+    );
+    assert_eq!(
+        paths::input(
+            url::Url::from_file_path(&path).unwrap().as_str(),
+            roots,
+            bytes.len()
+        )
+        .unwrap(),
+        bytes
+    );
+    assert_eq!(
+        paths::input(
+            path.to_str().unwrap(),
+            &[workspace.0.join("not-created")],
+            bytes.len()
+        )
+        .unwrap_err()
+        .code,
+        "permission_denied"
+    );
+    assert_eq!(
+        paths::input(path.to_str().unwrap(), roots, bytes.len() - 1)
+            .unwrap_err()
+            .code,
+        "input_file_error"
+    );
+    assert_eq!(
+        paths::input(inputs.to_str().unwrap(), roots, bytes.len())
+            .unwrap_err()
+            .code,
+        "input_file_error"
+    );
     for invalid in [
-        "relative.png".to_owned(), "file:///bad%ZZ".to_owned(),
+        "relative.png".to_owned(),
+        "file:///bad%ZZ".to_owned(),
         inputs.join("absent.png").to_str().unwrap().to_owned(),
         format!("{}:stream", path.to_str().unwrap()),
     ] {
-        assert_eq!(paths::input(&invalid, roots, bytes.len()).unwrap_err().code, "input_file_error");
+        assert_eq!(
+            paths::input(&invalid, roots, bytes.len()).unwrap_err().code,
+            "input_file_error"
+        );
     }
 }
 
 #[tokio::test]
-async fn exact_source_input_links_output_junctions_non_directories_and_nested_unicode_are_checked() {
+async fn exact_source_input_links_output_junctions_non_directories_and_nested_unicode_are_checked()
+{
     let scenario = async {
         let workspace = Workspace::new();
         let inputs = workspace.0.join("inputs");
@@ -119,9 +161,16 @@ async fn exact_source_input_links_output_junctions_non_directories_and_nested_un
         let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join(".ci-work/parity/image-acceptance.json");
         let cases = numera_image_gen_mcp::compat::value::Value::parse_with_limit(
-            &std::fs::read_to_string(file).unwrap(), 1048576,
-        ).unwrap();
-        let case = cases.as_array().unwrap().iter().find(|case| case["name"] == "png").unwrap();
+            &std::fs::read_to_string(file).unwrap(),
+            1048576,
+        )
+        .unwrap();
+        let case = cases
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|case| case["name"] == "png")
+            .unwrap();
         let bytes = images::decode_base64(case["base64"].as_str().unwrap(), 1048576).unwrap();
         std::fs::write(outside.join("image.png"), bytes).unwrap();
         for parent in ["inputs", "outputs"] {
@@ -140,33 +189,69 @@ async fn exact_source_input_links_output_junctions_non_directories_and_nested_un
                     .stderr(std::process::Stdio::null())
                     .creation_flags(0x08000000)
                     .kill_on_drop(true)
-                    .spawn().unwrap();
+                    .spawn()
+                    .unwrap();
                 match tokio::time::timeout(std::time::Duration::from_secs(2), child.wait()).await {
-                    Ok(status) => assert!(status.unwrap().success(), "owned junction creation failed"),
+                    Ok(status) => {
+                        assert!(status.unwrap().success(), "owned junction creation failed")
+                    }
                     Err(_) => {
-                        tokio::time::timeout(std::time::Duration::from_secs(2), child.kill()).await
-                            .expect("owned junction child must be reaped").unwrap();
+                        tokio::time::timeout(std::time::Duration::from_secs(2), child.kill())
+                            .await
+                            .expect("owned junction child must be reaped")
+                            .unwrap();
                         panic!("owned junction creation exceeded 2 seconds");
                     }
                 }
             }
             assert!(std::fs::symlink_metadata(&target).unwrap().is_symlink());
         }
-        assert_eq!(paths::input(inputs.join("link/image.png").to_str().unwrap(), std::slice::from_ref(&inputs), 1000).unwrap_err().code, "permission_denied");
-        assert_eq!(paths::output_directory(&outputs, Some("link/subdir")).unwrap_err().code, "output_file_error");
+        assert_eq!(
+            paths::input(
+                inputs.join("link/image.png").to_str().unwrap(),
+                std::slice::from_ref(&inputs),
+                1000
+            )
+            .unwrap_err()
+            .code,
+            "permission_denied"
+        );
+        assert_eq!(
+            paths::output_directory(&outputs, Some("link/subdir"))
+                .unwrap_err()
+                .code,
+            "output_file_error"
+        );
         std::fs::write(outputs.join("not-directory"), b"fixture").unwrap();
-        assert_eq!(paths::output_directory(&outputs, Some("not-directory/subdir")).unwrap_err().code, "output_file_error");
-        assert_eq!(paths::output_directory(&outputs, Some("nested/café")).unwrap(), std::fs::canonicalize(outputs.join("nested/café")).unwrap());
-        assert_eq!(paths::output_directory(&outputs, Some("../escape")).unwrap_err().code, "invalid_input");
+        assert_eq!(
+            paths::output_directory(&outputs, Some("not-directory/subdir"))
+                .unwrap_err()
+                .code,
+            "output_file_error"
+        );
+        assert_eq!(
+            paths::output_directory(&outputs, Some("nested/café")).unwrap(),
+            std::fs::canonicalize(outputs.join("nested/café")).unwrap()
+        );
+        assert_eq!(
+            paths::output_directory(&outputs, Some("../escape"))
+                .unwrap_err()
+                .code,
+            "invalid_input"
+        );
     };
-    tokio::time::timeout(std::time::Duration::from_secs(8), scenario).await
+    tokio::time::timeout(std::time::Duration::from_secs(8), scenario)
+        .await
         .expect("exact source link scenario exceeded 8 seconds");
 }
 
 #[test]
 fn exact_source_backslash_traversal_and_nul_relative_paths_are_rejected() {
     for path in ["a\\..\\b", "a\0b"] {
-        assert_eq!(paths::safe_relative(path).unwrap_err().code, "invalid_input");
+        assert_eq!(
+            paths::safe_relative(path).unwrap_err().code,
+            "invalid_input"
+        );
     }
 }
 

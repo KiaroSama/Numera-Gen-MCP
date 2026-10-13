@@ -44,6 +44,10 @@ fn whitespace_prompt_count_eleven_and_spaced_connection_name_reject_exact_source
     for value in [
         json!({"prompt": "  "}),
         json!({"prompt": "draw", "count": 11}),
+        json!({"prompt": "draw", "count": 0}),
+        json!({"prompt": "draw", "request_id": "../id"}),
+        json!({"prompt": "draw", "reference_images": [{"type": "path", "path": ""}]}),
+        json!({"prompt": "draw", "extra": true}),
     ] {
         assert_eq!(request::parse(value).unwrap_err().code, "invalid_input");
     }

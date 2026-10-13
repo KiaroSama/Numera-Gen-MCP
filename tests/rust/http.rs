@@ -35,7 +35,8 @@ fn operation_prefix_and_sensitive_query_are_preserved() {
 }
 
 #[test]
-fn exact_source_operation_prefix_base_and_relative_path_inputs_preserve_the_trusted_destination_contract() {
+fn exact_source_operation_prefix_base_and_relative_path_inputs_preserve_the_trusted_destination_contract()
+ {
     for (base, mode, expected) in [
         (
             "http://127.0.0.1:20100/v1",
@@ -72,14 +73,19 @@ fn exact_source_operation_prefix_base_and_relative_path_inputs_preserve_the_trus
         "https://example.com/v1?api_key=x",
     ] {
         assert!(
-            operation_url(base, "api-prefix", "images/generations", "/v1", &json!({}))
-                .is_err()
+            operation_url(base, "api-prefix", "images/generations", "/v1", &json!({})).is_err()
         );
     }
     for path in ["../secret", "%2e%2e/secret", "//other.example/path", "a\\b"] {
         assert!(
-            operation_url("https://example.com/v1", "api-prefix", path, "/v1", &json!({}))
-                .is_err()
+            operation_url(
+                "https://example.com/v1",
+                "api-prefix",
+                path,
+                "/v1",
+                &json!({})
+            )
+            .is_err()
         );
     }
 }

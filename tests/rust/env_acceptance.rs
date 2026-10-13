@@ -38,7 +38,11 @@ fn environment(workspace: &Workspace) -> HashMap<String, String> {
         .map(|key| {
             (
                 key.to_owned(),
-                workspace.0.to_str().expect("Unicode fixture root").to_owned(),
+                workspace
+                    .0
+                    .to_str()
+                    .expect("Unicode fixture root")
+                    .to_owned(),
             )
         })
         .collect()
@@ -49,7 +53,10 @@ fn load_file(workspace: &Workspace, name: &str, bytes: &[u8]) -> Result<Config> 
     assert!(file.is_absolute(), "Fixture config path must be absolute.");
     std::fs::write(&file, bytes).expect("write actual fixture config bytes");
     load_config(
-        &["--config".into(), file.to_str().expect("Unicode fixture path").into()],
+        &[
+            "--config".into(),
+            file.to_str().expect("Unicode fixture path").into(),
+        ],
         &environment(workspace),
         &workspace.0,
     )
@@ -154,7 +161,10 @@ fn file_reload_retains_initial_arc_for_unchanged_storage_change_and_snapshot_ref
     let config = load_file(&workspace, "config.json", raw.to_string().as_bytes()).unwrap();
     let original_value = config.value.clone();
     let logger = Logger::new(&workspace.0.join("logs"), "ERROR");
-    let args = vec!["--config".into(), file.to_str().expect("Unicode fixture path").into()];
+    let args = vec![
+        "--config".into(),
+        file.to_str().expect("Unicode fixture path").into(),
+    ];
     let env = environment(&workspace);
     let mut reload = ConfigReload::new(config, file.clone(), args, env);
     let original = reload.current();
@@ -162,25 +172,37 @@ fn file_reload_retains_initial_arc_for_unchanged_storage_change_and_snapshot_ref
     assert_eq!(original.value, original_value);
 
     let unchanged = reload
-        .refresh(&logger, |_| panic!("Unchanged file must not request snapshot admission."))
+        .refresh(&logger, |_| {
+            panic!("Unchanged file must not request snapshot admission.")
+        })
         .unwrap();
     assert!(Arc::ptr_eq(&unchanged, &original));
     assert_eq!(unchanged.value, original_value);
 
     let mut changed = original_value.clone();
-    changed["stateDir"] = json!(workspace.0.join("different").to_str().expect("Unicode fixture path"));
-    let loaded_change = load_file(&workspace, "config.json", changed.to_string().as_bytes()).unwrap();
+    changed["stateDir"] = json!(
+        workspace
+            .0
+            .join("different")
+            .to_str()
+            .expect("Unicode fixture path")
+    );
+    let loaded_change =
+        load_file(&workspace, "config.json", changed.to_string().as_bytes()).unwrap();
     assert_eq!(loaded_change.value["stateDir"], changed["stateDir"]);
     assert_ne!(loaded_change.value["stateDir"], original_value["stateDir"]);
     let fixed_storage = reload
-        .refresh(&logger, |_| panic!("Fixed storage changes must reject before admission."))
+        .refresh(&logger, |_| {
+            panic!("Fixed storage changes must reject before admission.")
+        })
         .unwrap();
     assert!(Arc::ptr_eq(&fixed_storage, &original));
     assert_eq!(fixed_storage.value, original_value);
 
     let mut refused = original_value.clone();
     refused["returnMode"] = json!("files_and_preview");
-    let loaded_refusal = load_file(&workspace, "config.json", refused.to_string().as_bytes()).unwrap();
+    let loaded_refusal =
+        load_file(&workspace, "config.json", refused.to_string().as_bytes()).unwrap();
     assert_eq!(loaded_refusal.value["returnMode"], "files_and_preview");
     let mut admission_checked = false;
     let snapshot_limit = reload
@@ -190,7 +212,10 @@ fn file_reload_retains_initial_arc_for_unchanged_storage_change_and_snapshot_ref
             false
         })
         .unwrap();
-    assert!(admission_checked, "Snapshot refusal must reach the acceptance callback.");
+    assert!(
+        admission_checked,
+        "Snapshot refusal must reach the acceptance callback."
+    );
     assert!(Arc::ptr_eq(&snapshot_limit, &original));
     assert_eq!(snapshot_limit.value, original_value);
     assert!(Arc::ptr_eq(&reload.current(), &original));

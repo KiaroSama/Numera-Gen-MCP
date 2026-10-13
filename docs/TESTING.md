@@ -204,6 +204,21 @@ execution of this new batch have not run locally and require separate hosted evi
 Legacy same-request/same-index fresh-UUID publication and the public `addOutput` contract remain
 explicit gaps: distinct stable items and directly seeded SQL metadata do not prove those contracts.
 Pure sibling-containment and the complete bounded-stream/cancellation input case also remain open.
+At `9e6e234`, all 62 native targets, strict Clippy, release builds and SDK checks passed on five
+completed native platforms, as did nightly tests and complete 85.80% regions / 83.55% branches.
+The macOS ARM native and Node jobs were cancelled, not passing. Six Rust fixture files and the
+JavaScript oracle import needed formatting; the two completed Node jobs stopped at that format
+check, and all distribution packaging was skipped. The repair uses the actual hosted formatter
+without changing assertions. Exact-source review also found blocked readiness returning exit1
+instead of exit2; a scoped correction and four actual-executable readiness fixtures are authored
+with exact catalog/error/credential inputs, report fields, GET-only/zero-call and redaction assertions.
+Those new fixtures are not yet executed. Native readiness runs directly, so they verify the actual
+child's reaping rather than inventing the old inner-stdio wrapper's cleanup log marker. That transport
+mapping gap remains explicit. Four previously substituted request fixtures now use the exact `draw`,
+`../id`, empty reference-path and `extra` inputs. The integrated repair has 63 registered native
+targets and 216 concrete case assignments, with all 470 dispositions still pending. Independent
+source review found no additional confirmed defects in the readiness repair; it is not runtime proof.
+Replacement hosted verification is still required.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

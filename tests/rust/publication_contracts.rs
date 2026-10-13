@@ -19,11 +19,24 @@ fn exact_source_image(name: &str, config: &Value) -> numera_image_gen_mcp::files
     let cases = Value::parse_with_limit(
         &std::fs::read_to_string(file).expect("exact source image fixtures"),
         1048576,
-    ).unwrap();
-    let case = cases.as_array().unwrap().iter().find(|case| case["name"] == name).unwrap();
-    inspect(numera_image_gen_mcp::files::images::decode_base64(
-        case["base64"].as_str().unwrap(), 1048576,
-    ).unwrap(), config, None).unwrap()
+    )
+    .unwrap();
+    let case = cases
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|case| case["name"] == name)
+        .unwrap();
+    inspect(
+        numera_image_gen_mcp::files::images::decode_base64(
+            case["base64"].as_str().unwrap(),
+            1048576,
+        )
+        .unwrap(),
+        config,
+        None,
+    )
+    .unwrap()
 }
 
 #[test]
@@ -33,19 +46,39 @@ fn exact_source_owned_originals_reject_tampering_missing_files_prefixes_and_outs
     let image = exact_source_image("png", &raw);
     let state = workspace.0.join("state");
     let mut store = Store::open(&state).unwrap();
-    let (_, receipt) = store.prepare(Receipt::new(json!({
-        "request_id":"receipt", "connection":"test", "status":"prepared",
-        "outputs":[], "deviations":[], "generation_outcome":"not_submitted"
-    })), "effective", "account").unwrap();
+    let (_, receipt) = store
+        .prepare(
+            Receipt::new(json!({
+                "request_id":"receipt", "connection":"test", "status":"prepared",
+                "outputs":[], "deviations":[], "generation_outcome":"not_submitted"
+            })),
+            "effective",
+            "account",
+        )
+        .unwrap();
     store.reserve("receipt", 1048576, 2097152).unwrap();
     // Stable publication uses distinct retained items; it does not prove legacy same-index fresh UUIDs.
     let mut saved = Vec::new();
     for index in 0..2 {
-        store.retain("receipt", index, &image.bytes, Some(&receipt)).unwrap();
-        saved.push(output::save(&image, &raw, &mut store, Publication {
-            id:"receipt", index, subdir:Some("batch"), prefix:Some("café"),
-            deviations:&[], expected:Some(&receipt),
-        }).unwrap());
+        store
+            .retain("receipt", index, &image.bytes, Some(&receipt))
+            .unwrap();
+        saved.push(
+            output::save(
+                &image,
+                &raw,
+                &mut store,
+                Publication {
+                    id: "receipt",
+                    index,
+                    subdir: Some("batch"),
+                    prefix: Some("café"),
+                    deviations: &[],
+                    expected: Some(&receipt),
+                },
+            )
+            .unwrap(),
+        );
     }
     let first = &saved[0];
     let second = &saved[1];
@@ -56,17 +89,65 @@ fn exact_source_owned_originals_reject_tampering_missing_files_prefixes_and_outs
     assert_eq!(first["height"], 6);
     assert_eq!(first["bytes"], image.bytes.len());
     assert_eq!(first["sha256"], image.sha256);
-    assert_eq!(std::fs::read(first["path"].as_str().unwrap()).unwrap(), image.bytes);
-    assert_eq!(output::owned(&raw, &store, first["output_id"].as_str().unwrap()).unwrap().1.sha256, image.sha256);
-    assert_eq!(std::fs::read_dir(workspace.0.join("outputs/batch")).unwrap().count(), 2);
-    std::fs::write(first["path"].as_str().unwrap(), exact_source_image("tamper-png", &raw).bytes).unwrap();
-    assert_eq!(output::owned(&raw, &store, first["output_id"].as_str().unwrap()).err().unwrap().code, "output_file_error");
+    assert_eq!(
+        std::fs::read(first["path"].as_str().unwrap()).unwrap(),
+        image.bytes
+    );
+    assert_eq!(
+        output::owned(&raw, &store, first["output_id"].as_str().unwrap())
+            .unwrap()
+            .1
+            .sha256,
+        image.sha256
+    );
+    assert_eq!(
+        std::fs::read_dir(workspace.0.join("outputs/batch"))
+            .unwrap()
+            .count(),
+        2
+    );
+    std::fs::write(
+        first["path"].as_str().unwrap(),
+        exact_source_image("tamper-png", &raw).bytes,
+    )
+    .unwrap();
+    assert_eq!(
+        output::owned(&raw, &store, first["output_id"].as_str().unwrap())
+            .err()
+            .unwrap()
+            .code,
+        "output_file_error"
+    );
     std::fs::remove_file(second["path"].as_str().unwrap()).unwrap();
-    assert_eq!(output::owned(&raw, &store, second["output_id"].as_str().unwrap()).err().unwrap().code, "output_file_error");
-    for (subdir, prefix) in [(Some("batch"), Some("nested/prefix")), (Some("../escape"), None)] {
-        assert_eq!(output::save(&image, &raw, &mut store, Publication {
-            id:"receipt", index:2, subdir, prefix, deviations:&[], expected:Some(&receipt),
-        }).unwrap_err().code, "invalid_input");
+    assert_eq!(
+        output::owned(&raw, &store, second["output_id"].as_str().unwrap())
+            .err()
+            .unwrap()
+            .code,
+        "output_file_error"
+    );
+    for (subdir, prefix) in [
+        (Some("batch"), Some("nested/prefix")),
+        (Some("../escape"), None),
+    ] {
+        assert_eq!(
+            output::save(
+                &image,
+                &raw,
+                &mut store,
+                Publication {
+                    id: "receipt",
+                    index: 2,
+                    subdir,
+                    prefix,
+                    deviations: &[],
+                    expected: Some(&receipt),
+                }
+            )
+            .unwrap_err()
+            .code,
+            "invalid_input"
+        );
     }
     let outside = workspace.0.join("outside.png");
     std::fs::write(&outside, &image.bytes).unwrap();
@@ -76,8 +157,16 @@ fn exact_source_owned_originals_reject_tampering_missing_files_prefixes_and_outs
     record["path"] = json!(outside.to_str().unwrap());
     // Seed the unchanged schema directly; native Store has no legacy addOutput API.
     let fixture = rusqlite::Connection::open(state.join("receipts.sqlite")).unwrap();
-    fixture.execute("INSERT INTO outputs VALUES(?,?,?)", rusqlite::params![id, "receipt", record.to_string()]).unwrap();
-    assert_eq!(output::owned(&raw, &store, &id).err().unwrap().code, "permission_denied");
+    fixture
+        .execute(
+            "INSERT INTO outputs VALUES(?,?,?)",
+            rusqlite::params![id, "receipt", record.to_string()],
+        )
+        .unwrap();
+    assert_eq!(
+        output::owned(&raw, &store, &id).err().unwrap().code,
+        "permission_denied"
+    );
     drop(fixture);
     store.release("receipt", Some(&receipt)).unwrap();
 }
@@ -89,17 +178,43 @@ fn exact_source_regular_file_output_root_fails_without_indexing_an_output() {
     let mut store = Store::open(&workspace.0.join("state")).unwrap();
     std::fs::write(raw["outputDir"].as_str().unwrap(), b"blocked").unwrap();
     let image = exact_source_image("png", &raw);
-    let (_, receipt) = store.prepare(Receipt::new(json!({
-        "request_id":"receipt", "connection":"test", "status":"prepared",
-        "outputs":[], "deviations":[], "generation_outcome":"not_submitted"
-    })), "effective", "account").unwrap();
+    let (_, receipt) = store
+        .prepare(
+            Receipt::new(json!({
+                "request_id":"receipt", "connection":"test", "status":"prepared",
+                "outputs":[], "deviations":[], "generation_outcome":"not_submitted"
+            })),
+            "effective",
+            "account",
+        )
+        .unwrap();
     store.reserve("receipt", 1048576, 2097152).unwrap();
-    store.retain("receipt", 0, &image.bytes, Some(&receipt)).unwrap();
-    assert_eq!(output::save(&image, &raw, &mut store, Publication {
-        id:"receipt", index:0, subdir:None, prefix:None, deviations:&[], expected:Some(&receipt),
-    }).unwrap_err().code, "storage_error");
+    store
+        .retain("receipt", 0, &image.bytes, Some(&receipt))
+        .unwrap();
+    assert_eq!(
+        output::save(
+            &image,
+            &raw,
+            &mut store,
+            Publication {
+                id: "receipt",
+                index: 0,
+                subdir: None,
+                prefix: None,
+                deviations: &[],
+                expected: Some(&receipt),
+            }
+        )
+        .unwrap_err()
+        .code,
+        "storage_error"
+    );
     assert!(store.list_outputs(0, 25).unwrap().is_empty());
-    assert_eq!(store.pending("receipt").unwrap()[0].bytes.as_ref().unwrap(), &image.bytes);
+    assert_eq!(
+        store.pending("receipt").unwrap()[0].bytes.as_ref().unwrap(),
+        &image.bytes
+    );
     store.release("receipt", Some(&receipt)).unwrap();
 }
 
