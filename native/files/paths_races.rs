@@ -24,22 +24,14 @@ fn link(target: &Path, source: &Path) {
         .enable_all()
         .build()
         .unwrap();
-    let directory = source
-        .parent()
-        .expect("owned fixture root")
-        .join(
-            target
-                .parent()
-                .expect("owned junction parent")
-                .file_name()
-                .unwrap(),
-        );
+    let directory = fs::canonicalize(source.parent().expect("owned fixture root")).unwrap();
+    let junction = Path::new("outputs").join(target.file_name().expect("owned junction basename"));
     runtime.block_on(async {
         let mut child = tokio::process::Command::new("cmd.exe")
             .args(["/D", "/C", "mklink", "/J"])
             .current_dir(directory)
-            .arg(target.file_name().expect("owned junction basename"))
-            .arg(source)
+            .arg(junction)
+            .arg(source.file_name().expect("owned junction destination"))
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())

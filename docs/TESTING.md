@@ -153,6 +153,16 @@ An opaque-tier recovery case requires exactly one source warning. Recovery delib
 `storage_error` and `partial_or_failed` storage outcome, rather than implying clean storage. These
 new cases and the Windows command correction are source-only until replacement hosted verification.
 Metadata comparisons and JSON round trips are not image inference or process-restart evidence.
+At `3dc882a`, all four requirements tests passed on all six native targets, including exact warnings,
+normal publication and SQL-failure local recovery. Strict Clippy, release builds and SDK stdio/HTTP
+acceptance passed on all six targets; all three Node jobs passed. The new compact Responses fixture
+incorrectly compared the entire schema-defaulted model override instead of the source's requested
+settings subset. Windows junction creation still returned exit1; its exact cause remains unproven.
+Four files also required hosted formatting corrections. The failed instrumented run measured 85.55%
+regions / 82.61% branches, but is not accepted coverage evidence because the config case failed.
+Archives were gated. The combined repair applies the actual formatter, compares exact model defaults
+and uses fully relative junction source/destination arguments under the owned fixture root. It still
+requires replacement hosted proof; no source assertion or timeout is removed.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

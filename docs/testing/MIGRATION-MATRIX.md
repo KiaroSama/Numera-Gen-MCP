@@ -35,7 +35,12 @@ extracted stdio/HTTP SDK execution passed on all four POSIX targets. All three N
 fixture's shell command; their archive/extraction steps did not run. The fixture correction uses an
 owned normal CWD and relative basename, retaining real junction/containment assertions and time bounds.
 New config acceptance and source-exact requirement warning/deviation/finalization/recovery cases bring
-the authored tree to 59 integration targets; these newest changes await hosted execution.
+the authored tree to 59 integration targets. At `3dc882a`, all four requirements cases passed on all
+six targets; all three Node jobs and native Clippy/release/SDK checks passed. Packaging remained gated
+by formatting, a too-strict compact model-override fixture and Windows junction command exit1. Its
+85.55% regions / 82.61% branches report came from a failed instrumented run, not accepted coverage.
+The combined repair retains the source settings subset and real junction assertions; replacement
+hosted execution remains required.
 
 **All-six packaged execution and complete baseline-case migration acceptance have not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

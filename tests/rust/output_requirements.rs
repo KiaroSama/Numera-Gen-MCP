@@ -58,8 +58,15 @@ fn cases() -> Vec<Value> {
         .map(|case| case["name"].as_str().unwrap().to_owned())
         .collect();
     assert_eq!(values.len(), 92);
-    assert_eq!(names.len(), values.len(), "source scenario names are unique");
-    assert_eq!(names, expected, "six edges plus all 56 Flash and 30 Pro pairs");
+    assert_eq!(
+        names.len(),
+        values.len(),
+        "source scenario names are unique"
+    );
+    assert_eq!(
+        names, expected,
+        "six edges plus all 56 Flash and 30 Pro pairs"
+    );
     values
 }
 
@@ -121,7 +128,10 @@ async fn finalized(recover: bool, name: &str) {
         let workspace = Workspace::new();
         let raw = workspace.config("https://invalid.example/v1", "openai-images");
         let g = generation(&workspace, &raw);
-        let oracle = cases().into_iter().find(|case| case["name"] == name).unwrap();
+        let oracle = cases()
+            .into_iter()
+            .find(|case| case["name"] == name)
+            .unwrap();
         let bytes = image_fixture::original();
         let mut request_raw = json!({"prompt": "draw", "count": 1});
         request_raw
@@ -198,7 +208,10 @@ async fn finalized(recover: bool, name: &str) {
             result = jobs::get(&recovered, "requirements", true, &signal, None)
                 .await
                 .unwrap();
-            assert_eq!(result.value["outputs"][0]["output_id"], pending[0].output_id);
+            assert_eq!(
+                result.value["outputs"][0]["output_id"],
+                pending[0].output_id
+            );
             assert_eq!(result.value["errors"].as_array().unwrap().len(), 1);
             assert_eq!(result.value["errors"][0]["code"], "storage_error");
             assert_eq!(result.value["storage_outcome"], "partial_or_failed");

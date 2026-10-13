@@ -39,7 +39,10 @@ fn load(
 
 #[test]
 fn whitespace_prompt_count_eleven_and_spaced_connection_name_reject_exact_source_inputs() {
-    for value in [json!({"prompt": "  "}), json!({"prompt": "draw", "count": 11})] {
+    for value in [
+        json!({"prompt": "  "}),
+        json!({"prompt": "draw", "count": 11}),
+    ] {
         assert_eq!(request::parse(value).unwrap_err().code, "invalid_input");
     }
     let workspace = Workspace::new();
@@ -98,7 +101,12 @@ fn flag_default_connection_and_precedence_preserve_unicode_and_original_defaults
             ),
             (
                 "NUMERA_STATE_DIR".into(),
-                workspace.0.join("environment-state").to_str().unwrap().into(),
+                workspace
+                    .0
+                    .join("environment-state")
+                    .to_str()
+                    .unwrap()
+                    .into(),
             ),
             ("NUMERA_LOG_LEVEL".into(), "ERROR".into()),
             ("NUMERA_REQUEST_TIMEOUT_MS".into(), "1000".into()),
@@ -128,7 +136,10 @@ fn flag_default_connection_and_precedence_preserve_unicode_and_original_defaults
         request::parse(json!({"prompt": "Draw a café"})).unwrap()["prompt"],
         "Draw a café"
     );
-    assert_eq!(original.value["connections"]["a"]["requestTimeoutMs"], 300000);
+    assert_eq!(
+        original.value["connections"]["a"]["requestTimeoutMs"],
+        300000
+    );
     assert_eq!(original.value, before);
     assert_eq!(
         std::fs::read_to_string(workspace.0.join("config.json")).unwrap(),
@@ -213,9 +224,14 @@ fn all_eighteen_unsafe_compact_variants_reject_and_never_display_the_fixture_key
         let error = load(&workspace, &raw, &[], &HashMap::new())
             .err()
             .unwrap_or_else(|| panic!("unsafe compact source variant {ordinal} was accepted"));
-        assert_eq!(error.code, "invalid_configuration", "source variant {ordinal}");
+        assert_eq!(
+            error.code, "invalid_configuration",
+            "source variant {ordinal}"
+        );
         assert!(
-            !error.to_string().contains(original["api_key"].as_str().unwrap()),
+            !error
+                .to_string()
+                .contains(original["api_key"].as_str().unwrap()),
             "source variant {ordinal} displayed the original fixture key"
         );
     }
@@ -272,10 +288,8 @@ fn compact_responses_preserves_exact_per_model_defaults_and_separate_orchestrati
         json!([{"id": "opaque/image", "name": "Image"}])
     );
     assert_eq!(
-        c["modelOverrides"],
-        json!({"opaque/image": {"defaults": {
-            "output_format": "webp", "size": "1536x1024", "quality": "high"
-        }}})
+        c["modelOverrides"]["opaque/image"]["defaults"],
+        json!({"output_format": "webp", "size": "1536x1024", "quality": "high"})
     );
     assert!(c.get("gateway").is_none());
 }
