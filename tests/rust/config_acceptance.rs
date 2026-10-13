@@ -1,12 +1,14 @@
 mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
+#[path = "common/http.rs"]
+mod http_fixture;
 use common::Workspace;
 use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     config::{Config, credentials, load_config},
     runtime_paths::RuntimePaths,
-    services::{discovery::Discovery, request},
+    services::{discovery::Discovery, health, request},
 };
 use std::{collections::HashMap, time::Duration};
 use tokio_util::sync::CancellationToken;
@@ -346,4 +348,224 @@ async fn three_disabled_and_enabled_slots_keep_only_the_original_active_model_in
     tokio::time::timeout(Duration::from_secs(8), action)
         .await
         .expect("disabled-model offline scenario exceeded 8 seconds");
+}
+
+#[test]
+fn explicit_compatibility_and_file_errors_never_silently_fall_back() {
+    let workspace = Workspace::new();
+    let env = HashMap::from([
+        ("LOCALAPPDATA".into(), workspace.0.to_str().unwrap().into()),
+        ("XDG_CONFIG_HOME".into(), workspace.0.to_str().unwrap().into()),
+        ("USERPROFILE".into(), workspace.0.to_str().unwrap().into()),
+        ("HOME".into(), workspace.0.to_str().unwrap().into()),
+        ("OPENAI_BASE_URL".into(), "https://compat.example/v1".into()),
+        ("OPENAI_MODEL".into(), "image-model".into()),
+    ]);
+    let config = load_config(&["--openai-compat".into()], &env, &workspace.0).unwrap();
+    let keys: Vec<_> = config.value["connections"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(|key| key.as_str().unwrap())
+        .collect();
+    assert_eq!(keys, ["openai-compat"]);
+    assert_eq!(
+        config.value["connections"]["openai-compat"]["baseUrl"],
+        "https://compat.example/v1"
+    );
+    assert_eq!(
+        config.value["connections"]["openai-compat"]["defaultModel"],
+        "image-model"
+    );
+    assert_eq!(
+        config.value["connections"]["openai-compat"]["auth"]["secretEnv"],
+        "OPENAI_API_KEY"
+    );
+    for path in [
+        "relative.json".to_owned(),
+        workspace.0.join("missing").to_str().unwrap().into(),
+    ] {
+        assert_eq!(
+            load_config(&["--config".into(), path], &env, &workspace.0)
+                .err()
+                .unwrap()
+                .code,
+            "invalid_configuration"
+        );
+    }
+    let path = workspace.0.join("config.json");
+    std::fs::write(&path, b"{").unwrap();
+    assert_eq!(
+        load_config(
+            &["--config".into(), path.to_str().unwrap().into()],
+            &HashMap::new(),
+            &workspace.0
+        )
+        .err()
+        .unwrap()
+        .code,
+        "invalid_configuration"
+    );
+    for value in [
+        json!(null),
+        json!("text"),
+        json!([]),
+        json!({
+            "api_endpoint": "http://127.0.0.1:20100/v1", "api_key": "", "models": [{"id": "only", "name": "Name"}]
+        }),
+    ] {
+        assert_eq!(
+            load(&workspace, &value, &[], &HashMap::new())
+                .err()
+                .unwrap()
+                .code,
+            "invalid_configuration"
+        );
+    }
+}
+
+#[tokio::test]
+async fn exact_no_probe_health_reports_storage_without_any_provider_or_generation_claim() {
+    let action = async {
+        let workspace = Workspace::new();
+        let raw = workspace.config("https://invalid.example/v1", "openai-images");
+        let config = load(&workspace, &raw, &[], &HashMap::new()).unwrap();
+        let runtime = RuntimePaths::new(&workspace.0).unwrap();
+        let signal = CancellationToken::new();
+        signal.cancel();
+        let result = health::health(&config, &HashMap::new(), &runtime, false, &signal)
+            .await
+            .unwrap();
+        assert_eq!(
+            result["storage"],
+            json!({"outputs": true, "state": true, "logs": true})
+        );
+        assert_eq!(
+            result["connections"],
+            json!([{
+                "name": "test", "reachable": null, "authentication_checked": false,
+                "generation_verified": false, "error": null
+            }])
+        );
+        assert_eq!(result["generation_verified"], false);
+    };
+    tokio::time::timeout(Duration::from_secs(8), action)
+        .await
+        .expect("no-probe health scenario exceeded 8 seconds");
+}
+
+#[tokio::test]
+async fn exact_offline_catalog_keeps_both_configured_names_after_one_failed_refresh() {
+    let server = http_fixture::Server::new(|_| http_fixture::Reply {
+        status: 503,
+        value: json!({"error": "fixture"}),
+        bytes: None,
+    })
+    .await;
+    let origin = server.origin.clone();
+    let requests = server.requests.clone();
+    let action = async move {
+        let workspace = Workspace::new();
+        let mut raw = compact();
+        raw["api_endpoint"] = json!(format!("{origin}/v1"));
+        let config = load(&workspace, &raw, &[], &HashMap::new()).unwrap();
+        let runtime = RuntimePaths::new(&workspace.0).unwrap();
+        let signal = CancellationToken::new();
+        let mut discovery = Discovery::default();
+        let offline = discovery
+            .list(&config, &runtime, &HashMap::new(), None, false, &signal)
+            .await
+            .unwrap();
+        assert!(requests.lock().unwrap().is_empty());
+        let expected = [
+            ("antigravity/opaque-image", "Image 日本語"),
+            ("custom/another", "Second"),
+        ];
+        for (model, (id, name)) in offline["models"].as_array().unwrap().iter().zip(expected) {
+            assert_eq!(model["id"], id);
+            assert_eq!(model["name"], name);
+            assert_eq!(model["configured"], true);
+        }
+        assert_eq!(offline["models"].as_array().unwrap().len(), 2);
+        let refreshed = discovery
+            .list(&config, &runtime, &HashMap::new(), None, true, &signal)
+            .await
+            .unwrap();
+        assert_eq!(*requests.lock().unwrap(), ["/v1/models"]);
+        assert_eq!(refreshed["complete"], false);
+        assert_eq!(refreshed["models"].as_array().unwrap().len(), 2);
+        for (model, (id, name)) in refreshed["models"].as_array().unwrap().iter().zip(expected) {
+            assert_eq!(model["id"], id);
+            assert_eq!(model["name"], name);
+        }
+    };
+    let result =
+        tokio::spawn(async move { tokio::time::timeout(Duration::from_secs(8), action).await })
+            .await;
+    tokio::time::timeout(Duration::from_secs(2), server.close())
+        .await
+        .expect("catalog fixture shutdown exceeded 2 seconds");
+    match result {
+        Ok(result) => result.expect("offline failed-refresh scenario exceeded 8 seconds"),
+        Err(error) if error.is_panic() => std::panic::resume_unwind(error.into_panic()),
+        Err(error) => panic!("catalog fixture action failed: {error}"),
+    }
+}
+
+#[tokio::test]
+async fn exact_bearer_file_credential_trims_private_bytes_and_rejects_source_failure_variants() {
+    let action = async {
+        let workspace = Workspace::new();
+        let path = workspace.0.join("fixture-secret.txt");
+        std::fs::write(&path, b"  fixture-secret  \n").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
+        }
+        let runtime = RuntimePaths::new(&workspace.0).unwrap();
+        let profile = json!({"auth": {"type": "bearer", "secretFile": path.to_str().unwrap()}});
+        assert_eq!(
+            credentials(&profile, &HashMap::new(), &runtime).await.unwrap(),
+            HashMap::from([("Authorization".into(), "Bearer fixture-secret".into())])
+        );
+        std::fs::write(&path, vec![b'x'; 65537]).unwrap();
+        assert_eq!(
+            credentials(&profile, &HashMap::new(), &runtime)
+                .await
+                .unwrap_err()
+                .code,
+            "missing_credentials"
+        );
+        for (file, code) in [
+            ("relative.txt", "invalid_configuration"),
+            (workspace.0.to_str().unwrap(), "missing_credentials"),
+        ] {
+            assert_eq!(
+                credentials(
+                    &json!({"auth": {"type": "bearer", "secretFile": file}}),
+                    &HashMap::new(),
+                    &runtime
+                )
+                .await
+                .unwrap_err()
+                .code,
+                code
+            );
+        }
+        let mut raw = workspace.config("https://api.example/v1", "openai-images");
+        raw["connections"]["test"]["auth"] = json!({
+            "type": "bearer", "secretEnv": "EXAMPLE", "secretFile": path.to_str().unwrap()
+        });
+        assert_eq!(
+            load(&workspace, &raw, &[], &HashMap::new())
+                .err()
+                .unwrap()
+                .code,
+            "invalid_configuration"
+        );
+    };
+    tokio::time::timeout(Duration::from_secs(8), action)
+        .await
+        .expect("bearer file credential scenario exceeded 8 seconds");
 }

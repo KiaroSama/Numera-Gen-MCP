@@ -276,6 +276,14 @@ path = "tests/rust/config_acceptance.rs"
 name = "output_requirements"
 path = "tests/rust/output_requirements.rs"
 
+[[test]]
+name = "policy_acceptance"
+path = "tests/rust/policy_acceptance.rs"
+
+[[test]]
+name = "normalization_acceptance"
+path = "tests/rust/normalization_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

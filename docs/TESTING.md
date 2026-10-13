@@ -163,6 +163,24 @@ regions / 82.61% branches, but is not accepted coverage evidence because the con
 Archives were gated. The combined repair applies the actual formatter, compares exact model defaults
 and uses fully relative junction source/destination arguments under the owned fixture root. It still
 requires replacement hosted proof; no source assertion or timeout is removed.
+At `76d32e9`, all ten jobs passed: all 59 native integration targets, real Windows junction schedules,
+strict quality checks, release builds, all-six dependency notices/archives/checksums/extracted SDK
+execution and all three Node jobs. Complete native coverage passed at 85.51% regions / 82.61% branches.
+The case ledger still has 470 pending dispositions; this is not complete assertion parity or a Release.
+New source-only acceptance fixtures extend exact policy precedence/default immutability, six nested
+reserved keys, scalar/allowlist/array/object/depth limits, URL references, mask polarity/model limits,
+compatibility/file-loader failures, no-probe health, one actual503 catalog refresh and private bearer
+file variants. A separate frozen-source helper now supplies the exact six Persian prompt-only wire
+inputs, both Antigravity reference refusals, all 24 malformed sibling pairs, five fatal envelopes and
+two private continuation inputs. Native assertions require three-item order, both exact errors and the
+original source-generated 8x6 RGBA image. Actual generation additionally exercises the source's count2,
+valid-plus-null response, partial receipt, original bytes, explicit error code and one POST after repeat.
+These bring the authored tree to 61 integration targets and require separate hosted execution. Failed
+catalog-refresh assertions now close and join their fixture before propagating a panic. Its client
+retains the 15-second discovery default; the scenario and fixture socket are bounded at eight and three
+seconds respectively. A local helper check against the retained older `dist` failed because that runtime
+predates sibling isolation; it is not frozen-baseline or native evidence. The old runtime was not rebuilt
+or changed. No extra paid request, live host edit or old-runtime cleanup is part of these fixtures.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

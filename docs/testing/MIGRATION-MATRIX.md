@@ -40,9 +40,16 @@ six targets; all three Node jobs and native Clippy/release/SDK checks passed. Pa
 by formatting, a too-strict compact model-override fixture and Windows junction command exit1. Its
 85.55% regions / 82.61% branches report came from a failed instrumented run, not accepted coverage.
 The combined repair retains the source settings subset and real junction assertions; replacement
-hosted execution remains required.
+hosted execution remains required. That replacement, `76d32e9`, passed all ten jobs, including all
+59 native targets and all-six notices/archives/checksums/extracted SDK execution. Complete coverage
+passed at 85.51% regions / 82.61% branches. Windows junction and compact settings cases passed; full
+470-case assertion equivalence and Release/cutover remain open. The next source-only policy/config
+and exact wire/malformed-result/continuation fixtures bring the authored tree to 61 integration targets;
+they are not covered by that green SHA. A new actual count2 partial-publication fixture retains original
+bytes and proves one POST after same-instance repeat. All new literal mappings remain pending hosted
+execution and final review; an older local runtime cannot supply the frozen normalization expectations.
 
-**All-six packaged execution and complete baseline-case migration acceptance have not passed.** Passing
+**All-six packaged execution passed at `76d32e9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery
@@ -71,8 +78,8 @@ and full assertion acceptance are separate gates; setting a completion flag alon
 | Generation/dedup/finalization/local recovery          | `native/services/`                                                    | Tiny loopback, original hash, recovery fixtures                   | Pending exhaustive original lifecycle contracts                                                                           |
 | Ten tools/stdio/resources/negotiation/bridge          | `native/mcp/`, `native/main.rs`                                       | Real child `bridge` fixture, foreign CWD and EOF                  | Bridge/two-host/two-restart/legacy-auto-pin and HTTP outputs/resources passed at 8271b81; active race case ledger pending |
 | Maintenance/readiness/client registration             | Native CLI replacement                                                | Existing maintenance cases not yet migrated                       | Pending; do not retire working scripts yet                                                                                |
-| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed four POSIX targets at ec60ae3; Windows gated by junction fixture; no Release                                       |
-| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete ec60ae3 report: 85.37% regions / 82.20% branches; both unchanged floors passed                                   |
+| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed all six native targets at76d32e9; no verified Release yet                                                          |
+| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete76d32e9 report:85.51% regions /82.61% branches; both unchanged floors passed                                      |
 
 ## Release blockers
 
