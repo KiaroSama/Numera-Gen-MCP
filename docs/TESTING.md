@@ -61,7 +61,12 @@ Revision `da6056f` passed all three Node jobs but failed native quality/runtime 
 instrumented run measured 83.51% regions / 80.40% branches, not a complete acceptance measurement.
 Repairs preserve empty SSE priming events, select the actual response by ID, restore the source's
 method-not-found bootstrap fallback, compare canonical Windows paths and construct crash/provider
-fixtures through their real admission and allowlist contracts. Full hosted verification remains pending.
+fixtures through their real admission and allowlist contracts. Revision `ed07a39` passed strict Clippy,
+all 54 native targets on POSIX and actual stdio/HTTP SDK acceptance; Windows exposed a published-target
+fixture path mismatch. Formatting still failed, and a complete instrumented run measured 84.15%
+regions / 80.91% branches. The next tree uses the real canonical publication path and adds actual
+HTTP output/preview/resource/error/existing-handle contracts. These additions remain unverified;
+full case-ledger, coverage and archive acceptance are still required.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

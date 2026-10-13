@@ -256,6 +256,10 @@ path = "tests/rust/catalog_upload_contracts.rs"
 name = "snapshot_races"
 path = "tests/rust/snapshot_races.rs"
 
+[[test]]
+name = "http_output_contracts"
+path = "tests/rust/http_output_contracts.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

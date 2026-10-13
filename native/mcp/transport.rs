@@ -133,7 +133,11 @@ impl Transport<RoleServer> for Stdio {
                         && matches!(&request.request, ClientRequest::DiscoverRequest(_))
                     {
                         let error = JsonRpcMessage::error(
-                            rmcp::ErrorData::new(ErrorCode::METHOD_NOT_FOUND, "Method not found", None),
+                            rmcp::ErrorData::new(
+                                ErrorCode::METHOD_NOT_FOUND,
+                                "Method not found",
+                                None,
+                            ),
                             Some(request.id.clone()),
                         );
                         if self.send(error).await.is_err() {

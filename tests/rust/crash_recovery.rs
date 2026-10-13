@@ -7,7 +7,7 @@ use common::Workspace;
 use numera_image_gen_mcp::{
     compat::value::json,
     config::Config,
-    files::{images, output},
+    files::{images, output, paths},
     jobs::{Receipt, Store},
     logging::Logger,
     runtime_paths::RuntimePaths,
@@ -81,13 +81,18 @@ fn crash_checkpoint_child() {
         checkpoint(&phase);
     }
     if phase == "published" {
+        let directory = paths::output_directory(
+            Path::new(config.value["outputDir"].as_str().unwrap()),
+            Some("crash"),
+        )
+        .unwrap();
         let item = store
             .publication(
                 "child-crash",
                 0,
                 |id| {
-                    Ok(root
-                        .join(format!("outputs/crash/{id}.png"))
+                    Ok(directory
+                        .join(format!("{id}.png"))
                         .to_str()
                         .unwrap()
                         .into())
@@ -286,7 +291,18 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
                     )
                     .await
                     .unwrap();
-                    assert_eq!(receipt.value["outputs"][0]["output_id"], id);
+                    assert_eq!(
+                        receipt.status(),
+                        "completed",
+                        "phase {phase}: errors={}",
+                        receipt.value["errors"]
+                    );
+                    assert_eq!(
+                        receipt.value["outputs"][0]["output_id"],
+                        id,
+                        "phase {phase}: errors={}",
+                        receipt.value["errors"]
+                    );
                     assert_eq!(
                         std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap())
                             .unwrap(),
