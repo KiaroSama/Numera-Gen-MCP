@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import hashlib
 import json
 from pathlib import Path
@@ -27,6 +28,7 @@ def main() -> None:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, default=ROOT / "docs/testing/native-parity.json")
     parser.add_argument("--inventory", action="store_true")
+    parser.add_argument("--collection", type=Path, default=ROOT / ".ci-work/parity/source-cases.json")
     args = parser.parse_args()
     source = args.source.resolve()
     expected = inventory(source)
@@ -36,6 +38,11 @@ def main() -> None:
         output.write_text(json.dumps({"baseline": "fc7da25c3b470199949b1b4c67127d77afa0c34a", "baseline_case_count": 470, "suites": expected}, indent=2) + "\n", encoding="utf-8")
         print(json.dumps({"component": "parity", "discovered_source_suites": len(expected), "acceptance_verified": False}))
         return
+    spec = importlib.util.spec_from_file_location("native_case_ledger", ROOT / "scripts/native-case-ledger.py")
+    ledger = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ledger)
+    ledger.validate(source, json.loads(args.collection.read_text(encoding="utf-8")),
+                    ROOT / "docs/testing/native-cases", True)
     actual = json.loads(args.manifest.read_text(encoding="utf-8"))
     rows = actual["suites"]
     if len(rows) != len(expected) or {r["source"] for r in rows} != {r["source"] for r in expected}:

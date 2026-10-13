@@ -66,7 +66,9 @@ async fn wire(adapter: &str, path: &str, expected: Value) {
         let (_, selected) = config.select(Some("test")).unwrap();
         let env = HashMap::from([("NUMERA_WIRE_FIXTURE".into(), "fixture-key".into())]);
         let runtime = RuntimePaths::new(&workspace.0).unwrap();
-        let pinned = snapshot_credentials(&selected, &env, &runtime).await.unwrap();
+        let pinned = snapshot_credentials(&selected, &env, &runtime)
+            .await
+            .unwrap();
         let c = pinned.value();
         let headers = pinned.headers();
         let request = request::parse(json!({"prompt": "اصل Unicode 123"})).unwrap();

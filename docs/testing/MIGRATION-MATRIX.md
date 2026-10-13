@@ -20,7 +20,12 @@ all 56 runtime targets, release builds and SDK stdio/HTTP acceptance. Intel macO
 30-second toolchain-download timeout before native checks. All three Node jobs and complete native
 coverage passed at 85.25% regions / 82.18% branches. Five actual-notice preservation steps failed;
 archive/extraction checks remained skipped. Exact upstream-notice and bounded public-download repairs,
-plus six actual provider-HTTP fixtures, are authored but unexecuted. No archive or Release is accepted.
+plus six actual provider-HTTP fixtures, were published at `0f80e3b`. All six provider cases, all
+57 native targets, strict Clippy, release builds, five offline tooling contracts and SDK acceptance
+passed on all six targets; complete coverage remained 85.25% regions / 82.18% branches. One test
+formatting correction blocked packaging. Linux's Node PowerShell fixture hit its ten-second idle
+bound; the other Node jobs passed. The actual notice collector and archives remain unverified.
+No archive or Release is accepted.
 
 **Packaged execution and complete baseline-case migration acceptance have not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
@@ -30,6 +35,10 @@ regressions passed at `bc34fbf`; new reference-encoding assertions and cleanup/c
 passed at `3c5958f`. The [pending ledger](native-parity.json) preserves all
 50 frozen suite hashes and concrete source-authored mappings, with incomplete case equivalence.
 Actual expanded collection retains platform-skipped cases; no suite grouping is promoted to 470-case acceptance.
+The [case ledger](native-cases/index.json) has all 470 identities and remains entirely pending.
+Seventeen cases have concrete assertion ranges; explicit gaps include same-instance recovery versus
+reopen, unmasked versus mask upload counts, and the Omni multipart model field. Structural validation
+and full assertion acceptance are separate gates; setting a completion flag alone cannot pass.
 
 | Boundary                                              | Native implementation                                                 | Authored verification                                             | Status                                                                                                                    |
 | ----------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |

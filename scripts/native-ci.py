@@ -172,11 +172,14 @@ def main() -> None:
             if os.environ.get("NUMERA_COLLECT_SOURCE_CASES") == "true":
                 try:
                     run(["node", "scripts/native-case-inventory.mjs"], wall=60, idle=30, env=env)
+                    run([sys.executable, "-I", "-B", "scripts/native-case-ledger.py", "--source", env["NUMERA_ORACLE_ROOT"],
+                         "--collection", str(ROOT / ".ci-work/parity/source-cases.json")], wall=30, idle=15, env=env)
                 except (RuntimeError, TimeoutError) as error:
                     failures.append("case-inventory")
                     emit("ERROR", "Expanded source case collection failed.", error_type=type(error).__name__)
             for command, wall, idle in [
                 ([sys.executable, "-I", "-B", "tests/tooling/native_ci_contracts.py"], 30, 15),
+                ([sys.executable, "-I", "-B", "tests/tooling/native_case_ledger_contracts.py"], 30, 15),
                 (["cargo", "fmt", "--check"], 30, 20),
                 (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),
                 (["cargo", "test", "--locked", "--all-targets", "--no-fail-fast", "--", "--test-threads=2"], 900, 180),

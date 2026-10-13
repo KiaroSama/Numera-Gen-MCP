@@ -108,7 +108,22 @@ notices with sanitized package/code evidence. Official public downloads retain t
 idle bound, discard partial timeout attempts, and run under 90-second wall / 35-second idle ownership;
 checksums remain mandatory before execution. Offline tooling contracts are run in hosted stable jobs.
 Six independent provider HTTP cases are now authored for exact POST/path/auth/Unicode body and original
-normalization; they are not yet runtime evidence or complete source-case equivalence.
+normalization. At `0f80e3b`, all six provider cases, all 57 native targets, strict Clippy,
+release builds, five offline tooling contracts and SDK stdio/HTTP acceptance passed on all six
+platforms. Complete coverage remained 85.25% regions / 82.18% branches. One provider fixture
+formatting correction still blocked packaging, so the real notice collector and extracted archives
+remain unverified. The Linux Node job separately hit its retained PowerShell fixture's ten-second
+idle deadline; the other two Node jobs passed. These runtime results are not complete source-case
+equivalence. The retained PowerShell fixture now forwards real child output as it arrives and emits
+bounded parse/action phase evidence instead of withholding all progress behind `spawnSync`. Its
+12-second wall / 10-second idle ceilings and all syntax, WhatIf and no-mutation assertions remain.
+The original slow phase is unproven; replacement three-OS execution is required.
+The [case ledger](testing/native-cases/index.json) now retains every one of the 470 actual identities,
+frozen source hashes and three-platform modes. All remain pending. Seventeen cases have literal
+source/native assertion ranges and explicit schedule gaps; neither a passing suite nor a completed
+boolean can close them. Hosted structural validation compares the ledger with fresh frozen runtime
+collection. Full acceptance requires reviewed assertions, no gaps, unchanged native source hashes
+and actual applicable native execution evidence.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally
