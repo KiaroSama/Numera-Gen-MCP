@@ -5,8 +5,10 @@ itself with `args: ["bridge"]`; no launcher, daemon or manual server startup is 
 stdio MCP in `bridge` mode. The optional separate [direct HTTP mode](HTTP.md) listens locally on
 configurable port1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
 
-The native migration is still awaiting hosted compilation/parity and a verified Release. The examples
-below describe the native target; do not point a live host at an executable that has not been installed.
+Hosted native builds and packaged SDK checks passed on all six targets at `7199441`. Complete
+baseline-case parity and a verified Release remain pending; newer acceptance changes require their
+own hosted verification. The examples below describe the native target; do not point a live host
+at an executable that has not been installed.
 
 ## Claude Desktop
 

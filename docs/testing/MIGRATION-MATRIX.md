@@ -53,8 +53,15 @@ all six platforms; all three Node jobs and full 85.65% regions / 83.02% branches
 Only formatting in four test files failed. Actual notices/archives/extracted execution were skipped
 on that revision. Exact hosted formatting and assertion-range corrections still need replacement CI;
 130 assignments and all 470 pending dispositions do not establish full source-case acceptance.
+At `7199441`, all ten jobs passed, including all 61 native targets, strict quality, complete 85.65%
+regions / 83.02% branches and all-six actual notices, archives, checksums and extracted SDK execution.
+The new source-only environment/foundation/image batch has 62 registered targets and 212 concrete
+case assignments, all still pending native execution and final literal acceptance. Exact file loads,
+original codecs, Base64, masks/previews, Unicode paths, actual input/output links and owned-output
+failures are now authored. Legacy fresh-UUID same-index publication/public addOutput, pure containment
+and the exact bounded-stream/cancellation case remain gaps, not silently retired contracts.
 
-**All-six packaged execution passed at `76d32e9`; complete baseline-case assertion acceptance has not passed.** Passing
+**All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery
@@ -83,8 +90,8 @@ and full assertion acceptance are separate gates; setting a completion flag alon
 | Generation/dedup/finalization/local recovery          | `native/services/`                                                    | Tiny loopback, original hash, recovery fixtures                   | Pending exhaustive original lifecycle contracts                                                                           |
 | Ten tools/stdio/resources/negotiation/bridge          | `native/mcp/`, `native/main.rs`                                       | Real child `bridge` fixture, foreign CWD and EOF                  | Bridge/two-host/two-restart/legacy-auto-pin and HTTP outputs/resources passed at 8271b81; active race case ledger pending |
 | Maintenance/readiness/client registration             | Native CLI replacement                                                | Existing maintenance cases not yet migrated                       | Pending; do not retire working scripts yet                                                                                |
-| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed all six native targets at76d32e9; no verified Release yet                                                          |
-| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete76d32e9 report:85.51% regions /82.61% branches; both unchanged floors passed                                      |
+| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed all six native targets at7199441; no verified Release yet                                                          |
+| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete7199441 report:85.65% regions /83.02% branches; both unchanged floors passed                                      |
 
 ## Release blockers
 

@@ -27,15 +27,17 @@ profiles, native image protocols and configured GPU ComfyUI workflows. No paid P
 uploads, prompt enhancement or automatic provider/model fallback.
 
 **Migration status:** the native Rust replacement is under implementation. No native Release is
-published yet. Native compilation and selected runtime fixtures have succeeded in hosted CI, but
-complete parity, strict quality checks, coverage floors and packaged distribution remain unverified.
+published yet. At `7199441`, hosted native tests, strict quality checks, coverage floors and
+packaged SDK execution passed on all six targets. Complete baseline-case parity remains pending;
+newer acceptance changes require their own hosted verification.
 The previously tested Node implementation remains available until the native replacement is verified.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
 
 The native target also adds an optional direct HTTP MCP endpoint at `http://127.0.0.1:1969/mcp`,
 a configurable port and a cross-platform native menu. It reuses Numera's own tools, not a remote MCP
 proxy. Local authentication is separate from provider keys; `bridge` remains launcher-free.
-[HTTP and menu setup](docs/HTTP.md) is pending exact-SHA hosted verification.
+[HTTP and menu setup](docs/HTTP.md) has provider-free hosted SDK/CLI verification; actual owner
+registration and interactive GUI use remain unverified.
 
 ## Installation and setup
 

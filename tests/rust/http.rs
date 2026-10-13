@@ -35,6 +35,64 @@ fn operation_prefix_and_sensitive_query_are_preserved() {
 }
 
 #[test]
+fn exact_source_operation_prefix_base_and_relative_path_inputs_preserve_the_trusted_destination_contract() {
+    for (base, mode, expected) in [
+        (
+            "http://127.0.0.1:20100/v1",
+            "api-prefix",
+            "http://127.0.0.1:20100/v1/images/generations",
+        ),
+        (
+            "http://127.0.0.1:20100",
+            "origin",
+            "http://127.0.0.1:20100/v1/images/generations",
+        ),
+        (
+            "https://gateway.example/api/v1/",
+            "api-prefix",
+            "https://gateway.example/api/v1/images/generations",
+        ),
+        (
+            "https://gateway.example/company/v1",
+            "api-prefix",
+            "https://gateway.example/company/v1/images/generations",
+        ),
+    ] {
+        assert_eq!(
+            operation_url(base, mode, "images/generations", "/v1", &json!({}))
+                .unwrap()
+                .as_str(),
+            expected
+        );
+    }
+    for base in [
+        "https://key:secret@example.com/v1",
+        "https://example.com/v1#x",
+        "https://example.com/v1/images/generations",
+        "https://example.com/v1?api_key=x",
+    ] {
+        assert!(
+            operation_url(base, "api-prefix", "images/generations", "/v1", &json!({}))
+                .is_err()
+        );
+    }
+    for path in ["../secret", "%2e%2e/secret", "//other.example/path", "a\\b"] {
+        assert!(
+            operation_url("https://example.com/v1", "api-prefix", path, "/v1", &json!({}))
+                .is_err()
+        );
+    }
+}
+
+#[test]
+fn exact_source_private_and_public_addresses_are_classified_without_network() {
+    assert!(private_address("192.168.1.1"));
+    for address in ["1.1.1.1", "2606:4700:4700::1111"] {
+        assert!(!private_address(address), "{address}");
+    }
+}
+
+#[test]
 fn private_asset_destinations_remain_blocked() {
     for address in [
         "127.0.0.1",

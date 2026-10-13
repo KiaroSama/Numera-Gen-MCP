@@ -187,6 +187,23 @@ cases passed, as did all three Node jobs. Complete nightly coverage passed at 85
 branches. Formatting in four test files alone failed the six stable jobs, so notice/archive/extraction
 steps were skipped. The replacement applies the exact hosted formatter and rebases assertion ranges;
 no assertion or timeout changes. All 470 case dispositions remain pending, with 130 assignments.
+At `7199441`, the replacement run passed all ten jobs, all 61 native integration targets, strict
+Clippy, release builds, complete coverage at 85.65% regions / 83.02% branches, and actual dependency
+notices, allowlisted archives, checksums and extracted SDK execution on all six native targets.
+This verifies that revision's distribution checks, not complete baseline assertion acceptance.
+
+The next source-only batch adds one registered environment acceptance target (62 targets total):
+actual `.env` file loads for all 17 expanded source cases, exact URL/redaction inputs and exact
+source-generated 8x6 PNG/JPEG/WebP originals. It directly asserts four-MiB Base64, byte/pixel limits,
+real mask dimensions, bounded preview geometry, Unicode file URLs, escaping input links/output
+junctions, tampered/missing owned outputs and a regular-file output root. The root-failure fixture
+uses a valid prepared/reserved/retained item, exact storage error and preserved pending original;
+an unrelated missing request cannot satisfy it. The 82 reviewed case records bring concrete
+assignments to 212, still with all 470 dispositions pending. Native compilation, formatting and
+execution of this new batch have not run locally and require separate hosted evidence.
+Legacy same-request/same-index fresh-UUID publication and the public `addOutput` contract remain
+explicit gaps: distinct stable items and directly seeded SQL metadata do not prove those contracts.
+Pure sibling-containment and the complete bounded-stream/cancellation input case also remain open.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

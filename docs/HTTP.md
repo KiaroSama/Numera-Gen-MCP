@@ -1,7 +1,8 @@
 # Direct local HTTP MCP
 
-The optional native HTTP server and menu are under implementation and awaiting hosted CI.
-Do not replace a working client entry until a verified binary Release is installed.
+Provider-free hosted native SDK/CLI and packaged HTTP checks passed on all six targets at
+`7199441`. Complete migration acceptance, a verified Release and actual owner GUI registration remain
+pending. Do not replace a working client entry until a verified binary Release is installed.
 
 ## Start
 
