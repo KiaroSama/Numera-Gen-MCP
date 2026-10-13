@@ -154,14 +154,18 @@ export async function runBounded(
       } else target.write(chunk);
     });
   }
-  let hardStop;
+  let hardStop,
+    closed = false;
   child.once("error", () => {
     failed = true;
     log?.emit("ERROR", "Bounded child could not start.");
   });
   // Joining close is bounded too: leaked inherited pipes must not keep the supervisor alive forever.
   const result = await new Promise((accept) => {
-    child.once("close", (code) => accept(code));
+    child.once("close", (code) => {
+      closed = true;
+      accept(code);
+    });
     hardStop = setTimeout(() => {
       kill("cleanup_deadline");
       child.stdout.destroy();
@@ -176,6 +180,16 @@ export async function runBounded(
     process.removeListener(signal, interrupt);
   let verified = true,
     survivors = [];
+  const cleanupFailures = [];
+  const cleanupFailure = (phase, error) => {
+    verified = false;
+    cleanupFailures.push({
+      phase,
+      code: /^[A-Z][A-Z0-9_]{0,40}$/.test(error?.code ?? "")
+        ? error.code
+        : "UNKNOWN",
+    });
+  };
   if (child.pid) {
     if (process.platform === "win32") {
       const sweep = windowsSweep(child.pid, started);
@@ -192,7 +206,7 @@ export async function runBounded(
       try {
         process.kill(-child.pid, "SIGKILL");
       } catch (error) {
-        if (error.code !== "ESRCH") verified = false;
+        if (error.code !== "ESRCH") cleanupFailure("group_kill", error);
       }
       if (process.platform === "linux") {
         try {
@@ -202,8 +216,8 @@ export async function runBounded(
             Date.now() < until
           )
             await pause(20);
-        } catch {
-          verified = false;
+        } catch (error) {
+          cleanupFailure("group_inspection", error);
         }
       } else {
         const until = Date.now() + 2000;
@@ -211,23 +225,19 @@ export async function runBounded(
           try {
             process.kill(-child.pid, 0);
           } catch (error) {
-            if (error.code !== "ESRCH") verified = false;
+            if (error.code !== "ESRCH") cleanupFailure("group_probe", error);
             break;
           }
           if (Date.now() >= until) {
-            verified = false;
+            cleanupFailure("group_deadline", { code: "ETIMEDOUT" });
             break;
           }
           await pause(20);
         }
       }
     }
-    try {
-      process.kill(child.pid, 0);
-      verified = false;
-    } catch (error) {
-      if (error.code !== "ESRCH") verified = false;
-    }
+    // close proves this child instance exited; its numeric PID can already name another process.
+    if (!closed) cleanupFailure("child_close", { code: "ETIMEDOUT" });
   }
   const code = terminated
     ? 124
@@ -240,11 +250,13 @@ export async function runBounded(
     finished: new Date().toISOString(),
     exit_code: code,
     cleanup_verified: verified && !survivors.length,
+    ...(cleanupFailures.length ? { cleanup_failures: cleanupFailures } : {}),
   });
   log?.emit(code ? "ERROR" : "INFO", "Bounded child finished.", {
     pid: child.pid,
     exit_code: code,
     cleanup_verified: verified && !survivors.length,
+    ...(cleanupFailures.length ? { cleanup_failures: cleanupFailures } : {}),
   });
   return { code, stdout, stderr };
 }

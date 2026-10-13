@@ -243,7 +243,7 @@ it(
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line));
-      expect(records).toEqual(
+      expect(records, JSON.stringify(records)).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             event: "start",
@@ -260,6 +260,33 @@ it(
       );
     }),
   15000,
+);
+
+it(
+  "bounded cleanup trusts the owned close event rather than a reused numeric PID",
+  async () =>
+    workspace(async (root) => {
+      const file = join(root, "reused-pid.mjs");
+      const runner = new URL("../../scripts/bounded.mjs", import.meta.url).href;
+      await writeFile(
+        file,
+        `import {runBounded} from ${JSON.stringify(runner)};const original=process.kill;process.kill=function(pid,signal){if(pid>0&&signal===0)return true;return original.call(process,pid,signal)};try{const result=await runBounded(process.execPath,['-e','process.exit(0)'],{wall:2000,idle:1000,cwd:process.cwd(),capture:true});process.exitCode=result.code}finally{process.kill=original}`,
+        "utf8",
+      );
+      const result = await cli(root, file, [], [5000, 3000]);
+      expect(result.code, result.stderr).toBe(0);
+      const records = (
+        await readFile(join(root, ".ci-work/processes.jsonl"), "utf8")
+      )
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      expect(records.filter((record) => record.event === "finish")).toEqual([
+        expect.objectContaining({ exit_code: 0, cleanup_verified: true }),
+        expect.objectContaining({ exit_code: 0, cleanup_verified: true }),
+      ]);
+    }),
+  10000,
 );
 
 it(

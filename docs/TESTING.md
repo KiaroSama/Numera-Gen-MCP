@@ -76,8 +76,23 @@ failed in one test file. Complete nightly coverage measured 84.72% regions / 81.
 region floor still failed. The repair isolates every adapter/state variant as a named harness case
 without changing the real polling interval, eight-second per-case ceiling or two-worker cap. New
 Comfy fixtures capture distinct reference/mask bytes and workflow targets, zero-upload preflight
-failures, GPU refusal/opt-out and completed-original download recovery; they remain unexecuted until
-the replacement hosted run. Full case-ledger, coverage and archive acceptance are still required.
+failures, GPU refusal/opt-out and completed-original download recovery. At `bc34fbf`, all 56 native
+targets, strict Clippy and SDK stdio/HTTP acceptance passed on all six native targets. The polling
+fixture now ran 14 cases and passed; Linux x86_64 target duration was 3.02 seconds, versus the prior
+8.32-second failed aggregate run. This is an observed run, not a repeated performance benchmark.
+Two test files still failed formatting. Complete nightly coverage measured 84.86% regions / 81.42%
+branches, still below 85% regions. The Node macOS job separately failed its retained maintenance
+runner's cleanup-verification record; original cleanup assertions remain required. The next repair
+adds named phase/errno diagnostics and actual close-event identity rather than probing a reusable
+numeric PID. Real process-group disappearance remains mandatory within the existing two-second bound.
+
+A pending [source mapping](testing/native-parity.json) records all 50 frozen suite hashes, concrete
+native counterparts and unresolved assertion gaps; it explicitly does not mark full case equivalence.
+Hosted case collection uses the frozen Vitest runtime to expand declaration loops without running test
+bodies. Unlike CLI `list` JSON, it retains skipped platform cases with their names/locations/modes.
+Collection must produce exactly 50 suites / 470 cases and close its pool under a 60-second wall /
+30-second idle ceiling with two workers. Raw collection is evidence for mapping, not native acceptance.
+Full case-ledger, coverage and archive acceptance are still required.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

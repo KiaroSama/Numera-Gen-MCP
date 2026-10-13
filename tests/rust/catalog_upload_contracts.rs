@@ -514,7 +514,8 @@ async fn invalid_reference_bindings_refuse_all_six_source_variants_before_any_up
             ] {
                 let mut connection = comfy_config(&origin);
                 connection["workflow"]["graph"]["text"]["inputs"]["image2"] = json!("");
-                connection["workflow"]["bindings"]["image_2"] = json!({"node":"text","input":"image2"});
+                connection["workflow"]["bindings"]["image_2"] =
+                    json!({"node":"text","input":"image2"});
                 let prepared = if mode == "changed-after-preflight" {
                     Some(
                         workflow::prepare(&Input {
@@ -563,7 +564,10 @@ async fn invalid_reference_bindings_refuse_all_six_source_variants_before_any_up
                     references: &references,
                     mask: (mode == "mask").then_some(&image),
                 };
-                let result = match prepared.map(Ok).unwrap_or_else(|| workflow::prepare(&input)) {
+                let result = match prepared
+                    .map(Ok)
+                    .unwrap_or_else(|| workflow::prepare(&input))
+                {
                     Ok(graph) => {
                         comfy::submit(&input, graph, &HashMap::new(), &CancellationToken::new())
                             .await

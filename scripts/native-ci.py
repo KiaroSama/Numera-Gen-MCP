@@ -169,6 +169,12 @@ def main() -> None:
             run(["cargo", "generate-lockfile"], wall=180, idle=90, env=env)
         if args.phase == "stable":
             failures = []
+            if os.environ.get("NUMERA_COLLECT_SOURCE_CASES") == "true":
+                try:
+                    run(["node", "scripts/native-case-inventory.mjs"], wall=60, idle=30, env=env)
+                except (RuntimeError, TimeoutError) as error:
+                    failures.append("case-inventory")
+                    emit("ERROR", "Expanded source case collection failed.", error_type=type(error).__name__)
             for command, wall, idle in [
                 (["cargo", "fmt", "--check"], 30, 20),
                 (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),

@@ -47,11 +47,17 @@ def main() -> None:
         if row["status"] != "verified" or not row["native"] or not row["evidence"]:
             raise RuntimeError("Native migration has pending or unverified source contracts")
         for mapping in row["native"]:
-            file = ROOT / mapping["file"]
+            if isinstance(mapping, str):
+                path, separator, test = mapping.partition("::")
+                if not separator or not path or not test:
+                    raise RuntimeError("Native mapping must contain a file and test identity")
+            else:
+                path, test = mapping["file"], mapping["test"]
+            file = (ROOT / path).resolve()
             if not file.is_relative_to(ROOT / "tests/rust") or not file.is_file():
                 raise RuntimeError("Native mapping must reference an existing Rust test")
             text = file.read_text(encoding="utf-8")
-            if not re.search(r"\bfn\s+" + re.escape(mapping["test"]) + r"\s*\(", text):
+            if not re.search(r"\bfn\s+" + re.escape(test) + r"\s*\(", text):
                 raise RuntimeError("Native mapped test is missing")
     if actual["baseline_case_count"] != 470 or actual.get("case_mapping_complete") is not True:
         raise RuntimeError("All 470 baseline cases must be mapped; suite grouping alone is insufficient")

@@ -96,7 +96,7 @@ fn download(path: &str, filename: &str) {
 
 #[tokio::test]
 async fn synchronous_comfy_completed_history_survives_first_download_failure_and_reopens_without_replay()
-{
+ {
     let bytes = image_fixture::original();
     let served = bytes.clone();
     let downloads = Arc::new(AtomicUsize::new(0));
@@ -158,14 +158,31 @@ async fn synchronous_comfy_completed_history_survives_first_download_failure_and
         assert_eq!(first.status(), "running");
         assert_eq!(first.value["generation_outcome"], "completed");
         assert_eq!(first.value["storage_outcome"], "not_started");
-        assert_eq!(first.value["upstream_job"], json!({"id": "job", "kind": "comfyui"}));
+        assert_eq!(
+            first.value["upstream_job"],
+            json!({"id": "job", "kind": "comfyui"})
+        );
         assert!(first.value["upstream_terminal"].is_null());
         assert!(first.value["outputs"].as_array().unwrap().is_empty());
         assert_eq!(first.value["errors"].as_array().unwrap().len(), 1);
         assert_eq!(first.value["errors"][0]["code"], "upstream_error");
         assert_eq!(first.value["errors"][0]["http_status"], 500);
-        assert_eq!(g.store.lock().unwrap().get("download-failure").unwrap().value, first.value);
-        assert!(!g.store.lock().unwrap().has_pending("download-failure").unwrap());
+        assert_eq!(
+            g.store
+                .lock()
+                .unwrap()
+                .get("download-failure")
+                .unwrap()
+                .value,
+            first.value
+        );
+        assert!(
+            !g.store
+                .lock()
+                .unwrap()
+                .has_pending("download-failure")
+                .unwrap()
+        );
         assert!(g.active.lock().unwrap().is_empty());
         assert_eq!(downloads.load(Ordering::SeqCst), 1);
         {
@@ -176,7 +193,15 @@ async fn synchronous_comfy_completed_history_survives_first_download_failure_and
         }
         drop(g);
         let g = generation(&workspace, &raw);
-        assert_eq!(g.store.lock().unwrap().get("download-failure").unwrap().value, first.value);
+        assert_eq!(
+            g.store
+                .lock()
+                .unwrap()
+                .get("download-failure")
+                .unwrap()
+                .value,
+            first.value
+        );
         let recovered = jobs::get(&g, "download-failure", true, &signal, None)
             .await
             .unwrap();
@@ -187,21 +212,40 @@ async fn synchronous_comfy_completed_history_survives_first_download_failure_and
         assert_eq!(recovered.value["outputs"].as_array().unwrap().len(), 1);
         assert!(recovered.value["errors"].as_array().unwrap().is_empty());
         let output = &recovered.value["outputs"][0];
-        assert_eq!(std::fs::read(output["path"].as_str().unwrap()).unwrap(), bytes);
+        assert_eq!(
+            std::fs::read(output["path"].as_str().unwrap()).unwrap(),
+            bytes
+        );
         assert_eq!(output["request_id"], "download-failure");
         assert_eq!(output["sha256"], sha256(&bytes));
         assert_eq!(output["mime_type"], "image/png");
         assert!(uuid::Uuid::parse_str(output["output_id"].as_str().unwrap()).is_ok());
-        assert!(g.store.lock().unwrap().pending("download-failure").unwrap().is_empty());
+        assert!(
+            g.store
+                .lock()
+                .unwrap()
+                .pending("download-failure")
+                .unwrap()
+                .is_empty()
+        );
         let repeated = jobs::get(&g, "download-failure", true, &signal, None)
             .await
             .unwrap();
         assert_eq!(repeated.value, recovered.value);
-        assert_eq!(g.store.lock().unwrap().list_outputs(0, 10).unwrap(), vec![output.clone()]);
+        assert_eq!(
+            g.store.lock().unwrap().list_outputs(0, 10).unwrap(),
+            vec![output.clone()]
+        );
         assert_eq!(downloads.load(Ordering::SeqCst), 2);
         let captured = requests.lock().unwrap();
         assert_eq!(captured.len(), 6);
-        assert_eq!(captured.iter().filter(|path| path.as_str() == "/prompt").count(), 1);
+        assert_eq!(
+            captured
+                .iter()
+                .filter(|path| path.as_str() == "/prompt")
+                .count(),
+            1
+        );
         assert_eq!(captured[4], "/history/job");
         download(&captured[5], "final.png");
         assert_eq!(captured[3], captured[5]);
@@ -211,7 +255,7 @@ async fn synchronous_comfy_completed_history_survives_first_download_failure_and
 
 #[tokio::test]
 async fn seeded_comfy_second_download_failure_retains_first_original_and_recovers_locally_after_removal()
-{
+ {
     let bytes = image_fixture::original();
     let served = bytes.clone();
     let server = Server::new(move |path| match path {
@@ -276,10 +320,15 @@ async fn seeded_comfy_second_download_failure_retains_first_original_and_recover
         }
         assert!(requests.lock().unwrap().is_empty());
         let signal = CancellationToken::new();
-        let first = jobs::get(&g, "comfy-partial", true, &signal, None).await.unwrap();
+        let first = jobs::get(&g, "comfy-partial", true, &signal, None)
+            .await
+            .unwrap();
         assert_eq!(first.status(), "failed");
         assert_eq!(first.value["generation_outcome"], "completed");
-        assert_eq!(first.value["upstream_job"], json!({"id": "owned", "kind": "comfyui"}));
+        assert_eq!(
+            first.value["upstream_job"],
+            json!({"id": "owned", "kind": "comfyui"})
+        );
         assert!(first.value["outputs"].as_array().unwrap().is_empty());
         assert_eq!(first.value["errors"].as_array().unwrap().len(), 1);
         assert_eq!(first.value["errors"][0]["code"], "upstream_error");
@@ -317,26 +366,46 @@ async fn seeded_comfy_second_download_failure_retains_first_original_and_recover
             assert_eq!(pending[0].output_id, retained.output_id);
             assert_eq!(pending[0].bytes.as_ref().unwrap(), &bytes);
         }
-        let recovered = jobs::get(&g, "comfy-partial", true, &signal, None).await.unwrap();
+        let recovered = jobs::get(&g, "comfy-partial", true, &signal, None)
+            .await
+            .unwrap();
         assert_eq!(recovered.status(), "partial");
         assert_eq!(recovered.value["generation_outcome"], "completed");
         assert_eq!(recovered.value["storage_outcome"], "completed");
         assert_eq!(recovered.value["output_requirements"]["count"], 2);
         assert_eq!(recovered.value["upstream_job"], first.value["upstream_job"]);
         assert_eq!(recovered.value["outputs"].as_array().unwrap().len(), 1);
-        assert_eq!(recovered.value["deviations"], json!(["Requested 2 image(s), saved 1."]));
+        assert_eq!(
+            recovered.value["deviations"],
+            json!(["Requested 2 image(s), saved 1."])
+        );
         let output = &recovered.value["outputs"][0];
         assert_eq!(output["output_id"], retained.output_id);
         assert_eq!(output["request_id"], "comfy-partial");
         assert_eq!(output["sha256"], sha256(&bytes));
-        assert_eq!(std::fs::read(output["path"].as_str().unwrap()).unwrap(), bytes);
-        assert!(g.store.lock().unwrap().pending("comfy-partial").unwrap().is_empty());
+        assert_eq!(
+            std::fs::read(output["path"].as_str().unwrap()).unwrap(),
+            bytes
+        );
+        assert!(
+            g.store
+                .lock()
+                .unwrap()
+                .pending("comfy-partial")
+                .unwrap()
+                .is_empty()
+        );
         assert_eq!(*requests.lock().unwrap(), before);
         drop(g);
         let g = generation(&workspace, &raw);
-        let repeated = jobs::get(&g, "comfy-partial", true, &signal, None).await.unwrap();
+        let repeated = jobs::get(&g, "comfy-partial", true, &signal, None)
+            .await
+            .unwrap();
         assert_eq!(repeated.value, recovered.value);
-        assert_eq!(g.store.lock().unwrap().list_outputs(0, 10).unwrap(), vec![output.clone()]);
+        assert_eq!(
+            g.store.lock().unwrap().list_outputs(0, 10).unwrap(),
+            vec![output.clone()]
+        );
         assert_eq!(
             std::fs::read(repeated.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
             bytes
