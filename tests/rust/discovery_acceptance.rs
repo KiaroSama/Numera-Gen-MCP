@@ -82,7 +82,7 @@ async fn exact_source_generic_flash_dimensions_separate_native_sizes_from_route_
     );
     assert_eq!(
         dimensions["model_support"]["resolution_tiers"],
-        json!(["0.5K","1K","2K","4K"])
+        json!(["0.5K", "1K", "2K", "4K"])
     );
     assert!(
         dimensions["model_support"]["pixel_sizes"]
@@ -133,11 +133,11 @@ async fn exact_source_gateway_tier_restrictions_do_not_establish_native_or_accou
     .await;
     assert_eq!(
         result["dimensions"]["route_support"]["accepted_parameters"],
-        json!(["size","aspect_ratio","image_size"])
+        json!(["size", "aspect_ratio", "image_size"])
     );
     assert_eq!(
         result["dimensions"]["route_support"]["resolution_tiers"],
-        json!(["1K","2K","4K"])
+        json!(["1K", "2K", "4K"])
     );
     assert_eq!(result["account_availability"], "unknown");
 }
@@ -146,11 +146,11 @@ async fn exact_source_gateway_tier_restrictions_do_not_establish_native_or_accou
 async fn exact_source_four_adapter_dimension_inputs_remain_offline_and_unverified_for_accounts() {
     let workspace = Workspace::new();
     for (adapter, overrides, accepted) in [
-        ("gemini", json!({}), json!(["aspect_ratio","image_size"])),
+        ("gemini", json!({}), json!(["aspect_ratio", "image_size"])),
         (
             "gemini-interactions",
             json!({}),
-            json!(["aspect_ratio","image_size"]),
+            json!(["aspect_ratio", "image_size"]),
         ),
         ("comfyui", json!({}), json!([])),
         (
@@ -161,11 +161,13 @@ async fn exact_source_four_adapter_dimension_inputs_remain_offline_and_unverifie
     ] {
         let result = model(&workspace, adapter, overrides, "gemini-3.1-flash-image").await;
         assert_eq!(
-            result["dimensions"]["route_support"]["accepted_parameters"],
-            accepted,
+            result["dimensions"]["route_support"]["accepted_parameters"], accepted,
             "{adapter}"
         );
-        assert_eq!(result["dimensions"]["route_support"]["max_pixels"], 64000000);
+        assert_eq!(
+            result["dimensions"]["route_support"]["max_pixels"],
+            64000000
+        );
         assert_eq!(result["dimensions"]["account_verified"], false);
     }
 }

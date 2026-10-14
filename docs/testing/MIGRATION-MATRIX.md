@@ -112,6 +112,12 @@ no confirmed defects; that is not native compilation or complete case acceptance
 67-target batch records 322 concrete assertion assignments, including partial mappings; all 470
 acceptance dispositions remain pending.
 
+At `21a8d9b`, all 67 native targets, all-six Clippy/release/stdio/HTTP SDK checks, all three Node jobs
+and full 86.16% regions / 84.49% branches coverage passed. Only discovery-fixture formatting failed;
+notices and archives were skipped. The next source-only 68-target batch adds seven literal Store
+cases, nine exact reservation variants and a two-process 2048-byte budget assertion after both child
+Stores/processes close. Previous broader assertions remain; all 470 acceptance dispositions stay pending.
+
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

@@ -433,13 +433,28 @@ fn reservation_process_child() {
     };
     let id = std::env::var("NUMERA_RESERVATION_FIXTURE_ID").unwrap();
     let mut store = Store::open(Path::new(&root)).unwrap();
-    let (_, owner) = store.prepare(Receipt::new(json!({"request_id":id,"connection":"test","status":"prepared","outputs":[],"errors":[],"warnings":[],"deviations":[]})), &id, "fixture").unwrap();
+    let exact = std::env::var_os("NUMERA_RESERVATION_EXACT_SOURCE").is_some();
+    let initial = if exact {
+        let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+        Receipt::new(json!({
+            "request_id":id,"connection":"local","adapter":"openai-images","operation":"generate",
+            "status":"prepared","requested_model":"image-model","upstream_model":null,
+            "outputs":[],"warnings":[],"deviations":[],"errors":[],
+            "generation_outcome":"not_submitted","storage_outcome":"not_started",
+            "another_submission_may_charge":true,"created_at":now,"updated_at":now
+        }))
+    } else {
+        Receipt::new(json!({"request_id":id,"connection":"test","status":"prepared","outputs":[],"errors":[],"warnings":[],"deviations":[]}))
+    };
+    let (_, owner) = store
+        .prepare(initial, &id, if exact { "identity" } else { "fixture" })
+        .unwrap();
     println!("reservation-ready");
     std::io::stdout().flush().unwrap();
     let mut line = String::new();
     std::io::stdin().lock().read_line(&mut line).unwrap();
     assert_eq!(line.trim(), "reserve");
-    let result = store.reserve(&id, 2048, 3072);
+    let result = store.reserve(&id, 2048, if exact { 2048 } else { 3072 });
     println!(
         "reservation-result:{}",
         match result {
@@ -448,6 +463,10 @@ fn reservation_process_child() {
         }
     );
     std::io::stdout().flush().unwrap();
+    if exact {
+        drop(store);
+        return;
+    }
     std::io::stdin()
         .lock()
         .read_line(&mut String::new())
@@ -470,7 +489,7 @@ impl Drop for OwnedChild {
         }
     }
 }
-fn child(root: &Path, id: &str) -> OwnedChild {
+fn child(root: &Path, id: &str, exact: bool) -> OwnedChild {
     let mut command = Command::new(std::env::current_exe().unwrap());
     command
         .args(["--exact", "reservation_process_child", "--nocapture"])
@@ -483,6 +502,11 @@ fn child(root: &Path, id: &str) -> OwnedChild {
     {
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x08000000);
+    }
+    if exact {
+        command.env("NUMERA_RESERVATION_EXACT_SOURCE", "1");
+    } else {
+        command.env_remove("NUMERA_RESERVATION_EXACT_SOURCE");
     }
     let mut child = command.spawn().unwrap();
     let stdout = child.stdout.take().unwrap();
@@ -503,12 +527,68 @@ fn child(root: &Path, id: &str) -> OwnedChild {
 }
 
 #[test]
+fn exact_source_two_process_reservations_close_before_reading_full_budget() {
+    let workspace = Workspace::new();
+    let state = workspace.0.join("state");
+    let mut first = child(&state, "one", true);
+    let mut second = child(&state, "two", true);
+    for process in [&mut first, &mut second] {
+        assert_eq!(
+            process.events.recv_timeout(Duration::from_secs(3)).unwrap(),
+            "reservation-ready"
+        );
+    }
+    for process in [&mut first, &mut second] {
+        let stdin = process.child.stdin.as_mut().unwrap();
+        stdin.write_all(b"reserve\n").unwrap();
+        stdin.flush().unwrap();
+    }
+    let mut results = Vec::new();
+    for process in [&mut first, &mut second] {
+        results.push(process.events.recv_timeout(Duration::from_secs(3)).unwrap());
+    }
+    for process in [&mut first, &mut second] {
+        process.child.stdin.take();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            if let Some(status) = process.child.try_wait().unwrap() {
+                assert!(status.success());
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "source reservation child exit deadline"
+            );
+            std::thread::yield_now();
+        }
+        process.reader.take().unwrap().join().unwrap();
+    }
+    results.sort();
+    assert_eq!(
+        results,
+        [
+            "reservation-result:rate_limited",
+            "reservation-result:reserved"
+        ]
+    );
+    let database = rusqlite::Connection::open_with_flags(
+        state.join("receipts.sqlite"),
+        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY,
+    )
+    .unwrap();
+    let used: i64 = database
+        .query_row("SELECT SUM(reservation) FROM requests", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(used, 2048);
+}
+
+#[test]
 fn two_actual_store_processes_serialize_shared_budget_reservations() {
     let workspace = Workspace::new();
     let state = workspace.0.join("state");
     drop(Store::open(&state).unwrap());
-    let mut first = child(&state, "one");
-    let mut second = child(&state, "two");
+    let mut first = child(&state, "one", false);
+    let mut second = child(&state, "two", false);
     for process in [&mut first, &mut second] {
         assert_eq!(
             process.events.recv_timeout(Duration::from_secs(3)).unwrap(),

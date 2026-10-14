@@ -279,6 +279,15 @@ availability separate. The current batch has 67 registered native targets and 32
 assignments, including partial mappings; all 470 dispositions remain pending. Its compilation and
 execution remain pending.
 
+At `21a8d9b`, all 67 native targets passed on all six platforms and nightly; Clippy, release builds,
+stdio/HTTP SDK checks and all three Node jobs passed. Coverage passed at 86.16% regions / 84.49%
+branches. Only discovery-fixture formatting failed; notices and archives remained skipped.
+The next unexecuted 68-target batch replaces seven partial Store mappings with literal fingerprint,
+identity, admission, cancellation and output-index cases. Nine additional reservation variants use
+exact byte counts, capacities, URLs and reopen/control schedules. A separate actual two-process case
+uses the source's 2048-byte budget and checks reservation totals only after both Stores/processes
+close; the broader live-writer fixture remains. All 470 acceptance dispositions remain pending.
+
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally
 for this migration. [Acceptance matrix](testing/MIGRATION-MATRIX.md) records incomplete source-case,
