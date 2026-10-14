@@ -1,5 +1,6 @@
 use crate::compat::value::{JsString, Value};
 use crate::error::{NumeraError, Result};
+use crate::http::bounded::BoundedBytes;
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     time::Duration,
@@ -143,31 +144,18 @@ pub async fn fetch(
                 )
                 .stage("download"));
             }
-            if response.content_length().is_some_and(|n| n > limit as u64) {
-                return Err(
-                    NumeraError::new("invalid_response", "Response exceeds byte limit.")
-                        .stage("response"),
-                );
-            }
-            let mut bytes = Vec::new();
+            let mut bytes = BoundedBytes::new(
+                response.content_length(),
+                !matches!(status, 204 | 205),
+                limit,
+            )?;
             while let Some(chunk) = response.chunk().await.map_err(|_| {
                 NumeraError::new("input_file_error", "Image download interrupted.")
                     .stage("download")
             })? {
-                if bytes
-                    .len()
-                    .checked_add(chunk.len())
-                    .is_none_or(|n| n > limit)
-                {
-                    return Err(NumeraError::new(
-                        "invalid_response",
-                        "Response exceeds byte limit.",
-                    )
-                    .stage("response"));
-                }
-                bytes.extend_from_slice(&chunk);
+                bytes.push(&chunk, None)?;
             }
-            return Ok(bytes);
+            return Ok(bytes.finish());
         }
         Err(NumeraError::new(
             "unsafe_destination",

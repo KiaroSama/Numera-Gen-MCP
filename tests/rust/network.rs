@@ -102,6 +102,63 @@ async fn api_status_errors_redirects_limits_and_cancel_never_retry() {
 }
 
 #[tokio::test]
+async fn api_and_asset_absent_bodies_reject_but_empty_present_body_is_allowed() {
+    let server = Server::new(|path| Reply {
+        bytes: Some(Vec::new()),
+        status: path.trim_start_matches('/').parse().unwrap_or(200),
+        value: json!({}),
+    })
+    .await;
+    let connection = json!({"baseUrl":server.origin,"baseUrlMode":"api-prefix","discoveryTimeoutMs":2000});
+    let config = json!({"files":{"assetAllowances":[{"origin":server.origin,"pathPrefix":"/"}]}});
+    let cancel = CancellationToken::new();
+    let result = tokio::time::timeout(Duration::from_secs(6), async {
+        let mut results = Vec::new();
+        for status in [204, 205, 200] {
+            let path = status.to_string();
+            let api = api::request(
+                &connection,
+                &HashMap::new(),
+                api::Operation {
+                    operation: &path,
+                    prefix: "",
+                    method: Method::GET,
+                    body: Body::Empty,
+                    query: None,
+                },
+                &cancel,
+                1024,
+            )
+            .await
+            .map(|response| response.bytes);
+            let asset = assets::fetch(
+                &format!("{}/{path}", server.origin).into(),
+                &config,
+                1024,
+                &cancel,
+            )
+            .await;
+            results.push((status, api, asset));
+        }
+        results
+    })
+    .await;
+    server.close().await;
+    for (status, api, asset) in result.unwrap() {
+        for result in [api, asset] {
+            if status == 200 {
+                assert!(result.unwrap().is_empty());
+            } else {
+                let error = result.unwrap_err();
+                assert_eq!(error.code, "invalid_response");
+                assert_eq!(error.message, "Response body is empty.");
+                assert_eq!(error.stage, "response");
+            }
+        }
+    }
+}
+
+#[tokio::test]
 async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects() {
     let server = Server::new(|path| Reply {
         bytes: None,

@@ -70,9 +70,16 @@ async fn actual_multipart_wire_preserves_source_field_names_order_filenames_and_
     let oracle: Value =
         serde_json::from_slice(&std::fs::read(root.join(".ci-work/parity/adapters.json")).unwrap())
             .unwrap();
+    let exact = Value::parse_with_limit(
+        &std::fs::read_to_string(root.join(".ci-work/parity/stream-acceptance.json")).unwrap(),
+        4 * 1024 * 1024,
+    )
+    .unwrap();
+    let exact_cases = exact["multipart"].as_array().unwrap();
+    assert_eq!(exact_cases.len(), 2);
     let action = async {
         let mut checked = 0;
-        for case in oracle["wires"].as_array().unwrap() {
+        for case in oracle["wires"].as_array().unwrap().iter().chain(exact_cases) {
             let Some(expected) = case["expected"]["value"].get("multipart") else {
                 continue;
             };
@@ -90,6 +97,9 @@ async fn actual_multipart_wire_preserves_source_field_names_order_filenames_and_
                     .unwrap()
                 })
                 .collect::<Vec<_>>();
+            let mask = case["mask_base64"].as_str().map(|encoded| {
+                inspect(decode_base64(encoded, 1048576).unwrap(), &json!({}), None).unwrap()
+            });
             let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
             let origin = format!("http://{}", listener.local_addr().unwrap());
             let server = async move {
@@ -131,7 +141,7 @@ async fn actual_multipart_wire_preserves_source_field_names_order_filenames_and_
                 model: case["model"].as_js_string().unwrap(),
                 operation: case["operation"].as_str().unwrap(),
                 references: &references,
-                mask: None,
+                mask: mask.as_ref(),
             };
             let built = build_request(&input).unwrap();
             assert!(matches!(&built.body, Body::Multipart(_)));
@@ -153,9 +163,32 @@ async fn actual_multipart_wire_preserves_source_field_names_order_filenames_and_
             let (response, captured) = tokio::join!(request, server);
             response.unwrap();
             assert_eq!(captured, *expected, "{}", case["name"]);
+            if case["name"] == "multipart-image-array-mask" {
+                let parts = captured.as_array().unwrap();
+                let field = |name: &str| parts.iter().find(|part| part["name"] == name).unwrap();
+                assert_eq!(field("prompt")["text"], "A café");
+                assert_eq!(field("n")["text"], "1");
+                assert_eq!(field("quality")["text"], "high");
+                let files = parts
+                    .iter()
+                    .filter(|part| part["name"] == "image[]")
+                    .collect::<Vec<_>>();
+                assert_eq!(files.len(), 2);
+                let original = decode_base64(exact["original"].as_str().unwrap(), 1048576).unwrap();
+                let hex = original
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect::<String>();
+                for file in files {
+                    assert_eq!(file["mime"], "image/png");
+                    assert_eq!(file["hex"], hex);
+                }
+                assert_eq!(field("mask")["hex"], hex);
+                assert!(mask.as_ref().unwrap().alpha);
+            }
             checked += 1;
         }
-        assert!(checked > 0, "source multipart cases required");
+        assert!(checked > 2, "broad and both exact source multipart cases required");
     };
     tokio::time::timeout(Duration::from_secs(8), action)
         .await

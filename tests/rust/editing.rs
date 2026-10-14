@@ -246,6 +246,19 @@ async fn exact_source_input_links_output_junctions_non_directories_and_nested_un
 }
 
 #[test]
+fn exact_source_nested_unicode_and_sibling_containment_use_whole_path_components() {
+    assert_eq!(
+        paths::safe_relative("batch/café-output").unwrap(),
+        "batch/café-output"
+    );
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/allowed");
+    assert!(root.starts_with(&root));
+    assert!(root.join("a.png").starts_with(&root));
+    let sibling = root.parent().unwrap().join("allowed-other/a.png");
+    assert!(!sibling.starts_with(&root));
+}
+
+#[test]
 fn exact_source_backslash_traversal_and_nul_relative_paths_are_rejected() {
     for path in ["a\\..\\b", "a\0b"] {
         assert_eq!(

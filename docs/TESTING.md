@@ -237,6 +237,20 @@ Stable production callers explicitly retain the journal, writer fence and recove
 original/tampered/missing/outside-owned assertions are authored and independently source-reviewed,
 not yet executed for this new tree. All 470 dispositions remain pending; no source case is promoted
 from these source-only repairs, coverage or an older successful run.
+At `98cc779`, all 63 native targets, Clippy, release builds and SDK checks passed on all six native
+platforms; all three Node jobs passed, including the macOS cleanup regression. Complete native
+coverage passed at 85.85% regions / 83.82% branches. Only formatting in `native/main.rs` and the
+shared fixture helper failed; archives remained skipped. The Windows cleanup failure did not recur,
+but that does not identify its earlier unknown OS cause. Exact hosted formatting is now applied.
+The next source-only batch registers 65 native targets and records 271 case assignments. It adds
+literal source stream normalization/JSON/SSE/binary cases, exact seven-byte preview/completion
+schedules, actual two-reference multipart capture with alpha mask, sibling containment and the exact
+three-byte bounded-body fixture. The shared API/asset accumulator rejects missing bodies separately
+from empty present bodies. The 9router builder now preserves explicit multi-reference JSON and
+rejects unverified implicit non-Codex edits, matching the frozen source rather than inferring current
+account entitlement. These new assertions and repairs require their own hosted execution; all 470
+case dispositions remain pending. Windows/Linux/macOS x64 and ARM64 tests and builds remain exclusively
+on GitHub-hosted runners; no local Rust build or toolchain is used.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

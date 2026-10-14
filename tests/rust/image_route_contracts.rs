@@ -169,7 +169,7 @@ fn all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway
             assert_eq!(body["prompt"], request["prompt"]);
         }
     }
-    let c = json!({"adapter":"openai-images","gateway":"9router"});
+    let c = json!({"adapter":"openai-images","gateway":"9router","edit":{"mode":"json","encoding":"image","maxReferences":1}});
     let built = build_request(&input(&c, &request, &references[..1], None)).unwrap();
     assert_eq!(built.operation, "images/generations");
     let Body::Json(body) = built.body else {

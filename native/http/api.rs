@@ -1,7 +1,7 @@
 use crate::compat::value::Value;
 use crate::{
     error::{NumeraError, Result},
-    http::{sse, url::operation_url},
+    http::{bounded::BoundedBytes, sse, url::operation_url},
 };
 use reqwest::{Client, Method, header::HeaderValue, multipart::Form};
 use std::{collections::HashMap, time::Duration};
@@ -100,6 +100,7 @@ pub async fn request(
             "Cannot initialize configured API transport.",
         )
     })?;
+    let expects_body = method != Method::HEAD;
     let mut request = client.request(method, url);
     for (name, value) in headers {
         request = request.header(name, value);
@@ -148,10 +149,11 @@ pub async fn request(
             .get("x-request-id")
             .and_then(|v| v.to_str().ok())
             .map(str::to_owned);
-        if response.content_length().is_some_and(|n| n > limit as u64) {
-            return Err(byte_limit());
-        }
-        let mut bytes = Vec::new();
+        let mut bytes = BoundedBytes::new(
+            response.content_length(),
+            expects_body && !matches!(status, 204 | 205),
+            limit,
+        )?;
         let mut stream = mime
             .contains("text/event-stream")
             .then(|| sse::Reader::new(limit));
@@ -159,19 +161,14 @@ pub async fn request(
             if let Some(stream) = stream.as_mut() {
                 stream.push(&chunk)?;
             } else {
-                if bytes
-                    .len()
-                    .checked_add(chunk.len())
-                    .is_none_or(|n| n > limit)
-                {
-                    return Err(byte_limit());
-                }
-                bytes.extend_from_slice(&chunk);
+                bytes.push(&chunk, None)?;
             }
         }
-        if let Some(stream) = stream {
-            bytes = stream.finish()?;
-        }
+        let bytes = if let Some(stream) = stream {
+            stream.finish()?
+        } else {
+            bytes.finish()
+        };
         Ok(ApiResponse {
             bytes,
             mime,
@@ -214,7 +211,4 @@ fn network_error(error: reqwest::Error) -> NumeraError {
         )
         .stage("network")
     }
-}
-fn byte_limit() -> NumeraError {
-    NumeraError::new("invalid_response", "Response exceeds byte limit.").stage("response")
 }

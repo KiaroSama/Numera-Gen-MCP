@@ -79,6 +79,15 @@ final absence proof, and makes Windows transient fixture cleanup bounded and dia
 implements source-compatible fresh-UUID same-index independent saves and `Store.add_output` while
 stable callers retain their journal/fences. These changes remain unexecuted natively; pure containment,
 exact bounded-stream/cancellation and the old inner-stdio/cleanup-marker acceptance remain open.
+At `98cc779`, all six native platforms passed all 63 targets, Clippy, release builds and SDK checks;
+all three Node jobs and full 85.85% regions / 83.82% branches coverage passed. Only main/shared-helper
+formatting failed; archives were skipped. Exact hosted formatting is applied without changing behavior.
+The next 65-target source batch brings concrete assignments to 271, all 470 still pending. Literal
+stream/result/builder fixtures, exact incremental schedules, two-reference multipart with mask,
+sibling containment and bounded-body/cancellation cases are authored. Source-confirmed 9router
+multi-reference and unverified implicit-route divergences are corrected; missing API/asset bodies
+are distinct from empty present bodies. Current compilation/execution and final literal acceptance
+remain pending. Builds and tests continue on all six GitHub-hosted Windows/Linux/macOS x64/ARM64 targets.
 
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

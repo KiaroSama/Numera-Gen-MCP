@@ -593,6 +593,9 @@ const { requirementsOracle } = await import("./rust-requirements-oracle.mjs");
 await requirementsOracle({ source, emit, plain, images });
 const { streamOracle } = await import("./rust-stream-oracle.mjs");
 await streamOracle({ source, emit, plain, images, outcome });
+const { streamAcceptanceOracle } =
+  await import("./rust-stream-acceptance-oracle.mjs");
+await streamAcceptanceOracle({ source, emit, sharp });
 const { jsonOracle } = await import("./rust-json-oracle.mjs");
 await jsonOracle({ emit, fingerprint, configSchema, requestSchema });
 if (process.platform === "win32") {

@@ -76,6 +76,30 @@ fn complete_frame_parsing_matches_source_crlf_multiline_unicode_and_error_contra
 }
 
 #[test]
+fn exact_source_seven_byte_preview_completed_done_chunks_preserve_only_terminal_images() {
+    let text = "data: {\"type\":\"image_generation.partial_image\",\"b64_json\":\"preview\"}\r\n\r\ndata: {\"type\":\"image_generation.completed\",\"b64_json\":\"ZmluYWw=\"}\r\n\r\ndata: [DONE]\r\n\r\n";
+    let mut reader = Reader::new(10000);
+    for chunk in text.as_bytes().chunks(7) {
+        reader.push(chunk).unwrap();
+    }
+    let bytes = reader.finish().unwrap();
+    assert!(!String::from_utf8(bytes.clone()).unwrap().contains("preview"));
+    let result = response(&json!({"adapter":"openrouter-images"}), bytes, "text/event-stream")
+        .unwrap();
+    assert_eq!(normalized(result)["images"], json!([{"base64":"ZmluYWw="}]));
+}
+
+#[test]
+fn exact_source_truncated_completed_frame_and_one_byte_limit_never_return_success() {
+    let chunk = b"data: {\"type\":\"image_generation.completed\"}";
+    let mut reader = Reader::new(10000);
+    reader.push(chunk).unwrap();
+    assert_eq!(reader.finish().unwrap_err().code, "outcome_unknown");
+    let mut reader = Reader::new(1);
+    assert_eq!(reader.push(chunk).unwrap_err().code, "invalid_response");
+}
+
+#[test]
 fn incremental_reader_bounds_discarded_progress_and_rejects_invalid_or_unfinished_input() {
     for (bytes, code) in [
         (b"data: {broken}\n\n".as_slice(), "invalid_response"),

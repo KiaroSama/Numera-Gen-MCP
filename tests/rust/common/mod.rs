@@ -27,7 +27,11 @@ impl Drop for Workspace {
                 std::thread::yield_now();
                 continue;
             }
-            let detail = format!("kind={:?}, os_code={:?}", error.kind(), error.raw_os_error());
+            let detail = format!(
+                "kind={:?}, os_code={:?}",
+                error.kind(),
+                error.raw_os_error()
+            );
             if std::thread::panicking() {
                 eprintln!("Fixture cleanup failed: {detail}.");
             } else {

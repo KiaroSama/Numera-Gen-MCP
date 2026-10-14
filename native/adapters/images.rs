@@ -70,13 +70,23 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
         ));
     }
     if c["gateway"] == "9router" {
-        if mask.is_some() || references.len() > 1 {
+        if mask.is_some() {
             return Err(NumeraError::new(
                 "unsupported_operation",
-                "Examined 9router supports one embedded reference and no mask.",
+                "9router has no verified mask forwarding contract.",
             ));
         }
-        fields["image"] = json!(mime_data(&references[0]));
+        if !codex(model) && c.get("edit").is_none() {
+            return Err(NumeraError::new(
+                "unsupported_operation",
+                "9router reference contract is not verified for this model.",
+            ));
+        }
+        if references.len() == 1 {
+            fields["image"] = json!(mime_data(&references[0]));
+        } else {
+            fields["images"] = json!(references.iter().map(mime_data).collect::<Vec<_>>());
+        }
         return Ok(Prepared::json("images/generations", "/v1", fields));
     }
     let fallback = json!({"mode":"multipart", "encoding":"image", "maxReferences":if c["gateway"] == "omniroute" && codex(model){8}else{1}, "masks":false});

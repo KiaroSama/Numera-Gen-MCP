@@ -292,6 +292,14 @@ path = "tests/rust/env_acceptance.rs"
 name = "readiness_acceptance"
 path = "tests/rust/readiness_acceptance.rs"
 
+[[test]]
+name = "body_acceptance"
+path = "tests/rust/body_acceptance.rs"
+
+[[test]]
+name = "streams_acceptance"
+path = "tests/rust/streams_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1
