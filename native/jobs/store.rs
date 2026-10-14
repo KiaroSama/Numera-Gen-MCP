@@ -259,6 +259,21 @@ impl Store {
             .map_err(|_| NumeraError::storage())?
             == Some(1))
     }
+    pub fn add_output(&self, output: &Value) -> Result<()> {
+        let text = |key: &str| {
+            output[key]
+                .as_js_string()
+                .map(|value| String::from_utf16_lossy(value.as_utf16()))
+                .ok_or_else(NumeraError::storage)
+        };
+        self.db
+            .execute(
+                "INSERT INTO outputs VALUES(?,?,?)",
+                params![text("output_id")?, text("request_id")?, output.to_string()],
+            )
+            .map_err(|_| NumeraError::storage())?;
+        Ok(())
+    }
     pub fn output(&self, id: &str) -> Result<Value> {
         let value: Option<String> = self
             .db

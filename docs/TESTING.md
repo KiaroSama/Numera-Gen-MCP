@@ -219,6 +219,24 @@ mapping gap remains explicit. Four previously substituted request fixtures now u
 targets and 216 concrete case assignments, with all 470 dispositions still pending. Independent
 source review found no additional confirmed defects in the readiness repair; it is not runtime proof.
 Replacement hosted verification is still required.
+At `69e46ee`, all 63 native targets passed on five platforms and nightly; Windows ARM passed three
+readiness cases but failed the fourth fixture's directory cleanup with `Uncategorized`, without a
+raw OS-code diagnostic. All platforms passed Clippy, release builds and SDK checks. Full coverage
+passed at 85.85% regions / 83.82% branches. Linux and Windows Node jobs passed; macOS failed one
+POSIX cleanup-record assertion after a post-close group kill returned EPERM and the final probe
+established group absence. Native readiness formatting also failed, and packaging was skipped.
+The repair keeps unsuccessful signal attempts as diagnostics but resolves only the exact EPERM
+attempt after child closure and definitive group absence; permission/probe/deadline/survivor failures
+remain failures. Seven deterministic classification fixtures preserve this distinction. Windows
+fixture cleanup now reports the raw OS code and retries only documented sharing/delete-pending/
+not-empty errors during a two-second retry window. That window limits additional attempts, not the
+duration of a synchronous OS deletion call; the original failure's precise cause remains unproven.
+The independent-publication source gap is now implemented: two saves with the same request/index
+and no receipt create fresh UUID paths, and `Store.add_output` preserves the unchanged SQL schema.
+Stable production callers explicitly retain the journal, writer fence and recovery path. Exact
+original/tampered/missing/outside-owned assertions are authored and independently source-reviewed,
+not yet executed for this new tree. All 470 dispositions remain pending; no source case is promoted
+from these source-only repairs, coverage or an older successful run.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

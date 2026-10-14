@@ -70,6 +70,15 @@ direct native maintenance does not establish the old inner-stdio/cleanup-marker 
 The integrated repair registers 63 native targets and records 216 case assignments, all 470
 pending. Independent source review found no additional confirmed readiness defects, not proof
 of compilation or execution.
+At `69e46ee`, five platforms and nightly passed all 63 native targets; Windows ARM failed only one
+readiness fixture's final directory cleanup. All six passed Clippy, release and SDK checks, but
+readiness formatting failed and archives were skipped. Full coverage passed at 85.85% regions /
+83.82% branches; macOS Node failed the final POSIX cleanup-state report after a denied kill attempt.
+The next unified repair applies hosted formatting, keeps denied attempts separate from definitive
+final absence proof, and makes Windows transient fixture cleanup bounded and diagnostic. It also
+implements source-compatible fresh-UUID same-index independent saves and `Store.add_output` while
+stable callers retain their journal/fences. These changes remain unexecuted natively; pure containment,
+exact bounded-stream/cancellation and the old inner-stdio/cleanup-marker acceptance remain open.
 
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

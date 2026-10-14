@@ -275,6 +275,7 @@ pub async fn finalize(
                     prefix: receipt.value["output_requirements"]["filename_prefix"].as_str(),
                     deviations: &deviations,
                     expected: Some(&receipt),
+                    stable: true,
                 },
             )?;
             Ok::<(), NumeraError>(())

@@ -47,6 +47,26 @@ function linuxGroup(pid) {
   }
   return alive;
 }
+export function cleanupProof({ closed, groupAbsent, survivors, failures }) {
+  const resolved = [],
+    unresolved = [];
+  for (const failure of failures) {
+    if (
+      closed &&
+      groupAbsent &&
+      failure.phase === "group_kill" &&
+      failure.code === "EPERM"
+    )
+      resolved.push({ ...failure, resolution: "closed_group_absent" });
+    else unresolved.push(failure);
+  }
+  return {
+    verified: closed && !survivors.length && !unresolved.length,
+    failures: unresolved,
+    resolved,
+  };
+}
+
 export async function runBounded(
   command,
   args,
@@ -181,6 +201,7 @@ export async function runBounded(
   let verified = true,
     survivors = [];
   const cleanupFailures = [];
+  let cleanupResolved = [];
   const cleanupFailure = (phase, error) => {
     verified = false;
     cleanupFailures.push({
@@ -203,6 +224,7 @@ export async function runBounded(
         });
       if (sweep.owned.length && !terminated) failed = true;
     } else {
+      let groupAbsent = false;
       try {
         process.kill(-child.pid, "SIGKILL");
       } catch (error) {
@@ -225,7 +247,8 @@ export async function runBounded(
           try {
             process.kill(-child.pid, 0);
           } catch (error) {
-            if (error.code !== "ESRCH") cleanupFailure("group_probe", error);
+            if (error.code === "ESRCH") groupAbsent = true;
+            else cleanupFailure("group_probe", error);
             break;
           }
           if (Date.now() >= until) {
@@ -235,6 +258,15 @@ export async function runBounded(
           await pause(20);
         }
       }
+      const proof = cleanupProof({
+        closed,
+        groupAbsent,
+        survivors,
+        failures: cleanupFailures,
+      });
+      verified = proof.verified;
+      cleanupFailures.splice(0, cleanupFailures.length, ...proof.failures);
+      cleanupResolved = proof.resolved;
     }
     // close proves this child instance exited; its numeric PID can already name another process.
     if (!closed) cleanupFailure("child_close", { code: "ETIMEDOUT" });
@@ -251,12 +283,14 @@ export async function runBounded(
     exit_code: code,
     cleanup_verified: verified && !survivors.length,
     ...(cleanupFailures.length ? { cleanup_failures: cleanupFailures } : {}),
+    ...(cleanupResolved.length ? { cleanup_resolved: cleanupResolved } : {}),
   });
   log?.emit(code ? "ERROR" : "INFO", "Bounded child finished.", {
     pid: child.pid,
     exit_code: code,
     cleanup_verified: verified && !survivors.length,
     ...(cleanupFailures.length ? { cleanup_failures: cleanupFailures } : {}),
+    ...(cleanupResolved.length ? { cleanup_resolved: cleanupResolved } : {}),
   });
   return { code, stdout, stderr };
 }

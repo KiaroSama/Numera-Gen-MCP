@@ -46,23 +46,8 @@ fn exact_source_owned_originals_reject_tampering_missing_files_prefixes_and_outs
     let image = exact_source_image("png", &raw);
     let state = workspace.0.join("state");
     let mut store = Store::open(&state).unwrap();
-    let (_, receipt) = store
-        .prepare(
-            Receipt::new(json!({
-                "request_id":"receipt", "connection":"test", "status":"prepared",
-                "outputs":[], "deviations":[], "generation_outcome":"not_submitted"
-            })),
-            "effective",
-            "account",
-        )
-        .unwrap();
-    store.reserve("receipt", 1048576, 2097152).unwrap();
-    // Stable publication uses distinct retained items; it does not prove legacy same-index fresh UUIDs.
     let mut saved = Vec::new();
-    for index in 0..2 {
-        store
-            .retain("receipt", index, &image.bytes, Some(&receipt))
-            .unwrap();
+    for _ in 0..2 {
         saved.push(
             output::save(
                 &image,
@@ -70,16 +55,19 @@ fn exact_source_owned_originals_reject_tampering_missing_files_prefixes_and_outs
                 &mut store,
                 Publication {
                     id: "receipt",
-                    index,
+                    index: 0,
                     subdir: Some("batch"),
                     prefix: Some("café"),
                     deviations: &[],
-                    expected: Some(&receipt),
+                    expected: None,
+                    stable: false,
                 },
             )
             .unwrap(),
         );
     }
+    assert_eq!(store.list_outputs(0, 25).unwrap().len(), 2);
+    assert!(store.get("receipt").is_err());
     let first = &saved[0];
     let second = &saved[1];
     assert_ne!(first["path"], second["path"]);
@@ -137,11 +125,12 @@ fn exact_source_owned_originals_reject_tampering_missing_files_prefixes_and_outs
                 &mut store,
                 Publication {
                     id: "receipt",
-                    index: 2,
+                    index: 1,
                     subdir,
                     prefix,
                     deviations: &[],
-                    expected: Some(&receipt),
+                    expected: None,
+                    stable: false,
                 }
             )
             .unwrap_err()
@@ -155,20 +144,12 @@ fn exact_source_owned_originals_reject_tampering_missing_files_prefixes_and_outs
     let mut record = first.clone();
     record["output_id"] = json!(id);
     record["path"] = json!(outside.to_str().unwrap());
-    // Seed the unchanged schema directly; native Store has no legacy addOutput API.
-    let fixture = rusqlite::Connection::open(state.join("receipts.sqlite")).unwrap();
-    fixture
-        .execute(
-            "INSERT INTO outputs VALUES(?,?,?)",
-            rusqlite::params![id, "receipt", record.to_string()],
-        )
-        .unwrap();
+    store.add_output(&record).unwrap();
     assert_eq!(
         output::owned(&raw, &store, &id).err().unwrap().code,
         "permission_denied"
     );
-    drop(fixture);
-    store.release("receipt", Some(&receipt)).unwrap();
+    assert_eq!(store.list_outputs(0, 25).unwrap().len(), 3);
 }
 
 #[test]
@@ -204,6 +185,7 @@ fn exact_source_regular_file_output_root_fails_without_indexing_an_output() {
                 prefix: None,
                 deviations: &[],
                 expected: Some(&receipt),
+                stable: true,
             }
         )
         .unwrap_err()
@@ -242,6 +224,7 @@ fn filesystem_sql_gap_reconciles_original_bytes_uuid_and_refuses_a_changed_publi
         prefix: Some("verified"),
         deviations: &[],
         expected: Some(&receipt),
+        stable: true,
     };
     assert_eq!(
         output::save(&image, &raw, &mut store, publication())

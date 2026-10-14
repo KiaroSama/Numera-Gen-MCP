@@ -39,6 +39,23 @@ fn exact_source_nested_signed_query_redaction_preserves_status_without_private_v
 }
 
 #[test]
+fn fixture_cleanup_retries_only_documented_windows_transient_errors() {
+    for code in [32, 145, 303] {
+        assert!(common::cleanup_retryable(
+            &std::io::Error::from_raw_os_error(code)
+        ));
+    }
+    for code in [5, 2, 87] {
+        assert!(!common::cleanup_retryable(
+            &std::io::Error::from_raw_os_error(code)
+        ));
+    }
+    assert!(!common::cleanup_retryable(&std::io::Error::other(
+        "unknown fixture error"
+    )));
+}
+
+#[test]
 fn secrets_are_redacted_without_replacing_safe_metadata() {
     let value = redact(
         &json!({

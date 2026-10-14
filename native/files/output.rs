@@ -28,6 +28,7 @@ pub struct Publication<'a> {
     pub prefix: Option<&'a str>,
     pub deviations: &'a [String],
     pub expected: Option<&'a Receipt>,
+    pub stable: bool,
 }
 
 pub fn save(
@@ -43,6 +44,7 @@ pub fn save(
         prefix,
         deviations,
         expected,
+        stable,
     } = publication;
     let error = || {
         NumeraError::new("output_file_error","Cannot save verified image; retained results can be recovered with get_job. Do not resubmit automatically.").stage("storage")
@@ -58,25 +60,32 @@ pub fn save(
             ));
         }
     }
-    let item = store.publication(
-        id,
-        index,
-        |output_id| {
-            Ok(directory
-                .join(format!(
-                    "{}{}-{}-{}.{}",
-                    prefix.map(|s| format!("{s}-")).unwrap_or_default(),
-                    id,
-                    index,
-                    output_id,
-                    image.extension
-                ))
-                .to_string_lossy()
-                .into_owned())
-        },
-        expected,
-    )?;
-    let target = std::path::PathBuf::from(item.target.as_ref().ok_or_else(error)?);
+    let filename = |output_id: &str| -> Result<String> {
+        Ok(directory
+            .join(format!(
+                "{}{}-{}-{}.{}",
+                prefix.map(|s| format!("{s}-")).unwrap_or_default(),
+                id,
+                index,
+                output_id,
+                image.extension
+            ))
+            .to_string_lossy()
+            .into_owned())
+    };
+    let item = if stable {
+        Some(store.publication(id, index, filename, expected)?)
+    } else {
+        None
+    };
+    let output_id = item
+        .as_ref()
+        .map(|item| item.output_id.clone())
+        .unwrap_or_else(|| Uuid::new_v4().to_string());
+    let target = std::path::PathBuf::from(match &item {
+        Some(item) => item.target.as_ref().ok_or_else(error)?.clone(),
+        None => filename(&output_id)?,
+    });
     let parent = fs::canonicalize(target.parent().ok_or_else(error)?).map_err(|_| error())?;
     if parent != directory || !parent.starts_with(fs::canonicalize(root).map_err(|_| error())?) {
         return Err(NumeraError::new(
@@ -84,18 +93,20 @@ pub fn save(
             "Retained output target does not match the configured output directory.",
         ));
     }
-    if item.sha256.as_deref() != Some(image.sha256.as_str()) {
+    if item
+        .as_ref()
+        .is_some_and(|item| item.sha256.as_deref() != Some(image.sha256.as_str()))
+    {
         return Err(NumeraError::new(
             "output_file_error",
             "Retained output hash does not match image bytes.",
         )
         .stage("storage"));
     }
-    if item.phase == "committed" {
-        return store.output(&item.output_id);
+    if item.as_ref().is_some_and(|item| item.phase == "committed") {
+        return store.output(&output_id);
     }
-    let temporary =
-        Temporary(directory.join(format!(".{}-{}.tmp", item.output_id, Uuid::new_v4())));
+    let temporary = Temporary(directory.join(format!(".{}-{}.tmp", output_id, Uuid::new_v4())));
     let mut options = fs::OpenOptions::new();
     options.write(true).create_new(true);
     #[cfg(unix)]
@@ -108,7 +119,7 @@ pub fn save(
         .and_then(|_| file.sync_all())
         .map_err(|_| error())?;
     drop(file);
-    if !store.owns(id, expected)? {
+    if stable && !store.owns(id, expected)? {
         return Err(NumeraError::new(
             "outcome_unknown",
             "Output writer lease changed before publication.",
@@ -117,7 +128,7 @@ pub fn save(
     }
     match fs::hard_link(&temporary.0, &target) {
         Ok(()) => {}
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+        Err(e) if stable && e.kind() == std::io::ErrorKind::AlreadyExists => {}
         Err(_) => return Err(error()),
     }
     fs::remove_file(&temporary.0).map_err(|_| error())?;
@@ -138,9 +149,13 @@ pub fn save(
             NumeraError::new("output_file_error", "Saved image hash mismatch.").stage("storage"),
         );
     }
-    let output = json!({"output_id":item.output_id,"request_id":id,"path":target.to_str().ok_or_else(error)?,
+    let output = json!({"output_id":output_id,"request_id":id,"path":target.to_str().ok_or_else(error)?,
         "mime_type":saved.mime,"width":saved.width,"height":saved.height,"has_alpha":saved.alpha,"bytes":saved.bytes.len(),"sha256":saved.sha256});
-    store.commit(id, index, &output, deviations, expected)?;
+    if stable {
+        store.commit(id, index, &output, deviations, expected)?;
+    } else {
+        store.add_output(&output).map_err(|_| error())?;
+    }
     Ok(output)
 }
 

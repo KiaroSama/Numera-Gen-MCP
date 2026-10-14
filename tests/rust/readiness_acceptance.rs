@@ -90,7 +90,11 @@ async fn captured_bytes(stream: impl AsyncRead + Unpin) -> FixtureResult<Vec<u8>
     Ok(bytes)
 }
 
-async fn readiness(fixture: &Fixture, args: &[String], deadline: Instant) -> FixtureResult<Captured> {
+async fn readiness(
+    fixture: &Fixture,
+    args: &[String],
+    deadline: Instant,
+) -> FixtureResult<Captured> {
     let budget = deadline
         .saturating_duration_since(Instant::now())
         .saturating_sub(Duration::from_secs(2))
@@ -132,11 +136,8 @@ async fn readiness(fixture: &Fixture, args: &[String], deadline: Instant) -> Fix
     let stdout = child.stdout.take().expect("owned stdout pipe");
     let stderr = child.stderr.take().expect("owned stderr pipe");
     let capture = async {
-        let (status, stdout, stderr) = tokio::join!(
-            child.wait(),
-            captured_bytes(stdout),
-            captured_bytes(stderr),
-        );
+        let (status, stdout, stderr) =
+            tokio::join!(child.wait(), captured_bytes(stdout), captured_bytes(stderr),);
         Ok::<_, String>((
             status.map_err(|_| "Cannot reap owned readiness executable.".to_owned())?,
             stdout?,
@@ -234,8 +235,8 @@ async fn serve(
             accepted = listener.accept() => accepted,
             _ = stop.cancelled() => return Ok(methods),
         };
-        let (mut socket, _) = accepted
-            .map_err(|_| "Cannot accept owned readiness fixture connection.".to_owned())?;
+        let (mut socket, _) =
+            accepted.map_err(|_| "Cannot accept owned readiness fixture connection.".to_owned())?;
         let rejected = reject.load(Ordering::SeqCst);
         let failure = json!({"error":"Bearer must-not-print-provider-error"});
         methods.push(String::new());
@@ -308,7 +309,8 @@ async fn exercise(
 
 fn report(output: &Captured, code: i32) -> Value {
     assert_eq!(output.status.code(), Some(code));
-    Value::parse_with_limit(&output.stdout, 1048576).expect("readiness stdout must be one JSON report")
+    Value::parse_with_limit(&output.stdout, 1048576)
+        .expect("readiness stdout must be one JSON report")
 }
 
 #[tokio::test]
@@ -330,7 +332,10 @@ async fn executable_readiness_probes_get_only_and_never_discloses_the_exact_cata
     assert_eq!(result["catalog_count"], 1);
     assert_eq!(result["generation_verified"], false);
     assert_eq!(result["tool_count"], 10);
-    assert!(!methods.is_empty(), "Read-only probe must contact its local fixture.");
+    assert!(
+        !methods.is_empty(),
+        "Read-only probe must contact its local fixture."
+    );
     assert!(methods.iter().all(|method| method == "GET"));
     assert!(!outputs[0].stdout.contains("do-not-print-fixture"));
     assert!(!outputs[0].stderr.contains("do-not-print-fixture"));
@@ -352,7 +357,10 @@ async fn executable_readiness_missing_declared_credential_exits_two_without_prov
     assert_eq!(result["credentials_ready"], false);
     assert_eq!(result["connection_ready"], false);
     assert_eq!(result["blockers"], json!(["declared_credentials_missing"]));
-    assert!(methods.is_empty(), "Missing credentials must prevent every provider call.");
+    assert!(
+        methods.is_empty(),
+        "Missing credentials must prevent every provider call."
+    );
 }
 
 #[tokio::test]
@@ -374,12 +382,16 @@ async fn executable_readiness_local_only_has_null_connection_and_relative_config
     assert_eq!(result["local_ready"], true);
     assert_eq!(result["connection_ready"], Value::Null);
     assert_eq!(result["generation_verified"], false);
-    assert!(methods.is_empty(), "Local-only checks must never contact the provider.");
+    assert!(
+        methods.is_empty(),
+        "Local-only checks must never contact the provider."
+    );
     assert_eq!(outputs[1].status.code(), Some(1));
 }
 
 #[tokio::test]
-async fn executable_readiness_unlisted_model_and_failed_catalog_exit_two_without_post_or_error_leak() {
+async fn executable_readiness_unlisted_model_and_failed_catalog_exit_two_without_post_or_error_leak()
+ {
     let fixture = Fixture::new().await;
     let mut failed = fixture.configuration(json!({"type":"none"}));
     failed.push("--probe".into());

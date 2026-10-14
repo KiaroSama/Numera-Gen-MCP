@@ -161,7 +161,7 @@ impl Store {
                 return Err(NumeraError::new("output_file_error","Published output does not match its retained journal identity.").stage("storage"));
             }
             if item.phase=="committed" {return Ok(());}
-            store.db.execute("INSERT INTO outputs VALUES(?,?,?)",params![item.output_id,id,output.to_string()]).map_err(|_|NumeraError::storage())?;
+            store.add_output(output)?;
             let mut receipt=store.get(id)?;
             receipt.value["outputs"].as_array_mut().ok_or_else(NumeraError::storage)?.push(output.clone());
             receipt.value["deviations"].as_array_mut().ok_or_else(NumeraError::storage)?.extend(deviations.iter().map(|s|json!(s)));

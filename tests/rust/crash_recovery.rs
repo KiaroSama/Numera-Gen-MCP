@@ -112,6 +112,7 @@ fn crash_checkpoint_child() {
                 prefix: None,
                 deviations: &[],
                 expected: Some(&owner),
+                stable: true,
             },
         )
         .unwrap();

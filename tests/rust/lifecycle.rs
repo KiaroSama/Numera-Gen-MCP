@@ -72,6 +72,7 @@ fn writer_fences_terminal_accounting_and_original_journal_survive_reopen() {
             prefix: None,
             deviations: &[],
             expected: Some(&original),
+            stable: true,
         },
     )
     .unwrap();
