@@ -300,6 +300,10 @@ path = "tests/rust/body_acceptance.rs"
 name = "streams_acceptance"
 path = "tests/rust/streams_acceptance.rs"
 
+[[test]]
+name = "generation_acceptance"
+path = "tests/rust/generation_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

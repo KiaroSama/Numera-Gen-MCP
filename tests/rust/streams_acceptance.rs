@@ -19,7 +19,10 @@ use std::{collections::HashSet, path::Path};
 fn oracle() -> Value {
     let file = Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/stream-acceptance.json");
     let bytes = std::fs::read(file).expect("exact frozen stream acceptance oracle required");
-    assert!(bytes.len() <= 4 * 1024 * 1024, "bounded stream oracle bundle");
+    assert!(
+        bytes.len() <= 4 * 1024 * 1024,
+        "bounded stream oracle bundle"
+    );
     Value::parse_with_limit(std::str::from_utf8(&bytes).unwrap(), 4 * 1024 * 1024).unwrap()
 }
 
@@ -31,7 +34,9 @@ fn outcome(result: Result<Value>) -> Value {
 }
 
 fn group<'a>(oracle: &'a Value, name: &str, count: usize) -> &'a [Value] {
-    let cases = oracle[name].as_array().expect("required exact source group");
+    let cases = oracle[name]
+        .as_array()
+        .expect("required exact source group");
     assert_eq!(cases.len(), count, "{name}");
     let names: HashSet<_> = cases
         .iter()
@@ -76,7 +81,10 @@ fn exact_source_normalization_preserves_metadata_siblings_jobs_and_all_terminal_
             assert_eq!(result["upstreamId"], "owned-upstream");
             assert_eq!(result["usage"], json!({"images": 2}));
             assert_eq!(result["images"].as_array().unwrap().len(), 3);
-            assert_eq!(result["images"][1]["url"], "https://fixture.example/output.png");
+            assert_eq!(
+                result["images"][1]["url"],
+                "https://fixture.example/output.png"
+            );
             assert!(result["images"][2]["error"].is_string());
             assert_eq!(result["warnings"], json!([]));
             assert_eq!(
@@ -89,10 +97,13 @@ fn exact_source_normalization_preserves_metadata_siblings_jobs_and_all_terminal_
             assert_eq!(raw["id"], "job-123");
             assert_eq!(raw["model"], "actual");
             assert_eq!(actual["value"]["images"], json!([]));
-            assert_eq!(actual["value"]["job"], json!({
-                "id": "job-123",
-                "kind": if adapter == "gemini-interactions" { "interactions" } else { "responses" }
-            }));
+            assert_eq!(
+                actual["value"]["job"],
+                json!({
+                    "id": "job-123",
+                    "kind": if adapter == "gemini-interactions" { "interactions" } else { "responses" }
+                })
+            );
         } else if name.starts_with("terminal-") {
             let status = raw["status"].as_str().unwrap();
             assert!(terminal.insert((adapter, status)));
@@ -135,11 +146,17 @@ fn exact_source_json_binary_and_sse_results_require_finals_and_never_promote_par
         } else {
             case["text"].as_str().unwrap().as_bytes().to_vec()
         };
-        let actual = response(&case["connection"], bytes.clone(), case["mime"].as_str().unwrap());
+        let actual = response(
+            &case["connection"],
+            bytes.clone(),
+            case["mime"].as_str().unwrap(),
+        );
         if name.starts_with("binary-") {
             let format = name.strip_prefix("binary-").unwrap();
             assert!(binary.insert(format));
-            let result = actual.as_ref().expect("binary source output must be preserved");
+            let result = actual
+                .as_ref()
+                .expect("binary source output must be preserved");
             assert_eq!(result.images.len(), 1);
             assert_eq!(result.images[0].bytes.as_ref().unwrap(), &bytes);
             assert!(result.upstream_model.is_none());
@@ -161,19 +178,28 @@ fn exact_source_json_binary_and_sse_results_require_finals_and_never_promote_par
             let frames = numera_image_gen_mcp::http::sse::events(
                 case["text"].as_str().unwrap().as_bytes(),
                 1048576,
-            ).unwrap();
+            )
+            .unwrap();
             assert_eq!(frames.len(), 2);
             assert_eq!(frames[0].kind, "response.completed");
             assert_eq!(frames[1].kind, kind);
             assert!(frames[0].data["response"].get("id").is_none());
-            assert_eq!(frames[0].data["response"]["output"][0]["result"], oracle["original"]);
+            assert_eq!(
+                frames[0].data["response"]["output"][0]["result"],
+                oracle["original"]
+            );
             assert_eq!(frames[1].data, json!({"error": "fixture"}));
         }
     }
-    assert_eq!(binary, ["png", "jpeg", "webp"].into_iter().collect::<HashSet<_>>());
+    assert_eq!(
+        binary,
+        ["png", "jpeg", "webp"].into_iter().collect::<HashSet<_>>()
+    );
     assert_eq!(
         suffixes,
-        ["error", "response.failed", "response.incomplete"].into_iter().collect::<HashSet<_>>()
+        ["error", "response.failed", "response.incomplete"]
+            .into_iter()
+            .collect::<HashSet<_>>()
     );
 }
 
@@ -224,23 +250,36 @@ fn exact_source_json_edits_settings_and_all_unsupported_options_and_masks_match(
                 assert_eq!(case["reference_count"], 1);
                 assert_eq!(case["mask"], true);
                 assert!(
-                    body[encoding].to_string().contains(oracle["original"].as_str().unwrap())
+                    body[encoding]
+                        .to_string()
+                        .contains(oracle["original"].as_str().unwrap())
                 );
                 assert_eq!(
                     body["mask"],
-                    format!("data:image/png;base64,{}", oracle["original"].as_str().unwrap())
+                    format!(
+                        "data:image/png;base64,{}",
+                        oracle["original"].as_str().unwrap()
+                    )
                 );
                 assert_eq!(actual["value"]["operation"], "images/edits");
             } else if name == "9router-two-references" {
-                let url = format!("data:image/png;base64,{}", oracle["original"].as_str().unwrap());
+                let url = format!(
+                    "data:image/png;base64,{}",
+                    oracle["original"].as_str().unwrap()
+                );
                 assert_eq!(case["reference_count"], 2);
                 assert_eq!(body["images"], json!([url, url]));
             } else if name == "openrouter-fallback" {
                 assert_eq!(body["seed"], 42);
                 assert_eq!(body["resolution"], "2K");
-                assert_eq!(body["provider"], json!({"allow_fallbacks": false, "order": ["fixture-provider"]}));
+                assert_eq!(
+                    body["provider"],
+                    json!({"allow_fallbacks": false, "order": ["fixture-provider"]})
+                );
                 assert!(
-                    body["input_references"].to_string().contains(oracle["original"].as_str().unwrap())
+                    body["input_references"]
+                        .to_string()
+                        .contains(oracle["original"].as_str().unwrap())
                 );
             }
         }

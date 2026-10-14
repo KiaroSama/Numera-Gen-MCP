@@ -228,7 +228,7 @@ impl Generation {
         }
         let continuation = result.continuation.clone();
         let mut completed = self
-            .finish(receipt.clone(), result, input.request, cancel, false)
+            .finish(receipt.clone(), result, input.request, cancel, true, false)
             .await?;
         if let Some(value) = continuation {
             let stored = locked(&self.store)?.save_continuation(

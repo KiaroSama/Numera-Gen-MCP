@@ -252,6 +252,22 @@ account entitlement. These new assertions and repairs require their own hosted e
 case dispositions remain pending. Windows/Linux/macOS x64 and ARM64 tests and builds remain exclusively
 on GitHub-hosted runners; no local Rust build or toolchain is used.
 
+At `d9fc7be`, all 65 native targets passed on all six platforms and nightly; Clippy, release builds,
+stdio/HTTP SDK checks and all three Node jobs also passed. Complete coverage passed at 86.08% regions /
+84.32% branches. Only formatting in five test files failed, so notices, archives and extracted-package
+checks were skipped. The actual hosted formatter corrections preserve every assertion and string.
+The next acceptance repair adds exact direct-finalization fixtures: source 8x6 originals, ordered
+JPEG deviations, aggregate limits, cancellation and recovery on the same Generation/Store, data-URL
+output and terminal cancellation. Direct finalization now claims, renews and releases its writer;
+already-claimed callers preserve their outer ownership. A controlled failure checks release on error.
+Terminal retention updates receipt JSON without relinquishing the writer's full reservation. An exact
+1024-byte budget/32-byte result case refuses a peer's 992-byte reservation before release and permits
+it afterward. These new changes are source-reviewed but not yet compiled or executed. The withdrawn
+hypothesis that same-owner recovery necessarily blocks is not a repair rationale or test result.
+The 46-case Store/lifecycle review retains partial and unmapped schedules explicitly. The current
+batch has 66 registered native targets and 313 concrete assertion assignments; many remain partial.
+All 470 acceptance dispositions remain pending; passing related fixtures does not establish literal parity.
+
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally
 for this migration. [Acceptance matrix](testing/MIGRATION-MATRIX.md) records incomplete source-case,

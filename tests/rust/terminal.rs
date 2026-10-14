@@ -304,6 +304,62 @@ fn terminal_writer_keeps_reservation_until_retention_then_releases_unused_capaci
 }
 
 #[test]
+fn exact_source_terminal_retention_keeps_full_budget_until_writer_release() {
+    let workspace = common::Workspace::new();
+    let directory = workspace.0.join("state");
+    let mut owner = Store::open(&directory).unwrap();
+    let mut peer = Store::open(&directory).unwrap();
+    let initial = |id: &str| {
+        Receipt::new(json!({
+            "request_id":id,"connection":"local","adapter":"openai-images",
+            "operation":"generate","status":"prepared","requested_model":"image-model",
+            "upstream_model":null,"outputs":[],"warnings":[],"deviations":[],"errors":[],
+            "generation_outcome":"not_submitted","storage_outcome":"not_started",
+            "another_submission_may_charge":false,
+            "created_at":"2026-10-02T00:00:00.000Z","updated_at":"2026-10-02T00:00:00.000Z"
+        }))
+    };
+    let mut receipt = owner
+        .prepare(initial("terminal"), "hash", "identity")
+        .unwrap()
+        .1;
+    assert!(owner.admit("terminal", "local", 1, 1).unwrap());
+    receipt.value["status"] = json!("running");
+    receipt.value["upstream_job"] = json!({"id":"job","kind":"responses"});
+    owner.update(&mut receipt).unwrap();
+    owner.reserve("terminal", 1024, 1024).unwrap();
+    let done = owner
+        .terminate(
+            "terminal",
+            "failed",
+            &json!({"code":"provider_rejection"}),
+            Some(&receipt),
+            Some(&receipt.value["upstream_job"]),
+        )
+        .unwrap();
+    assert!(owner.owns("terminal", Some(&done)).unwrap());
+    peer.prepare(initial("fresh"), "fresh", "identity").unwrap();
+    assert!(peer.admit("fresh", "local", 1, 1).unwrap());
+    assert_eq!(code(peer.reserve("fresh", 1024, 1024)), "rate_limited");
+    let bytes = [0u8; 32];
+    owner.retain("terminal", 0, &bytes, Some(&done)).unwrap();
+    assert!(owner.owns("terminal", Some(&done)).unwrap());
+    assert_eq!(code(peer.reserve("fresh", 992, 1024)), "rate_limited");
+    assert_eq!(
+        owner.pending("terminal").unwrap()[0].bytes.as_deref(),
+        Some(bytes.as_slice())
+    );
+    owner.release("terminal", Some(&done)).unwrap();
+    peer.reserve("fresh", 992, 1024).unwrap();
+    assert!(!owner.owns("terminal", Some(&done)).unwrap());
+    assert_eq!(owner.get("terminal").unwrap().value["status"], "failed");
+    assert_eq!(
+        owner.get("terminal").unwrap().value["generation_outcome"],
+        "failed"
+    );
+}
+
+#[test]
 fn releasing_empty_terminal_reservation_keeps_receipt_but_frees_full_budget() {
     let workspace = common::Workspace::new();
     let directory = workspace.0.join("state");

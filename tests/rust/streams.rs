@@ -83,9 +83,17 @@ fn exact_source_seven_byte_preview_completed_done_chunks_preserve_only_terminal_
         reader.push(chunk).unwrap();
     }
     let bytes = reader.finish().unwrap();
-    assert!(!String::from_utf8(bytes.clone()).unwrap().contains("preview"));
-    let result = response(&json!({"adapter":"openrouter-images"}), bytes, "text/event-stream")
-        .unwrap();
+    assert!(
+        !String::from_utf8(bytes.clone())
+            .unwrap()
+            .contains("preview")
+    );
+    let result = response(
+        &json!({"adapter":"openrouter-images"}),
+        bytes,
+        "text/event-stream",
+    )
+    .unwrap();
     assert_eq!(normalized(result)["images"], json!([{"base64":"ZmluYWw="}]));
 }
 

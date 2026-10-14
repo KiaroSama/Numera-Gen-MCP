@@ -228,6 +228,7 @@ pub async fn get(
                         &recovery_request(&receipt)?,
                         &cancel,
                         true,
+                        true,
                     )
                     .await;
             }

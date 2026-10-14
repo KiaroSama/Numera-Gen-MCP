@@ -140,6 +140,7 @@ async fn cancelled_publication_retains_completed_originals_and_recovery_preserve
             result,
             &json!({"count":2,"output_format":"jpeg","size":"8x6"}),
             &signal,
+            true,
             false,
         ),
     )

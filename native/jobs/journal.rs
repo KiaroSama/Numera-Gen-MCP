@@ -103,7 +103,11 @@ impl Store {
             store.db.execute("INSERT INTO result_journal(request_id,item,output_id,bytes,sha256,phase) VALUES(?,?,?,?,?,'retained') ON CONFLICT(request_id,item) DO UPDATE SET bytes=excluded.bytes,url=NULL,sha256=excluded.sha256,phase=CASE WHEN result_journal.target IS NULL THEN 'retained' ELSE 'publishing' END",params![id,index,output_id,bytes,hash]).map_err(|_|NumeraError::storage())?;
             let mut receipt=store.get(id)?;
             receipt.value["generation_outcome"]=if receipt.value["upstream_terminal"].is_null(){json!("completed")}else{receipt.value["upstream_terminal"].clone()};
-            store.update(&mut receipt)
+            receipt.touch();
+            // Retention cannot release capacity while the terminal writer still owns it.
+            store.db.execute("UPDATE requests SET receipt=? WHERE id=? AND owner=? AND generation=?",
+                params![receipt.value.to_string(),id,store.owner,request.generation]).map_err(|_|NumeraError::storage())?;
+            Ok(())
         })
     }
     pub fn retain_url(

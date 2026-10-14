@@ -89,6 +89,20 @@ multi-reference and unverified implicit-route divergences are corrected; missing
 are distinct from empty present bodies. Current compilation/execution and final literal acceptance
 remain pending. Builds and tests continue on all six GitHub-hosted Windows/Linux/macOS x64/ARM64 targets.
 
+At `d9fc7be`, all 65 native targets passed on all six stable platforms and nightly; all-six Clippy,
+release builds and stdio/HTTP SDK checks, all three Node jobs and full 86.08% regions / 84.32% branches
+coverage passed. Only five test-file formatting checks failed; notices and all archives remained
+skipped. Actual hosted formatting is now applied without assertion/string changes.
+The next source-only repair registers a direct-finalization acceptance target with four literal
+8x6/default-receipt cases and a direct-error versus claimed-writer control. Direct calls claim/renew/
+release; outer callers explicitly retain claimed ownership. Terminal retention preserves the full
+reservation until release, with the 1024/32/992 intermediate peer-budget assertion missing from older
+fixtures. Independent source review found no confirmed defects, not compilation/runtime proof.
+The current batch has 66 registered native targets and 313 concrete assertion assignments, including
+partial mappings. All 46 reviewed Store/lifecycle cases retain pending status; remaining public
+SDK/reopen/process schedules are not closed by direct Store assertions. The earlier same-owner recovery-blocked
+hypothesis was retracted and is not treated as a failure.
+
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

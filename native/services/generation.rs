@@ -403,9 +403,11 @@ impl Generation {
         result: Normalized,
         request: &Value,
         cancel: &CancellationToken,
+        mut claimed: bool,
         recovery: bool,
     ) -> Result<Receipt> {
         let id = receipt.id()?.to_owned();
+        let mut terminal_claim = false;
         if let Some(state) = &result.terminal {
             if !locked(&self.store)?.owns(&id, Some(&receipt))? {
                 return locked(&self.store)?.get(&id);
@@ -427,12 +429,27 @@ impl Generation {
             if result.images.is_empty() && !locked(&self.store)?.has_pending(&id)? {
                 return Ok(receipt);
             }
+            claimed = true;
+            terminal_claim = true;
         }
-        finalization::finalize(
+        let owned = {
+            let mut store = locked(&self.store)?;
+            if claimed {
+                store.owns(&id, Some(&receipt))?
+            } else {
+                store.claim(&id, Some(&receipt), false)?
+            }
+        };
+        if !owned {
+            return locked(&self.store)?.get(&id);
+        }
+        receipt = locked(&self.store)?.get(&id)?;
+        let lease = Lease::start(self.store.clone(), receipt.clone(), cancel.clone(), false);
+        let result = finalization::finalize(
             &self.config.value,
             &self.store,
             &self.logger,
-            receipt,
+            receipt.clone(),
             finalization::Finalization {
                 result: Some(result),
                 request,
@@ -440,7 +457,12 @@ impl Generation {
                 recovery,
             },
         )
-        .await
+        .await;
+        lease.close().await;
+        if !claimed || terminal_claim {
+            locked(&self.store)?.release(&id, Some(&receipt))?;
+        }
+        result
     }
 
     fn record_error(

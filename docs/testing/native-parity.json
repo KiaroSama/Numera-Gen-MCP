@@ -394,6 +394,7 @@
         "tests/rust/snapshot_races.rs::two_actual_store_processes_serialize_shared_budget_reservations",
         "tests/rust/terminal.rs::received_completion_wins_late_cancellation_and_preserves_accounting",
         "tests/rust/terminal.rs::terminal_writer_keeps_reservation_until_retention_then_releases_unused_capacity",
+        "tests/rust/terminal.rs::exact_source_terminal_retention_keeps_full_budget_until_writer_release",
         "tests/rust/terminal.rs::releasing_empty_terminal_reservation_keeps_receipt_but_frees_full_budget"
       ],
       "status": "pending",
@@ -476,7 +477,8 @@
       "native": [
         "tests/rust/terminal.rs::authoritative_terminal_states_release_admission_and_survive_reopen_without_replay",
         "tests/rust/terminal.rs::wrong_job_and_local_cancellation_do_not_claim_authoritative_terminal_state",
-        "tests/rust/job_recovery_contracts.rs::comfy_authoritative_failed_history_and_absent_cancel_acknowledgement_are_not_equivalent"
+        "tests/rust/job_recovery_contracts.rs::comfy_authoritative_failed_history_and_absent_cancel_acknowledgement_are_not_equivalent",
+        "tests/rust/generation_acceptance.rs::exact_source_terminal_partial_finish_recovers_on_same_generation_without_capacity_resurrection"
       ],
       "status": "pending",
       "evidence": null,
@@ -628,7 +630,10 @@
         "tests/rust/canonical_parity.rs::generated_source_canonicalization_cases_are_nonempty_and_exact",
         "tests/rust/state.rs::existing_request_identity_survives_reopen_and_never_replays",
         "tests/rust/terminal.rs::two_real_store_instances_enforce_global_and_connection_admission_limits",
-        "tests/rust/generation_contracts.rs::input_reference_mask_pixel_and_owned_byte_limits_reject_before_submission"
+        "tests/rust/generation_contracts.rs::input_reference_mask_pixel_and_owned_byte_limits_reject_before_submission",
+        "tests/rust/generation_acceptance.rs::exact_source_direct_finish_keeps_jpeg_sibling_metadata_and_ordered_deviations",
+        "tests/rust/generation_acceptance.rs::exact_source_direct_finish_aggregate_cancel_and_same_store_recovery_preserve_originals",
+        "tests/rust/generation_acceptance.rs::exact_source_direct_data_url_finish_refresh_and_cancel_keep_terminal_receipt"
       ],
       "status": "pending",
       "evidence": null,

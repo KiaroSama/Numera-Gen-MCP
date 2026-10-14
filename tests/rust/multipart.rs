@@ -79,7 +79,12 @@ async fn actual_multipart_wire_preserves_source_field_names_order_filenames_and_
     assert_eq!(exact_cases.len(), 2);
     let action = async {
         let mut checked = 0;
-        for case in oracle["wires"].as_array().unwrap().iter().chain(exact_cases) {
+        for case in oracle["wires"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .chain(exact_cases)
+        {
             let Some(expected) = case["expected"]["value"].get("multipart") else {
                 continue;
             };
@@ -188,7 +193,10 @@ async fn actual_multipart_wire_preserves_source_field_names_order_filenames_and_
             }
             checked += 1;
         }
-        assert!(checked > 2, "broad and both exact source multipart cases required");
+        assert!(
+            checked > 2,
+            "broad and both exact source multipart cases required"
+        );
     };
     tokio::time::timeout(Duration::from_secs(8), action)
         .await

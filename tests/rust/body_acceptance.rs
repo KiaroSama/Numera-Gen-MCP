@@ -21,5 +21,10 @@ fn exact_source_chunks_advertised_actual_limits_absent_body_and_cancel_reason_ar
     assert_eq!(error.message, "fixture cancellation");
     assert_eq!(error.code, "cancelled");
     assert!(body.finish().is_empty());
-    assert!(BoundedBytes::new(None, true, 3).unwrap().finish().is_empty());
+    assert!(
+        BoundedBytes::new(None, true, 3)
+            .unwrap()
+            .finish()
+            .is_empty()
+    );
 }

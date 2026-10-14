@@ -109,7 +109,8 @@ async fn api_and_asset_absent_bodies_reject_but_empty_present_body_is_allowed() 
         value: json!({}),
     })
     .await;
-    let connection = json!({"baseUrl":server.origin,"baseUrlMode":"api-prefix","discoveryTimeoutMs":2000});
+    let connection =
+        json!({"baseUrl":server.origin,"baseUrlMode":"api-prefix","discoveryTimeoutMs":2000});
     let config = json!({"files":{"assetAllowances":[{"origin":server.origin,"pathPrefix":"/"}]}});
     let cancel = CancellationToken::new();
     let result = tokio::time::timeout(Duration::from_secs(6), async {

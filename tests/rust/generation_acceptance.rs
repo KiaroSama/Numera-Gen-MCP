@@ -1,0 +1,399 @@
+mod common;
+use base64::{Engine, engine::general_purpose::STANDARD};
+use common::Workspace;
+use numera_image_gen_mcp::compat::value::{Value, json};
+use numera_image_gen_mcp::{
+    adapters::types::{Normalized, ResultItem},
+    config::Config,
+    files::images::{decode_base64, inspect},
+    jobs::{Receipt, Store},
+    logging::Logger,
+    runtime_paths::RuntimePaths,
+    services::{generation::Generation, jobs, request},
+};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+use tokio_util::sync::CancellationToken;
+
+fn generation(workspace: &Workspace, aggregate: Option<usize>) -> Generation {
+    let mut raw = json!({
+        "schemaVersion":1,"defaultConnection":"local",
+        "outputDir":workspace.0.join("outputs").to_str().unwrap(),
+        "stateDir":workspace.0.join("state").to_str().unwrap(),
+        "logging":{"directory":workspace.0.join("logs").to_str().unwrap()},
+        "files":{"allowedInputRoots":[workspace.0.join("inputs").to_str().unwrap()]},
+        "connections":{"local":{"adapter":"openai-images","baseUrl":"https://api.example/v1","auth":{"type":"none"}}}
+    });
+    if let Some(limit) = aggregate {
+        raw["files"]["maxAggregateBytes"] = json!(limit);
+    }
+    Generation {
+        config: Arc::new(
+            Config::parse(
+                &raw.to_string(),
+                &workspace.0.join("config.json"),
+                &[],
+                &HashMap::new(),
+            )
+            .unwrap(),
+        ),
+        runtime: RuntimePaths::new(&workspace.0).unwrap(),
+        store: Arc::new(Mutex::new(Store::open(&workspace.0.join("state")).unwrap())),
+        logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
+        env: HashMap::new(),
+        active: Arc::new(Mutex::new(HashMap::new())),
+    }
+}
+
+fn original(format: &str) -> Vec<u8> {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join(".ci-work/parity/image-acceptance.json");
+    let text = std::fs::read_to_string(path).unwrap();
+    let cases = Value::parse_with_limit(&text, 1048576).unwrap();
+    let case = cases
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|case| case["name"] == format)
+        .unwrap();
+    let bytes = decode_base64(case["base64"].as_str().unwrap(), 1048576).unwrap();
+    let image = inspect(bytes.clone(), &json!({}), None).unwrap();
+    assert_eq!((image.width, image.height), (8, 6));
+    assert_eq!(image.mime, format!("image/{format}"));
+    bytes
+}
+
+fn prepare(generation: &Generation, id: &str, hash: &str) -> Receipt {
+    let initial = Receipt::new(json!({
+        "request_id":id,"connection":"local","adapter":"openai-images","operation":"generate",
+        "status":"prepared","requested_model":"image-model","upstream_model":null,
+        "outputs":[],"warnings":[],"deviations":[],"errors":[],
+        "generation_outcome":"not_submitted","storage_outcome":"not_started",
+        "another_submission_may_charge":false,
+        "created_at":"2026-10-02T00:00:00.000Z","updated_at":"2026-10-02T00:00:00.000Z"
+    }));
+    generation
+        .store
+        .lock()
+        .unwrap()
+        .prepare(initial, hash, "identity")
+        .unwrap()
+        .1
+}
+
+fn bytes_result(bytes: Vec<u8>) -> Normalized {
+    Normalized {
+        images: vec![ResultItem {
+            bytes: Some(bytes),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
+
+#[tokio::test]
+async fn exact_source_direct_finish_keeps_jpeg_sibling_metadata_and_ordered_deviations() {
+    let workspace = Workspace::new();
+    let g = generation(&workspace, None);
+    let initial = prepare(&g, "request-1", "hash");
+    let jpeg = original("jpeg");
+    let mut result = bytes_result(jpeg.clone());
+    result.images.push(ResultItem {
+        error: Some("fixture output failure".into()),
+        ..Default::default()
+    });
+    result.upstream_model = Some("actual-model".into());
+    result.upstream_id = Some("upstream-1".into());
+    result.usage = Some(json!({"images":1}));
+    result.warnings = vec!["fixture warning".into()];
+    let request = request::parse(json!({
+        "prompt":"draw","count":2,"size":"10x10","output_format":"png","background":"transparent"
+    }))
+    .unwrap();
+    let receipt = tokio::time::timeout(
+        Duration::from_secs(3),
+        g.finish(
+            initial,
+            result,
+            &request,
+            &CancellationToken::new(),
+            false,
+            false,
+        ),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(receipt.status(), "partial");
+    assert_eq!(receipt.value["generation_outcome"], "completed");
+    assert_eq!(receipt.value["storage_outcome"], "partial_or_failed");
+    assert_eq!(receipt.value["upstream_model"], "actual-model");
+    assert_eq!(receipt.value["upstream_request_id"], "upstream-1");
+    assert_eq!(receipt.value["usage"], json!({"images":1}));
+    assert_eq!(receipt.value["outputs"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+        jpeg
+    );
+    assert_eq!(receipt.value["errors"].as_array().unwrap().len(), 1);
+    assert_eq!(receipt.value["errors"][0]["code"], "invalid_response");
+    assert_eq!(receipt.value["warnings"], json!(["fixture warning"]));
+    assert_eq!(
+        receipt.value["deviations"],
+        json!([
+            "Output 0 format is image/jpeg, not requested png.",
+            "Output 0 dimensions differ from requested size.",
+            "Output 0 has no alpha channel.",
+            "Requested 2 image(s), saved 1."
+        ])
+    );
+    let store = g.store.lock().unwrap();
+    assert_eq!(store.get("request-1").unwrap().value, receipt.value);
+    assert!(!store.owns("request-1", None).unwrap());
+}
+
+#[tokio::test]
+async fn exact_source_direct_finish_aggregate_cancel_and_same_store_recovery_preserve_originals() {
+    let workspace = Workspace::new();
+    let bytes = original("png");
+    let g = generation(&workspace, Some(bytes.len()));
+    let initial = prepare(&g, "request-1", "hash");
+    let mut result = bytes_result(bytes.clone());
+    result.images.push(ResultItem {
+        base64: Some(STANDARD.encode(&bytes).into()),
+        ..Default::default()
+    });
+    let signal = CancellationToken::new();
+    let request = request::parse(json!({"prompt":"draw","count":2})).unwrap();
+    let partial = tokio::time::timeout(
+        Duration::from_secs(3),
+        g.finish(initial, result, &request, &signal, false, false),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(partial.status(), "partial");
+    assert_eq!(partial.value["outputs"].as_array().unwrap().len(), 1);
+    assert_eq!(partial.value["errors"].as_array().unwrap().len(), 1);
+    assert_eq!(partial.value["errors"][0]["code"], "invalid_response");
+    assert_eq!(
+        partial.value["errors"][0]["message"],
+        "Aggregate output bytes exceeded."
+    );
+    assert!(!g.store.lock().unwrap().owns("request-1", None).unwrap());
+    let initial = prepare(&g, "cancelled", "cancelled-hash");
+    let cancelled = CancellationToken::new();
+    cancelled.cancel();
+    let request = request::parse(json!({"prompt":"draw"})).unwrap();
+    let failed = tokio::time::timeout(
+        Duration::from_secs(3),
+        g.finish(
+            initial,
+            bytes_result(bytes.clone()),
+            &request,
+            &cancelled,
+            false,
+            false,
+        ),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(failed.status(), "failed");
+    assert_eq!(failed.value["generation_outcome"], "completed");
+    assert_eq!(failed.value["storage_outcome"], "partial_or_failed");
+    assert_eq!(failed.value["outputs"], json!([]));
+    assert_eq!(failed.value["errors"].as_array().unwrap().len(), 1);
+    {
+        let store = g.store.lock().unwrap();
+        assert_eq!(store.pending("cancelled").unwrap().len(), 1);
+        assert!(!store.owns("cancelled", None).unwrap());
+    }
+    let recovered = tokio::time::timeout(
+        Duration::from_secs(3),
+        jobs::get(&g, "cancelled", true, &signal, None),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(recovered.status(), "completed");
+    assert_eq!(
+        std::fs::read(recovered.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+        bytes
+    );
+    assert_eq!(g.store.lock().unwrap().list_outputs(0, 100).unwrap().len(), 2);
+}
+
+#[tokio::test]
+async fn exact_source_direct_data_url_finish_refresh_and_cancel_keep_terminal_receipt() {
+    let workspace = Workspace::new();
+    let g = generation(&workspace, None);
+    let initial = prepare(&g, "request-1", "hash");
+    let bytes = original("png");
+    let result = Normalized {
+        images: vec![ResultItem {
+            url: Some(format!("data:image/png;base64,{}", STANDARD.encode(&bytes)).into()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let signal = CancellationToken::new();
+    let request = request::parse(json!({"prompt":"draw"})).unwrap();
+    let receipt = tokio::time::timeout(
+        Duration::from_secs(3),
+        g.finish(initial, result, &request, &signal, false, false),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(receipt.status(), "completed");
+    assert_eq!(receipt.value["storage_outcome"], "completed");
+    assert_eq!(receipt.value["errors"], json!([]));
+    assert_eq!(receipt.value["deviations"], json!([]));
+    assert_eq!(
+        std::fs::read(receipt.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+        bytes
+    );
+    let refreshed = tokio::time::timeout(
+        Duration::from_secs(3),
+        jobs::get(&g, "request-1", true, &signal, None),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(refreshed.value, receipt.value);
+    let cancelled = tokio::time::timeout(
+        Duration::from_secs(3),
+        jobs::cancel(&g, "request-1", &signal),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(
+        cancelled,
+        json!({
+            "request_id":"request-1","local_wait_cancelled":true,"upstream_requested":false,
+            "upstream_cancelled":null,"refund_verified":false,"another_submission_may_charge":true
+        })
+    );
+    let store = g.store.lock().unwrap();
+    assert!(store.cancelled("request-1").unwrap());
+    assert!(!store.owns("request-1", None).unwrap());
+}
+
+#[tokio::test]
+async fn exact_source_terminal_partial_finish_recovers_on_same_generation_without_capacity_resurrection()
+{
+    let workspace = Workspace::new();
+    let g = generation(&workspace, None);
+    let mut receipt = prepare(&g, "partial", "hash");
+    {
+        let mut store = g.store.lock().unwrap();
+        assert!(store.admit("partial", "local", 1, 1).unwrap());
+        receipt.value["status"] = json!("running");
+        receipt.value["upstream_job"] = json!({"id":"job","kind":"responses"});
+        store.update(&mut receipt).unwrap();
+    }
+    let bytes = original("png");
+    let mut result = bytes_result(bytes.clone());
+    result.upstream_id = Some("job".into());
+    result.terminal = Some("failed".into());
+    let signal = CancellationToken::new();
+    signal.cancel();
+    let request = request::parse(json!({"prompt":"fixture","count":1})).unwrap();
+    let first = tokio::time::timeout(
+        Duration::from_secs(3),
+        g.finish(receipt, result, &request, &signal, false, false),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(first.value["generation_outcome"], "failed");
+    {
+        let store = g.store.lock().unwrap();
+        assert_eq!(
+            store.pending("partial").unwrap()[0].bytes.as_deref(),
+            Some(bytes.as_slice())
+        );
+        assert!(!store.owns("partial", None).unwrap());
+    }
+    prepare(&g, "fresh", "fresh");
+    {
+        let mut store = g.store.lock().unwrap();
+        assert!(store.admit("fresh", "local", 1, 1).unwrap());
+        let mut end = store.get("fresh").unwrap();
+        end.value["status"] = json!("failed");
+        store.update(&mut end).unwrap();
+        store.release("fresh", Some(&end)).unwrap();
+    }
+    let recovered = tokio::time::timeout(
+        Duration::from_secs(3),
+        jobs::recover_local(&g, "partial", &CancellationToken::new()),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(recovered.value["generation_outcome"], "failed");
+    assert_eq!(recovered.status(), "partial");
+    assert_eq!(
+        std::fs::read(recovered.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+        bytes
+    );
+    assert!(!g.store.lock().unwrap().owns("partial", None).unwrap());
+}
+
+#[tokio::test]
+async fn direct_finish_releases_on_error_but_claimed_finish_preserves_outer_writer() {
+    let workspace = Workspace::new();
+    let g = generation(&workspace, None);
+    let request = request::parse(json!({"prompt":"draw"})).unwrap();
+    let initial = prepare(&g, "oversized", "hash");
+    let result = Normalized {
+        images: (0..11).map(|_| ResultItem::default()).collect(),
+        ..Default::default()
+    };
+    let error = tokio::time::timeout(
+        Duration::from_secs(3),
+        g.finish(
+            initial,
+            result,
+            &request,
+            &CancellationToken::new(),
+            false,
+            false,
+        ),
+    )
+    .await
+    .unwrap()
+    .err()
+    .unwrap();
+    assert_eq!(error.code, "invalid_response");
+    assert!(!g.store.lock().unwrap().owns("oversized", None).unwrap());
+    let initial = prepare(&g, "outer", "outer");
+    let current = {
+        let mut store = g.store.lock().unwrap();
+        assert!(store.claim("outer", Some(&initial), false).unwrap());
+        store.get("outer").unwrap()
+    };
+    let result = tokio::time::timeout(
+        Duration::from_secs(3),
+        g.finish(
+            current,
+            bytes_result(original("png")),
+            &request,
+            &CancellationToken::new(),
+            true,
+            false,
+        ),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let mut store = g.store.lock().unwrap();
+    assert!(store.owns("outer", Some(&result)).unwrap());
+    store.release("outer", Some(&result)).unwrap();
+    assert!(!store.owns("outer", None).unwrap());
+}
