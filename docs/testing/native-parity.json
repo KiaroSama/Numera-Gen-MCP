@@ -52,7 +52,9 @@
       "source": "tests/contract/capability-descriptors.test.ts",
       "sha256": "5a4f3459e5b7cdf6abfc91337752f097a7a1681a1bb530de51c2c6ab5a450e2a",
       "native": [
-        "tests/rust/model_policy.rs::endpoint_descriptors_pin_compatible_provider_and_refuse_fallback_or_dropped_requirements"
+        "tests/rust/model_policy.rs::endpoint_descriptors_pin_compatible_provider_and_refuse_fallback_or_dropped_requirements",
+        "tests/rust/discovery_acceptance.rs::exact_source_minimal_endpoint_descriptors_pin_only_compatible_provider",
+        "tests/rust/discovery_acceptance.rs::exact_source_failed_catalog_warns_unknown_without_setting_or_replacing_model"
       ],
       "status": "pending",
       "evidence": null
@@ -75,7 +77,11 @@
       "sha256": "ff11703e3240abf30e835ed8283c1638c5dc51d19441f2bc50ea65e535909ec8",
       "native": [
         "tests/rust/policy.rs::source_oracle_policy_dimensions_and_effective_request_match",
-        "tests/rust/image_route_contracts.rs::requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_and_evidence"
+        "tests/rust/image_route_contracts.rs::requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_and_evidence",
+        "tests/rust/discovery_acceptance.rs::exact_source_generic_flash_dimensions_separate_native_sizes_from_route_acceptance",
+        "tests/rust/discovery_acceptance.rs::exact_source_opaque_model_does_not_invent_native_dimensions",
+        "tests/rust/discovery_acceptance.rs::exact_source_gateway_tier_restrictions_do_not_establish_native_or_account_support",
+        "tests/rust/discovery_acceptance.rs::exact_source_four_adapter_dimension_inputs_remain_offline_and_unverified_for_accounts"
       ],
       "status": "pending",
       "evidence": null,

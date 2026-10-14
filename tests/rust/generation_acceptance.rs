@@ -224,7 +224,10 @@ async fn exact_source_direct_finish_aggregate_cancel_and_same_store_recovery_pre
         std::fs::read(recovered.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
         bytes
     );
-    assert_eq!(g.store.lock().unwrap().list_outputs(0, 100).unwrap().len(), 2);
+    assert_eq!(
+        g.store.lock().unwrap().list_outputs(0, 100).unwrap().len(),
+        2
+    );
 }
 
 #[tokio::test]
@@ -286,7 +289,7 @@ async fn exact_source_direct_data_url_finish_refresh_and_cancel_keep_terminal_re
 
 #[tokio::test]
 async fn exact_source_terminal_partial_finish_recovers_on_same_generation_without_capacity_resurrection()
-{
+ {
     let workspace = Workspace::new();
     let g = generation(&workspace, None);
     let mut receipt = prepare(&g, "partial", "hash");

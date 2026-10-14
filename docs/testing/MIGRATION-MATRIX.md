@@ -103,6 +103,15 @@ partial mappings. All 46 reviewed Store/lifecycle cases retain pending status; r
 SDK/reopen/process schedules are not closed by direct Store assertions. The earlier same-owner recovery-blocked
 hypothesis was retracted and is not treated as a failure.
 
+At `39c9643`, all 66 native targets and all-six Clippy/release/stdio/HTTP SDK checks passed; Node jobs
+passed on all three OSes. Complete coverage passed at 86.13% regions / 84.49% branches. Both lifecycle
+repairs passed their new regressions. Only two formatting corrections in one test file failed;
+notices and archives were skipped. The next unexecuted target adds seven literal Discovery-model
+dimension variants and two source-minimal endpoint-descriptor cases. Independent source review found
+no confirmed defects; that is not native compilation or complete case acceptance. The current
+67-target batch records 322 concrete assertion assignments, including partial mappings; all 470
+acceptance dispositions remain pending.
+
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

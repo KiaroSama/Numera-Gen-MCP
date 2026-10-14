@@ -268,6 +268,17 @@ The 46-case Store/lifecycle review retains partial and unmapped schedules explic
 batch has 66 registered native targets and 313 concrete assertion assignments; many remain partial.
 All 470 acceptance dispositions remain pending; passing related fixtures does not establish literal parity.
 
+At `39c9643`, all 66 native targets, Clippy, release builds and stdio/HTTP SDK checks passed on all six
+platforms; all three Node jobs passed. Complete coverage passed at 86.13% regions / 84.49% branches.
+The direct-finalization and intermediate reservation regressions passed. Two formatting corrections
+in the new finalization fixture were the only failures, leaving notices and archives skipped.
+The next source-only target adds the seven literal Discovery-model dimension variants and two minimal
+endpoint-descriptor cases, without adding provider fields absent from the source fixtures. It uses
+bounded loopback only for descriptor reads and keeps native capability, forwarding and account
+availability separate. The current batch has 67 registered native targets and 322 concrete assertion
+assignments, including partial mappings; all 470 dispositions remain pending. Its compilation and
+execution remain pending.
+
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally
 for this migration. [Acceptance matrix](testing/MIGRATION-MATRIX.md) records incomplete source-case,
