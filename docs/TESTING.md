@@ -395,6 +395,21 @@ Store schedule and remains partial. The pending ledger has 379 assignments and 9
 all 470 dispositions remain pending. These additions and compiler-progress diagnostics require their
 own hosted execution. No production configuration, provider behavior or dependency is changed.
 
+At `5cd907a`, all 75 native targets and the actual stdio/HTTP SDK checks passed on all six
+platforms and nightly, including the new reload, negotiation, logging and workflow cases. Strict
+Clippy and release compilation passed everywhere; all three Node jobs passed. Complete coverage
+reached 86.39% regions / 85.05% branches. Windows x64 test compilation passed under unchanged bounds;
+the previous stall's original cause remains unproven. Only one workflow fixture comma-space failed
+formatting, so notices, archives and extracted checks were skipped. That exact correction is applied.
+
+The next source-only tree adds four literal cases across 76 targets: mixed URL/inline cancellation
+without asset downloads, real SQL output-index failure followed by same-Store public recovery,
+future schema refusal without changing version3, and an event-held Responses waiter/refresher race.
+The SQL recovery uses a fresh Generation sharing the original Store, configuration and logger. The
+race retains one POST, two GETs, one output/index record, the original PNG and a three-second bound.
+The ledger records 383 assignments, including partial mappings, with 87 unassigned cases; every
+one of the 470 dispositions remains pending. These additions require their own hosted execution.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

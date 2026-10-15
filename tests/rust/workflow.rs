@@ -374,7 +374,7 @@ fn exact_source_installed_graph_preserves_enum_and_cycle_error_messages() {
     let error = workflow::validate(&bad, configured, &info).unwrap_err();
     assert!(error.message.contains("enum"));
     let mut cycle = configured["graph"].clone();
-    cycle["a"]["inputs"]["count"] = json!(["b",0]);
+    cycle["a"]["inputs"]["count"] = json!(["b", 0]);
     let error = workflow::validate(&cycle, configured, &info).unwrap_err();
     assert!(error.message.contains("cycle"));
 }

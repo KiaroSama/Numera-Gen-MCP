@@ -584,3 +584,128 @@ async fn direct_finish_releases_on_error_but_claimed_finish_preserves_outer_writ
     store.release("outer", Some(&result)).unwrap();
     assert!(!store.owns("outer", None).unwrap());
 }
+
+#[tokio::test]
+async fn exact_source_cancelled_mixed_result_retains_inline_bytes_without_asset_download() {
+    let workspace = Workspace::new();
+    let server = Server::new(|_| Reply {
+        status: 500,
+        bytes: None,
+        value: json!({}),
+    })
+    .await;
+    let action = async {
+        let mut g = generation(&workspace, None);
+        Arc::get_mut(&mut g.config).unwrap().value["files"]["assetAllowances"] =
+            json!([{"origin":server.origin,"pathPrefix":"/image"}]);
+        let initial = prepare(&g, "cancel-assets", "hash");
+        g.store.lock().unwrap().cancel("cancel-assets").unwrap();
+        let bytes = original("png");
+        let result = Normalized {
+            images: vec![
+                ResultItem {
+                    url: Some(format!("{}/image.png", server.origin).into()),
+                    ..Default::default()
+                },
+                ResultItem {
+                    bytes: Some(bytes.clone()),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        };
+        let signal = CancellationToken::new();
+        signal.cancel();
+        let request = request::parse(json!({"prompt":"draw","count":2})).unwrap();
+        let receipt = g
+            .finish(initial, result, &request, &signal, false, false)
+            .await
+            .unwrap();
+        assert!(server.requests.lock().unwrap().is_empty());
+        assert_eq!(receipt.value["outputs"], json!([]));
+        let store = g.store.lock().unwrap();
+        let pending = store.pending("cancel-assets").unwrap();
+        assert_eq!(pending.len(), 2);
+        assert_eq!(pending[1].bytes.as_deref(), Some(bytes.as_slice()));
+        assert_eq!(receipt.value["generation_outcome"], "completed");
+    };
+    let result = tokio::time::timeout(Duration::from_secs(3), action).await;
+    server.close().await;
+    result.unwrap();
+}
+
+#[tokio::test]
+async fn exact_source_sql_failure_recovers_published_original_with_same_store() {
+    let action = async {
+        let workspace = Workspace::new();
+        let g = generation(&workspace, None);
+        let database = workspace.0.join("state/receipts.sqlite");
+        let fault = rusqlite::Connection::open(database).unwrap();
+        let bytes = original("png");
+        prepare(&g, "sql-fault", "hash");
+        fault.execute_batch("CREATE TRIGGER reject_output BEFORE INSERT ON outputs BEGIN SELECT RAISE(FAIL,'Controlled output-index failure'); END;").unwrap();
+        let initial = g.store.lock().unwrap().get("sql-fault").unwrap();
+        let request = request::parse(json!({"prompt":"draw"})).unwrap();
+        let result = g
+            .finish(
+                initial,
+                bytes_result(bytes.clone()),
+                &request,
+                &CancellationToken::new(),
+                false,
+                false,
+            )
+            .await
+            .unwrap();
+        assert_eq!(result.value["outputs"], json!([]));
+        let pending = {
+            let store = g.store.lock().unwrap();
+            assert!(store.list_outputs(0, 25).unwrap().is_empty());
+            store.pending("sql-fault").unwrap()
+        };
+        assert_eq!(pending.len(), 1);
+        assert_eq!(
+            std::fs::read(pending[0].target.as_ref().unwrap()).unwrap(),
+            bytes
+        );
+        fault.execute_batch("DROP TRIGGER reject_output").unwrap();
+        let recovery = Generation {
+            config: g.config.clone(),
+            store: g.store.clone(),
+            logger: g.logger.clone(),
+            runtime: g.runtime.clone(),
+            env: g.env.clone(),
+            active: Arc::new(Mutex::new(HashMap::new())),
+        };
+        let recovered = jobs::get(&recovery, "sql-fault", true, &CancellationToken::new(), None)
+            .await
+            .unwrap();
+        assert_eq!(recovered.status(), "completed");
+        assert_eq!(g.store.lock().unwrap().list_outputs(0, 25).unwrap().len(), 1);
+        assert_eq!(
+            std::fs::read(recovered.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+            bytes
+        );
+        drop(fault);
+    };
+    tokio::time::timeout(Duration::from_secs(3), action)
+        .await
+        .unwrap();
+}
+
+#[test]
+fn exact_source_future_state_rejection_preserves_user_version_three() {
+    let workspace = Workspace::new();
+    let directory = workspace.0.join("state");
+    drop(Store::open(&directory).unwrap());
+    let fault = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
+    fault.execute_batch("PRAGMA user_version=3").unwrap();
+    let error = Store::open(&directory)
+        .err()
+        .expect("future state must reject");
+    assert!(error.message.contains("newer than this build"));
+    let version: i64 = fault
+        .query_row("PRAGMA user_version", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(version, 3);
+}

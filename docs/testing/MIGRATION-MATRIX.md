@@ -192,6 +192,20 @@ messages. The retained-handle fixture's external Store ownership-release handoff
 not source-equivalent same-owner seeding. Current native compilation and hosted/extracted execution
 remain required; source review or a registered mapping does not establish them.
 
+At `5cd907a`, all 75 targets passed on all six stable platforms and nightly. All-six strict Clippy,
+release compilation and actual stdio/HTTP SDK execution passed, including the new seven SDK scenarios
+and three literal logging/workflow cases. The three Node jobs and complete 86.39% regions / 85.05%
+branches coverage passed. Windows x64 compilation passed unchanged bounds, without explaining the
+original stall. Only one workflow fixture comma-space failed formatting; notices, archives and
+extracted checks were skipped. The exact formatting correction is applied.
+
+The next source-only tree has 76 targets and 383 assignments, including partial mappings; 87 cases
+remain unassigned and all 470 dispositions remain pending. Four literal cases cover mixed-result
+cancellation, public SQL-failure recovery using a fresh Generation sharing the original Store,
+unchanged future schema version3 and an actual held Responses waiter/refresher race. Each retains
+the exact source inputs and original PNG assertions; the race keeps its three-second bound. These
+new cases have not yet run in hosted CI.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

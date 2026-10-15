@@ -243,22 +243,28 @@
       "sha256": "c2b712be6db6a9fe7a5664ad047ab8e593ee8a2b8f21c121dc0f343ab2b2db42",
       "native": [
         "tests/rust/terminal.rs::shared_terminal_control_fences_old_writer_and_preserves_retained_originals",
-        "tests/rust/job_recovery_contracts.rs::inactive_nonrefreshed_no_handle_terminal_and_owned_writer_requests_do_not_probe"
+        "tests/rust/job_recovery_contracts.rs::inactive_nonrefreshed_no_handle_terminal_and_owned_writer_requests_do_not_probe",
+        "tests/rust/async_waiter_acceptance.rs::exact_source_refresher_fences_original_responses_waiter_without_duplicate_output"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["active_waiter_races"]
+      "gaps": [
+        "Applicable hosted execution and independent final literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/cancelled-results.test.ts",
       "sha256": "627be6f0fb512be7a7e26ce399174f2e8b8acd6b637b1af6bd8a2afb9988e352",
       "native": [
         "tests/rust/generation_results.rs::cancelled_publication_retains_completed_originals_and_recovery_preserves_deviations",
-        "tests/rust/recovery.rs::completed_retained_bytes_recover_after_local_cancel_without_credentials_or_post"
+        "tests/rust/recovery.rs::completed_retained_bytes_recover_after_local_cancel_without_credentials_or_post",
+        "tests/rust/generation_acceptance.rs::exact_source_cancelled_mixed_result_retains_inline_bytes_without_asset_download"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["cancelled_mixed_results"]
+      "gaps": [
+        "Applicable hosted execution and independent final literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/comfy-result-retention.test.ts",
@@ -371,11 +377,16 @@
       "sha256": "c5c70fd39dcf3eb161bd3b6a594b54fceb0198a3f8e4b01332ba91ad26e2774e",
       "native": [
         "tests/rust/publication_contracts.rs::filesystem_sql_gap_reconciles_original_bytes_uuid_and_refuses_a_changed_publication_target",
-        "tests/rust/migration.rs::legacy_wal_snapshot_preserves_receipts_and_refuses_future_or_incomplete_schemas"
+        "tests/rust/migration.rs::legacy_wal_snapshot_preserves_receipts_and_refuses_future_or_incomplete_schemas",
+        "tests/rust/generation_acceptance.rs::exact_source_public_finish_sql_index_failure_recovers_published_original_on_same_store",
+        "tests/rust/generation_acceptance.rs::exact_source_future_state_rejection_preserves_user_version_three",
+        "tests/rust/generation_acceptance.rs::exact_source_sql_failure_recovers_published_original_with_same_store"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["public_sql_recovery"]
+      "gaps": [
+        "Applicable hosted execution and independent final literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/mcp.test.ts",

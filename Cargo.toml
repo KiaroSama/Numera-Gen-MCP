@@ -340,6 +340,10 @@ path = "tests/rust/comfy_workflow_acceptance.rs"
 name = "upscale_acceptance"
 path = "tests/rust/upscale_acceptance.rs"
 
+[[test]]
+name = "async_waiter_acceptance"
+path = "tests/rust/async_waiter_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1
