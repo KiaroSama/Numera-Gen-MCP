@@ -82,9 +82,15 @@ async fn request(socket: &mut TcpStream) -> (String, String) {
         let mut buffer = [0u8; 4096];
         loop {
             let read = socket.read(&mut buffer).await.unwrap();
-            assert!(read > 0, "race fixture request ended before its declared body");
+            assert!(
+                read > 0,
+                "race fixture request ended before its declared body"
+            );
             bytes.extend_from_slice(&buffer[..read]);
-            assert!(bytes.len() <= 1048576 + 65536, "bounded race fixture request");
+            assert!(
+                bytes.len() <= 1048576 + 65536,
+                "bounded race fixture request"
+            );
             let Some(boundary) = bytes.windows(4).position(|chunk| chunk == b"\r\n\r\n") else {
                 assert!(bytes.len() <= 65536, "bounded race fixture headers");
                 continue;
@@ -152,7 +158,11 @@ async fn exact_source_refresher_fences_original_responses_waiter_without_duplica
             let (method, path) = request(&mut submission).await;
             assert_eq!((method.as_str(), path.as_str()), ("POST", "/v1/responses"));
             posts += 1;
-            reply(&mut submission, &json!({"id":"owned","status":"in_progress"})).await;
+            reply(
+                &mut submission,
+                &json!({"id":"owned","status":"in_progress"}),
+            )
+            .await;
             drop(submission);
             let (mut first, _) = listener.accept().await.unwrap();
             let (method, path) = request(&mut first).await;

@@ -677,11 +677,20 @@ async fn exact_source_sql_failure_recovers_published_original_with_same_store() 
             env: g.env.clone(),
             active: Arc::new(Mutex::new(HashMap::new())),
         };
-        let recovered = jobs::get(&recovery, "sql-fault", true, &CancellationToken::new(), None)
-            .await
-            .unwrap();
+        let recovered = jobs::get(
+            &recovery,
+            "sql-fault",
+            true,
+            &CancellationToken::new(),
+            None,
+        )
+        .await
+        .unwrap();
         assert_eq!(recovered.status(), "completed");
-        assert_eq!(g.store.lock().unwrap().list_outputs(0, 25).unwrap().len(), 1);
+        assert_eq!(
+            g.store.lock().unwrap().list_outputs(0, 25).unwrap().len(),
+            1
+        );
         assert_eq!(
             std::fs::read(recovered.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
             bytes

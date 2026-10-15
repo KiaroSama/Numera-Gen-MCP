@@ -184,7 +184,7 @@ async fn finalized(recover: bool, name: &str) {
             assert_eq!(pending.len(), 1);
             assert_eq!(pending[0].bytes.as_ref().unwrap(), &bytes);
             assert_eq!(result.value["outputs"], json!([]));
-            assert_eq!(result.value["errors"][0]["code"], "storage_error");
+            assert_eq!(result.value["errors"][0]["code"], "output_file_error");
             fault.execute_batch("DROP TRIGGER reject_output").unwrap();
             let mut removed = g.config.value.clone();
             removed["connections"] = json!({});
@@ -212,9 +212,8 @@ async fn finalized(recover: bool, name: &str) {
                 result.value["outputs"][0]["output_id"],
                 pending[0].output_id
             );
-            assert_eq!(result.value["errors"].as_array().unwrap().len(), 1);
-            assert_eq!(result.value["errors"][0]["code"], "storage_error");
-            assert_eq!(result.value["storage_outcome"], "partial_or_failed");
+            assert_eq!(result.value["errors"], json!([]));
+            assert_eq!(result.value["storage_outcome"], "completed");
         } else {
             assert_eq!(result.value["errors"], json!([]));
             assert_eq!(result.value["storage_outcome"], "completed");

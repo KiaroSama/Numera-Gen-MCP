@@ -410,6 +410,22 @@ race retains one POST, two GETs, one output/index record, the original PNG and a
 The ledger records 383 assignments, including partial mappings, with 87 unassigned cases; every
 one of the 470 dispositions remains pending. These additions require their own hosted execution.
 
+At `9de7761`, all 76 targets executed on all six stable platforms and nightly. The held Responses
+race, mixed cancellation and future-schema cases passed. One exact SQL recovery case failed
+everywhere: successful recovery returned `partial` instead of `completed`. Strict Clippy, release
+compilation, actual SDK checks and all three Node jobs passed; formatting failed in two fixture files
+and packaging was skipped. Coverage exceeded the floors, but the instrumented test run failed and
+is not passing acceptance evidence.
+
+The source-confirmed repair restores the frozen output-save boundary: a failed stable SQL commit
+becomes `output_file_error`, which successful local recovery clears. Direct Store errors and the
+regular-file output-root error remain unchanged. Existing output-requirement assertions still require
+partial status for genuine dimension deviations while requiring recovered storage errors to clear.
+The next source-only tree has 78 targets and 387 assignments, including partial mappings, with 83
+unassigned cases and all 470 dispositions pending. Four new cases preserve exact region-mask pixels
+for three polarities and detached Comfy recovery on the same Generation/Store. Synthetic GPU metadata
+and loopback images are not evidence of live inference. This repair and the new cases need hosted verification.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

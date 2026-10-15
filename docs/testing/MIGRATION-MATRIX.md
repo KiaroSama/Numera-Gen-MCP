@@ -206,6 +206,19 @@ unchanged future schema version3 and an actual held Responses waiter/refresher r
 the exact source inputs and original PNG assertions; the race keeps its three-second bound. These
 new cases have not yet run in hosted CI.
 
+At `9de7761`, all 76 targets executed on all six stable platforms and nightly; one SQL recovery case
+failed with `partial` instead of `completed`. The held Responses race, mixed cancellation and future
+schema cases passed. Strict Clippy, release compilation, actual SDK checks and Node jobs passed;
+formatting failed in two fixtures and archives were skipped. Coverage exceeded its floors, but the
+instrumented test run failed and is not passing acceptance evidence.
+
+The next source-only tree repairs the output-save error boundary rather than clearing arbitrary
+storage errors: stable commit failures become the source's recoverable `output_file_error`. Existing
+dimension deviations, direct Store errors, regular-file output-root behavior, journal identity and
+original bytes remain asserted. Two new targets add three exact region-edit polarity cases and one
+same-Generation/Store detached Comfy case. There are 78 targets and 387 assignments, including partial
+mappings; 83 remain unassigned and all 470 dispositions stay pending. Current hosted execution is required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

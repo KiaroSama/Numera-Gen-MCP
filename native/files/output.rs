@@ -152,7 +152,9 @@ pub fn save(
     let output = json!({"output_id":output_id,"request_id":id,"path":target.to_str().ok_or_else(error)?,
         "mime_type":saved.mime,"width":saved.width,"height":saved.height,"has_alpha":saved.alpha,"bytes":saved.bytes.len(),"sha256":saved.sha256});
     if stable {
-        store.commit(id, index, &output, deviations, expected)?;
+        store
+            .commit(id, index, &output, deviations, expected)
+            .map_err(|_| error())?;
     } else {
         store.add_output(&output).map_err(|_| error())?;
     }

@@ -344,6 +344,14 @@ path = "tests/rust/upscale_acceptance.rs"
 name = "async_waiter_acceptance"
 path = "tests/rust/async_waiter_acceptance.rs"
 
+[[test]]
+name = "detached_job_acceptance"
+path = "tests/rust/detached_job_acceptance.rs"
+
+[[test]]
+name = "image_editing_acceptance"
+path = "tests/rust/image_editing_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

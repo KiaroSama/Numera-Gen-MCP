@@ -230,7 +230,7 @@ fn filesystem_sql_gap_reconciles_original_bytes_uuid_and_refuses_a_changed_publi
         output::save(&image, &raw, &mut store, publication())
             .unwrap_err()
             .code,
-        "storage_error"
+        "output_file_error"
     );
     let retained = store.pending("gap").unwrap().remove(0);
     let target = retained.target.clone().unwrap();
