@@ -1,8 +1,8 @@
 mod common;
-#[path = "common/comfy_source.rs"]
-mod source;
 #[path = "common/multipart.rs"]
 mod multipart_fixture;
+#[path = "common/comfy_source.rs"]
+mod source;
 #[path = "common/wire.rs"]
 mod wire;
 use common::Workspace;

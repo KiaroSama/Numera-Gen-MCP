@@ -4,6 +4,7 @@ mod multipart_fixture;
 #[path = "common/wire.rs"]
 mod wire;
 use common::Workspace;
+use multipart_fixture::multipart;
 use numera_image_gen_mcp::{
     adapters::{
         build_request, comfy,
@@ -20,7 +21,6 @@ use numera_image_gen_mcp::{
 use reqwest::Method;
 use std::{collections::HashMap, path::Path, time::Duration};
 use tokio_util::sync::CancellationToken;
-use multipart_fixture::multipart;
 
 fn configuration(root: &Path, connections: Value) -> Config {
     let default = connections

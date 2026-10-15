@@ -6,6 +6,8 @@ import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import { toolsAcceptance } from "./native-tools-acceptance.mjs";
+import { twoHostAcceptance } from "./native-two-host-acceptance.mjs";
+import { compactAcceptance } from "./native-compact-acceptance.mjs";
 
 // Hosted differential acceptance: the actual native binary, two SDK hosts, two restarts.
 if (process.env.GITHUB_ACTIONS !== "true")
@@ -149,11 +151,30 @@ async function bounded(promise, ms = 5000) {
     clearTimeout(timer);
   }
 }
-async function start(configFile, mode = "auto", connectOptions = {}) {
+async function start(
+  configFile,
+  mode = "auto",
+  connectOptions = {},
+  overrides = {},
+) {
+  const launch = {
+    command: overrides.command ?? binary,
+    args: overrides.args ?? ["bridge", "--config", configFile],
+    cwd: overrides.cwd ?? workspace,
+    clientInfo: overrides.clientInfo ?? {
+      name: "native-differential-host",
+      version: "1",
+    },
+  };
+  for (const key of Object.keys(overrides.env ?? {}))
+    assert.ok(
+      ["NUMERA_CONFIG", "NUMERA_LOG_DIR"].includes(key),
+      "fixture environment override must be explicit",
+    );
   const transport = new StdioClientTransport({
-    command: binary,
-    args: ["bridge", "--config", configFile],
-    cwd: workspace,
+    command: launch.command,
+    args: launch.args,
+    cwd: launch.cwd,
     env: {
       PATH: process.env.PATH ?? "",
       TEMP: join(workspace, "temp"),
@@ -162,18 +183,19 @@ async function start(configFile, mode = "auto", connectOptions = {}) {
       ...(process.env.LLVM_PROFILE_FILE
         ? { LLVM_PROFILE_FILE: process.env.LLVM_PROFILE_FILE }
         : {}),
+      ...overrides.env,
     },
     stderr: "pipe",
   });
   let stderr = "";
   transport.stderr?.on("data", (chunk) => {
+    overrides.onStderr?.(chunk);
     stderr += chunk.toString("utf8").slice(0, 4096);
     if (stderr.length > 65536) stderr = stderr.slice(-65536);
   });
-  const client = new Client(
-    { name: "native-differential-host", version: "1" },
-    { versionNegotiation: { mode } },
-  );
+  const client = new Client(launch.clientInfo, {
+    versionNegotiation: { mode },
+  });
   let signalClosed;
   const closed = new Promise((accept) => {
     signalClosed = accept;
@@ -181,6 +203,7 @@ async function start(configFile, mode = "auto", connectOptions = {}) {
   const host = {
     client,
     transport,
+    launch,
     closed,
     pid: null,
     started: false,
@@ -206,6 +229,7 @@ async function start(configFile, mode = "auto", connectOptions = {}) {
   }
   return host;
 }
+start.supportsLaunchOverrides = true;
 async function tool(host, name, args) {
   const result = await bounded(
     host.client.callTool({ name, arguments: args }, { timeout: 5000 }),
@@ -448,6 +472,15 @@ try {
     root,
     workspace,
     configSchema,
+    start,
+    closeHost,
+    bounded,
+  });
+  await twoHostAcceptance({ root, workspace, start, closeHost, bounded });
+  await compactAcceptance({
+    root,
+    workspace,
+    binary,
     start,
     closeHost,
     bounded,

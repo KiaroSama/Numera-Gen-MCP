@@ -376,11 +376,14 @@
       "native": [
         "tests/rust/stdio.rs::bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof",
         "tests/rust/generation.rs::actual_loopback_generation_preserves_bytes_and_deduplicates_paid_post",
-        "tests/rust/http_output_contracts.rs::actual_http_tools_preserve_originals_previews_resource_reads_and_error_contracts"
+        "tests/rust/http_output_contracts.rs::actual_http_tools_preserve_originals_previews_resource_reads_and_error_contracts",
+        "scripts/native-two-host-acceptance.mjs::twoHostAcceptance"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["two_host_generation_dedup"]
+      "gaps": [
+        "Applicable hosted/extracted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/negotiation.test.ts",
@@ -505,11 +508,14 @@
       "native": [
         "tests/rust/config_parity.rs::source_generated_defaults_compact_advanced_and_overrides_match",
         "tests/rust/stdio.rs::bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof",
-        "tests/rust/adapters.rs::source_generated_wire_and_result_contracts_match"
+        "tests/rust/adapters.rs::source_generated_wire_and_result_contracts_match",
+        "scripts/native-compact-acceptance.mjs::compactAcceptance"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["compact_sdk_wire"]
+      "gaps": [
+        "Applicable hosted/extracted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/stdio-terminal-lifecycle.test.ts",

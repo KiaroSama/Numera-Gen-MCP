@@ -359,6 +359,25 @@ and the actual spawned PID/close event remain tracked even when the SDK clears i
 A pre-cancelled legacy handshake exercises that failure path. These changes require hosted execution;
 source review and syntax checks do not establish runtime acceptance.
 
+At `98a5db8`, all 75 native targets passed on all six stable platforms and nightly. Strict Clippy,
+native release compilation, actual stdio/HTTP SDK checks and all three Node jobs passed. The exact
+ten-tool SDK case, upscale case and pre-cancelled handshake cleanup passed. Complete coverage passed
+at 86.35% regions / 84.96% branches. Windows ARM compilation and Linux PowerShell startup passed
+under unchanged bounds; the previous stalls were not reproduced and their original causes remain
+unproven. Only formatting in three files failed; notices, archives and extracted checks were skipped.
+Those exact hosted formatting corrections are applied without changing assertions.
+
+The next source-only tree retains 75 native targets and adds three exact SDK scenarios: two real
+native hosts share one concurrent logical request and submit once; a copied executable discovers an
+adjacent compact file from a foreign CWD; compact Responses preserves configured defaults and explicit
+overrides. Distinct host identities, environment-selected configuration, original PNG bytes, redacted
+paired logs and bounded full-session stderr are asserted. The new MCP PNG uses the frozen source's
+separate RGB20/40/60 recipe and `.png()` call; the previous nine image-oracle rows are unchanged.
+The ledger now records 369 assignments, including partial mappings, with 101 unassigned cases.
+All 470 dispositions remain pending. Three explicitly registered native SDK fixtures require actual
+interoperability and extracted-package wiring; source review and structural checks are not runtime
+acceptance. These additions require their own hosted verification.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

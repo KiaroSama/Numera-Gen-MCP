@@ -165,6 +165,18 @@ and extracted entrypoints; it is not a fictitious Rust test. Complete edit metad
 child ownership are restored, with a pre-cancelled legacy-handshake regression. None of these additions
 is verified by the earlier green SHA.
 
+At `98a5db8`, all 75 native targets passed on all six stable platforms and nightly; all-six Clippy,
+release compilation and SDK checks, all three Node jobs and full 86.35% regions / 84.96% branches
+coverage passed. Exact ten-tool/upscale cases and failed-handshake cleanup passed. Both prior stalls
+passed unchanged bounds, without establishing their original causes. Only three formatting paths
+failed; notices, archives and extracted checks were skipped. The actual formatter corrections are applied.
+
+The next source-only tree keeps 75 targets and records 369 concrete assignments, including partial
+mappings; 101 remain unassigned and all 470 dispositions stay pending. Three new SDK scenarios cover
+exact two-host concurrent deduplication, executable-adjacent compact config from a foreign CWD and
+compact Responses defaults/overrides. The separate RGB20/40/60 source PNG preserves the literal `.png()`
+recipe; previous nine oracle rows are unchanged. Actual hosted and extracted execution is still required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
@@ -176,8 +188,8 @@ Actual expanded collection retains platform-skipped cases; no suite grouping is 
 The [case ledger](native-cases/index.json) has all 470 identities and remains entirely pending.
 Targeted cases have concrete assertion ranges; explicit gaps include same-instance recovery versus
 reopen, direct-wait cancellation reasons and public terminal-error integration. The unmasked-upload
-and Omni multipart assertions passed five stable targets and nightly at `552941c`; Windows ARM runtime
-and final literal acceptance remain open. Structural validation
+and Omni multipart assertions passed all six stable targets and nightly at `98a5db8`;
+final literal acceptance remains open. Structural validation
 and full assertion acceptance are separate gates; setting a completion flag alone cannot pass.
 
 | Boundary                                              | Native implementation                                                 | Authored verification                                             | Status                                                                                                                    |

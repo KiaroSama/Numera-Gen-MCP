@@ -57,8 +57,7 @@ fn generation(root: &Path, origin: &str) -> Generation {
 }
 
 fn original(name: &str, expected: (u32, u32)) -> Vec<u8> {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join(".ci-work/parity/image-acceptance.json");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/image-acceptance.json");
     assert!(std::fs::metadata(&path).unwrap().len() <= 1048576);
     let rows = Value::parse_with_limit(&std::fs::read_to_string(path).unwrap(), 1048576).unwrap();
     let row = rows
@@ -98,11 +97,9 @@ async fn exact_source_native_upscale_saves_larger_original_then_marks_unchanged_
                     .to_ascii_lowercase()
                     .contains("content-type: application/json")
             );
-            let body = Value::parse_with_limit(
-                std::str::from_utf8(&request.body).unwrap(),
-                1048576,
-            )
-            .unwrap();
+            let body =
+                Value::parse_with_limit(std::str::from_utf8(&request.body).unwrap(), 1048576)
+                    .unwrap();
             assert_eq!(body["image"], wire_reference);
             assert!(
                 body["prompt"]
@@ -137,9 +134,14 @@ async fn exact_source_native_upscale_saves_larger_original_then_marks_unchanged_
             unchanged_input["request_id"] = json!("unchanged-output");
             let mismatch = g.run(unchanged_input, "edit", &signal).await.unwrap();
             assert_eq!(mismatch.status(), "partial");
-            assert!(mismatch.value["deviations"].as_array().unwrap().contains(&json!(
-                "Output 0 was not upscaled beyond the reference dimensions."
-            )));
+            assert!(
+                mismatch.value["deviations"]
+                    .as_array()
+                    .unwrap()
+                    .contains(&json!(
+                        "Output 0 was not upscaled beyond the reference dimensions."
+                    ))
+            );
             assert_eq!(
                 std::fs::read(mismatch.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
                 original
@@ -153,9 +155,11 @@ async fn exact_source_native_upscale_saves_larger_original_then_marks_unchanged_
             }
             let captured = requests.lock().unwrap();
             assert_eq!(captured.len(), 2);
-            assert!(captured.iter().all(|request| {
-                request.method == "POST" && request.path == "/v1/images/edits"
-            }));
+            assert!(
+                captured.iter().all(|request| {
+                    request.method == "POST" && request.path == "/v1/images/edits"
+                })
+            );
         },
     )
     .await;

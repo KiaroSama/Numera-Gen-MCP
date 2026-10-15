@@ -54,8 +54,15 @@ class CaseLedger(unittest.TestCase):
         text = ledger.mapping_source("scripts/native-tools-acceptance.mjs", "::", "toolsAcceptance")
         self.assertIn("host.client.callTool", text)
         self.assertIn("host.client.readResource", text)
+        for path, symbol in [
+            ("scripts/native-two-host-acceptance.mjs", "twoHostAcceptance"),
+            ("scripts/native-compact-acceptance.mjs", "compactAcceptance"),
+        ]:
+            with self.subTest(path=path):
+                self.assertIn(f"export async function {symbol}(", ledger.mapping_source(path, "::", symbol))
         for path, separator, symbol in [
             ("scripts/native-tools-acceptance.mjs", "::", "missing"),
+            ("scripts/native-compact-acceptance.mjs", "::", "twoHostAcceptance"),
             ("scripts/native-interop.mjs", "::", "tool"),
             ("tests/integration/tools.test.ts", "::", "toolsAcceptance"),
             ("scripts/native-tools-acceptance.mjs", "", "toolsAcceptance"),

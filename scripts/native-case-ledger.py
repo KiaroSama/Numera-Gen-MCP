@@ -20,15 +20,21 @@ def contained(root: Path, relative: str) -> Path:
 
 
 def mapping_source(path: str, separator: str, symbol: str) -> str:
-    sdk = path == "scripts/native-tools-acceptance.mjs" and symbol == "toolsAcceptance"
+    sdk_entries = {
+        "scripts/native-tools-acceptance.mjs": "toolsAcceptance",
+        "scripts/native-two-host-acceptance.mjs": "twoHostAcceptance",
+        "scripts/native-compact-acceptance.mjs": "compactAcceptance",
+    }
+    sdk = path in sdk_entries and symbol == sdk_entries[path]
     if not separator or not (sdk or (path.startswith(("tests/rust/", "native/")) and path.endswith(".rs"))):
         raise RuntimeError("Native case mapping requires a Rust test or registered native SDK fixture")
     text = contained(ROOT, path).read_text(encoding="utf-8")
     if sdk:
-        if "export async function toolsAcceptance(" not in text:
+        if f"export async function {symbol}(" not in text:
             raise RuntimeError("Mapped native SDK fixture is missing")
         caller = contained(ROOT, "scripts/native-interop.mjs").read_text(encoding="utf-8")
-        if 'import { toolsAcceptance } from "./native-tools-acceptance.mjs";' not in caller or "await toolsAcceptance(" not in caller:
+        imported = f'import {{ {symbol} }} from "./{Path(path).name}";'
+        if imported not in caller or f"await {symbol}(" not in caller:
             raise RuntimeError("Native SDK fixture is not executed by interoperability acceptance")
         for entry in ["scripts/native-ci.py", "scripts/native-extract-check.py"]:
             if "scripts/native-interop.mjs" not in contained(ROOT, entry).read_text(encoding="utf-8"):
