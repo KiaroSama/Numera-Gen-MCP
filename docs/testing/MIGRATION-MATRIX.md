@@ -141,7 +141,17 @@ concrete assignments, including partial mappings; 137 remain unassigned, and all
 remain pending. Replacement hosted execution must confirm these additions and Intel macOS without
 relaxing bounds. Literal-IP asset tests do not establish hostname DNS-pinning coverage.
 
-**All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
+At `544baa9`, all ten jobs passed: all 70 native targets, strict quality, native release compilation,
+stdio/HTTP SDK checks, all-six notices/archives/checksums/extracted SDK execution and all three Node
+jobs. Complete coverage passed at 86.25% regions / 84.61% branches. Intel compilation passed under
+unchanged bounds; the earlier one-run stall was not reproduced and its original cause is unproven.
+The next source-only batch has 74 registered targets and 364 assertion assignments, including partial
+mappings; 106 remain unassigned, all 470 dispositions stay pending. It adds nine literal Discovery
+cases and exact Comfy graph/upload/history/reference/gateway assertions with a separate opaque-JPEG
+source oracle. The history-error terminal flag remains a partial seam mapping; direct wait/reason and
+public rejection integration still need evidence. None of the new tests is verified by `544baa9`.
+
+**All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery
@@ -151,7 +161,8 @@ passed at `3c5958f`. The [pending ledger](native-parity.json) preserves all
 Actual expanded collection retains platform-skipped cases; no suite grouping is promoted to 470-case acceptance.
 The [case ledger](native-cases/index.json) has all 470 identities and remains entirely pending.
 Targeted cases have concrete assertion ranges; explicit gaps include same-instance recovery versus
-reopen, unmasked versus mask upload counts, and the Omni multipart model field. Structural validation
+reopen, direct-wait cancellation reasons and public terminal-error integration. The new unmasked-upload
+and Omni multipart assertions remain source-only until their own hosted execution. Structural validation
 and full assertion acceptance are separate gates; setting a completion flag alone cannot pass.
 
 | Boundary                                              | Native implementation                                                 | Authored verification                                             | Status                                                                                                                    |
@@ -170,8 +181,8 @@ and full assertion acceptance are separate gates; setting a completion flag alon
 | Generation/dedup/finalization/local recovery          | `native/services/`                                                    | Tiny loopback, original hash, recovery fixtures                   | Pending exhaustive original lifecycle contracts                                                                           |
 | Ten tools/stdio/resources/negotiation/bridge          | `native/mcp/`, `native/main.rs`                                       | Real child `bridge` fixture, foreign CWD and EOF                  | Bridge/two-host/two-restart/legacy-auto-pin and HTTP outputs/resources passed at 8271b81; active race case ledger pending |
 | Maintenance/readiness/client registration             | Native CLI replacement                                                | Existing maintenance cases not yet migrated                       | Pending; do not retire working scripts yet                                                                                |
-| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed all six native targets at7199441; no verified Release yet                                                          |
-| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete7199441 report:85.65% regions /83.02% branches; both unchanged floors passed                                      |
+| Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed all six native targets at544baa9; unsigned test artifacts, no verified signed Release                              |
+| Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete544baa9 report:86.25% regions /84.61% branches; both unchanged floors passed                                      |
 
 ## Release blockers
 

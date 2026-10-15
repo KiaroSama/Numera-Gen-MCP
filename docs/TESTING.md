@@ -318,6 +318,27 @@ The tree registers 70 native targets and 333 concrete assertion assignments, inc
 or executed locally. The next coherent hosted batch also confirms Intel macOS under unchanged bounds;
 no timeout increase or production transport change substitutes for that evidence.
 
+At `544baa9`, all ten jobs passed: all 70 native targets and 72 successful harness summaries on
+six stable platforms and nightly, strict formatting/Clippy, native release compilation, actual
+stdio/HTTP SDK checks, dependency notices, allowlisted archives/checksums and extracted SDK execution.
+All three Node jobs passed. Full native coverage passed at 86.25% regions / 84.61% branches. Intel
+macOS test and release compilation completed in 197.66 / 323.53 seconds under the unchanged bounds;
+the earlier single-run compilation stall was not reproduced, but its original cause is unproven.
+These are internal unsigned distribution-test results, not an approved signed Release or host cutover.
+
+The next source-only batch registers 74 native targets and 364 concrete assertion assignments,
+including partial mappings; 106 cases remain unassigned and all 470 dispositions remain pending.
+Nine Discovery cases retain complete specialty-route evidence, Omni image-only pagination, Gemini
+refresh cursor isolation and encoded metadata URLs with a separate 404 result. Comfy fixtures use the
+exact five-node graph, source 8x6 originals, three uploads, nine-request schedule and bound final/temp
+outputs. Pure workflow cases preserve parsed defaults and original mutation/refusal order. Reference
+preflight now uses a separate three-channel opaque-JPEG oracle, unmasked two-upload submission and
+both exact gateway aliases, including the serialized Omni multipart model field. Prior seven image
+oracle rows remain unchanged; the consumer now requires eight rows. Shared bounded wire capture
+avoids duplicated listener/multipart machinery. These additions are source-reviewed, not compiled or
+executed. Direct history-error flags versus public provider rejection, arbitrary wait cancellation
+reasons and the complete direct-wait schedule remain explicit acceptance gaps.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

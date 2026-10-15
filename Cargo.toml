@@ -320,6 +320,22 @@ path = "tests/rust/discovery_lifecycle_acceptance.rs"
 name = "network_acceptance"
 path = "tests/rust/network_acceptance.rs"
 
+[[test]]
+name = "discovery_routes_acceptance"
+path = "tests/rust/discovery_routes_acceptance.rs"
+
+[[test]]
+name = "reference_preflight_acceptance"
+path = "tests/rust/reference_preflight_acceptance.rs"
+
+[[test]]
+name = "comfy_lifecycle_acceptance"
+path = "tests/rust/comfy_lifecycle_acceptance.rs"
+
+[[test]]
+name = "comfy_workflow_acceptance"
+path = "tests/rust/comfy_workflow_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

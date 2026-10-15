@@ -7,6 +7,7 @@ export async function imageAcceptanceOracle({ source, emit, sharp }) {
     ["jpeg", "jpeg", true, 8, 6],
     ["webp", "webp", true, 8, 6],
     ["opaque-png", "png", false, 8, 6],
+    ["opaque-jpeg", "jpeg", false, 8, 6],
     ["width-mask", "png", true, 7, 6],
     ["height-mask", "png", true, 8, 5],
     ["tamper-png", "png", true, 9, 6],

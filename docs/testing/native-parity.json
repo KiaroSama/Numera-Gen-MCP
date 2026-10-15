@@ -66,11 +66,34 @@
         "tests/rust/workflow.rs::explicit_bindings_preserve_unicode_parameters_and_shared_graph",
         "tests/rust/comfy.rs::installed_comfy_graph_gpu_preflight_upload_submission_and_terminal_history_are_explicit",
         "tests/rust/catalog_upload_contracts.rs::malformed_image_and_mask_upload_identity_prevent_prompt_submission_and_unknown_ids_never_retry",
-        "tests/rust/comfy_results.rs::comfy_history_rejects_malformed_or_excessive_outputs_and_retains_only_completed_originals"
+        "tests/rust/comfy_results.rs::comfy_history_rejects_malformed_or_excessive_outputs_and_retains_only_completed_originals",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_prompt_seed_count_options_bind_on_clone_without_changing_configuration",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_aspect_ratio_requires_explicit_binding",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_image_size_requires_explicit_binding",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_output_format_requires_explicit_binding",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_size_requires_explicit_binding",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_background_requires_explicit_binding",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_negative_prompt_requires_explicit_binding",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_quality_requires_explicit_binding",
+        "tests/rust/comfy_workflow_acceptance.rs::exact_source_invalid_graphs_and_unbound_inputs_reject_in_original_order",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_full_comfy_edit_preserves_three_uploads_and_only_bound_final_originals",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_missing_node_refuses_before_any_upload_or_prompt",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_cpu_refuses_before_any_upload_or_prompt",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_no_devices_refuses_before_any_upload_or_prompt",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_cpu_optout_only_requests_installed_nodes",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_missing_image_and_mask_bindings_refuse_both_calls",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_bad_reference_identity_then_empty_submission_never_retries",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_empty_mask_upload_identity_never_submits_sentinel_prompt",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_error_input_only_history_retains_terminal_flag_without_view",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_absent_history_fetches_no_unrelated_image",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_empty_input_only_history_returns_no_image_without_view",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_running_input_only_history_fetches_no_unrelated_image"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["parameterized_accounting"]
+      "gaps": [
+        "Direct wait/arbitrary cancellation reason, public terminal-rejection integration, applicable hosted execution and final literal acceptance remain pending."
+      ]
     },
     {
       "source": "tests/contract/dimensions.test.ts",
@@ -105,12 +128,21 @@
         "tests/rust/network_acceptance.rs::exact_source_http_429_is_rate_limited_without_retry",
         "tests/rust/network_acceptance.rs::exact_source_http_500_is_upstream_error_without_retry",
         "tests/rust/network_acceptance.rs::exact_source_redirect_malformed_five_byte_limit_and_preabort_reject_in_order",
-        "tests/rust/network_acceptance.rs::exact_source_asset_prefix_redirect_loop_limits_and_unsafe_urls_preserve_original_bytes"
+        "tests/rust/network_acceptance.rs::exact_source_asset_prefix_redirect_loop_limits_and_unsafe_urls_preserve_original_bytes",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_images_specialty_route_preserves_complete_uncached_evidence",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_openrouter_specialty_route_preserves_complete_uncached_evidence",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_ninerouter_specialty_route_preserves_complete_uncached_evidence",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_comfy_specialty_route_preserves_complete_uncached_evidence",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_gemini_specialty_route_preserves_complete_uncached_evidence",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_interactions_specialty_route_preserves_complete_uncached_evidence",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_omniroute_specialty_supplements_only_paginated_unified_images",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_gemini_page_token_refresh_preserves_config_and_resets_cursor",
+        "tests/rust/discovery_routes_acceptance.rs::exact_source_gateway_metadata_preserves_encoded_ids_and_unknown_availability"
       ],
       "status": "pending",
       "evidence": null,
       "gaps": [
-        "exact specialty/metadata schedules, applicable hosted execution and final literal acceptance remain pending"
+        "Applicable hosted execution and final literal acceptance remain pending."
       ]
     },
     {
@@ -145,11 +177,22 @@
         "tests/rust/multipart.rs::actual_multipart_wire_preserves_source_field_names_order_filenames_and_original_bytes",
         "tests/rust/catalog_upload_contracts.rs::distinct_reference_and_mask_uploads_preserve_bytes_targets_and_gpu_preflight",
         "tests/rust/catalog_upload_contracts.rs::invalid_reference_bindings_refuse_all_six_source_variants_before_any_upload",
-        "tests/rust/image_route_contracts.rs::all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway_ids"
+        "tests/rust/image_route_contracts.rs::all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway_ids",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_missing_node_refuses_before_upload",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_second_binding_refuses_before_upload",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_changed_after_preflight_revalidates_before_upload",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_colliding_targets_refuse_before_upload",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_mask_binding_refuses_before_upload",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_misspelled_slot_refuses_before_upload",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_unmasked_two_distinct_references_keep_bytes_targets_and_direct_submit_order",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_nine_router_aliases_keep_json_model_ids_and_negative_prefix_unknown",
+        "tests/rust/reference_preflight_acceptance.rs::exact_source_omniroute_aliases_preserve_full_multipart_model_and_refuse_paid_fanout"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["comfy_preflight_wire", "alias_policy"]
+      "gaps": [
+        "New exact preflight/reference/alias fixtures require applicable hosted execution and final literal acceptance."
+      ]
     },
     {
       "source": "tests/contract/streams.test.ts",
@@ -186,10 +229,14 @@
       "source": "tests/contract/workflow-branches.test.ts",
       "sha256": "6825a10eeb23ff2cf2d86f68312403be40f12d24086ac01ccfef30d145225281",
       "native": [
-        "tests/rust/catalog_upload_contracts.rs::accepted_partial_workflow_warns_only_rejected_node_ids_and_preserves_mask_evidence"
+        "tests/rust/catalog_upload_contracts.rs::accepted_partial_workflow_warns_only_rejected_node_ids_and_preserves_mask_evidence",
+        "tests/rust/comfy_lifecycle_acceptance.rs::exact_source_partial_branch_warning_keeps_only_bad_node_and_mask_evidence"
       ],
       "status": "pending",
-      "evidence": null
+      "evidence": null,
+      "gaps": [
+        "Exact single bad-node warning/mask evidence fixture requires applicable hosted execution and final literal acceptance."
+      ]
     },
     {
       "source": "tests/integration/async-waiter-race.test.ts",
