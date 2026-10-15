@@ -44,7 +44,7 @@ fn exact_source_four_mebibyte_base64_preserves_all_bytes_and_strict_boundaries()
 #[test]
 fn exact_source_eight_by_six_png_jpeg_webp_metadata_hash_and_base64_round_trips_match() {
     let cases = exact_source_images();
-    assert_eq!(cases.as_array().unwrap().len(), 8);
+    assert_eq!(cases.as_array().unwrap().len(), 9);
     for format in ["png", "jpeg", "webp"] {
         let matches: Vec<_> = cases
             .as_array()

@@ -50,6 +50,19 @@ class CaseLedger(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     ledger.validate(self.source, changed, self.directory, False)
 
+    def test_only_registered_native_sdk_fixture_is_mappable(self):
+        text = ledger.mapping_source("scripts/native-tools-acceptance.mjs", "::", "toolsAcceptance")
+        self.assertIn("host.client.callTool", text)
+        self.assertIn("host.client.readResource", text)
+        for path, separator, symbol in [
+            ("scripts/native-tools-acceptance.mjs", "::", "missing"),
+            ("scripts/native-interop.mjs", "::", "tool"),
+            ("tests/integration/tools.test.ts", "::", "toolsAcceptance"),
+            ("scripts/native-tools-acceptance.mjs", "", "toolsAcceptance"),
+        ]:
+            with self.subTest(path=path, symbol=symbol), self.assertRaises(RuntimeError):
+                ledger.mapping_source(path, separator, symbol)
+
     def test_complete_boolean_cannot_bypass_pending_assertions(self):
         directory = ROOT / ".ci-work/native/tooling-tests"
         directory.mkdir(parents=True, exist_ok=True)

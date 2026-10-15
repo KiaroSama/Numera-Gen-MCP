@@ -6,7 +6,6 @@ import importlib.util
 import hashlib
 import json
 from pathlib import Path
-import re
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -60,14 +59,7 @@ def main() -> None:
                     raise RuntimeError("Native mapping must contain a file and test identity")
             else:
                 path, test = mapping["file"], mapping["test"]
-            file = (ROOT / path).resolve()
-            if not (file.is_relative_to(ROOT / "tests/rust") or file.is_relative_to(ROOT / "native")) or not file.is_file():
-                raise RuntimeError("Native mapping must reference an existing Rust test")
-            text = file.read_text(encoding="utf-8")
-            if not re.search(r"\bfn\s+" + re.escape(test) + r"\s*\(", text):
-                raise RuntimeError("Native mapped test is missing")
-            if file.is_relative_to(ROOT / "native") and not re.search(r"#\[test\]\s*fn\s+" + re.escape(test) + r"\s*\(", text):
-                raise RuntimeError("Library mapping must identify an actual unit test")
+            ledger.mapping_source(path, "::", test)
     if actual["baseline_case_count"] != 470 or actual.get("case_mapping_complete") is not True:
         raise RuntimeError("All 470 baseline cases must be mapped; suite grouping alone is insufficient")
     print(json.dumps({"component": "parity", "source_suites": len(rows), "source_cases": 470, "acceptance_verified": True}))

@@ -321,10 +321,7 @@ async fn exact_source_gateway_metadata_preserves_encoded_ids_and_unknown_availab
         assert_eq!(result["model_id"], "codex/image model");
         assert_eq!(result["account_availability"], "unknown");
         assert_eq!(result["advertised"], json!({"supported":true}));
-        let config = configuration(
-            &root,
-            connection(&origin, "openrouter-images", "/api/v1"),
-        );
+        let config = configuration(&root, connection(&origin, "openrouter-images", "/api/v1"));
         let result = Discovery::model(
             &config,
             &runtime,

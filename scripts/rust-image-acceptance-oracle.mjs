@@ -11,6 +11,7 @@ export async function imageAcceptanceOracle({ source, emit, sharp }) {
     ["width-mask", "png", true, 7, 6],
     ["height-mask", "png", true, 8, 5],
     ["tamper-png", "png", true, 9, 6],
+    ["upscale-png", "png", true, 16, 12],
   ]) {
     const bytes = await sharp({
       create: {

@@ -1,6 +1,8 @@
 mod common;
 #[path = "common/comfy_source.rs"]
 mod source;
+#[path = "common/multipart.rs"]
+mod multipart_fixture;
 #[path = "common/wire.rs"]
 mod wire;
 use common::Workspace;
@@ -117,7 +119,7 @@ async fn exact_source_full_comfy_edit_preserves_three_uploads_and_only_bound_fin
                 assert!(upload.body.windows(b"Content-Type: image/png".len())
                     .any(|window| window == b"Content-Type: image/png"));
                 assert!(upload.headers.to_ascii_lowercase().contains("multipart/form-data"));
-                let parts = wire::multipart(upload);
+                let parts = multipart_fixture::multipart(upload);
                 let files = parts.iter().filter(|part| part.name == "image").collect::<Vec<_>>();
                 assert_eq!(files.len(), 1);
                 assert!(files[0].filename.is_some());
@@ -219,7 +221,12 @@ async fn exact_source_cpu_optout_only_requests_installed_nodes() {
             )
             .await
             .unwrap();
-            let paths = requests.lock().unwrap().iter().map(|r| r.path.clone()).collect::<Vec<_>>();
+            let paths = requests
+                .lock()
+                .unwrap()
+                .iter()
+                .map(|r| r.path.clone())
+                .collect::<Vec<_>>();
             assert_eq!(paths, ["/object_info"]);
         },
     )
@@ -240,12 +247,14 @@ async fn exact_source_missing_image_and_mask_bindings_refuse_both_calls() {
     let references = [image.clone()];
     assert_eq!(
         workflow::prepare(&input(&connection, &request, &references, None, "generate"))
-            .unwrap_err().code,
+            .unwrap_err()
+            .code,
         "unsupported_operation"
     );
     assert_eq!(
         workflow::prepare(&input(&connection, &request, &[], Some(&image), "generate"))
-            .unwrap_err().code,
+            .unwrap_err()
+            .code,
         "unsupported_operation"
     );
 }
@@ -254,9 +263,13 @@ async fn exact_source_missing_image_and_mask_bindings_refuse_both_calls() {
 async fn exact_source_bad_reference_identity_then_empty_submission_never_retries() {
     let workspace = Workspace::new();
     serve(
-        |request| reply(if request.path == "/upload/image" {
-            json!({"name":42,"subfolder":""})
-        } else { json!({}) }),
+        |request| {
+            reply(if request.path == "/upload/image" {
+                json!({"name":42,"subfolder":""})
+            } else {
+                json!({})
+            })
+        },
         |origin, requests| async move {
             let config = config(&workspace, &origin, configured_workflow());
             let (_, connection) = config.select(None).unwrap();
@@ -266,17 +279,59 @@ async fn exact_source_bad_reference_identity_then_empty_submission_never_retries
             let signal = CancellationToken::new();
             let adapter = input(&connection, &request, &references, None, "generate");
             let error = comfy::submit(
-                &adapter, workflow::prepare(&adapter).unwrap(), &HashMap::new(), &signal,
-            ).await.err().unwrap();
-            assert_eq!((error.code.as_str(), error.stage.as_str()), ("invalid_response", "upload"));
-            assert_eq!(requests.lock().unwrap().iter().filter(|r| r.path == "/upload/image").count(), 1);
-            assert_eq!(requests.lock().unwrap().iter().filter(|r| r.path == "/prompt").count(), 0);
+                &adapter,
+                workflow::prepare(&adapter).unwrap(),
+                &HashMap::new(),
+                &signal,
+            )
+            .await
+            .err()
+            .unwrap();
+            assert_eq!(
+                (error.code.as_str(), error.stage.as_str()),
+                ("invalid_response", "upload")
+            );
+            assert_eq!(
+                requests
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|r| r.path == "/upload/image")
+                    .count(),
+                1
+            );
+            assert_eq!(
+                requests
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|r| r.path == "/prompt")
+                    .count(),
+                0
+            );
             let adapter = input(&connection, &request, &[], None, "generate");
             let error = comfy::submit(
-                &adapter, workflow::prepare(&adapter).unwrap(), &HashMap::new(), &signal,
-            ).await.err().unwrap();
-            assert_eq!((error.code.as_str(), error.stage.as_str()), ("outcome_unknown", "submission"));
-            assert_eq!(requests.lock().unwrap().iter().filter(|r| r.path == "/prompt").count(), 1);
+                &adapter,
+                workflow::prepare(&adapter).unwrap(),
+                &HashMap::new(),
+                &signal,
+            )
+            .await
+            .err()
+            .unwrap();
+            assert_eq!(
+                (error.code.as_str(), error.stage.as_str()),
+                ("outcome_unknown", "submission")
+            );
+            assert_eq!(
+                requests
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|r| r.path == "/prompt")
+                    .count(),
+                1
+            );
         },
     )
     .await;
@@ -286,9 +341,13 @@ async fn exact_source_bad_reference_identity_then_empty_submission_never_retries
 async fn exact_source_empty_mask_upload_identity_never_submits_sentinel_prompt() {
     let workspace = Workspace::new();
     serve(
-        |request| reply(if request.path == "/upload/image" {
-            json!({})
-        } else { json!({"prompt_id":"must-not-submit"}) }),
+        |request| {
+            reply(if request.path == "/upload/image" {
+                json!({})
+            } else {
+                json!({"prompt_id":"must-not-submit"})
+            })
+        },
         |origin, requests| async move {
             let config = config(&workspace, &origin, configured_workflow());
             let (_, connection) = config.select(None).unwrap();
@@ -301,9 +360,22 @@ async fn exact_source_empty_mask_upload_identity_never_submits_sentinel_prompt()
                 &HashMap::new(),
                 &CancellationToken::new(),
             )
-            .await.err().unwrap();
-            assert_eq!((error.code.as_str(), error.stage.as_str()), ("invalid_response", "upload"));
-            assert_eq!(requests.lock().unwrap().iter().filter(|r| r.path == "/prompt").count(), 0);
+            .await
+            .err()
+            .unwrap();
+            assert_eq!(
+                (error.code.as_str(), error.stage.as_str()),
+                ("invalid_response", "upload")
+            );
+            assert_eq!(
+                requests
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|r| r.path == "/prompt")
+                    .count(),
+                0
+            );
         },
     )
     .await;
@@ -370,7 +442,9 @@ async fn history_case(state: &str) {
                 "error" => json!({"status_str":"error"}),
                 _ => json!({"completed":true}),
             };
-            reply(if state == "absent" { json!({}) } else {
+            reply(if state == "absent" {
+                json!({})
+            } else {
                 json!({"job":{"status":status,"outputs":{"save":{"images":[
                     {"filename":"not-output.png","type":"input"}
                 ]}}}})
@@ -387,7 +461,10 @@ async fn history_case(state: &str) {
                     &HashMap::new(),
                     &"job".into(),
                     &signal,
-                    comfy::OutputLimits { item: 100 * 1024 * 1024, aggregate: 100 * 1024 * 1024 },
+                    comfy::OutputLimits {
+                        item: 100 * 1024 * 1024,
+                        aggregate: 100 * 1024 * 1024,
+                    },
                     |_, _| Ok(()),
                     || Ok(()),
                 ),
@@ -407,7 +484,15 @@ async fn history_case(state: &str) {
                     assert!(result.terminal.is_none());
                 }
             }
-            assert_eq!(requests.lock().unwrap().iter().filter(|r| r.path.starts_with("/view")).count(), 0);
+            assert_eq!(
+                requests
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|r| r.path.starts_with("/view"))
+                    .count(),
+                0
+            );
         },
     )
     .await;

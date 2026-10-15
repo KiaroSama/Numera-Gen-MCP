@@ -562,11 +562,14 @@
       "sha256": "ca484107cecf7f2be80d8c556f76aedb5ccf844f357cbd6b5cdf643f292b781b",
       "native": [
         "tests/rust/application.rs::public_tools_validate_arguments_store_outputs_and_reload_last_good_config",
-        "tests/rust/http_output_contracts.rs::actual_http_tools_preserve_originals_previews_resource_reads_and_error_contracts"
+        "tests/rust/http_output_contracts.rs::actual_http_tools_preserve_originals_previews_resource_reads_and_error_contracts",
+        "scripts/native-tools-acceptance.mjs::toolsAcceptance"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["public_tool_schema"]
+      "gaps": [
+        "Applicable hosted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/transport-boundaries.test.ts",
@@ -585,11 +588,14 @@
       "sha256": "d3f44fd6900cf9c78a50eba60f5e3cb881dbeb97b0ba955d889b48596bbea9d4",
       "native": [
         "tests/rust/generation_contracts.rs::explicit_masks_region_translation_and_upscale_report_native_results_not_resized_images",
-        "tests/rust/image_route_contracts.rs::requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_and_evidence"
+        "tests/rust/image_route_contracts.rs::requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_and_evidence",
+        "tests/rust/upscale_acceptance.rs::exact_source_native_upscale_saves_larger_original_then_marks_unchanged_output_partial"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["upscale_wire"]
+      "gaps": [
+        "Applicable hosted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/unit/config.test.ts",

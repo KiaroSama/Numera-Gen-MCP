@@ -336,6 +336,10 @@ path = "tests/rust/comfy_lifecycle_acceptance.rs"
 name = "comfy_workflow_acceptance"
 path = "tests/rust/comfy_workflow_acceptance.rs"
 
+[[test]]
+name = "upscale_acceptance"
+path = "tests/rust/upscale_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

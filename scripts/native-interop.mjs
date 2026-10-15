@@ -5,6 +5,7 @@ import { resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
+import { toolsAcceptance } from "./native-tools-acceptance.mjs";
 
 // Hosted differential acceptance: the actual native binary, two SDK hosts, two restarts.
 if (process.env.GITHUB_ACTIONS !== "true")
@@ -124,11 +125,12 @@ wire.on("connection", (socket) => {
 const closeHost = async (host) => {
   if (host.reaped) return;
   await bounded(host.client.close(), 5000);
-  await bounded(host.closed, 2000);
-  assert.throws(
-    () => process.kill(host.pid, 0),
-    "native child must be gone, not just absent from SDK",
-  );
+  if (host.started) await bounded(host.closed, 2000);
+  if (host.pid !== null)
+    assert.throws(
+      () => process.kill(host.pid, 0),
+      "native child must be gone, not just absent from SDK",
+    );
   host.reaped = true;
 };
 async function bounded(promise, ms = 5000) {
@@ -147,7 +149,7 @@ async function bounded(promise, ms = 5000) {
     clearTimeout(timer);
   }
 }
-async function start(configFile, mode = "auto") {
+async function start(configFile, mode = "auto", connectOptions = {}) {
   const transport = new StdioClientTransport({
     command: binary,
     args: ["bridge", "--config", configFile],
@@ -181,27 +183,27 @@ async function start(configFile, mode = "auto") {
     transport,
     closed,
     pid: null,
+    started: false,
     reaped: false,
     stderr: () => stderr,
   };
+  const startTransport = transport.start.bind(transport);
+  transport.start = () => {
+    host.started = true;
+    const pending = startTransport();
+    // SDK close clears transport.pid before its asynchronous child reaping completes.
+    host.pid = transport.pid;
+    return pending;
+  };
+  hosts.push(host);
   client.onclose = signalClosed;
   try {
-    await bounded(client.connect(transport), 8000);
-    host.pid = transport.pid;
+    await bounded(client.connect(transport, connectOptions), 8000);
     assert.ok(host.pid > 0, "actual native child required");
   } catch (error) {
-    host.pid = transport.pid;
-    await client.close();
-    if (host.pid !== null) {
-      await bounded(closed, 2000);
-      assert.throws(
-        () => process.kill(host.pid, 0),
-        "failed handshake child must be reaped",
-      );
-    }
+    await closeHost(host);
     throw error;
   }
-  hosts.push(host);
   return host;
 }
 async function tool(host, name, args) {
@@ -261,6 +263,24 @@ try {
   await assert.rejects(start(file, { pin: "2026-07-28" }), {
     code: "ERA_NEGOTIATION_FAILED",
   });
+  const ownedBeforeFailure = hosts.length;
+  await assert.rejects(
+    start(file, "legacy", {
+      signal: AbortSignal.abort(new Error("Synthetic handshake cancellation")),
+    }),
+  );
+  assert.equal(hosts.length, ownedBeforeFailure + 1);
+  const rejectedHost = hosts.at(-1);
+  assert.equal(rejectedHost.started, true);
+  assert.ok(
+    rejectedHost.pid > 0,
+    "failed handshake retained its actual child PID",
+  );
+  assert.equal(
+    rejectedHost.reaped,
+    true,
+    "failed handshake awaited actual child close",
+  );
   const seeded = new Store(config.stateDir);
   try {
     for (const [name, connection] of Object.entries(config.connections)) {
@@ -424,6 +444,14 @@ try {
       }
     }
   }
+  await toolsAcceptance({
+    root,
+    workspace,
+    configSchema,
+    start,
+    closeHost,
+    bounded,
+  });
   assert.deepEqual(
     posts,
     [],

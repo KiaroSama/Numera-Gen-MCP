@@ -19,6 +19,27 @@ def contained(root: Path, relative: str) -> Path:
     return file
 
 
+def mapping_source(path: str, separator: str, symbol: str) -> str:
+    sdk = path == "scripts/native-tools-acceptance.mjs" and symbol == "toolsAcceptance"
+    if not separator or not (sdk or (path.startswith(("tests/rust/", "native/")) and path.endswith(".rs"))):
+        raise RuntimeError("Native case mapping requires a Rust test or registered native SDK fixture")
+    text = contained(ROOT, path).read_text(encoding="utf-8")
+    if sdk:
+        if "export async function toolsAcceptance(" not in text:
+            raise RuntimeError("Mapped native SDK fixture is missing")
+        caller = contained(ROOT, "scripts/native-interop.mjs").read_text(encoding="utf-8")
+        if 'import { toolsAcceptance } from "./native-tools-acceptance.mjs";' not in caller or "await toolsAcceptance(" not in caller:
+            raise RuntimeError("Native SDK fixture is not executed by interoperability acceptance")
+        for entry in ["scripts/native-ci.py", "scripts/native-extract-check.py"]:
+            if "scripts/native-interop.mjs" not in contained(ROOT, entry).read_text(encoding="utf-8"):
+                raise RuntimeError("Native SDK fixture is missing hosted or extracted execution")
+    elif not re.search(r"\bfn\s+" + re.escape(symbol) + r"\s*\(", text):
+        raise RuntimeError("Mapped native test is missing")
+    elif path.startswith("native/") and not re.search(r"#\[test\]\s*fn\s+" + re.escape(symbol) + r"\s*\(", text):
+        raise RuntimeError("Library mapping must identify an actual unit test")
+    return text
+
+
 def validate(source: Path, collection: dict, ledger_root: Path, acceptance: bool) -> dict:
     index = json.loads((ledger_root / "index.json").read_text(encoding="utf-8"))
     if index["baseline"] != BASELINE or collection["baseline"] != BASELINE:
@@ -60,14 +81,7 @@ def validate(source: Path, collection: dict, ledger_root: Path, acceptance: bool
         native_files = {}
         for mapping in row["native"]:
             path, separator, symbol = mapping.partition("::")
-            if not separator or not path.startswith(("tests/rust/", "native/")) or not path.endswith(".rs"):
-                raise RuntimeError("Native case mapping requires a Rust test identity")
-            target = contained(ROOT, path)
-            text = target.read_text(encoding="utf-8")
-            if not re.search(r"\bfn\s+" + re.escape(symbol) + r"\s*\(", text):
-                raise RuntimeError("Mapped native test is missing")
-            if path.startswith("native/") and not re.search(r"#\[test\]\s*fn\s+" + re.escape(symbol) + r"\s*\(", text):
-                raise RuntimeError("Library mapping must identify an actual unit test")
+            text = mapping_source(path, separator, symbol)
             native_files[path] = text
         for assertion in row["assertions"]:
             text = native_files.get(assertion["native_file"])

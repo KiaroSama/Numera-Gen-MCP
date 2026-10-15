@@ -151,6 +151,20 @@ cases and exact Comfy graph/upload/history/reference/gateway assertions with a s
 source oracle. The history-error terminal flag remains a partial seam mapping; direct wait/reason and
 public rejection integration still need evidence. None of the new tests is verified by `544baa9`.
 
+At `552941c`, all 74 native targets passed on five stable platforms and nightly; Windows ARM test
+compilation hit the unchanged 180-second idle ceiling before a harness. All six Clippy/release/SDK
+checks passed, but formatting in five fixtures failed and all archives were skipped. Full coverage
+passed at 86.29% regions / 84.74% branches. Node Linux hit its PowerShell-startup idle deadline; Node
+Windows/macOS passed. Neither stall is explained by a compiler diagnostic or reproduced root cause.
+The next coherent batch confirms both under unchanged bounds and applies the actual hosted formatting.
+
+The current source-only tree has 75 registered targets and 366 concrete assignments, including partial
+mappings; 104 remain unassigned and all 470 dispositions remain pending. Exact upscale wire/original-byte
+acceptance and the frozen ten-tool SDK case are authored. The SDK mapping validates its actual hosted
+and extracted entrypoints; it is not a fictitious Rust test. Complete edit metadata and failed-handshake
+child ownership are restored, with a pre-cancelled legacy-handshake regression. None of these additions
+is verified by the earlier green SHA.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
@@ -161,8 +175,9 @@ passed at `3c5958f`. The [pending ledger](native-parity.json) preserves all
 Actual expanded collection retains platform-skipped cases; no suite grouping is promoted to 470-case acceptance.
 The [case ledger](native-cases/index.json) has all 470 identities and remains entirely pending.
 Targeted cases have concrete assertion ranges; explicit gaps include same-instance recovery versus
-reopen, direct-wait cancellation reasons and public terminal-error integration. The new unmasked-upload
-and Omni multipart assertions remain source-only until their own hosted execution. Structural validation
+reopen, direct-wait cancellation reasons and public terminal-error integration. The unmasked-upload
+and Omni multipart assertions passed five stable targets and nightly at `552941c`; Windows ARM runtime
+and final literal acceptance remain open. Structural validation
 and full assertion acceptance are separate gates; setting a completion flag alone cannot pass.
 
 | Boundary                                              | Native implementation                                                 | Authored verification                                             | Status                                                                                                                    |

@@ -1,4 +1,6 @@
 mod common;
+#[path = "common/multipart.rs"]
+mod multipart_fixture;
 #[path = "common/wire.rs"]
 mod wire;
 use common::Workspace;
@@ -18,10 +20,16 @@ use numera_image_gen_mcp::{
 use reqwest::Method;
 use std::{collections::HashMap, path::Path, time::Duration};
 use tokio_util::sync::CancellationToken;
-use wire::multipart;
+use multipart_fixture::multipart;
 
 fn configuration(root: &Path, connections: Value) -> Config {
-    let default = connections.as_object().unwrap().keys().next().unwrap().clone();
+    let default = connections
+        .as_object()
+        .unwrap()
+        .keys()
+        .next()
+        .unwrap()
+        .clone();
     let config = Config::parse(
         &json!({
             "schemaVersion":1,"defaultConnection":default,
@@ -42,7 +50,9 @@ fn configuration(root: &Path, connections: Value) -> Config {
 }
 
 fn parsed_connection(root: &Path, raw: Value) -> Value {
-    let (_, connection) = configuration(root, json!({"local":raw})).select(None).unwrap();
+    let (_, connection) = configuration(root, json!({"local":raw}))
+        .select(None)
+        .unwrap();
     assert_eq!(connection["enabled"], true);
     assert_eq!(connection["baseUrlMode"], "api-prefix");
     assert_eq!(connection["auth"], json!({"type":"none"}));
@@ -95,7 +105,14 @@ fn original(config: &Config, name: &str) -> Image {
     let bytes = decode_base64(row["base64"].as_str().unwrap(), 1048576).unwrap();
     let image = inspect(bytes.clone(), &config.value, None).unwrap();
     assert_eq!((image.width, image.height), (8, 6));
-    assert_eq!(image.mime, if name == "png" { "image/png" } else { "image/jpeg" });
+    assert_eq!(
+        image.mime,
+        if name == "png" {
+            "image/png"
+        } else {
+            "image/jpeg"
+        }
+    );
     assert_eq!(image.alpha, name == "png");
     assert_eq!(image.bytes, bytes);
     image
@@ -138,17 +155,23 @@ async fn invalid_case(mode: &str) {
             };
             match mode {
                 "second" | "changed-after-preflight" => {
-                    connection["workflow"]["bindings"].as_object_mut().unwrap().remove("image_2");
+                    connection["workflow"]["bindings"]
+                        .as_object_mut()
+                        .unwrap()
+                        .remove("image_2");
                 }
-                "mask" => {},
+                "mask" => {}
                 "node" => {
-                    connection["workflow"]["bindings"]["image_2"] = json!({"node":"missing","input":"image"});
+                    connection["workflow"]["bindings"]["image_2"] =
+                        json!({"node":"missing","input":"image"});
                 }
                 "slot" => {
-                    connection["workflow"]["bindings"]["image_2"] = json!({"node":"1","input":"imagge"});
+                    connection["workflow"]["bindings"]["image_2"] =
+                        json!({"node":"1","input":"imagge"});
                 }
                 "collision" => {
-                    connection["workflow"]["bindings"]["image_2"] = connection["workflow"]["bindings"]["image"].clone();
+                    connection["workflow"]["bindings"]["image_2"] =
+                        connection["workflow"]["bindings"]["image"].clone();
                 }
                 _ => panic!("Unknown frozen reference variant"),
             }
@@ -171,7 +194,10 @@ async fn invalid_case(mode: &str) {
             .await
             .expect("invalid reference action exceeded source two-second bound");
             assert!(result.is_err(), "{mode} must reject");
-            assert!(requests.lock().unwrap().is_empty(), "{mode} must precede every HTTP request");
+            assert!(
+                requests.lock().unwrap().is_empty(),
+                "{mode} must precede every HTTP request"
+            );
         },
     )
     .await;
@@ -208,7 +234,8 @@ async fn exact_source_changed_after_preflight_revalidates_before_upload() {
 }
 
 #[tokio::test]
-async fn exact_source_unmasked_two_distinct_references_keep_bytes_targets_and_direct_submit_order() {
+async fn exact_source_unmasked_two_distinct_references_keep_bytes_targets_and_direct_submit_order()
+{
     let workspace = Workspace::new();
     let root = &workspace.0;
     let mut uploads = 0;
@@ -271,9 +298,12 @@ async fn exact_source_unmasked_two_distinct_references_keep_bytes_targets_and_di
 fn gateway_inputs(root: &Path, gateway: &str) -> (Value, Value, Image) {
     let config = image_configuration(root);
     let image = original(&config, "png");
-    let connection = parsed_connection(root, json!({
-        "adapter":"openai-images","baseUrl":"https://api.example/v1","auth":{"type":"none"},"gateway":gateway
-    }));
+    let connection = parsed_connection(
+        root,
+        json!({
+            "adapter":"openai-images","baseUrl":"https://api.example/v1","auth":{"type":"none"},"gateway":gateway
+        }),
+    );
     let request = request::parse(json!({
         "prompt":"fixture","reference_images":[{"type":"data_url","data_url":mime_data(&image)}]
     }))

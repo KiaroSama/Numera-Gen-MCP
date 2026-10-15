@@ -339,6 +339,26 @@ avoids duplicated listener/multipart machinery. These additions are source-revie
 executed. Direct history-error flags versus public provider rejection, arbitrary wait cancellation
 reasons and the complete direct-wait schedule remain explicit acceptance gaps.
 
+At `552941c`, five stable platforms and nightly passed all 74 native targets. Windows ARM
+passed Clippy, release compilation and SDK checks, but test compilation hit its unchanged 180-second
+idle ceiling before any harness started. All six required formatting corrections in five fixture
+files; notices and archives were skipped. Complete coverage passed at 86.29% regions / 84.74%
+branches. Node Windows/macOS passed; Linux's PowerShell fixture stopped after launch, before its first
+parse marker, at the unchanged ten-second idle ceiling. Neither startup/compile stall has an established
+root cause; the next coherent run supplies one confirmation without increasing deadlines.
+
+The next source-only tree has 75 native targets and 366 case assignments, including partial mappings;
+104 cases remain unassigned and all 470 dispositions stay pending. A source-faithful upscale fixture
+captures both edit POSTs, exact 8x6/16x12 originals, unchanged-size partial status and four invalid sizes.
+The image oracle preserves its earlier eight rows and adds the exact source 16x12 PNG. A separate
+SDK fixture runs the frozen ten-tool case through the real native bridge, including schema descriptions,
+original resource bytes, previews, editing, pagination and error results. It is mapped as native SDK
+acceptance, not misrepresented as a Rust unit test. The edit description now retains the complete frozen
+`edit_region`/translation/upscale contract. Failed-handshake ownership is registered before connecting,
+and the actual spawned PID/close event remain tracked even when the SDK clears its transport handle.
+A pre-cancelled legacy handshake exercises that failure path. These changes require hosted execution;
+source review and syntax checks do not establish runtime acceptance.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine
