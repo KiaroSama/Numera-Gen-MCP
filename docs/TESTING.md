@@ -300,6 +300,24 @@ isolation/stale 503 warnings, repeated cursor/twenty-page refresh bounds, malfor
 and enabled/disabled health with absent-secret redaction. The integrated tree registers 69 targets
 and 326 concrete case assignments, including partial mappings; 144 cases remain unassigned.
 
+At `f8971fb`, five stable platforms and nightly passed all 69 native targets; all six platforms
+passed strict Clippy, and all three Node jobs passed. Complete coverage passed at 86.23% regions /
+84.58% branches. Intel macOS did not reach a test harness: test compilation hit its 180-second idle
+ceiling after 580.37 seconds, and release compilation hit its 360-second idle ceiling after 860.88
+seconds. Its missing-binary stdio error and HTTP process termination are downstream failures, not
+passing protocol checks. No compiler diagnostic or assertion failure explains those compilation
+stalls; runner slowdown is observed, not an established root cause. Two fixture files required actual
+hosted formatting corrections, now applied without assertion changes. Notices and archives were skipped.
+
+The next source-only target preserves five exact HTTP status/error/no-retry cases, the ordered
+redirect/malformed-JSON/five-byte-limit/pre-cancelled request case, and the complete source 8x6 PNG
+asset-prefix/redirect/loop/limit/unsafe-URL schedule. Its scoped futures own every listener/socket,
+with eight-second scenarios and three-second socket bounds; no detached service or sleep is needed.
+The tree registers 70 native targets and 333 concrete assertion assignments, including partial mappings;
+137 cases remain unassigned and all 470 dispositions remain pending. The new fixtures are not compiled
+or executed locally. The next coherent hosted batch also confirms Intel macOS under unchanged bounds;
+no timeout increase or production transport change substitutes for that evidence.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

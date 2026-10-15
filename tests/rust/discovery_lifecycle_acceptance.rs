@@ -59,7 +59,8 @@ fn local(origin: &str) -> Value {
 async fn checked(server: Server, action: impl Future<Output = ()> + Send + 'static) {
     // Join assertion panics before releasing the socket owner and propagating the result.
     let result =
-        tokio::spawn(async move { tokio::time::timeout(Duration::from_secs(8), action).await }).await;
+        tokio::spawn(async move { tokio::time::timeout(Duration::from_secs(8), action).await })
+            .await;
     tokio::time::timeout(Duration::from_secs(2), server.close())
         .await
         .expect("Discovery fixture shutdown exceeded two seconds");

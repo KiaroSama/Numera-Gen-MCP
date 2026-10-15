@@ -115,7 +115,11 @@ async fn exact_source_preintent_refusals_leave_no_queued_or_active_work() {
     let signal = CancellationToken::new();
     for (raw, operation, code) in [
         (json!({"prompt":"draw"}), "generate", "invalid_input"),
-        (json!({"prompt":"draw","model":"image"}), "edit", "invalid_input"),
+        (
+            json!({"prompt":"draw","model":"image"}),
+            "edit",
+            "invalid_input",
+        ),
         (
             json!({"prompt":"draw","model":"image","output_subdirectory":"../escape"}),
             "generate",
@@ -214,12 +218,16 @@ async fn exact_source_owned_responses_job_refresh_and_active_cancel_are_separate
     let g = generation_with_connection(&workspace, connection, None);
     let result = tokio::time::timeout(Duration::from_secs(6), async {
         let (_, connection) = g.config.select(None).unwrap();
-        let pinned =
-            numera_image_gen_mcp::config::snapshot_credentials(&connection, &HashMap::new(), &g.runtime)
-                .await
-                .unwrap();
+        let pinned = numera_image_gen_mcp::config::snapshot_credentials(
+            &connection,
+            &HashMap::new(),
+            &g.runtime,
+        )
+        .await
+        .unwrap();
         let identity =
-            numera_image_gen_mcp::services::identity::connection_identity("local", &pinned).unwrap();
+            numera_image_gen_mcp::services::identity::connection_identity("local", &pinned)
+                .unwrap();
         let mut initial = Receipt::new(json!({
             "request_id":"request-1","connection":"local","adapter":"openai-images",
             "operation":"generate","status":"running","requested_model":"image-model",

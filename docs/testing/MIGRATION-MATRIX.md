@@ -129,6 +129,18 @@ execution and final literal review. Manual dispatch retains the complete matrix 
 push/PR reruns. Final signed publication additionally waits for an approved owner signer/trust path;
 no signing credentials or trust identity have been invented.
 
+At `f8971fb`, five stable platforms and nightly passed all 69 native targets, all six passed Clippy,
+all three Node jobs passed, and complete coverage passed at 86.23% regions / 84.58% branches.
+Intel macOS reached no test harness: test and release compilation stopped at unchanged 180-second /
+360-second idle ceilings after 580.37 / 860.88 seconds. Missing-binary stdio and HTTP termination
+are downstream failures; no compiler diagnostic or test assertion establishes a production regression.
+Actual formatting corrections in two fixtures are applied; notices and archives were skipped.
+The next source-only target adds the five literal HTTP status cases, ordered redirect/malformed/body/
+cancellation case and complete original-byte asset schedule. There are 70 registered targets and 333
+concrete assignments, including partial mappings; 137 remain unassigned, and all 470 dispositions
+remain pending. Replacement hosted execution must confirm these additions and Intel macOS without
+relaxing bounds. Literal-IP asset tests do not establish hostname DNS-pinning coverage.
+
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

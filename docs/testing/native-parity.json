@@ -98,12 +98,19 @@
         "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_profile_caches_stay_isolated_and_failed_refresh_retains_stale_evidence",
         "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_repeated_cursor_and_twenty_page_refresh_remain_incomplete",
         "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_malformed_first_page_is_incomplete_with_one_response_warning",
-        "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_enabled_and_disabled_health_never_disclose_declared_secret_sources"
+        "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_enabled_and_disabled_health_never_disclose_declared_secret_sources",
+        "tests/rust/network_acceptance.rs::exact_source_http_401_is_authentication_error_without_retry",
+        "tests/rust/network_acceptance.rs::exact_source_http_403_is_permission_denied_without_retry",
+        "tests/rust/network_acceptance.rs::exact_source_http_404_is_model_unavailable_without_retry",
+        "tests/rust/network_acceptance.rs::exact_source_http_429_is_rate_limited_without_retry",
+        "tests/rust/network_acceptance.rs::exact_source_http_500_is_upstream_error_without_retry",
+        "tests/rust/network_acceptance.rs::exact_source_redirect_malformed_five_byte_limit_and_preabort_reject_in_order",
+        "tests/rust/network_acceptance.rs::exact_source_asset_prefix_redirect_loop_limits_and_unsafe_urls_preserve_original_bytes"
       ],
       "status": "pending",
       "evidence": null,
       "gaps": [
-        "exact specialty/metadata/API/asset schedules and final literal acceptance remain pending"
+        "exact specialty/metadata schedules, applicable hosted execution and final literal acceptance remain pending"
       ]
     },
     {
