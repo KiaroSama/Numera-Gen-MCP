@@ -24,6 +24,9 @@ def mapping_source(path: str, separator: str, symbol: str) -> str:
         "scripts/native-tools-acceptance.mjs": "toolsAcceptance",
         "scripts/native-two-host-acceptance.mjs": "twoHostAcceptance",
         "scripts/native-compact-acceptance.mjs": "compactAcceptance",
+        "scripts/native-env-acceptance.mjs": "envAcceptance",
+        "scripts/native-negotiation-acceptance.mjs": "negotiationAcceptance",
+        "scripts/native-config-reload-acceptance.mjs": "configReloadAcceptance",
     }
     sdk = path in sdk_entries and symbol == sdk_entries[path]
     if not separator or not (sdk or (path.startswith(("tests/rust/", "native/")) and path.endswith(".rs"))):

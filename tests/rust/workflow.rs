@@ -335,3 +335,46 @@ fn installed_descriptors_reject_enum_scalar_range_cycle_and_invalid_links() {
         );
     }
 }
+
+#[test]
+fn exact_source_installed_graph_preserves_enum_and_cycle_error_messages() {
+    let workspace = common::Workspace::new();
+    let raw = json!({
+        "schemaVersion":1,"defaultConnection":"local",
+        "outputDir":workspace.0.join("outputs").to_str().unwrap(),
+        "stateDir":workspace.0.join("state").to_str().unwrap(),
+        "logging":{"directory":workspace.0.join("logs").to_str().unwrap()},
+        "files":{"allowedInputRoots":[workspace.0.join("inputs").to_str().unwrap()]},
+        "connections":{"local":{
+            "adapter":"comfyui","baseUrl":"https://api.example/v1","auth":{"type":"none"},
+            "workflow":{
+                "graph":{
+                    "a":{"class_type":"Source","inputs":{"count":1,"mode":"fast"}},
+                    "b":{"class_type":"Save","inputs":{"image":["a",0]}}
+                },
+                "bindings":{"prompt":{"node":"a","input":"mode"}},"outputNodes":["b"]
+            }
+        }}
+    });
+    let connection = numera_image_gen_mcp::config::Config::parse(
+        &raw.to_string(),
+        &workspace.0.join("config.json"),
+        &[],
+        &std::collections::HashMap::new(),
+    )
+    .unwrap();
+    let configured = &connection.value["connections"]["local"]["workflow"];
+    let info = json!({
+        "Source":{"input":{"required":{"count":["INT",{"min":1,"max":2}],"mode":[["fast","slow"]]}},"output":["IMAGE"]},
+        "Save":{"input":{"required":{"image":["IMAGE"]}},"output_node":true}
+    });
+    workflow::validate(&configured["graph"], configured, &info).unwrap();
+    let mut bad = configured["graph"].clone();
+    bad["a"]["inputs"]["mode"] = json!("unsupported");
+    let error = workflow::validate(&bad, configured, &info).unwrap_err();
+    assert!(error.message.contains("enum"));
+    let mut cycle = configured["graph"].clone();
+    cycle["a"]["inputs"]["count"] = json!(["b",0]);
+    let error = workflow::validate(&cycle, configured, &info).unwrap_err();
+    assert!(error.message.contains("cycle"));
+}

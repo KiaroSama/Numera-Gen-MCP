@@ -344,3 +344,99 @@ fn actual_hosted_animated_webp_is_rejected_instead_of_returning_its_first_frame(
         case.error
     );
 }
+
+#[test]
+fn exact_source_two_loggers_keep_four_levels_private_and_distinct_files() {
+    let workspace = Workspace::new();
+    {
+        let first = Logger::new(&workspace.0, "DEBUG");
+        let _second = Logger::new(&workspace.0, "DEBUG");
+        let files: Vec<_> = fs::read_dir(&workspace.0)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .collect();
+        assert_eq!(files.len(), 2);
+        assert_ne!(files[0], files[1]);
+        for level in ["INFO", "WARNING", "ERROR", "DEBUG"] {
+            first.log(
+                level,
+                "fixture",
+                "Safe event.",
+                json!({"authorization":"Bearer private","signature":"private","prompt":"private"}),
+            );
+        }
+    }
+    let files: Vec<_> = fs::read_dir(&workspace.0)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .collect();
+    assert_eq!(files.len(), 2);
+    let contents: Vec<_> = files
+        .iter()
+        .map(|path| fs::read_to_string(path).unwrap())
+        .collect();
+    assert_eq!(contents.iter().filter(|text| !text.is_empty()).count(), 1);
+    let text = contents.iter().find(|text| !text.is_empty()).unwrap();
+    let lines: Vec<Value> = text
+        .lines()
+        .map(|line| Value::parse(line).unwrap())
+        .collect();
+    let levels: Vec<_> = lines
+        .iter()
+        .map(|line| line["level"].as_str().unwrap())
+        .collect();
+    assert_eq!(levels, ["INFO", "WARNING", "ERROR", "DEBUG"]);
+    assert!(!text.contains("private"));
+    assert!(
+        lines
+            .iter()
+            .all(|line| line["timestamp"].as_str().unwrap().ends_with('Z'))
+    );
+}
+
+#[test]
+fn exact_source_log_metadata_cannot_be_forged_and_closed_file_can_rename() {
+    let workspace = Workspace::new();
+    {
+        let log = Logger::new(&workspace.0, "DEBUG");
+        log.log(
+            "INFO",
+            "fixture",
+            "First.",
+            json!({"run_id":"forged","timestamp":"forged","level":"forged","component":"forged","message":"forged"}),
+        );
+        log.log(
+            "ERROR",
+            "fixture",
+            "Second.",
+            json!({"api_key":"do-not-log","private_path":"do-not-log","nested":{"authorization":"do-not-log"}}),
+        );
+    }
+    let files: Vec<_> = fs::read_dir(&workspace.0)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .collect();
+    assert_eq!(files.len(), 1);
+    let text = fs::read_to_string(&files[0]).unwrap();
+    let lines: Vec<Value> = text
+        .lines()
+        .map(|line| Value::parse(line).unwrap())
+        .collect();
+    assert_eq!(lines.len(), 2);
+    assert_eq!(lines[0]["level"], "INFO");
+    assert_eq!(lines[0]["component"], "fixture");
+    assert_eq!(lines[0]["message"], "First.");
+    let run_id = lines[0]["run_id"].as_str().unwrap();
+    assert_eq!(run_id.len(), 36);
+    assert!(
+        run_id
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte) || byte == b'-')
+    );
+    assert_eq!(lines[0]["run_id"], lines[1]["run_id"]);
+    assert_ne!(lines[0]["timestamp"], "forged");
+    assert!(!text.contains("do-not-log"));
+    let renamed = std::path::PathBuf::from(format!("{}.closed", files[0].to_str().unwrap()));
+    fs::rename(&files[0], &renamed).expect("logger Drop releases file handler");
+    assert_eq!(fs::read_to_string(renamed).unwrap(), text);
+}

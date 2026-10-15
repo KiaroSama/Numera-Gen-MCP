@@ -378,6 +378,23 @@ All 470 dispositions remain pending. Three explicitly registered native SDK fixt
 interoperability and extracted-package wiring; source review and structural checks are not runtime
 acceptance. These additions require their own hosted verification.
 
+At `e0c670e`, five stable platforms and nightly passed all 75 native targets. All six platforms
+passed formatting, strict Clippy, release compilation and the actual SDK checks, including all three
+new scenarios. Five targets also passed notices, archives, checksums and extracted SDK execution;
+Windows x64 did not reach packaging. Its test compilation stopped at the unchanged 180-second idle
+ceiling after 298.95 seconds, before any harness, with no compiler diagnostic. Its release build and
+SDK fixtures passed. All three Node jobs and complete 86.35% regions / 84.99% branches coverage passed.
+The compiler stall's cause remains unproven. Stable tests now request Cargo's documented artifact
+messages while retaining rendered compiler diagnostics and every existing worker, timeout and test gate.
+
+The next source-only batch keeps 75 targets and adds ten case assignments: adjacent dotenv reload,
+three empty-config negotiation variants, three live-SDK configuration reload scenarios, two exact
+logging cases and installed workflow enum/cycle messages. The retained-handle SDK case explicitly
+releases an external seed Store before starting its native child; this is not the source's same-owner
+Store schedule and remains partial. The pending ledger has 379 assignments and 91 unassigned cases;
+all 470 dispositions remain pending. These additions and compiler-progress diagnostics require their
+own hosted execution. No production configuration, provider behavior or dependency is changed.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

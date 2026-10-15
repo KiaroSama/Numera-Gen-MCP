@@ -290,11 +290,15 @@
       "native": [
         "tests/rust/config_parity.rs::reload_retains_last_good_fixed_policy_and_sixty_four_snapshots",
         "tests/rust/application.rs::public_tools_validate_arguments_store_outputs_and_reload_last_good_config",
-        "tests/rust/snapshot_races.rs::in_flight_generation_keeps_old_snapshot_while_reload_and_next_request_use_new_model"
+        "tests/rust/snapshot_races.rs::in_flight_generation_keeps_old_snapshot_while_reload_and_next_request_use_new_model",
+        "scripts/native-config-reload-acceptance.mjs::configReloadAcceptance"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["reload_public_boundary"]
+      "gaps": [
+        "Applicable hosted execution and final independent literal acceptance pending.",
+        "Partial ownership schedule: source app.store prepares within the same Store owner; actual child fixture requires explicit public release of the external seed Store. Same-owner seeding/claim schedule remains required."
+      ]
     },
     {
       "source": "tests/integration/credential-snapshot.test.ts",
@@ -332,11 +336,14 @@
       "sha256": "0bc59f88558fd116fc578a923d188a07464221814365b9c1ea067ee6d04c22e0",
       "native": [
         "tests/rust/stdio.rs::bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof",
-        "tests/rust/config_contracts.rs::adjacent_discovery_explicit_paths_and_openai_compat_are_isolated_from_caller_state"
+        "tests/rust/config_contracts.rs::adjacent_discovery_explicit_paths_and_openai_compat_are_isolated_from_caller_state",
+        "scripts/native-env-acceptance.mjs::envAcceptance"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["reload_public_boundary"]
+      "gaps": [
+        "Applicable hosted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/http-resource-cleanup.test.ts",
@@ -388,7 +395,9 @@
     {
       "source": "tests/integration/negotiation.test.ts",
       "sha256": "fcd1356a6f20f8ab8701f0119056d4dd20f053f82a10f22f44708f559bc50b7b",
-      "native": [],
+      "native": [
+        "scripts/native-negotiation-acceptance.mjs::negotiationAcceptance"
+      ],
       "external": [
         {
           "file": "scripts/native-interop.mjs",
@@ -396,7 +405,10 @@
         }
       ],
       "status": "pending",
-      "evidence": null
+      "evidence": null,
+      "gaps": [
+        "Applicable hosted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/output-requirements.test.ts",
@@ -677,10 +689,15 @@
       "source": "tests/unit/logging.test.ts",
       "sha256": "dea0eddeb5c744877ce25bb7b34041a079b595402bbaa09cdc74c45f01d6678a",
       "native": [
-        "tests/rust/runtime_contracts.rs::log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed"
+        "tests/rust/runtime_contracts.rs::log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed",
+        "tests/rust/runtime_contracts.rs::exact_source_two_loggers_keep_four_levels_private_and_distinct_files",
+        "tests/rust/runtime_contracts.rs::exact_source_log_metadata_cannot_be_forged_and_closed_file_can_rename"
       ],
       "status": "pending",
-      "evidence": null
+      "evidence": null,
+      "gaps": [
+        "Applicable hosted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/unit/output-directory-race.test.ts",
@@ -738,10 +755,14 @@
       "source": "tests/unit/workflow-validation.test.ts",
       "sha256": "44c3d700374960019a7c31926fccc96040ff82c1d27d728fdbc332adbffe8e6b",
       "native": [
-        "tests/rust/workflow.rs::installed_descriptors_reject_enum_scalar_range_cycle_and_invalid_links"
+        "tests/rust/workflow.rs::installed_descriptors_reject_enum_scalar_range_cycle_and_invalid_links",
+        "tests/rust/workflow.rs::exact_source_installed_graph_preserves_enum_and_cycle_error_messages"
       ],
       "status": "pending",
-      "evidence": null
+      "evidence": null,
+      "gaps": [
+        "Applicable hosted execution and final independent literal acceptance pending."
+      ]
     }
   ],
   "native_reference_format": "repo-relative-file::function; suite navigation only, not case acceptance"

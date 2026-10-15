@@ -177,6 +177,21 @@ exact two-host concurrent deduplication, executable-adjacent compact config from
 compact Responses defaults/overrides. The separate RGB20/40/60 source PNG preserves the literal `.png()`
 recipe; previous nine oracle rows are unchanged. Actual hosted and extracted execution is still required.
 
+At `e0c670e`, all 75 targets passed on five stable platforms and nightly; all six passed formatting,
+Clippy, release compilation and actual SDK checks, including the three new scenarios. Five targets
+passed notices, archives, checksums and extracted execution. Windows x64 test compilation hit the
+unchanged 180-second idle ceiling after 298.95 seconds before any harness; no compiler diagnostic
+explains it. Its release build and SDK fixtures passed, but packaging was skipped. All three Node
+jobs and full 86.35% regions / 84.99% branches coverage passed. The next run emits actual Cargo artifact
+completion messages, keeping rendered diagnostics, bounds, workers and all assertions unchanged.
+
+The current source-only tree keeps 75 targets and records 379 assignments, including partial mappings;
+91 remain unassigned and all 470 dispositions stay pending. Ten new assignments cover adjacent dotenv,
+three negotiation variants, three SDK reload scenarios, two logging cases and workflow enum/cycle
+messages. The retained-handle fixture's external Store ownership-release handoff is explicitly partial,
+not source-equivalent same-owner seeding. Current native compilation and hosted/extracted execution
+remain required; source review or a registered mapping does not establish them.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

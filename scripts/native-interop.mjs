@@ -8,6 +8,9 @@ import { createRequire } from "node:module";
 import { toolsAcceptance } from "./native-tools-acceptance.mjs";
 import { twoHostAcceptance } from "./native-two-host-acceptance.mjs";
 import { compactAcceptance } from "./native-compact-acceptance.mjs";
+import { envAcceptance } from "./native-env-acceptance.mjs";
+import { negotiationAcceptance } from "./native-negotiation-acceptance.mjs";
+import { configReloadAcceptance } from "./native-config-reload-acceptance.mjs";
 
 // Hosted differential acceptance: the actual native binary, two SDK hosts, two restarts.
 if (process.env.GITHUB_ACTIONS !== "true")
@@ -481,6 +484,24 @@ try {
     root,
     workspace,
     binary,
+    start,
+    closeHost,
+    bounded,
+  });
+  await envAcceptance({ root, workspace, binary, start, closeHost, bounded });
+  await negotiationAcceptance({
+    workspace,
+    configSchema,
+    start,
+    closeHost,
+    bounded,
+  });
+  await configReloadAcceptance({
+    root,
+    workspace,
+    configSchema,
+    Store,
+    connectionIdentity,
     start,
     closeHost,
     bounded,
