@@ -204,7 +204,9 @@ fn exact_source_empty_orphan_reservations_preserve_uncertainty_across_two_reopen
             store.reserve(id, 1024, 2048).unwrap();
         }
         let database = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
-        database.execute_batch("UPDATE requests SET lease=0").unwrap();
+        database
+            .execute_batch("UPDATE requests SET lease=0")
+            .unwrap();
         drop(database);
         store.queued().unwrap();
     }
@@ -214,7 +216,12 @@ fn exact_source_empty_orphan_reservations_preserve_uncertainty_across_two_reopen
             let original = store.get(id).unwrap();
             assert_eq!(original.status(), "outcome_unknown");
             assert_eq!(original.value["generation_outcome"], "unknown");
-            assert!(!store.prepare(receipt(id, "local"), id, "identity").unwrap().0);
+            assert!(
+                !store
+                    .prepare(receipt(id, "local"), id, "identity")
+                    .unwrap()
+                    .0
+            );
         }
         let id = format!("fresh-{round}");
         let mut current = store
@@ -259,15 +266,16 @@ fn exact_source_bytes_urls_live_and_detached_writers_keep_charges_and_fence_expi
         }
         if matches!(mode, "bytes" | "url") {
             let database = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
-            database.execute_batch("UPDATE requests SET lease=0").unwrap();
+            database
+                .execute_batch("UPDATE requests SET lease=0")
+                .unwrap();
             drop(database);
             peer.queued().unwrap();
             assert!(!owner.owns("old", Some(&old)).unwrap());
             assert!(owner.retain("old", 1, &[0u8; 8], Some(&old)).is_err());
         }
-        peer
-        .prepare(receipt("fresh", "local"), "fresh", "identity")
-        .unwrap();
+        peer.prepare(receipt("fresh", "local"), "fresh", "identity")
+            .unwrap();
         peer.admit("fresh", "local", 10, 10).unwrap();
         assert_eq!(
             peer.reserve("fresh", 2048, 2048).unwrap_err().code,
@@ -378,7 +386,9 @@ fn exact_source_known_completion_wins_cancel_before_first_retention() {
         .unwrap();
     assert_eq!(result.value["generation_outcome"], "completed");
     assert!(owner.owns("finishing", Some(&current)).unwrap());
-    owner.retain("finishing", 0, &[0u8; 16], Some(&current)).unwrap();
+    owner
+        .retain("finishing", 0, &[0u8; 16], Some(&current))
+        .unwrap();
     assert_eq!(control.pending("finishing").unwrap().len(), 1);
 }
 
@@ -404,8 +414,7 @@ fn exact_source_empty_terminal_release_frees_full_budget_without_erasing_receipt
         )
         .unwrap();
     owner.release("empty", Some(&done)).unwrap();
-    peer
-        .prepare(receipt("fresh", "local"), "fresh", "identity")
+    peer.prepare(receipt("fresh", "local"), "fresh", "identity")
         .unwrap();
     peer.reserve("fresh", 1024, 1024).unwrap();
     assert_eq!(peer.get("empty").unwrap().status(), "failed");
@@ -448,5 +457,8 @@ fn exact_source_four_output_records_preserve_pagination_lookahead_and_duplicate_
         assert_eq!(store.output(&ids[0]).unwrap()["request_id"], "request-1");
     }
     let restarted = Store::open(&directory).unwrap();
-    assert_eq!(restarted.output(&ids[3]).unwrap(), output(&ids[3], "request-1"));
+    assert_eq!(
+        restarted.output(&ids[3]).unwrap(),
+        output(&ids[3], "request-1")
+    );
 }

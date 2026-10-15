@@ -1,6 +1,9 @@
 mod common;
+#[path = "common/http.rs"]
+mod http_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
+use http_fixture::{Reply, Server};
 use numera_image_gen_mcp::compat::value::{Value, json};
 use numera_image_gen_mcp::{
     adapters::types::{Normalized, ResultItem},
@@ -19,13 +22,24 @@ use std::{
 use tokio_util::sync::CancellationToken;
 
 fn generation(workspace: &Workspace, aggregate: Option<usize>) -> Generation {
+    let connection = json!({
+        "adapter":"openai-images","baseUrl":"https://api.example/v1","auth":{"type":"none"}
+    });
+    generation_with_connection(workspace, connection, aggregate)
+}
+
+fn generation_with_connection(
+    workspace: &Workspace,
+    connection: Value,
+    aggregate: Option<usize>,
+) -> Generation {
     let mut raw = json!({
         "schemaVersion":1,"defaultConnection":"local",
         "outputDir":workspace.0.join("outputs").to_str().unwrap(),
         "stateDir":workspace.0.join("state").to_str().unwrap(),
         "logging":{"directory":workspace.0.join("logs").to_str().unwrap()},
         "files":{"allowedInputRoots":[workspace.0.join("inputs").to_str().unwrap()]},
-        "connections":{"local":{"adapter":"openai-images","baseUrl":"https://api.example/v1","auth":{"type":"none"}}}
+        "connections":{"local":connection}
     });
     if let Some(limit) = aggregate {
         raw["files"]["maxAggregateBytes"] = json!(limit);
@@ -92,6 +106,168 @@ fn bytes_result(bytes: Vec<u8>) -> Normalized {
         }],
         ..Default::default()
     }
+}
+
+#[tokio::test]
+async fn exact_source_preintent_refusals_leave_no_queued_or_active_work() {
+    let workspace = Workspace::new();
+    let g = generation(&workspace, None);
+    let signal = CancellationToken::new();
+    for (raw, operation, code) in [
+        (json!({"prompt":"draw"}), "generate", "invalid_input"),
+        (json!({"prompt":"draw","model":"image"}), "edit", "invalid_input"),
+        (
+            json!({"prompt":"draw","model":"image","output_subdirectory":"../escape"}),
+            "generate",
+            "invalid_input",
+        ),
+        (
+            json!({"prompt":"draw","model":"image","filename_prefix":"nested/prefix"}),
+            "generate",
+            "invalid_input",
+        ),
+        (
+            json!({"prompt":"draw","model":"image","wait":false}),
+            "generate",
+            "unsupported_operation",
+        ),
+    ] {
+        let error = tokio::time::timeout(Duration::from_secs(3), g.run(raw, operation, &signal))
+            .await
+            .unwrap()
+            .unwrap_err();
+        assert_eq!(error.code, code);
+    }
+    assert_eq!(g.store.lock().unwrap().queued().unwrap(), 0);
+    assert!(g.active.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn exact_source_data_url_edit_mask_and_aggregate_refusals_precede_intent() {
+    let workspace = Workspace::new();
+    let connection = json!({
+        "adapter":"openai-images","baseUrl":"https://api.example/v1","auth":{"type":"none"},
+        "defaultModel":"image","edit":{
+            "mode":"multipart","encoding":"image","masks":true,
+            "maskPolarity":"transparent-edit","maxReferences":2
+        }
+    });
+    let mut g = generation_with_connection(&workspace, connection, None);
+    let png = original("png");
+    let jpeg = original("jpeg");
+    let reference = json!({
+        "type":"data_url","data_url":format!("data:image/png;base64,{}", STANDARD.encode(&png))
+    });
+    let signal = CancellationToken::new();
+    for (raw, operation) in [
+        (
+            json!({
+                "prompt":"edit","reference_images":[reference],
+                "mask":{"type":"data_url","data_url":format!("data:image/jpeg;base64,{}",STANDARD.encode(&jpeg))}
+            }),
+            "edit",
+        ),
+        (json!({"prompt":"edit","mask":reference}), "generate"),
+    ] {
+        let error = tokio::time::timeout(Duration::from_secs(3), g.run(raw, operation, &signal))
+            .await
+            .unwrap()
+            .unwrap_err();
+        assert_eq!(error.code, "invalid_input");
+    }
+    Arc::get_mut(&mut g.config).unwrap().value["files"]["maxAggregateBytes"] = json!(png.len());
+    for raw in [
+        json!({"prompt":"edit","reference_images":[reference,reference]}),
+        json!({
+            "prompt":"edit","reference_images":[{"type":"data_url","data_url":"data:image/png;base64,YQ=="}]
+        }),
+    ] {
+        let error = tokio::time::timeout(Duration::from_secs(3), g.run(raw, "edit", &signal))
+            .await
+            .unwrap()
+            .unwrap_err();
+        assert_eq!(error.code, "invalid_input");
+    }
+    assert_eq!(g.store.lock().unwrap().queued().unwrap(), 0);
+    assert!(g.active.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn exact_source_owned_responses_job_refresh_and_active_cancel_are_separate_from_refunds() {
+    let workspace = Workspace::new();
+    let bytes = original("png");
+    let encoded = STANDARD.encode(&bytes);
+    let server = Server::new(move |_| Reply {
+        status: 200,
+        bytes: None,
+        value: json!({
+            "id":"owned job","status":"completed","output":[{
+                "type":"image_generation_call","status":"completed","result":encoded
+            }]
+        }),
+    })
+    .await;
+    let connection = json!({
+        "adapter":"openai-responses","baseUrl":format!("{}/v1",server.origin),
+        "auth":{"type":"none"},"orchestrationModel":"text","discoveryTimeoutMs":2000
+    });
+    let g = generation_with_connection(&workspace, connection, None);
+    let result = tokio::time::timeout(Duration::from_secs(6), async {
+        let (_, connection) = g.config.select(None).unwrap();
+        let pinned =
+            numera_image_gen_mcp::config::snapshot_credentials(&connection, &HashMap::new(), &g.runtime)
+                .await
+                .unwrap();
+        let identity =
+            numera_image_gen_mcp::services::identity::connection_identity("local", &pinned).unwrap();
+        let mut initial = Receipt::new(json!({
+            "request_id":"request-1","connection":"local","adapter":"openai-images",
+            "operation":"generate","status":"running","requested_model":"image-model",
+            "upstream_model":null,"outputs":[],"warnings":[],"deviations":[],"errors":[],
+            "generation_outcome":"not_submitted","storage_outcome":"not_started",
+            "another_submission_may_charge":false,
+            "created_at":"2026-10-02T00:00:00.000Z","updated_at":"2026-10-02T00:00:00.000Z"
+        }));
+        initial.value["upstream_job"] = json!({"id":"owned job","kind":"responses"});
+        g.store
+            .lock()
+            .unwrap()
+            .prepare(initial, "hash", &identity)
+            .unwrap();
+        let signal = CancellationToken::new();
+        assert_eq!(
+            jobs::get(&g, "request-1", false, &signal, None)
+                .await
+                .unwrap()
+                .status(),
+            "running"
+        );
+        assert!(server.requests.lock().unwrap().is_empty());
+        let completed = jobs::get(&g, "request-1", true, &signal, None)
+            .await
+            .unwrap();
+        assert_eq!(completed.status(), "completed");
+        assert_eq!(
+            server.requests.lock().unwrap().as_slice(),
+            ["/v1/responses/owned%20job"]
+        );
+        let controller = CancellationToken::new();
+        g.active
+            .lock()
+            .unwrap()
+            .insert("request-1".into(), controller.clone());
+        let result = jobs::cancel(&g, "request-1", &signal).await.unwrap();
+        assert_eq!(result["refund_verified"], false);
+        assert!(controller.is_cancelled());
+        g.active.lock().unwrap().remove("request-1");
+        assert_eq!(
+            std::fs::read(completed.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
+            bytes
+        );
+    })
+    .await;
+    server.close().await;
+    result.unwrap();
 }
 
 #[tokio::test]

@@ -312,6 +312,10 @@ path = "tests/rust/discovery_acceptance.rs"
 name = "store_acceptance"
 path = "tests/rust/store_acceptance.rs"
 
+[[test]]
+name = "discovery_lifecycle_acceptance"
+path = "tests/rust/discovery_lifecycle_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

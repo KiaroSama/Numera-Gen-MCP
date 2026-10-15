@@ -288,6 +288,24 @@ exact byte counts, capacities, URLs and reopen/control schedules. A separate act
 uses the source's 2048-byte budget and checks reservation totals only after both Stores/processes
 close; the broader live-writer fixture remains. All 470 acceptance dispositions remain pending.
 
+At `18851d2`, all 68 native targets passed on all six platforms and nightly; Clippy, release compilation,
+stdio/HTTP SDK checks and all three Node jobs passed. Complete coverage passed at 86.18% regions /
+84.58% branches. Only formatting in two test files failed, leaving notices, archives and extracted-package
+checks skipped. The exact hosted formatter corrections retain the SQL assertion and its closure body.
+The next source-only fixtures preserve the ordered pre-intent refusals, real data-URL edit/mask limits
+and owned Responses refresh/active-cancellation schedule on the same Generation/Store. Compilation and
+execution of these additions remain pending; none of the 470 case dispositions is promoted.
+Four new Discovery lifecycle cases preserve first-key default selection, same-instance profile cache
+isolation/stale 503 warnings, repeated cursor/twenty-page refresh bounds, malformed first-page evidence
+and enabled/disabled health with absent-secret redaction. The integrated tree registers 69 targets
+and 326 concrete case assignments, including partial mappings; 144 cases remain unassigned.
+
+CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
+native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
+an additional matrix. Final publication also requires approved embedded publisher identity and genuine
+platform signing. No approved signer/trust path has been established; the repository has no signing
+secrets. Prior unsigned compilation is historical test evidence, not a signed release or activation claim.
+
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally
 for this migration. [Acceptance matrix](testing/MIGRATION-MATRIX.md) records incomplete source-case,

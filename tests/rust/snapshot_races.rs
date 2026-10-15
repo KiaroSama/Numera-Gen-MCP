@@ -444,7 +444,9 @@ fn reservation_process_child() {
             "another_submission_may_charge":true,"created_at":now,"updated_at":now
         }))
     } else {
-        Receipt::new(json!({"request_id":id,"connection":"test","status":"prepared","outputs":[],"errors":[],"warnings":[],"deviations":[]}))
+        Receipt::new(
+            json!({"request_id":id,"connection":"test","status":"prepared","outputs":[],"errors":[],"warnings":[],"deviations":[]}),
+        )
     };
     let (_, owner) = store
         .prepare(initial, &id, if exact { "identity" } else { "fixture" })
@@ -577,7 +579,9 @@ fn exact_source_two_process_reservations_close_before_reading_full_budget() {
     )
     .unwrap();
     let used: i64 = database
-        .query_row("SELECT SUM(reservation) FROM requests", [], |row| row.get(0))
+        .query_row("SELECT SUM(reservation) FROM requests", [], |row| {
+            row.get(0)
+        })
         .unwrap();
     assert_eq!(used, 2048);
 }

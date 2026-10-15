@@ -118,6 +118,17 @@ notices and archives were skipped. The next source-only 68-target batch adds sev
 cases, nine exact reservation variants and a two-process 2048-byte budget assertion after both child
 Stores/processes close. Previous broader assertions remain; all 470 acceptance dispositions stay pending.
 
+At `18851d2`, all 68 native targets, all-six Clippy/release/stdio/HTTP SDK checks, all three Node jobs
+and complete 86.18% regions / 84.58% branches coverage passed. Only formatting in two test files
+failed; notices, archives and extracted-package checks were skipped. Those actual formatter changes
+are applied. The next source-only batch adds three literal Generation scenarios and four Discovery
+lifecycle cases: cache isolation/stale refresh, cursor/page limits, malformed first page and disabled
+connection health/redaction. It has 69 registered targets and 326 concrete case assignments, including
+partial mappings; 144 cases remain unassigned. All case dispositions remain pending native
+execution and final literal review. Manual dispatch retains the complete matrix without automatic
+push/PR reruns. Final signed publication additionally waits for an approved owner signer/trust path;
+no signing credentials or trust identity have been invented.
+
 **All-six packaged execution passed at `7199441`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

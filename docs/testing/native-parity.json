@@ -94,11 +94,17 @@
         "tests/rust/discovery.rs::specialty_catalog_routes_cache_health_and_metadata_preserve_evidence",
         "tests/rust/discovery.rs::catalog_pagination_partial_errors_and_stale_cache_are_bounded",
         "tests/rust/catalog_upload_contracts.rs::omniroute_specialty_catalog_is_supplemented_by_paginated_image_only_deduplication",
-        "tests/rust/catalog_upload_contracts.rs::gemini_page_tokens_do_not_mutate_configuration_or_leak_into_fresh_refresh"
+        "tests/rust/catalog_upload_contracts.rs::gemini_page_tokens_do_not_mutate_configuration_or_leak_into_fresh_refresh",
+        "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_profile_caches_stay_isolated_and_failed_refresh_retains_stale_evidence",
+        "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_repeated_cursor_and_twenty_page_refresh_remain_incomplete",
+        "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_malformed_first_page_is_incomplete_with_one_response_warning",
+        "tests/rust/discovery_lifecycle_acceptance.rs::exact_source_enabled_and_disabled_health_never_disclose_declared_secret_sources"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["discovery_isolation"]
+      "gaps": [
+        "exact specialty/metadata/API/asset schedules and final literal acceptance remain pending"
+      ]
     },
     {
       "source": "tests/contract/malformed-image-items.test.ts",
@@ -644,6 +650,9 @@
         "tests/rust/state.rs::existing_request_identity_survives_reopen_and_never_replays",
         "tests/rust/terminal.rs::two_real_store_instances_enforce_global_and_connection_admission_limits",
         "tests/rust/generation_contracts.rs::input_reference_mask_pixel_and_owned_byte_limits_reject_before_submission",
+        "tests/rust/generation_acceptance.rs::exact_source_preintent_refusals_leave_no_queued_or_active_work",
+        "tests/rust/generation_acceptance.rs::exact_source_data_url_edit_mask_and_aggregate_refusals_precede_intent",
+        "tests/rust/generation_acceptance.rs::exact_source_owned_responses_job_refresh_and_active_cancel_are_separate_from_refunds",
         "tests/rust/generation_acceptance.rs::exact_source_direct_finish_keeps_jpeg_sibling_metadata_and_ordered_deviations",
         "tests/rust/generation_acceptance.rs::exact_source_direct_finish_aggregate_cancel_and_same_store_recovery_preserve_originals",
         "tests/rust/generation_acceptance.rs::exact_source_direct_data_url_finish_refresh_and_cancel_keep_terminal_receipt",
