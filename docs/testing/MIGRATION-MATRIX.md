@@ -233,6 +233,18 @@ private-file queue rotation and ephemeral independent headers with unchanged ser
 Same-Generation process-environment rotation and nested cancellation rotation remain unassigned.
 Current native execution and final literal review are still required.
 
+At `e9ff5eb`, all 79 targets and both credential cases passed on six stable platforms and nightly,
+along with all readiness cases, strict Clippy, release compilation, actual SDK checks and Node jobs.
+Full coverage passed at 86.45% regions / 85.17% branches. Only two credential-fixture formatter hunks
+failed; actual hosted corrections are applied. Archives and extracted checks were skipped. The prior
+Linux spawn failure did not recur under unchanged bounds; its original cause is still unknown.
+
+The next source-only tree has 80 targets and 393 assignments, including partial mappings; 77 remain
+unassigned and all 470 dispositions remain pending. Four exact cases cover scalar-reference loss,
+ordered array/multipart originals, documented model limits and original alpha-mask HTTP forwarding.
+The additional 6x8 source PNG preserves its literal recipe; no existing image recipe changed.
+Current hosted execution and final literal review are still required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

@@ -20,6 +20,7 @@ export async function imageAcceptanceOracle({ source, emit, sharp }) {
     ["tamper-png", "png", true, 9, 6],
     ["upscale-png", "png", true, 16, 12],
     ["mcp-png", "png", true, 8, 6, { r: 20, g: 40, b: 60, alpha: 0.5 }],
+    ["portrait-png", "png", true, 6, 8],
   ]) {
     const image = sharp({
       create: {

@@ -163,11 +163,14 @@
         "tests/rust/image_route_contracts.rs::explicit_native_json_generation_fields_preserve_references_masks_and_reject_unconfigured_routes",
         "tests/rust/image_route_contracts.rs::requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_and_evidence",
         "tests/rust/policy.rs::source_oracle_policy_dimensions_and_effective_request_match",
-        "tests/rust/image_route_contracts.rs::all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway_ids"
+        "tests/rust/image_route_contracts.rs::all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway_ids",
+        "tests/rust/reference_requirements_acceptance.rs::exact_source_generation_scalar_loss_refusals_preserve_all_array_and_multipart_references",
+        "tests/rust/reference_requirements_acceptance.rs::exact_source_json_scalar_loss_refusals_preserve_all_array_and_multipart_references",
+        "tests/rust/reference_requirements_acceptance.rs::exact_source_model_limits_remain_separate_from_route_safety_budget"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["reference_encodings", "parameterized_accounting"]
+      "gaps": ["Hosted execution and final literal acceptance pending."]
     },
     {
       "source": "tests/contract/reference-preflight.test.ts",
@@ -219,11 +222,12 @@
         "tests/rust/provider_wire_contracts.rs::gemini_interactions_posts_stateless_image_format_and_normalizes_original",
         "tests/rust/provider_wire_contracts.rs::responses_posts_separate_orchestrator_and_image_tool_and_normalizes_original",
         "tests/rust/provider_wire_contracts.rs::openrouter_posts_dedicated_images_route_without_fallback_and_normalizes_original",
-        "tests/rust/provider_wire_contracts.rs::chat_images_posts_opted_in_image_modalities_and_normalizes_original"
+        "tests/rust/provider_wire_contracts.rs::chat_images_posts_opted_in_image_modalities_and_normalizes_original",
+        "tests/rust/reference_requirements_acceptance.rs::exact_source_multipart_edit_keeps_original_reference_and_alpha_mask_on_wire"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["six_adapter_http"]
+      "gaps": ["Hosted execution and final literal acceptance pending."]
     },
     {
       "source": "tests/contract/workflow-branches.test.ts",

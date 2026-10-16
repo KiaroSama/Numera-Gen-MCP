@@ -155,7 +155,13 @@ async fn exact_source_file_credentials_pin_across_queue_but_refresh_on_same_gene
                 g.store
                     .lock()
                     .unwrap()
-                    .terminate("blocker", "cancelled", &json!({"code":"fixture"}), None, None)
+                    .terminate(
+                        "blocker",
+                        "cancelled",
+                        &json!({"code":"fixture"}),
+                        None,
+                        None,
+                    )
                     .unwrap();
                 identity
             };
@@ -210,7 +216,14 @@ async fn exact_source_ephemeral_snapshot_preserves_identity_and_independent_head
         HashMap::from([("Authorization".into(), "Bearer synthetic".into())])
     );
     assert_eq!(connection_identity("local", &pinned).unwrap(), identity);
-    let keys = |value: &Value| value.as_object().unwrap().keys().cloned().collect::<Vec<_>>();
+    let keys = |value: &Value| {
+        value
+            .as_object()
+            .unwrap()
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>()
+    };
     assert_eq!(keys(pinned.value()), keys(&connection));
     assert_eq!(pinned.value().to_string(), connection.to_string());
 }

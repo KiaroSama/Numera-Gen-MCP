@@ -356,6 +356,10 @@ path = "tests/rust/image_editing_acceptance.rs"
 name = "credential_snapshot_acceptance"
 path = "tests/rust/credential_snapshot_acceptance.rs"
 
+[[test]]
+name = "reference_requirements_acceptance"
+path = "tests/rust/reference_requirements_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

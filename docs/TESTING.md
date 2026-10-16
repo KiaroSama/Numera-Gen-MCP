@@ -443,6 +443,20 @@ Authorization values are compared exactly, not by substring. Same-Generation pro
 rotation and nested cancellation credential rotation remain explicit gaps. These cases and the
 readiness diagnostic require their own hosted execution.
 
+At `e9ff5eb`, all 79 targets passed on all six stable platforms and nightly, including both
+credential cases and all readiness cases. The previous Linux child-spawn failure did not recur at
+unchanged bounds; its original cause remains unproven. Strict Clippy, release compilation, actual SDK
+checks and all three Node jobs passed. Complete coverage passed at 86.45% regions / 85.17% branches.
+Only two formatter hunks in the credential fixture failed; their actual hosted corrections are applied.
+Notices, archives and extracted checks were skipped, not passing.
+
+The next source-only tree has 80 targets and 393 assignments, including partial mappings; 77 cases
+remain unassigned and every disposition is pending. Four literal cases preserve scalar-reference
+refusals, all three array encodings, both multipart reference fields, documented model limits versus
+route safety, and original reference/mask bytes at the actual HTTP boundary. An eleventh tiny source
+image is the exact 6x8 alpha PNG; the prior ten recipes are unchanged. The cases require their own
+hosted execution and final literal review; no live provider or GPU inference was performed.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine
