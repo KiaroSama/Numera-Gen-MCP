@@ -310,6 +310,19 @@ for across-restart PID nonreuse, an explicit fidelity gap. One exact Comfy origi
 race preserves held-history synchronization, completed state, output/index counts and one POST.
 Applicable hosted/extracted execution and final independent literal acceptance remain required.
 
+At `f8fc7e1`, all 88 targets, the exact Comfy waiter and three SDK terminal matrices passed on
+six stable platforms and nightly. Clippy, release compilation, stdio/HTTP SDK and Node jobs passed;
+full coverage was 86.59% regions / 85.52% branches. Intel release passed unchanged bounds; the prior
+stall's cause remains unproven. Only two Comfy formatter hunks failed and their exact corrections
+are applied. Notices/archives/extracted checks were skipped.
+
+The next source-only tree retains 88 targets with 448 assignments, including partial mappings;
+22 remain unassigned and all dispositions remain pending. Seven actual two-host SDK races preserve
+held-response synchronization, exclusive writer ownership, cancellation/completion precedence,
+two restarts, originals/output identities and exact request counts. Shared ownership observes late
+async provider errors after cleanup; a persistent two-case regression guards that failure path.
+Hosted/extracted execution and final independent literal acceptance remain required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

@@ -12,6 +12,7 @@ import { envAcceptance } from "./native-env-acceptance.mjs";
 import { negotiationAcceptance } from "./native-negotiation-acceptance.mjs";
 import { configReloadAcceptance } from "./native-config-reload-acceptance.mjs";
 import { terminalAcceptance } from "./native-terminal-acceptance.mjs";
+import { racesAcceptance } from "./native-races-acceptance.mjs";
 
 // Hosted differential acceptance: the actual native binary, two SDK hosts, two restarts.
 if (process.env.GITHUB_ACTIONS !== "true")
@@ -513,6 +514,14 @@ try {
     configSchema,
     Store,
     connectionIdentity,
+    start,
+    closeHost,
+    bounded,
+  });
+  await racesAcceptance({
+    root,
+    workspace,
+    configSchema,
     start,
     closeHost,
     bounded,

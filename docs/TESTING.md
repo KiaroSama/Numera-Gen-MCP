@@ -542,6 +542,23 @@ completed rounds, not timer heartbeats. One exact Comfy waiter/refresher case ho
 socket, completes public recovery, releases and settles the original, and asserts one output/index
 and one submission. These additions require hosted and extracted execution and final literal review.
 
+At `f8fc7e1`, all 88 targets, the Comfy waiter case and three actual-SDK terminal matrices passed
+on all six stable targets and nightly. Clippy, release compilation, stdio/HTTP SDK checks and all
+three Node jobs passed. Full coverage passed at 86.59% regions / 85.52% branches. Intel macOS release
+compilation passed at unchanged bounds; the earlier stall's cause remains unproven. Only two Comfy
+fixture formatting hunks failed; their exact hosted corrections are applied. Notices, archives and
+extracted checks were skipped.
+
+The next source-only tree retains 88 targets and has 448 assignments, including partial mappings;
+22 cases remain unassigned and all 470 dispositions remain pending. Seven actual-SDK race cases
+preserve held Responses polls, exclusive live-writer ownership, targeted Comfy cancellation and
+completion-before-download precedence across two hosts and two restarts. Original bytes, output
+identities and exact submission/poll/cancellation/download counts remain asserted. Shared host/provider
+ownership now observes asynchronous handler errors after draining cleanup; a two-case regression checks
+late failure propagation and preservation of an original scenario error. Cases retain 30-second bounds,
+45-second host lifetimes and five-second event limits; the whole SDK gate remains 180s wall / 45s idle.
+These changes still require hosted/extracted execution and final independent literal acceptance.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

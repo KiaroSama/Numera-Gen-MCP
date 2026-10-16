@@ -149,7 +149,13 @@ async fn reply(socket: &mut TcpStream, status: u16, mime: &str, bytes: &[u8]) {
 }
 
 async fn json_reply(socket: &mut TcpStream, value: &Value) {
-    reply(socket, 200, "application/json", value.to_string().as_bytes()).await;
+    reply(
+        socket,
+        200,
+        "application/json",
+        value.to_string().as_bytes(),
+    )
+    .await;
 }
 
 async fn scenario(workspace: &Workspace, bytes: &[u8]) {
@@ -243,7 +249,9 @@ async fn scenario(workspace: &Workspace, bytes: &[u8]) {
         }
         let recovered = jobs::get(&generation, "race", true, &signal, None).await;
         // Observe the original even if refresh failed, matching source finally settlement.
-        release.send(()).expect("First-history responder must still be owned");
+        release
+            .send(())
+            .expect("First-history responder must still be owned");
         original.as_mut().await.unwrap();
         let recovered = recovered.unwrap();
         assert_eq!(recovered.status(), "completed");
