@@ -343,7 +343,20 @@ bounds; its cause remains unknown. Full coverage passed at 86.61% regions / 85.5
 three POSIX formatter hunks failed; their exact hosted corrections are applied without changing
 assertions. Notices, archives and extracted checks were skipped; no current packaged acceptance is claimed.
 
-**All-six packaged execution passed at `f09561c`; complete baseline-case assertion acceptance has not passed.** Passing
+At `01eb340`, all ten exact-commit jobs passed: all 89 native targets on six stable platforms and
+nightly, strict quality checks, actual SDK stdio/HTTP, notices/licenses, archives/checksums and extracted
+SDK execution on every stable target. Full coverage passed at 86.61% regions / 85.55% branches.
+These unsigned internal artifacts are not a signed Release or complete baseline-case acceptance.
+
+The next source-only tree has 90 targets and 453 assignments, including partial mappings; 17 remain
+unassigned and all 470 dispositions stay pending. Three isolated actual-native registration cases
+preserve backup/rollback/removal, exact CRLF TOML/refusals, concurrent writes/foreign locks and invalid
+JSON. Native executable/bridge argv and PID-bearing log filenames remain explicit source-format gaps.
+The exact requirements case now uses the frozen 8x6 alpha PNG, opaque roundtrip, Flash 4:3/4K mismatch
+and all 56 Flash / 30 Pro pure metadata pairs with unchanged originals; the broad 7x5 oracle remains
+separate. These new assertions still need hosted execution and final independent literal acceptance.
+
+**All-six packaged execution passed at `01eb340`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery

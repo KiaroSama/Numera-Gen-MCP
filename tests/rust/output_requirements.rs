@@ -104,6 +104,108 @@ fn every_source_requirement_deviation_and_warning_matches_exact_metadata_and_jso
     }
 }
 
+#[test]
+fn exact_source_aspect_snapshot_round_trip_flash_four_thirds_and_all_documented_pairs() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/requirements");
+    let config = Config::parse(
+        &json!({
+            "schemaVersion":1,"defaultConnection":"local",
+            "outputDir":root.join("outputs").to_str().unwrap(),
+            "stateDir":root.join("state").to_str().unwrap(),
+            "logging":{"directory":root.join("logs").to_str().unwrap()},
+            "files":{"allowedInputRoots":[root.join("inputs").to_str().unwrap()]},
+            "connections":{"local":{
+                "adapter":"openai-images","baseUrl":"https://api.example/v1",
+                "auth":{"type":"none"}
+            }}
+        })
+        .to_string(),
+        &root.join("config.json"),
+        &[],
+        &HashMap::new(),
+    )
+    .unwrap();
+    let (_, connection) = config.select(None).unwrap();
+    let file =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/image-acceptance.json");
+    let rows = Value::parse_with_limit(&std::fs::read_to_string(file).unwrap(), 1048576).unwrap();
+    let row = rows
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["name"] == "png")
+        .unwrap();
+    let bytes = images::decode_base64(row["base64"].as_str().unwrap(), 1048576).unwrap();
+    let image = images::inspect(bytes.clone(), &config.value, None).unwrap();
+    assert_eq!((image.width, image.height), (8, 6));
+    assert!(image.alpha);
+    let requested =
+        request::parse(json!({"prompt":"draw","aspect_ratio":"16:9","image_size":"4K"}))
+            .unwrap();
+    let receipt = |snapshot: Value| {
+        let mut required = json!({"count":1});
+        required
+            .as_object_mut()
+            .unwrap()
+            .extend(snapshot.as_object().unwrap().clone());
+        Receipt::new(json!({
+            "request_id":"request-1","connection":"local","adapter":"openai-images",
+            "operation":"generate","status":"prepared","requested_model":"image-model",
+            "upstream_model":null,"outputs":[],"warnings":[],"deviations":[],"errors":[],
+            "generation_outcome":"not_submitted","storage_outcome":"not_started",
+            "another_submission_may_charge":false,"created_at":"2026-10-02T00:00:00.000Z",
+            "updated_at":"2026-10-02T00:00:00.000Z","output_requirements":required
+        }))
+    };
+    let opaque = receipt(requirements::snapshot(
+        &connection,
+        &"opaque-model".into(),
+        &requested,
+    ));
+    let restored = Receipt::new(Value::parse(&opaque.value.to_string()).unwrap());
+    let deviations = requirements::deviations(&opaque, &image, 0);
+    assert_eq!(deviations, requirements::deviations(&restored, &image, 0));
+    assert!(
+        deviations
+            .contains(&"Output 0 aspect ratio differs from requested aspect_ratio.".to_owned())
+    );
+    assert_eq!(requirements::warnings(&opaque).len(), 1);
+    let native = receipt(requirements::snapshot(
+        &connection,
+        &"gemini-3.1-flash-image".into(),
+        &request::parse(json!({"prompt":"draw","aspect_ratio":"4:3","image_size":"4K"}))
+            .unwrap(),
+    ));
+    assert!(requirements::deviations(&native, &image, 0).contains(
+        &"Output 0 dimensions differ from the documented requested resolution tier.".to_owned(),
+    ));
+    for model in ["gemini-3.1-flash-image", "gemini-3-pro-image"] {
+        let snapshot = requirements::snapshot(&connection, &model.into(), &requested);
+        let evidence = &snapshot["dimension_evidence"];
+        let sizes = evidence["pixel_sizes"].as_array().unwrap();
+        assert_eq!(
+            sizes.len(),
+            if model == "gemini-3-pro-image" {
+                30
+            } else {
+                56
+            }
+        );
+        for size in sizes {
+            let required = receipt(json!({
+                "aspect_ratio":size["aspect_ratio"],"image_size":size["resolution"],
+                "dimension_evidence":evidence
+            }));
+            let mut metadata = image.clone();
+            metadata.width = size["width"].as_u64().unwrap() as u32;
+            metadata.height = size["height"].as_u64().unwrap() as u32;
+            assert!(requirements::deviations(&required, &metadata, 0).is_empty());
+            assert!(requirements::warnings(&required).is_empty());
+        }
+    }
+    assert_eq!(image.bytes, bytes);
+}
+
 fn generation(workspace: &Workspace, raw: &Value) -> Generation {
     Generation {
         config: Arc::new(

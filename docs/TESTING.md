@@ -583,6 +583,23 @@ regions / 85.58% branches. Only three POSIX formatting hunks failed; their exact
 are applied without changing assertions. Notices, archives and extracted checks were skipped on this
 commit, so the earlier `f09561c` packaged execution is not fresh evidence for this tree.
 
+At `01eb340`, all ten jobs passed on the exact commit: all 89 targets on six stable platforms and
+nightly, fmt/Clippy/release compilation, actual stdio/HTTP SDK checks, notices/licenses, allowlisted
+archives/checksums and extracted SDK execution on every stable target. Complete coverage passed at
+86.61% regions / 85.55% branches. These are unsigned internal distribution-test artifacts, not a
+signed Release or complete baseline-case acceptance.
+
+The next source-only tree has 90 targets and 453 assignments, including partial mappings; 17 cases
+remain unassigned and all 470 dispositions remain pending. Three actual native registration cases
+preserve exact JSON backup/rollback/removal, CRLF TOML/five refusals, concurrent registration, foreign
+locks and invalid JSON. They copy the executable into an isolated installation and run from another
+CWD, with closed stdin, bounded regular-file captures and explicit child kill/reap ownership. Native
+executable/bridge arguments and the PID-bearing log filename remain explicit source-format differences.
+A separate requirements case uses the exact 8x6 alpha PNG, opaque JSON roundtrip, Flash 4:3/4K mismatch
+and all 56 Flash / 30 Pro pure metadata pairs without modifying original bytes. The broader 7x5 oracle
+is retained separately. These additions require their own hosted execution and final literal review;
+the passing `01eb340` run is not their evidence. The DPAPI draft remains unintegrated.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine
