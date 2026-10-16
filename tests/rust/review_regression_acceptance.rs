@@ -26,7 +26,8 @@ use std::{
 use tokio_util::sync::CancellationToken;
 
 fn config(root: &Path, adapter: &str, overrides: Value) -> Config {
-    let mut c = json!({"adapter":adapter,"baseUrl":"https://api.example/v1","auth":{"type":"none"}});
+    let mut c =
+        json!({"adapter":adapter,"baseUrl":"https://api.example/v1","auth":{"type":"none"}});
     c.as_object_mut()
         .unwrap()
         .extend(overrides.as_object().unwrap().clone());
@@ -180,7 +181,12 @@ async fn exact_source_two_stores_admit_one_finalizer_and_restore_original_output
         |request| {
             assert_eq!(request.method, "GET");
             assert_eq!(request.path, "/v1/responses/owned");
-            assert!(!request.headers.to_ascii_lowercase().contains("authorization:"));
+            assert!(
+                !request
+                    .headers
+                    .to_ascii_lowercase()
+                    .contains("authorization:")
+            );
             assert!(request.body.is_empty());
             wire::json_reply(json!({
                 "id":"owned","status":"completed","output":[
@@ -235,7 +241,11 @@ async fn exact_source_two_stores_admit_one_finalizer_and_restore_original_output
                 assert!(path.contains("original-"));
                 assert_eq!(&std::fs::read(path).unwrap(), original);
             }
-            assert!(results.iter().any(|receipt| receipt.status() == "completed"));
+            assert!(
+                results
+                    .iter()
+                    .any(|receipt| receipt.status() == "completed")
+            );
             assert_eq!(requests.lock().unwrap().len(), 1);
         },
     )
@@ -278,7 +288,10 @@ async fn exact_source_excessive_final_items_refuse_before_url_processing() {
     .unwrap()
     .unwrap_err();
     assert_eq!(error.code, "invalid_response");
-    assert_eq!(error.message, "Provider returned too many final image items.");
+    assert_eq!(
+        error.message,
+        "Provider returned too many final image items."
+    );
     assert_eq!(
         g.store.lock().unwrap().list_outputs(0, 100).unwrap(),
         Vec::<Value>::new()

@@ -372,6 +372,14 @@ path = "tests/rust/review_regression_acceptance.rs"
 name = "local_recovery_acceptance"
 path = "tests/rust/local_recovery_acceptance.rs"
 
+[[test]]
+name = "transport_acceptance"
+path = "tests/rust/transport_acceptance.rs"
+
+[[test]]
+name = "publication_recovery_acceptance"
+path = "tests/rust/publication_recovery_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

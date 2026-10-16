@@ -107,7 +107,10 @@ async fn exact_source_aborted_inline_finish_recovers_original_with_same_store_wi
             .unwrap();
         assert_eq!(first.value["generation_outcome"], "completed");
         assert_eq!(first.value["outputs"], json!([]));
-        assert_eq!(store.lock().unwrap().pending("abort-inline").unwrap().len(), 1);
+        assert_eq!(
+            store.lock().unwrap().pending("abort-inline").unwrap().len(),
+            1
+        );
         let mut without_connection = config;
         without_connection.value["connections"] = json!({});
         without_connection
@@ -154,7 +157,10 @@ fn exact_source_journal_reservation_refuses_second_request_until_terminal_update
     store.prepare(receipt("a"), "a", "identity").unwrap();
     store.prepare(receipt("b"), "b", "identity").unwrap();
     store.reserve("a", 100, 100).unwrap();
-    assert_eq!(store.reserve("b", 100, 100).unwrap_err().code, "rate_limited");
+    assert_eq!(
+        store.reserve("b", 100, 100).unwrap_err().code,
+        "rate_limited"
+    );
     assert_eq!(
         store.get("b").unwrap().value["generation_outcome"],
         "not_submitted"

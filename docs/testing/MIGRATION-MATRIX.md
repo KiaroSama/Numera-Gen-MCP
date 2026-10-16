@@ -268,6 +268,20 @@ local-recovery cases preserve pre-aborted inline completion, same-Store connecti
 the exact 100-byte reservation/release schedule. Their hosted execution and final literal acceptance
 are pending. A fixture's discarded stamped receipt was corrected without changing production fences.
 
+At `d98405b`, all 83 targets and all twelve new review/local-recovery cases passed on six stable
+platforms and nightly. Clippy, release compilation, SDK checks, Node jobs and full 86.47% regions /
+85.30% branches coverage passed. Only six formatter hunks in the two new fixtures failed; their actual
+corrections are applied. Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 85 targets and 425 assignments, including partial mappings; 45 remain
+unassigned and all dispositions stay pending. Twelve exact transport cases cover terminal/uncertain
+SSE and both adapters' other/missing/owned job-ID waiter/refresh matrix at actual Application dispatch.
+SDK structuredContent, protocol envelopes and handshake assertions remain explicit gaps. Three exact
+recovery cases cover same-Store published-file reconciliation, changed stable-target refusal and
+read-only receipt verification from a live-WAL migration backup. Other filesystem fault variants remain
+open. Runtime teardown precedes workspace cleanup on normal and failure paths. Current hosted
+compilation/execution and final independent literal acceptance are still required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

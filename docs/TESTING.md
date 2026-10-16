@@ -484,6 +484,25 @@ schedule. Independent source review caught a discarded generation-stamped prepar
 new fixture; it now passes the actual returned receipt without weakening production fencing. These
 12 cases still require their own hosted execution and final literal acceptance.
 
+At `d98405b`, all 83 targets and the twelve new review/local-recovery cases passed on all six
+stable platforms and nightly. Strict Clippy, release compilation, actual stdio/HTTP SDK checks and
+all three Node jobs passed. Complete coverage passed at 86.47% regions / 85.30% branches. Only six
+formatter hunks in the two new fixtures failed; their actual hosted corrections are applied without
+changing assertions or strings. Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 85 targets and 425 assignments, including partial mappings; 45 remain
+unassigned and all 470 dispositions stay pending. Twelve transport cases preserve terminal/uncertain
+SSE, the original 19-byte write split and both adapters' other/missing/owned job-ID waiter/refresh
+matrix. They call the actual Application dispatch seam through real HTTP, not the SDK envelope or
+InMemoryTransport handshake; those protocol assertions remain explicit gaps. Three recovery cases
+preserve a published original across a real SQL commit fault on the same Store, refuse a changed
+stable target without dropping retained bytes, and read back a completed receipt from the migrated
+live-WAL backup. The remaining write/sync/link/unlink/receipt fault matrix is not closed by these cases.
+Owned current-thread runtimes drop outstanding lease futures before synchronous workspace cleanup,
+including panic/timeout paths. Tiny original fixtures, three-second sockets/local recovery, five-second
+calls, eight-second scoped actions and the existing two-worker ceiling remain. These additions require
+their own hosted compilation/execution and final independent literal acceptance.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

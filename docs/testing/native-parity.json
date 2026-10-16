@@ -33,7 +33,7 @@
     "concurrent_finalizers": "Source review-fixes and recovery have actual competing finalizers/stale same-instance publication; direct fence checks do not prove every schedule.",
     "compact_sdk_wire": "Source simple-config integration captures compact Responses orchestrator/tool_choice/default versus explicit size/quality override through two actual SDK POSTs.",
     "public_tool_schema": "Source tools checks every tool argument plus edit watermark/edit_region descriptions. New HTTP output/resource test covers substantial boundary behavior but not every schema/description assertion.",
-    "polling_matrix": "Source transport-boundaries multiplies two adapters by other/missing/owned returned IDs for waiter and refresh and drives uncertain SSE through public generation. Parent reports eight named cases; reconcile their exact assertions before closing this gap.",
+    "polling_matrix": "Twelve exact Application-dispatch cases cover terminal/uncertain SSE and two adapters by other/missing/owned IDs for waiter and refresh. SDK structuredContent/protocol/handshake, hosted execution and final literal acceptance remain pending.",
     "upscale_wire": "Source upscale captures exact reference, prompt, size, omitted upscale flag and both larger/unchanged output branches. Unchanged-size partial checks alone are insufficient."
   },
   "suites": [
@@ -481,8 +481,8 @@
       "sha256": "a81d091158798f66fadeb248eb09010ad4092e9ad14b351d466fccc7db8a98c2",
       "native": [
         "tests/rust/crash_recovery.rs::actual_killed_children_preserve_all_eight_source_checkpoints_without_replay",
-        "tests/rust/publication_contracts.rs::filesystem_sql_gap_reconciles_original_bytes_uuid_and_refuses_a_changed_publication_target",
-        "tests/rust/migration.rs::legacy_wal_snapshot_preserves_receipts_and_refuses_future_or_incomplete_schemas",
+        "tests/rust/publication_recovery_acceptance.rs::exact_source_published_file_recovers_by_journal_hash_without_duplicate_output",
+        "tests/rust/publication_recovery_acceptance.rs::exact_source_legacy_backup_preserves_completed_receipt_from_live_wal",
         "tests/rust/local_recovery_acceptance.rs::exact_source_aborted_inline_finish_recovers_original_with_same_store_without_connection"
       ],
       "status": "pending",
@@ -621,9 +621,9 @@
       "source": "tests/integration/transport-boundaries.test.ts",
       "sha256": "30c74caf25771b5addb253b649ee5c550bd3a05a0a604fe74cb92550cbbd2c0e",
       "native": [
-        "tests/rust/streams.rs::final_stream_and_binary_results_match_frozen_source_without_promoting_previews",
-        "tests/rust/generation_contracts.rs::responses_and_interactions_poll_one_existing_handle_and_persist_terminal_results",
-        "tests/rust/http_output_contracts.rs::actual_http_tools_preserve_originals_previews_resource_reads_and_error_contracts"
+        "tests/rust/transport_acceptance.rs::exact_source_failed_sse_preserves_terminal_state_and_admission",
+        "tests/rust/transport_acceptance.rs::exact_source_error_sse_remains_uncertain_without_resubmission",
+        "tests/rust/transport_acceptance.rs::exact_source_responses_other_id_rejects_waiter_and_refresh"
       ],
       "status": "pending",
       "evidence": null,
