@@ -135,7 +135,8 @@ fn submission(request: &wire::Request, adapter: &str) {
             .to_ascii_lowercase()
             .contains("authorization:")
     );
-    let body = Value::parse_with_limit(std::str::from_utf8(&request.body).unwrap(), 1048576).unwrap();
+    let body =
+        Value::parse_with_limit(std::str::from_utf8(&request.body).unwrap(), 1048576).unwrap();
     assert_eq!(body["store"], false);
     if adapter == "openai-responses" {
         assert_eq!(body["model"], "text");
@@ -158,7 +159,10 @@ async fn capture(socket: &mut TcpStream) -> wire::Request {
         let read = socket.read(&mut buffer).await.unwrap();
         assert!(read > 0, "request ended before its complete body");
         bytes.extend_from_slice(&buffer[..read]);
-        assert!(bytes.len() <= 1048576 + 65536, "bounded source fixture request");
+        assert!(
+            bytes.len() <= 1048576 + 65536,
+            "bounded source fixture request"
+        );
         let Some(boundary) = wire::find(&bytes, b"\r\n\r\n") else {
             assert!(bytes.len() <= 65536, "bounded request headers");
             continue;
@@ -231,7 +235,11 @@ async fn terminal_sse(workspace: &Workspace, state: &str) {
         assert_eq!(first["generation_outcome"], state);
         assert_eq!(
             first["status"],
-            if state == "failed" { "failed" } else { "partial" }
+            if state == "failed" {
+                "failed"
+            } else {
+                "partial"
+            }
         );
         if state == "incomplete" {
             saved_original(&first, &bytes);
@@ -500,7 +508,11 @@ fn exact_source_interactions_other_id_rejects_waiter_and_refresh() {
         .enable_all()
         .build()
         .unwrap();
-    runtime.block_on(job_identity(&workspace, "gemini-interactions", Some("other")));
+    runtime.block_on(job_identity(
+        &workspace,
+        "gemini-interactions",
+        Some("other"),
+    ));
 }
 
 #[test]
@@ -520,5 +532,9 @@ fn exact_source_interactions_owned_id_retains_waiter_and_refresh() {
         .enable_all()
         .build()
         .unwrap();
-    runtime.block_on(job_identity(&workspace, "gemini-interactions", Some("owned")));
+    runtime.block_on(job_identity(
+        &workspace,
+        "gemini-interactions",
+        Some("owned"),
+    ));
 }

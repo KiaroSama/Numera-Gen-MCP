@@ -380,6 +380,14 @@ path = "tests/rust/transport_acceptance.rs"
 name = "publication_recovery_acceptance"
 path = "tests/rust/publication_recovery_acceptance.rs"
 
+[[test]]
+name = "terminal_lifecycle_acceptance"
+path = "tests/rust/terminal_lifecycle_acceptance.rs"
+
+[[test]]
+name = "crash_recovery_acceptance"
+path = "tests/rust/crash_recovery_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

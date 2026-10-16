@@ -172,7 +172,9 @@ fn exact_source_changed_stable_filename_refuses_without_index_or_retained_byte_l
     let config = config(&workspace.0);
     let state = workspace.0.join("state");
     let mut store = Store::open(&state).unwrap();
-    store.prepare(receipt("mismatch"), "hash", "identity").unwrap();
+    store
+        .prepare(receipt("mismatch"), "hash", "identity")
+        .unwrap();
     let image = original(&config.value);
     reserve(&mut store, &config, "mismatch");
     store.retain("mismatch", 0, &image.bytes, None).unwrap();
@@ -236,7 +238,8 @@ fn exact_source_legacy_backup_preserves_completed_receipt_from_live_wal() {
         })
         .collect::<Vec<_>>();
     assert_eq!(backups.len(), 1);
-    let backup = Connection::open_with_flags(&backups[0], OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
+    let backup =
+        Connection::open_with_flags(&backups[0], OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
     let saved: String = backup
         .query_row(
             "SELECT receipt FROM requests WHERE id='legacy'",
@@ -244,8 +247,16 @@ fn exact_source_legacy_backup_preserves_completed_receipt_from_live_wal() {
             |row| row.get(0),
         )
         .unwrap();
-    assert_eq!(Value::parse_with_limit(&saved, 1048576).unwrap(), initial.value);
-    assert!(!store.prepare(receipt("legacy"), "hash", "identity").unwrap().0);
+    assert_eq!(
+        Value::parse_with_limit(&saved, 1048576).unwrap(),
+        initial.value
+    );
+    assert!(
+        !store
+            .prepare(receipt("legacy"), "hash", "identity")
+            .unwrap()
+            .0
+    );
     drop(backup);
     drop(store);
     drop(legacy);

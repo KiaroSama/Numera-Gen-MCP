@@ -28,7 +28,7 @@
     "posix_symlinks": "Source posix-platform checks both escaping link rejection and safe in-root link acceptance; plain contained-file tests do not establish both.",
     "retained_tooling": "Source setup/POSIX process-tree bounds, PowerShell WhatIf, protector and actual registration mutation/rollback cases need explicit retained-tooling disposition; no silent retirement.",
     "readiness_variants": "Missing credential/no network, unavailable catalog and public SDK checks need separate assignment beyond generic ready/missing-model.",
-    "crash_assertion_parity": "Eight killed-child checkpoints now have a native test. Source also asserts second reopen/dedup, phase-specific status/counts and exactly one publication; all assertion equivalence was not established.",
+    "crash_assertion_parity": "Eight literal native killed-child cases include both reopens, phase status/dedup and original/index/pending/file counts. SQL lease expiry substitutes for Date.now; publication uses a restored SQL trigger. Hosted proof and final literal acceptance remain pending.",
     "publication_faults": "Source recovery lines 452-529 tests write/sync/link/unlink/receipt failures. SQL-index and directory failure are not the complete fault matrix.",
     "concurrent_finalizers": "Source review-fixes and recovery have actual competing finalizers/stale same-instance publication; direct fence checks do not prove every schedule.",
     "compact_sdk_wire": "Source simple-config integration captures compact Responses orchestrator/tool_choice/default versus explicit size/quality override through two actual SDK POSTs.",
@@ -480,7 +480,7 @@
       "source": "tests/integration/recovery.test.ts",
       "sha256": "a81d091158798f66fadeb248eb09010ad4092e9ad14b351d466fccc7db8a98c2",
       "native": [
-        "tests/rust/crash_recovery.rs::actual_killed_children_preserve_all_eight_source_checkpoints_without_replay",
+        "tests/rust/crash_recovery_acceptance.rs::exact_source_killed_published_recovers_one_original_across_two_reopens",
         "tests/rust/publication_recovery_acceptance.rs::exact_source_published_file_recovers_by_journal_hash_without_duplicate_output",
         "tests/rust/publication_recovery_acceptance.rs::exact_source_legacy_backup_preserves_completed_receipt_from_live_wal",
         "tests/rust/local_recovery_acceptance.rs::exact_source_aborted_inline_finish_recovers_original_with_same_store_without_connection"
@@ -595,7 +595,7 @@
       "sha256": "09558be59fb2a91f33b0e02f02190998f4709738d67637c6b5aeb58ff26cc973",
       "native": [
         "tests/rust/terminal.rs::authoritative_terminal_states_release_admission_and_survive_reopen_without_replay",
-        "tests/rust/terminal.rs::wrong_job_and_local_cancellation_do_not_claim_authoritative_terminal_state",
+        "tests/rust/terminal_lifecycle_acceptance.rs::exact_source_false_cancel_ack_preserves_capacity_across_two_reopens_without_generation",
         "tests/rust/job_recovery_contracts.rs::comfy_authoritative_failed_history_and_absent_cancel_acknowledgement_are_not_equivalent",
         "tests/rust/generation_acceptance.rs::exact_source_terminal_partial_finish_recovers_on_same_generation_without_capacity_resurrection"
       ],

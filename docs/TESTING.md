@@ -503,6 +503,26 @@ including panic/timeout paths. Tiny original fixtures, three-second sockets/loca
 calls, eight-second scoped actions and the existing two-worker ceiling remain. These additions require
 their own hosted compilation/execution and final independent literal acceptance.
 
+At `8a0c926`, all 85 targets and all fifteen transport/publication cases passed on six stable
+platforms and nightly. Strict Clippy, release compilation, actual SDK checks and all three Node jobs
+passed. Full coverage passed at 86.50% regions / 85.36% branches. Only eight formatter hunks in the
+transport/publication fixtures failed; the exact hosted corrections are applied without assertion
+or string changes. Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 87 targets and 437 assignments, including partial mappings; 33 remain
+unassigned and all 470 dispositions stay pending. Four exact terminal cases preserve disconnect or
+malformed polling uncertainty and false or ambiguous cancellation acknowledgements, with two actual
+Store reopens, blocked admission and no generation POST. They exercise Application dispatch, not SDK
+envelopes or handshake. Eight separately named killed-child cases retain exact source defaults and
+receipt fields, real checkpoints/termination, phase-specific first-open state, public job reads,
+original/index/pending/file counts and a second reopen's deduplication. Synthetic SQL lease expiry
+substitutes for the source's clock spy and the published checkpoint uses a restored SQL trigger;
+those mechanism differences remain explicit partial-acceptance gaps. Child termination/reaping and
+reader completion are bounded on success and unwind; only finished readers are joined, and incomplete
+cleanup fails visibly to the outer owned CI command. The published checkpoint additionally verifies
+actual original target bytes and an empty index before termination. These cases require their own
+hosted execution and final independent literal acceptance; broader earlier fixtures remain intact.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

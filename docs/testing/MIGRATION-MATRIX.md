@@ -282,6 +282,20 @@ read-only receipt verification from a live-WAL migration backup. Other filesyste
 open. Runtime teardown precedes workspace cleanup on normal and failure paths. Current hosted
 compilation/execution and final independent literal acceptance are still required.
 
+At `8a0c926`, all 85 targets and all fifteen transport/publication cases passed on six stable
+platforms and nightly. Clippy, release compilation, SDK checks, Node jobs and full 86.50% regions /
+85.36% branches coverage passed. Only eight formatter hunks failed; actual corrections are applied.
+Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 87 targets and 437 assignments, including partial mappings; 33 remain
+unassigned and all dispositions stay pending. Four terminal-uncertainty/cancellation cases preserve
+actual public dispatch, capacity, two reopens and zero generation POSTs; SDK envelope/handshake gaps
+remain. Eight named killed-child cases preserve exact defaults, receipt/phase state, public reads,
+original/index/pending/file counts and second-reopen deduplication. Targeted SQL expiry substitutes
+for the clock spy, and a restored SQL trigger represents the published commit fault; those differences
+remain partial. Reaping and reader cleanup are bounded on failure too, with incomplete cleanup reported
+to the outer CI owner. Current hosted execution and final literal acceptance are still required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
