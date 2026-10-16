@@ -605,9 +605,12 @@ A per-Store callback replaces only lease-time reads, defaulting to real UTC; rec
 migration deadlines and renewal scheduling remain unchanged. Tests use isolated SQLite, the original
 1000/30999/31001/61001 schedules and exact original bytes, not sleeps or SQL lease rewrites. They are
 synchronous, create no child/network/runtime tasks and retain the two-worker bounded hosted runner.
-Rust stable moves to 1.99.1; all six official target/component manifests are available. Clock cases and
-the patch need their own hosted verification. Environment/DNS/fault/DPAPI gaps remain; ignored drafts
-are not acceptance. Internal unsigned artifacts are not a signed Release or full baseline-case parity.
+At `5164efc`, the clock cases passed all six targets and nightly; Rust 1.99.1 setup/Clippy/release/SDK
+and Node jobs passed. Coverage passed at 86.68% regions / 85.67% branches. Two clock formatting hunks
+failed; Linux x86_64 alone hit the existing Responses waiter three-second deadline. Its cause is unknown.
+Actual hosted formatting is applied, and fixed-label stage/counter diagnostics plus runtime-before-
+workspace teardown preserve every assertion and deadline. Corrected-tree execution is pending; archives
+were skipped. Environment/DNS/fault/DPAPI gaps remain. Unsigned internal artifacts are not a signed Release.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

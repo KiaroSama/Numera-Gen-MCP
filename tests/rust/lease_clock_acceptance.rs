@@ -147,7 +147,10 @@ fn exact_source_stale_same_instance_publication_is_fenced_after_recovery_generat
     let workspace = Workspace::new();
     let config = config(&workspace.0);
     let clock = Arc::new(AtomicI64::new(1000));
-    let mut store = open_store(Path::new(config.value["stateDir"].as_str().unwrap()), &clock);
+    let mut store = open_store(
+        Path::new(config.value["stateDir"].as_str().unwrap()),
+        &clock,
+    );
     assert_eq!(Store::LEASE_MS, 30000);
 
     let initial = store
@@ -189,7 +192,10 @@ fn exact_source_stale_same_instance_publication_is_fenced_after_recovery_generat
         "outcome_unknown"
     );
     assert_eq!(
-        store.retain(id, 0, &image.bytes, Some(&stale)).unwrap_err().code,
+        store
+            .retain(id, 0, &image.bytes, Some(&stale))
+            .unwrap_err()
+            .code,
         "outcome_unknown"
     );
     let mut final_catch = stale.clone();

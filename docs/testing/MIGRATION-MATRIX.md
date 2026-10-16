@@ -377,6 +377,13 @@ renewal scheduling; tests use real isolated SQLite and original 8x6 alpha PNG by
 lease edits. Rust 1.99.1 has all six official target/component sets available; new cases and the compiler
 patch await their own hosted verification. Environment/DNS/fault/DPAPI gaps remain open.
 
+At `5164efc`, all three clock cases passed all six targets and nightly. Rust 1.99.1 setup, Clippy,
+release compilation, SDK stdio/HTTP and Node jobs passed; coverage passed at 86.68% regions / 85.67%
+branches. Only two clock formatting hunks and one Linux x86_64 Responses waiter three-second timeout
+failed. The timeout cause is unknown; fixed-label stage/counter diagnostics retain the deadline and
+assertions, with owned Runtime destruction before workspace cleanup. Actual hosted formatting is
+applied. The corrected tree needs its own verification; notices/archives/extracted checks were skipped.
+
 **All-six packaged execution passed at `d58b316`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

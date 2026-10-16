@@ -11,10 +11,11 @@ use numera_image_gen_mcp::{
     services::{generation::Generation, jobs},
 };
 use std::{
+    cell::Cell,
     collections::HashMap,
     path::Path,
     sync::{Arc, Mutex},
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -136,10 +137,23 @@ async fn reply(socket: &mut TcpStream, value: &Value) {
     .expect("race fixture socket write exceeded three seconds");
 }
 
-#[tokio::test]
-async fn exact_source_refresher_fences_original_responses_waiter_without_duplicate_output() {
+#[test]
+fn exact_source_refresher_fences_original_responses_waiter_without_duplicate_output() {
     let workspace = Workspace::new();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    runtime.block_on(waiter_case(&workspace));
+}
+
+async fn waiter_case(workspace: &Workspace) {
     let bytes = original();
+    let server_stage = Cell::new("setup");
+    let client_stage = Cell::new("setup");
+    let posts_seen = Cell::new(0);
+    let polls_seen = Cell::new(0);
+    let started = Instant::now();
     let completed = json!({"id":"owned","status":"completed","output":[{
         "type":"image_generation_call","status":"completed","result":STANDARD.encode(&bytes)
     }]});
@@ -158,12 +172,15 @@ async fn exact_source_refresher_fences_original_responses_waiter_without_duplica
             let (method, path) = request(&mut submission).await;
             assert_eq!((method.as_str(), path.as_str()), ("POST", "/v1/responses"));
             posts += 1;
+            posts_seen.set(posts);
+            server_stage.set("post_received");
             reply(
                 &mut submission,
                 &json!({"id":"owned","status":"in_progress"}),
             )
             .await;
             drop(submission);
+            server_stage.set("post_replied");
             let (mut first, _) = listener.accept().await.unwrap();
             let (method, path) = request(&mut first).await;
             assert_eq!(
@@ -171,6 +188,8 @@ async fn exact_source_refresher_fences_original_responses_waiter_without_duplica
                 ("GET", "/v1/responses/owned")
             );
             polls += 1;
+            polls_seen.set(polls);
+            server_stage.set("first_get_held");
             ready
                 .send(())
                 .expect("original waiter ended before its first GET was held");
@@ -181,11 +200,16 @@ async fn exact_source_refresher_fences_original_responses_waiter_without_duplica
                 ("GET", "/v1/responses/owned")
             );
             polls += 1;
+            polls_seen.set(polls);
+            server_stage.set("second_get_received");
             reply(&mut second, &completed).await;
             drop(second);
+            server_stage.set("second_get_replied");
             held.await
                 .expect("refresher must release the held original waiter");
+            server_stage.set("held_released");
             reply(&mut first, &completed).await;
+            server_stage.set("first_get_replied");
             (posts, polls)
         };
         let client = async {
@@ -195,18 +219,23 @@ async fn exact_source_refresher_fences_original_responses_waiter_without_duplica
                 &signal,
             );
             tokio::pin!(original);
+            client_stage.set("waiting_ready");
             tokio::select! {
                 ready = &mut waiting => ready.expect("fixture ended before its held first GET"),
                 outcome = original.as_mut() => {
                     panic!("original generation ended before held-poll readiness: {:?}", outcome.map(|receipt| receipt.status().to_owned()));
                 }
             }
+            client_stage.set("refresher_waiting");
             let recovered = jobs::get(&generation, "responses-race", true, &signal, None).await;
+            client_stage.set("refresher_returned");
             // Settle the original even when recovery returns an error, before asserting it.
             release
                 .send(())
                 .expect("held original socket must still be owned");
+            client_stage.set("release_sent");
             original.as_mut().await.unwrap();
+            client_stage.set("original_settled");
             let recovered = recovered.unwrap();
             assert_eq!(recovered.status(), "completed");
             let stored = generation
@@ -236,7 +265,16 @@ async fn exact_source_refresher_fences_original_responses_waiter_without_duplica
         assert_eq!(polls, 2);
     };
     // Keep the source's three-second scenario bound, not the provider's default timeout.
-    tokio::time::timeout(Duration::from_secs(3), scenario)
-        .await
-        .expect("exact source Responses waiter scenario exceeded three seconds");
+    let result = tokio::time::timeout(Duration::from_secs(3), scenario).await;
+    if result.is_err() {
+        eprintln!(
+            "Responses waiter timeout: server_stage={} client_stage={} posts={} polls={} elapsed_ms={}",
+            server_stage.get(),
+            client_stage.get(),
+            posts_seen.get(),
+            polls_seen.get(),
+            started.elapsed().as_millis()
+        );
+    }
+    result.expect("exact source Responses waiter scenario exceeded three seconds");
 }
