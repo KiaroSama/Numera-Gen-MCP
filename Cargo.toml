@@ -400,6 +400,10 @@ path = "tests/rust/posix_acceptance.rs"
 name = "registration_acceptance"
 path = "tests/rust/registration_acceptance.rs"
 
+[[test]]
+name = "lease_clock_acceptance"
+path = "tests/rust/lease_clock_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

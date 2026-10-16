@@ -363,7 +363,21 @@ assertions. All six Clippy/release/SDK paths and Node jobs passed; coverage pass
 85.64% branches. Seven actual formatter hunks are applied; notices/archives/extracted checks were
 skipped. The repaired tree still needs exact-SHA verification.
 
-**All-six packaged execution passed at `01eb340`; complete baseline-case assertion acceptance has not passed.** Passing
+At `d58b316`, all ten exact-commit jobs passed: all 90 targets on six stable platforms and nightly,
+strict fmt/Clippy/release compilation, SDK stdio/HTTP, notices/licenses, archives/checksums and extracted
+SDK execution on all six targets. Coverage passed at 86.64% regions / 85.67% branches. Windows exact
+registration command equality and redaction passed after fixture-root normalization; no assertion was
+weakened. These unsigned internal artifacts are not a signed Release or full 470-case acceptance.
+
+The next source-only tree has 91 targets and 456 assignments, including partial mappings; 14 remain
+unassigned and all 470 dispositions stay pending. Three exact clock cases use the original schedules
+for renewal/peer takeover, expired prepared admission and stale same-instance publication. Per-Store
+lease time defaults to UTC without changing receipt timestamps, migration deadlines, SQL/fences or
+renewal scheduling; tests use real isolated SQLite and original 8x6 alpha PNG bytes, not sleeps or SQL
+lease edits. Rust 1.99.1 has all six official target/component sets available; new cases and the compiler
+patch await their own hosted verification. Environment/DNS/fault/DPAPI gaps remain open.
+
+**All-six packaged execution passed at `d58b316`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery

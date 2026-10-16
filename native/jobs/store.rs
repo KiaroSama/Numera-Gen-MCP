@@ -58,11 +58,9 @@ pub struct Store {
     pub(super) db: Connection,
     pub owner: String,
     pub(super) generations: HashMap<String, i64>,
+    lease_clock: Box<dyn Fn() -> i64 + Send + Sync>,
 }
 
-pub(super) fn now() -> i64 {
-    Utc::now().timestamp_millis()
-}
 pub(super) fn timestamp() -> String {
     Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
 }
@@ -76,11 +74,24 @@ pub(super) fn terminal(status: &str) -> bool {
 impl Store {
     pub const LEASE_MS: i64 = 30000;
     pub fn open(directory: &Path) -> Result<Self> {
+        Self::open_with_lease_clock(directory, || Utc::now().timestamp_millis())
+    }
+
+    /// Supplies lease time only; receipt timestamps and I/O deadlines remain real-time.
+    pub fn open_with_lease_clock(
+        directory: &Path,
+        clock: impl Fn() -> i64 + Send + Sync + 'static,
+    ) -> Result<Self> {
         Ok(Self {
             db: super::migration::open(directory)?,
             owner: Uuid::new_v4().to_string(),
             generations: HashMap::new(),
+            lease_clock: Box::new(clock),
         })
+    }
+
+    pub(super) fn lease_now(&self) -> i64 {
+        (self.lease_clock)()
     }
 
     pub(super) fn transaction<T>(
@@ -144,7 +155,7 @@ impl Store {
         });
         Ok(row.owner.as_deref() == Some(self.owner.as_str())
             && Some(row.generation) == generation
-            && row.lease > now())
+            && row.lease > self.lease_now())
     }
 
     pub(super) fn fence(&self, id: &str, receipt: Option<&Receipt>) -> Result<RequestRow> {
@@ -180,7 +191,7 @@ impl Store {
                 return Ok((false,store.get(&id)?));
             }
             store.db.execute("INSERT INTO requests(id,fingerprint,identity,receipt,owner,lease) VALUES(?,?,?,?,?,?)",
-                params![id,hash,identity,receipt.value.to_string(),store.owner,now()+Self::LEASE_MS]).map_err(|_|NumeraError::storage())?;
+                params![id,hash,identity,receipt.value.to_string(),store.owner,store.lease_now()+Self::LEASE_MS]).map_err(|_|NumeraError::storage())?;
             store.generations.insert(id,1);
             receipt.stamp(1);
             Ok((true,receipt))
@@ -218,7 +229,13 @@ impl Store {
             .db
             .execute(
                 "UPDATE requests SET lease=? WHERE id=? AND owner=? AND generation=? AND lease>?",
-                params![now() + Self::LEASE_MS, id, self.owner, generation, now()],
+                params![
+                    self.lease_now() + Self::LEASE_MS,
+                    id,
+                    self.owner,
+                    generation,
+                    self.lease_now()
+                ],
             )
             .map_err(|_| NumeraError::storage())?
             == 1)

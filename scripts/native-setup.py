@@ -78,9 +78,9 @@ def main() -> None:
     installer.parent.mkdir(parents=True, exist_ok=True)
     installer.write_bytes(data)
     installer.chmod(0o700)
-    run([str(installer), "-y", "--no-modify-path", "--profile", "minimal", "--default-toolchain", "1.99.0"], wall=600, idle=180, env=env)
+    run([str(installer), "-y", "--no-modify-path", "--profile", "minimal", "--default-toolchain", "1.99.1"], wall=600, idle=180, env=env)
     rustup = str(Path(env["CARGO_HOME"]) / "bin" / ("rustup.exe" if os.name == "nt" else "rustup"))
-    run([rustup, "component", "add", "rustfmt", "clippy", "--toolchain", "1.99.0"], wall=180, idle=90, env=env)
+    run([rustup, "component", "add", "rustfmt", "clippy", "--toolchain", "1.99.1"], wall=180, idle=90, env=env)
     if "--coverage" in sys.argv:
         run([rustup, "toolchain", "install", "nightly-2026-10-10", "--profile", "minimal", "--component", "llvm-tools-preview"], wall=600, idle=180, env=env)
     with open(os.environ["GITHUB_PATH"], "a", encoding="utf-8") as file:
@@ -88,7 +88,7 @@ def main() -> None:
     with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as file:
         for key in ["CARGO_HOME", "RUSTUP_HOME", "CARGO_TARGET_DIR", "TEMP", "TMP", "TMPDIR", "npm_config_cache"]:
             file.write(f"{key}={env[key]}\n")
-    emit("INFO", "Official Rust setup completed inside workspace.", target=target, rust="1.99.0", rustup="1.29.1")
+    emit("INFO", "Official Rust setup completed inside workspace.", target=target, rust="1.99.1", rustup="1.29.1")
 
 
 if __name__ == "__main__":

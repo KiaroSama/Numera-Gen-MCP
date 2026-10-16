@@ -589,24 +589,25 @@ archives/checksums and extracted SDK execution on every stable target. Complete 
 86.61% regions / 85.55% branches. These are unsigned internal distribution-test artifacts, not a
 signed Release or complete baseline-case acceptance.
 
-The next source-only tree has 90 targets and 453 assignments, including partial mappings; 17 cases
-remain unassigned and all 470 dispositions remain pending. Three actual native registration cases
-preserve exact JSON backup/rollback/removal, CRLF TOML/five refusals, concurrent registration, foreign
-locks and invalid JSON. They copy the executable into an isolated installation and run from another
-CWD, with closed stdin, bounded regular-file captures and explicit child kill/reap ownership. Native
-executable/bridge arguments and the PID-bearing log filename remain explicit source-format differences.
-A separate requirements case uses the exact 8x6 alpha PNG, opaque JSON roundtrip, Flash 4:3/4K mismatch
-and all 56 Flash / 30 Pro pure metadata pairs without modifying original bytes. The broader 7x5 oracle
-is retained separately. These additions require their own hosted execution and final literal review;
-the passing `01eb340` run is not their evidence. The DPAPI draft remains unintegrated.
+At `d58b316`, all ten exact-commit jobs passed: all 90 targets on six stable platforms and nightly,
+fmt/Clippy/release compilation, SDK stdio/HTTP, notices/licenses, archives/checksums and extracted SDK
+execution on all six targets. Coverage passed at 86.64% regions / 85.67% branches. The Windows fixture
+separator repair passed with exact command equality and root-redaction assertions unchanged. Three
+native registration cases preserve JSON backup/rollback/removal, CRLF TOML/refusals, concurrent writes,
+foreign locks and invalid JSON. Native executable/bridge argv and PID-bearing log filenames still need
+final source-format disposition. The exact requirements case preserves the 8x6 alpha PNG, opaque
+roundtrip, Flash 4:3/4K mismatch and all 56 Flash / 30 Pro metadata pairs; the broad 7x5 oracle is separate.
 
-At `c948fb3`, all 90 targets passed on four stable POSIX platforms and nightly. The exact requirements
-case passed all six platforms; Windows registration alone failed its executable-string assertion:
-the fixture retained a mixed separator while `current_exe` used native separators. The fixture root
-now reconstructs native path components, preserving the exact assertion and root-redaction checks.
-All six Clippy/release/SDK stdio/HTTP paths and Node jobs passed; coverage passed at 86.63% regions /
-85.64% branches. Seven formatting hunks in the two test files are corrected from the actual hosted
-artifact. Notices, archives and extracted checks were skipped. The corrected tree needs its own run.
+The next source-only tree has 91 targets and 456 assignments, including partial mappings; 14 cases
+remain unassigned and all 470 dispositions stay pending. Three exact lease-clock cases exercise renewal
+and peer takeover, expired prepared admission without replay, and stale same-instance publication.
+A per-Store callback replaces only lease-time reads, defaulting to real UTC; receipt timestamps,
+migration deadlines and renewal scheduling remain unchanged. Tests use isolated SQLite, the original
+1000/30999/31001/61001 schedules and exact original bytes, not sleeps or SQL lease rewrites. They are
+synchronous, create no child/network/runtime tasks and retain the two-worker bounded hosted runner.
+Rust stable moves to 1.99.1; all six official target/component manifests are available. Clock cases and
+the patch need their own hosted verification. Environment/DNS/fault/DPAPI gaps remain; ignored drafts
+are not acceptance. Internal unsigned artifacts are not a signed Release or full baseline-case parity.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

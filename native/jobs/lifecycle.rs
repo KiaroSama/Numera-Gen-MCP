@@ -1,4 +1,4 @@
-use super::store::{Receipt, Store, busy, now, terminal};
+use super::store::{Receipt, Store, busy, terminal};
 use crate::compat::value::{Value, json};
 use crate::error::{NumeraError, Result};
 use rusqlite::params;
@@ -10,7 +10,7 @@ impl Store {
         let ids: Vec<String> = {
             let mut query=self.db.prepare("SELECT id FROM requests WHERE lease<=? AND owner IS NOT NULL AND (? IS NULL OR id=?)").map_err(|_|NumeraError::storage())?;
             query
-                .query_map(params![now(), id, id], |r| r.get(0))
+                .query_map(params![self.lease_now(), id, id], |r| r.get(0))
                 .and_then(Iterator::collect)
                 .map_err(|_| NumeraError::storage())?
         };
@@ -41,7 +41,7 @@ impl Store {
             let reserve =
                 retained || (!receipt.value["upstream_job"].is_null() && busy(receipt.status()));
             self.db.execute("UPDATE requests SET receipt=?,owner=NULL,lease=0,generation=generation+1,reservation=CASE WHEN ? THEN reservation ELSE 0 END WHERE id=? AND generation=? AND lease<=?",
-                params![receipt.value.to_string(),reserve,id,row.generation,now()]).map_err(|_|NumeraError::storage())?;
+                params![receipt.value.to_string(),reserve,id,row.generation,self.lease_now()]).map_err(|_|NumeraError::storage())?;
         }
         Ok(())
     }
@@ -94,7 +94,7 @@ impl Store {
             store.expire(None)?;
             let values:Vec<String>={
                 let mut stmt=store.db.prepare("SELECT receipt FROM requests WHERE lease>? OR (owner IS NULL AND json_extract(receipt,'$.status')='running' AND json_extract(receipt,'$.upstream_job') IS NOT NULL)").map_err(|_|NumeraError::storage())?;
-                stmt.query_map([now()],|r|r.get(0)).and_then(Iterator::collect).map_err(|_|NumeraError::storage())?
+                stmt.query_map([store.lease_now()],|r|r.get(0)).and_then(Iterator::collect).map_err(|_|NumeraError::storage())?
             };
             let all:Vec<Value>=values.into_iter().map(|v|Value::parse_with_limit(&v,128*1024*1024).map_err(|_|NumeraError::storage())).collect::<Result<Vec<Value>>>()?
                 .into_iter().filter(|v|matches!(v["status"].as_str(),Some("submitting"|"running"|"finalizing")) && v["upstream_terminal"].is_null() && v["generation_outcome"]!="completed").collect();
@@ -121,7 +121,7 @@ impl Store {
             let generation=row.generation+1;
             receipt.value["status"]=json!("finalizing");receipt.touch();
             store.db.execute("UPDATE requests SET receipt=?,owner=?,generation=?,lease=? WHERE id=? AND generation=?",
-                params![receipt.value.to_string(),store.owner,generation,now()+Self::LEASE_MS,id,row.generation]).map_err(|_|NumeraError::storage())?;
+                params![receipt.value.to_string(),store.owner,generation,store.lease_now()+Self::LEASE_MS,id,row.generation]).map_err(|_|NumeraError::storage())?;
             store.generations.insert(id.to_owned(),generation);
             Ok(true)
         })
