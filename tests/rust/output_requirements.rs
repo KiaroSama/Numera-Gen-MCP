@@ -126,8 +126,7 @@ fn exact_source_aspect_snapshot_round_trip_flash_four_thirds_and_all_documented_
     )
     .unwrap();
     let (_, connection) = config.select(None).unwrap();
-    let file =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/image-acceptance.json");
+    let file = Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/image-acceptance.json");
     let rows = Value::parse_with_limit(&std::fs::read_to_string(file).unwrap(), 1048576).unwrap();
     let row = rows
         .as_array()
@@ -140,8 +139,7 @@ fn exact_source_aspect_snapshot_round_trip_flash_four_thirds_and_all_documented_
     assert_eq!((image.width, image.height), (8, 6));
     assert!(image.alpha);
     let requested =
-        request::parse(json!({"prompt":"draw","aspect_ratio":"16:9","image_size":"4K"}))
-            .unwrap();
+        request::parse(json!({"prompt":"draw","aspect_ratio":"16:9","image_size":"4K"})).unwrap();
     let receipt = |snapshot: Value| {
         let mut required = json!({"count":1});
         required
@@ -173,8 +171,7 @@ fn exact_source_aspect_snapshot_round_trip_flash_four_thirds_and_all_documented_
     let native = receipt(requirements::snapshot(
         &connection,
         &"gemini-3.1-flash-image".into(),
-        &request::parse(json!({"prompt":"draw","aspect_ratio":"4:3","image_size":"4K"}))
-            .unwrap(),
+        &request::parse(json!({"prompt":"draw","aspect_ratio":"4:3","image_size":"4K"})).unwrap(),
     ));
     assert!(requirements::deviations(&native, &image, 0).contains(
         &"Output 0 dimensions differ from the documented requested resolution tier.".to_owned(),

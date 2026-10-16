@@ -356,6 +356,13 @@ The exact requirements case now uses the frozen 8x6 alpha PNG, opaque roundtrip,
 and all 56 Flash / 30 Pro pure metadata pairs with unchanged originals; the broad 7x5 oracle remains
 separate. These new assertions still need hosted execution and final independent literal acceptance.
 
+At `c948fb3`, all 90 targets passed on four stable POSIX platforms and nightly. The exact requirements
+case passed all six; Windows registration alone exposed mixed fixture separators versus native
+`current_exe` text. Reconstructing fixture-root components preserves exact command and redaction
+assertions. All six Clippy/release/SDK paths and Node jobs passed; coverage passed at 86.63% regions /
+85.64% branches. Seven actual formatter hunks are applied; notices/archives/extracted checks were
+skipped. The repaired tree still needs exact-SHA verification.
+
 **All-six packaged execution passed at `01eb340`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

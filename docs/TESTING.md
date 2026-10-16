@@ -600,6 +600,14 @@ and all 56 Flash / 30 Pro pure metadata pairs without modifying original bytes. 
 is retained separately. These additions require their own hosted execution and final literal review;
 the passing `01eb340` run is not their evidence. The DPAPI draft remains unintegrated.
 
+At `c948fb3`, all 90 targets passed on four stable POSIX platforms and nightly. The exact requirements
+case passed all six platforms; Windows registration alone failed its executable-string assertion:
+the fixture retained a mixed separator while `current_exe` used native separators. The fixture root
+now reconstructs native path components, preserving the exact assertion and root-redaction checks.
+All six Clippy/release/SDK stdio/HTTP paths and Node jobs passed; coverage passed at 86.63% regions /
+85.64% branches. Seven formatting hunks in the two test files are corrected from the actual hosted
+artifact. Notices, archives and extracted checks were skipped. The corrected tree needs its own run.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

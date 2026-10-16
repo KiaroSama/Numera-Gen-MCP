@@ -109,7 +109,8 @@ struct Fixture {
 
 impl Fixture {
     fn new() -> Self {
-        let workspace = Workspace::new();
+        let mut workspace = Workspace::new();
+        workspace.0 = workspace.0.components().collect();
         for directory in ["bin", "caller", "capture", "temp"] {
             fs::create_dir(workspace.0.join(directory)).unwrap();
         }
@@ -298,8 +299,7 @@ fn exact_source_native_registration_dry_run_backup_rollback_remove_and_private_l
     assert_eq!(unique.len(), logs.len());
     assert!(!logs.is_empty());
     let pattern =
-        regex::Regex::new(r"_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_UTC-\d+-[\da-f-]+\.log$")
-            .unwrap();
+        regex::Regex::new(r"_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_UTC-\d+-[\da-f-]+\.log$").unwrap();
     for log in logs {
         assert!(pattern.is_match(log.file_name().unwrap().to_str().unwrap()));
         let text = fs::read_to_string(log).unwrap();
@@ -307,7 +307,9 @@ fn exact_source_native_registration_dry_run_backup_rollback_remove_and_private_l
         for line in text.trim().lines() {
             let event: Value = serde_json::from_str(line).unwrap();
             assert!(event["timestamp"].as_str().unwrap().ends_with('Z'));
-            assert!(["INFO", "WARNING", "ERROR", "DEBUG"].contains(&event["level"].as_str().unwrap()));
+            assert!(
+                ["INFO", "WARNING", "ERROR", "DEBUG"].contains(&event["level"].as_str().unwrap())
+            );
             assert!(!event["run_id"].as_str().unwrap().is_empty());
         }
     }
@@ -343,10 +345,15 @@ fn exact_source_native_toml_registration_preserves_crlf_and_refuses_five_ambigui
 }
 
 #[test]
-fn exact_source_native_registration_concurrency_active_lock_and_invalid_json_never_partially_write() {
+fn exact_source_native_registration_concurrency_active_lock_and_invalid_json_never_partially_write()
+{
     let fixture = Fixture::new();
     let file = fixture.root().join("host.json");
-    fs::write(&file, b"{\"mcpServers\":{\"other\":{\"command\":\"stay\"}}}").unwrap();
+    fs::write(
+        &file,
+        b"{\"mcpServers\":{\"other\":{\"command\":\"stay\"}}}",
+    )
+    .unwrap();
     let first = fixture.start("ClaudeDesktop", &file, false, false);
     let second = fixture.start("ClaudeDesktop", &file, false, false);
     let first = first.finish();
@@ -364,7 +371,10 @@ fn exact_source_native_registration_concurrency_active_lock_and_invalid_json_nev
             .success()
     );
     assert_eq!(fs::read_to_string(&file).unwrap(), before);
-    assert_eq!(fs::read_to_string(&lock).unwrap(), "owned by another request");
+    assert_eq!(
+        fs::read_to_string(&lock).unwrap(),
+        "owned by another request"
+    );
     for invalid in ["{\"mcpServers\":null}", "{\"mcpServers\":[]}", "{malformed"] {
         let file = fixture.root().join("invalid.json");
         fs::write(&file, invalid.as_bytes()).unwrap();
