@@ -457,6 +457,19 @@ route safety, and original reference/mask bytes at the actual HTTP boundary. An 
 image is the exact 6x8 alpha PNG; the prior ten recipes are unchanged. The cases require their own
 hosted execution and final literal review; no live provider or GPU inference was performed.
 
+At `ae9089a`, all 80 targets passed on all six stable platforms and nightly, including the four
+new reference/model/multipart cases. Strict Clippy, release compilation, actual SDK checks and all
+three Node jobs passed. Complete coverage passed at 86.42% regions / 85.21% branches. Only two
+formatter hunks in the reference fixture failed; their actual hosted corrections are applied.
+Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 81 targets and 398 assignments, including partial mappings; 72 cases
+remain unassigned and all 470 dispositions remain pending. Five literal cleanup cases keep response
+bodies open and independently require prompt client rejection and actual socket EOF/reset. They
+preserve redirect, declared-size, streamed-size and SSE-error inputs, plus the combined oversized
+asset/unauthorized redirect schedule. The two DNS-hostname/autoSelectFamily cases remain unassigned.
+New cleanup execution and final literal review are pending; existing broader fixtures remain intact.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

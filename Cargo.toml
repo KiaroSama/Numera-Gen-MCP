@@ -360,6 +360,10 @@ path = "tests/rust/credential_snapshot_acceptance.rs"
 name = "reference_requirements_acceptance"
 path = "tests/rust/reference_requirements_acceptance.rs"
 
+[[test]]
+name = "http_cleanup_acceptance"
+path = "tests/rust/http_cleanup_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

@@ -245,6 +245,17 @@ ordered array/multipart originals, documented model limits and original alpha-ma
 The additional 6x8 source PNG preserves its literal recipe; no existing image recipe changed.
 Current hosted execution and final literal review are still required.
 
+At `ae9089a`, all 80 targets and all four new reference/model/multipart cases passed on six stable
+platforms and nightly. Strict Clippy, release compilation, actual SDK checks, Node jobs and full
+86.42% regions / 85.21% branches coverage passed. Only two reference-fixture formatter hunks failed;
+the actual corrections are applied. Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 81 targets and 398 assignments, including partial mappings; 72 remain
+unassigned and all dispositions are pending. Five exact HTTP cleanup cases assert prompt errors and
+real EOF/reset with deliberately open response bodies, including the combined asset schedule. Both
+DNS-hostname/autoSelectFamily cases remain unassigned. Current hosted execution and final literal
+acceptance are required. Suite navigation now points to the concrete cases; broader fixtures remain.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

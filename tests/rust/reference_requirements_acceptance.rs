@@ -207,7 +207,8 @@ async fn exact_source_json_scalar_loss_refusals_preserve_all_array_and_multipart
 }
 
 #[tokio::test]
-async fn exact_source_generation_scalar_loss_refusals_preserve_all_array_and_multipart_references() {
+async fn exact_source_generation_scalar_loss_refusals_preserve_all_array_and_multipart_references()
+{
     tokio::time::timeout(Duration::from_secs(8), scalar("generation"))
         .await
         .unwrap();
@@ -240,7 +241,10 @@ async fn exact_source_model_limits_remain_separate_from_route_safety_budget() {
         assert_eq!(limits["max_edge"], 3840);
         assert_eq!(limits["max_pixels"], 8294400);
         assert_eq!(limits["forwarding_guaranteed"], false);
-        assert_eq!(result["dimensions"]["route_support"]["max_pixels"], 64000000);
+        assert_eq!(
+            result["dimensions"]["route_support"]["max_pixels"],
+            64000000
+        );
         let r = request::parse(json!({"prompt":"draw","size":"4096x4096"})).unwrap();
         assert!(
             capabilities::effective_request(&c, &r, &"cx/gpt-image-2.5-sunburst".into())

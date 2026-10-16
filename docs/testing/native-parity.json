@@ -160,17 +160,14 @@
       "source": "tests/contract/recovery-requirements.test.ts",
       "sha256": "2aef09e8d26c2c3d497bfe8cdedbec578d06bb24df92c713b3fc5f59284b17ad",
       "native": [
-        "tests/rust/image_route_contracts.rs::explicit_native_json_generation_fields_preserve_references_masks_and_reject_unconfigured_routes",
-        "tests/rust/image_route_contracts.rs::requested_ratio_tier_format_and_upscale_deviations_use_original_dimensions_and_evidence",
-        "tests/rust/policy.rs::source_oracle_policy_dimensions_and_effective_request_match",
-        "tests/rust/image_route_contracts.rs::all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway_ids",
         "tests/rust/reference_requirements_acceptance.rs::exact_source_generation_scalar_loss_refusals_preserve_all_array_and_multipart_references",
         "tests/rust/reference_requirements_acceptance.rs::exact_source_json_scalar_loss_refusals_preserve_all_array_and_multipart_references",
-        "tests/rust/reference_requirements_acceptance.rs::exact_source_model_limits_remain_separate_from_route_safety_budget"
+        "tests/rust/reference_requirements_acceptance.rs::exact_source_model_limits_remain_separate_from_route_safety_budget",
+        "tests/rust/output_requirements.rs::every_source_requirement_deviation_and_warning_matches_exact_metadata_and_json_round_trip"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["Hosted execution and final literal acceptance pending."]
+      "gaps": ["Hosted run and final literal review pending."]
     },
     {
       "source": "tests/contract/reference-preflight.test.ts",
@@ -214,20 +211,17 @@
       "source": "tests/contract/wire-contracts.test.ts",
       "sha256": "091ab00cc152e911a16fd76af24fc6a87eb6b07ae27c721aafd1541393576a85",
       "native": [
-        "tests/rust/adapters.rs::source_generated_wire_and_result_contracts_match",
-        "tests/rust/multipart.rs::actual_multipart_wire_preserves_source_field_names_order_filenames_and_original_bytes",
-        "tests/rust/generation.rs::actual_loopback_generation_preserves_bytes_and_deduplicates_paid_post",
         "tests/rust/provider_wire_contracts.rs::openai_images_posts_exact_utf8_json_and_normalizes_original",
         "tests/rust/provider_wire_contracts.rs::gemini_posts_encoded_model_path_and_exact_modalities_and_normalizes_original",
-        "tests/rust/provider_wire_contracts.rs::gemini_interactions_posts_stateless_image_format_and_normalizes_original",
-        "tests/rust/provider_wire_contracts.rs::responses_posts_separate_orchestrator_and_image_tool_and_normalizes_original",
         "tests/rust/provider_wire_contracts.rs::openrouter_posts_dedicated_images_route_without_fallback_and_normalizes_original",
+        "tests/rust/provider_wire_contracts.rs::gemini_interactions_posts_stateless_image_format_and_normalizes_original",
         "tests/rust/provider_wire_contracts.rs::chat_images_posts_opted_in_image_modalities_and_normalizes_original",
+        "tests/rust/provider_wire_contracts.rs::responses_posts_separate_orchestrator_and_image_tool_and_normalizes_original",
         "tests/rust/reference_requirements_acceptance.rs::exact_source_multipart_edit_keeps_original_reference_and_alpha_mask_on_wire"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["Hosted execution and final literal acceptance pending."]
+      "gaps": ["Hosted run and final literal review pending."]
     },
     {
       "source": "tests/contract/workflow-branches.test.ts",
@@ -368,8 +362,11 @@
       "source": "tests/integration/http-resource-cleanup.test.ts",
       "sha256": "7e013ead2aa26c3cf1487a9dc72e16f18a5133959091fd5859db3bed2c3d335c",
       "native": [
-        "tests/rust/runtime_contracts.rs::rejected_hanging_api_bodies_release_sockets_without_redirect_or_submission_retry",
-        "tests/rust/runtime_contracts.rs::asset_oversize_and_unapproved_redirect_release_sockets"
+        "tests/rust/http_cleanup_acceptance.rs::exact_source_sse_error_releases_held_api_socket_before_provider_deadline",
+        "tests/rust/http_cleanup_acceptance.rs::exact_source_oversize_releases_held_api_socket_before_provider_deadline",
+        "tests/rust/http_cleanup_acceptance.rs::exact_source_redirect_releases_held_api_socket_before_provider_deadline",
+        "tests/rust/http_cleanup_acceptance.rs::exact_source_chunk_limit_releases_held_api_socket_before_provider_deadline",
+        "tests/rust/http_cleanup_acceptance.rs::exact_source_oversize_asset_releases_socket_and_refuses_unapproved_redirect"
       ],
       "status": "pending",
       "evidence": null,
