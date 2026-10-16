@@ -336,6 +336,13 @@ unassigned and all 470 dispositions stay pending. Two exact Linux/macOS permissi
 escape/safe-symlink cases require hosted execution and final literal review. A separate Windows DPAPI
 script/native roundtrip draft is not integrated because abort-path descendant cleanup is unverified.
 
+At `fbe8a3c`, all 89 targets passed on six stable platforms and nightly; both POSIX cases passed on
+Linux/macOS with the original Windows exclusion. Clippy, release compilation, SDK terminal/race/HTTP
+checks and Node jobs passed. The earlier nightly admission failure did not reproduce at unchanged
+bounds; its cause remains unknown. Full coverage passed at 86.61% regions / 85.58% branches. Only
+three POSIX formatter hunks failed; their exact hosted corrections are applied without changing
+assertions. Notices, archives and extracted checks were skipped; no current packaged acceptance is claimed.
+
 **All-six packaged execution passed at `f09561c`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

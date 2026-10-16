@@ -575,6 +575,14 @@ original image bytes. Windows retains the source's platform exclusion. These add
 own hosted execution and final literal acceptance. A Windows DPAPI script/native roundtrip draft is
 not integrated: failure-path descendant ownership remains unresolved.
 
+At `fbe8a3c`, all 89 targets passed on all six stable platforms and nightly; the two POSIX cases
+passed on Linux/macOS and remained inapplicable on Windows. Clippy, release compilation, all SDK
+terminal/race/HTTP checks and three Node jobs passed. The prior nightly admission failure did not
+reproduce at unchanged bounds; its original cause remains unknown. Full coverage passed at 86.61%
+regions / 85.58% branches. Only three POSIX formatting hunks failed; their exact hosted corrections
+are applied without changing assertions. Notices, archives and extracted checks were skipped on this
+commit, so the earlier `f09561c` packaged execution is not fresh evidence for this tree.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

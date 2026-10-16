@@ -29,8 +29,8 @@ mod posix {
     }
 
     fn original() -> Vec<u8> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join(".ci-work/parity/image-acceptance.json");
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/image-acceptance.json");
         assert!(fs::metadata(&path).unwrap().len() <= 1048576);
         let rows = Value::parse_with_limit(&fs::read_to_string(path).unwrap(), 1048576).unwrap();
         let row = rows
@@ -84,7 +84,10 @@ mod posix {
                 "Bearer posix-fixture-key".to_owned(),
             )])
         );
-        assert_eq!(fs::metadata(&file).unwrap().permissions().mode() & 0o777, 0o600);
+        assert_eq!(
+            fs::metadata(&file).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
         fs::set_permissions(&file, Permissions::from_mode(0o644)).unwrap();
         let error = runtime
             .block_on(credentials(&connection, &env, &paths))
@@ -122,8 +125,8 @@ mod posix {
         fs::write(&outside, &bytes).unwrap();
         let alias = input.join("escape.png");
         symlink(&outside, &alias).unwrap();
-        let error = paths::input(alias.to_str().unwrap(), std::slice::from_ref(&input), 1024)
-            .unwrap_err();
+        let error =
+            paths::input(alias.to_str().unwrap(), std::slice::from_ref(&input), 1024).unwrap_err();
         assert_eq!(error.code, "permission_denied");
         let inside = input.join("inside.png");
         fs::write(&inside, &bytes).unwrap();
