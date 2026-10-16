@@ -408,6 +408,10 @@ path = "tests/rust/lease_clock_acceptance.rs"
 name = "environment_snapshot_acceptance"
 path = "tests/rust/environment_snapshot_acceptance.rs"
 
+[[test]]
+name = "asset_dns_acceptance"
+path = "tests/rust/asset_dns_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

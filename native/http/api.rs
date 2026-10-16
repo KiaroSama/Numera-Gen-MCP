@@ -4,7 +4,10 @@ use crate::{
     http::{bounded::BoundedBytes, sse, url::operation_url},
 };
 use reqwest::{Client, Method, header::HeaderValue, multipart::Form};
-use std::{collections::HashMap, time::Duration};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 use tokio_util::sync::CancellationToken;
 
 pub enum Body {
@@ -41,6 +44,19 @@ pub async fn request(
     cancel: &CancellationToken,
     limit: usize,
 ) -> Result<ApiResponse> {
+    request_observed(connection, headers, wire, cancel, limit, |_, _, _| {}).await
+}
+
+/// Observes preparation only; the callback does not establish that a request was sent.
+pub async fn request_observed(
+    connection: &Value,
+    headers: &HashMap<String, String>,
+    wire: Operation<'_>,
+    cancel: &CancellationToken,
+    limit: usize,
+    prepared: impl FnOnce(u64, u64, u64) + Send,
+) -> Result<ApiResponse> {
+    let started = Instant::now();
     let Operation {
         operation,
         prefix,
@@ -94,12 +110,14 @@ pub async fn request(
         }
         builder = builder.proxy(proxy_agent);
     }
+    let building = Instant::now();
     let client = builder.build().map_err(|_| {
         NumeraError::new(
             "invalid_configuration",
             "Cannot initialize configured API transport.",
         )
     })?;
+    let client_build_ms = building.elapsed().as_millis() as u64;
     let expects_body = method != Method::HEAD;
     let mut request = client.request(method, url);
     for (name, value) in headers {
@@ -112,6 +130,7 @@ pub async fn request(
         Body::Multipart(form) => request.multipart(form),
         Body::Empty => request,
     };
+    prepared(client_build_ms, started.elapsed().as_millis() as u64, timeout);
     let operation = async {
         let mut response = request.send().await.map_err(network_error)?;
         let status = response.status().as_u16();

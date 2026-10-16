@@ -598,22 +598,26 @@ foreign locks and invalid JSON. Native executable/bridge argv and PID-bearing lo
 final source-format disposition. The exact requirements case preserves the 8x6 alpha PNG, opaque
 roundtrip, Flash 4:3/4K mismatch and all 56 Flash / 30 Pro metadata pairs; the broad 7x5 oracle is separate.
 
-At `a7273cf`, all ten exact-commit jobs passed: all 91 targets on six stable platforms and nightly,
-Rust 1.99.1 fmt/Clippy/release compilation, SDK stdio/HTTP, notices/licenses, archives/checksums and
-extracted SDK execution. Complete coverage passed at 86.65% regions / 85.61% branches. Three exact
-lease-clock cases passed with unchanged SQL/fences and receipt timestamps. The earlier Linux Responses
-waiter timeout did not reproduce at its unchanged three-second bound; its original cause is unknown.
-Fixed-label diagnostics and runtime-before-workspace teardown are not claimed as that cause's repair.
+At `a7273cf`, all ten jobs passed: 91 targets on six stable platforms and nightly, all-six packaged
+SDK execution and coverage 86.65% regions / 85.61% branches. Exact lease-clock cases passed without
+changing SQL/fences or receipt timestamps. The Responses waiter passed its unchanged three-second
+bound; diagnostics and teardown correction do not establish the earlier timeout's cause.
 
-At `8b52164`, all 92 targets, two same-Generation credential cases and two state regressions passed
-on six stable platforms and nightly; all six Clippy and three Node jobs passed. Two actual formatter
-hunks are applied. Five release/SDK paths passed; Intel macOS release hit its 900-second wall ceiling,
-with downstream missing-binary SDK failures. Nightly SDK separately observed zero admission-probe
-POSTs with `request_timeout` at the unchanged 700 ms deadline. Both causes remain unproven; fixed-stage,
-numeric-only diagnostics retain assertions and bounds. Coverage floors measured 86.75% / 85.64%, but
-the instrumented run failed. Archives were skipped. There are 458 assignments including partial
-mappings, 12 unassigned and all 470 dispositions pending. [Credential acceptance and limits](testing/CREDENTIAL-SNAPSHOTS.md)
-retain in-memory versus OS semantics. Unsigned internal artifacts are not a signed Release.
+At `b83d872`, all 92 targets and four Environment cases passed six stable platforms and nightly.
+All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/archives/checksums/extracted SDK and three Node
+jobs passed. Intel macOS release took 674.532 seconds under unchanged bounds; its earlier timeout cause
+remains unknown. Only nightly SDK failed: Interactions/failed/round0, zero observed admission POSTs,
+`request_timeout/network`, 1909 ms elapsed and available started/intent/completed rows. The unchanged
+700 ms cooperative deadline is not a hard wall for synchronous work. Failed-run coverage measured
+86.71% regions / 85.64% branches; it is not passing acceptance. A preparation-only observer now measures
+client-build/pre-send time before logging, without changing TLS, retries, request ordering or deadlines.
+
+The unverified tree has 93 targets, including four bounded DNS cases using a per-call resolver;
+production lookup, destination checks, first-address pinning and redirect revalidation stay shared.
+One fixture partially maps both Node `autoSelectFamily` cases, not their array/scalar callback branches.
+All 470 dispositions remain pending: 460 assignments including partial mappings and ten unassigned.
+[Credential limits](testing/CREDENTIAL-SNAPSHOTS.md) retain OS gaps. New code needs hosted proof;
+unsigned artifacts are not a signed Release.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

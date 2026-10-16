@@ -2,6 +2,7 @@ use crate::compat::value::{JsString, Value};
 use crate::error::{NumeraError, Result};
 use crate::http::bounded::BoundedBytes;
 use std::{
+    future::Future,
     net::{IpAddr, Ipv4Addr, SocketAddr},
     time::Duration,
 };
@@ -48,6 +49,26 @@ pub async fn fetch(
     limit: usize,
     cancel: &CancellationToken,
 ) -> Result<Vec<u8>> {
+    fetch_with_resolver(raw, config, limit, cancel, |host, port| async move {
+        tokio::net::lookup_host((host.as_str(), port))
+            .await
+            .map(|addresses| addresses.map(|address| address.ip()).collect())
+    })
+    .await
+}
+
+/// Supplies hostname resolution only; destination validation and socket pinning remain shared.
+pub async fn fetch_with_resolver<F, A>(
+    raw: &JsString,
+    config: &Value,
+    limit: usize,
+    cancel: &CancellationToken,
+    resolve: F,
+) -> Result<Vec<u8>>
+where
+    F: Fn(String, u16) -> A + Send + Sync,
+    A: Future<Output = std::io::Result<Vec<IpAddr>>> + Send,
+{
     let operation = async {
         let mut url = Url::parse(&String::from_utf16_lossy(raw.as_utf16()))
             .map_err(|_| NumeraError::new("unsafe_destination", "Invalid image URL."))?;
@@ -89,7 +110,7 @@ pub async fn fetch(
             let addresses: Vec<SocketAddr> = if let Ok(ip) = host.parse::<IpAddr>() {
                 vec![SocketAddr::new(ip, port)]
             } else {
-                tokio::net::lookup_host((host.as_str(), port))
+                resolve(host.clone(), port)
                     .await
                     .map_err(|_| {
                         NumeraError::new(
@@ -98,6 +119,8 @@ pub async fn fetch(
                         )
                         .stage("download")
                     })?
+                    .into_iter()
+                    .map(|ip| SocketAddr::new(ip, port))
                     .collect()
             };
             if addresses.is_empty()

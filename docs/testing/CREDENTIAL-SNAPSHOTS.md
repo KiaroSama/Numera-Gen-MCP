@@ -2,13 +2,14 @@
 
 ## Current evidence
 
-At `8b52164`, all 92 native targets and both credential cases/module regressions passed on six
-stable OS/CPU targets and nightly. All-six Clippy and five release/SDK paths passed. Two formatter
-hunks failed; Intel macOS release reached its wall ceiling and nightly SDK hit a separate admission
-probe timeout. The complete run failed and archives were skipped. Exact hosted formatting is applied,
-but the corrected tree needs its own verification. The ledger retains 458 assignments including
-partial mappings, 12 unassigned and all 470 dispositions pending. Earlier `a7273cf` passed all-six
-packaged execution before this shared source; it is not packaged proof for these changes.
+At `b83d872`, all 92 native targets and both credential cases/module regressions passed on six
+stable OS/CPU targets and nightly. All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/archives
+and extracted SDK checks passed. Only nightly SDK failed a separate Interactions admission probe:
+zero observed POSTs and `request_timeout/network`, with its original 700 ms deadline unchanged.
+The complete run failed; its above-floor coverage report is not passing acceptance. These packaged
+checks include the shared credential source, but do not prove the newer DNS/observer changes.
+The current ledger retains 460 assignments including partial mappings, ten unassigned and all 470
+dispositions pending. No credential case has been promoted to final assertion acceptance.
 
 ## Selected-key environment source
 

@@ -398,12 +398,23 @@ available-row stage/duration diagnostics retain assertions, order and bounds; mi
 proof a stage was unreached. Coverage measured 86.75% regions / 85.64% branches from a failed run;
 archives were skipped. The corrected tree still needs its own hosted proof.
 
-The ledger retains 458 assignments including partial mappings, 12 unassigned and all 470 pending.
-[Credential snapshot limits](CREDENTIAL-SNAPSHOTS.md) retain in-memory versus OS/Windows semantics and
-the Application owner-selection double-read gap. Exact source/helper hashes and final independent
-literal acceptance remain required.
+At `b83d872`, all 92 targets and four Environment cases passed six stable platforms and nightly.
+All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/archives/checksums/extracted SDK and Node jobs
+passed. Intel release took 674.532 seconds at unchanged bounds; its earlier timeout cause is unproven.
+Only nightly SDK failed: Interactions/failed/round0, zero observed POSTs, `request_timeout/network`,
+1909 ms elapsed and available started/intent/completed rows. Failed-run coverage was 86.71% regions /
+85.64% branches, not passing acceptance. The current preparation observer measures synchronous
+client-build and pre-send time before logging; no TLS, deadline, retry or ordering change is claimed.
 
-**All-six packaged execution passed at `a7273cf`; complete baseline-case assertion acceptance has not passed.** Passing
+The unverified current tree adds four bounded DNS cases and a shared per-call resolver without global
+DNS mutation. One observable fixture partially maps both source `autoSelectFamily` expansions; native
+singleton pinning does not execute Node's array/scalar callback branches. The ledger retains 460
+assignments including partial mappings, ten unassigned and all 470 pending; 93 targets are registered.
+[Credential snapshot limits](CREDENTIAL-SNAPSHOTS.md) retain in-memory versus OS/Windows semantics and
+the Application owner-selection double-read gap. New DNS/observer code needs hosted execution; exact
+source/helper hashes and final independent literal acceptance remain required.
+
+**All-six packaged execution passed at `b83d872`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery

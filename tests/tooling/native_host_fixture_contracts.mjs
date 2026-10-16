@@ -20,6 +20,22 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
       requestId: privateText,
     },
     {
+      component: "http",
+      message: "Submission transport prepared.",
+      client_build_ms: 900,
+      pre_send_ms: 901,
+      timeout_ms: 700,
+      url: privateText,
+      authorization: privateText,
+    },
+    {
+      component: "http",
+      message: "Submission transport prepared.",
+      client_build_ms: -1,
+      pre_send_ms: Infinity,
+      timeout_ms: privateText,
+    },
+    {
       component: "tool",
       tool: "generate_image",
       message: "Tool completed.",
@@ -44,6 +60,13 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
     stages: [
       { stage: "started" },
       { stage: "intent" },
+      {
+        stage: "transport_prepared",
+        client_build_ms: 900,
+        pre_send_ms: 901,
+        timeout_ms: 700,
+      },
+      { stage: "transport_prepared" },
       { stage: "completed", duration_ms: 701 },
       { stage: "failed" },
     ],

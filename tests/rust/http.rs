@@ -1,5 +1,75 @@
+#[path = "common/wire.rs"]
+mod wire;
 use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::http::{assets::private_address, sse::events, url::operation_url};
+use numera_image_gen_mcp::http::{api, assets::private_address, sse::events, url::operation_url};
+use reqwest::Method;
+use std::{collections::HashMap, sync::Mutex};
+use tokio_util::sync::CancellationToken;
+
+#[test]
+fn transport_observer_runs_once_before_send_and_not_for_invalid_configuration() {
+    let observations = Mutex::new(Vec::new());
+    let seen = &observations;
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(wire::serve(
+            |request| {
+                assert_eq!(observations.lock().unwrap().len(), 1);
+                assert_eq!(request.method, "GET");
+                assert_eq!(request.path, "/v1/probe");
+                assert!(
+                    !request.headers.to_ascii_lowercase().contains("authorization:")
+                );
+                assert!(request.body.is_empty());
+                wire::json_reply(json!({"ok":true}))
+            },
+            |origin, requests| async move {
+                let signal = CancellationToken::new();
+                let invalid = api::request_observed(
+                    &json!({"baseUrl":"https://user:private@example.invalid/v1"}),
+                    &HashMap::new(),
+                    api::Operation {
+                        operation: "probe",
+                        prefix: "/v1",
+                        method: Method::GET,
+                        body: api::Body::Empty,
+                        query: None,
+                    },
+                    &signal,
+                    4096,
+                    |_, _, _| panic!("Invalid destination must not prepare transport"),
+                )
+                .await;
+                assert_eq!(invalid.err().unwrap().code, "invalid_configuration");
+                assert!(seen.lock().unwrap().is_empty());
+                let result = api::request_observed(
+                    &json!({"baseUrl":format!("{origin}/v1"),"discoveryTimeoutMs":2000}),
+                    &HashMap::new(),
+                    api::Operation {
+                        operation: "probe",
+                        prefix: "/v1",
+                        method: Method::GET,
+                        body: api::Body::Empty,
+                        query: None,
+                    },
+                    &signal,
+                    4096,
+                    |build, prepare, timeout| {
+                        assert!(prepare >= build);
+                        assert_eq!(timeout, 2000);
+                        seen.lock().unwrap().push((build, prepare, timeout));
+                    },
+                )
+                .await
+                .unwrap();
+                assert_eq!(result.bytes, b"{\"ok\":true}");
+                assert_eq!(seen.lock().unwrap().len(), 1);
+                assert_eq!(requests.lock().unwrap().len(), 1);
+            },
+        ));
+}
 
 #[test]
 fn operation_prefix_and_sensitive_query_are_preserved() {

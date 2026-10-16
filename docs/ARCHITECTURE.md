@@ -30,6 +30,9 @@ migration matrix records acceptance rather than implying that authored modules h
 - `native/files/`, `native/http/`, `native/mcp/`, `native/cli/`: byte/container/path/mask validation,
   API transport separate from DNS-pinned credential-free assets, SDK protocol lifecycle and optional
   explicit host registration. Originals are never resized; derivative previews are separate.
+  Asset hostname resolution has a per-call seam; default Tokio lookup, all-address validation,
+  first-address pinning and redirect checks remain shared. Submission transport observation reports
+  numeric client-build/pre-send durations only; preparation is not proof of a network write.
 
 `native/runtime_paths.rs` confines managed temp/cache to the installation root. Logging uses private
 UTF-8 UTC structured files and stderr, never protocol stdout; credentials/prompts/private paths stay

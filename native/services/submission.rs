@@ -170,7 +170,7 @@ impl Generation {
             }
         } else {
             let built = built.ok_or_else(NumeraError::runtime)?;
-            let response = api::request(
+            let response = api::request_observed(
                 c,
                 headers,
                 api::Operation {
@@ -184,6 +184,14 @@ impl Generation {
                 config["files"]["maxAggregateBytes"]
                     .as_u64()
                     .unwrap_or(100 * 1024 * 1024) as usize,
+                |client_build_ms, pre_send_ms, timeout_ms| {
+                    self.logger.log(
+                        "INFO",
+                        "http",
+                        "Submission transport prepared.",
+                        json!({"client_build_ms":client_build_ms,"pre_send_ms":pre_send_ms,"timeout_ms":timeout_ms}),
+                    );
+                },
             )
             .await?;
             if let Some(id) = response.request_id {

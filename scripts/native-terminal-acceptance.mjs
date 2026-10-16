@@ -37,10 +37,20 @@ export function probeStages(before, after) {
       event.message === "Submission intent persisted."
     )
       stage = "intent";
+    else if (
+      event.component === "http" &&
+      event.message === "Submission transport prepared."
+    )
+      stage = "transport_prepared";
     if (!stage) continue;
     const entry = { stage };
-    if (Number.isFinite(event.duration_ms) && event.duration_ms >= 0)
-      entry.duration_ms = event.duration_ms;
+    const fields =
+      stage === "transport_prepared"
+        ? ["client_build_ms", "pre_send_ms", "timeout_ms"]
+        : ["duration_ms"];
+    for (const field of fields)
+      if (Number.isFinite(event[field]) && event[field] >= 0)
+        entry[field] = event[field];
     stages.push(entry);
   }
   // Missing, clipped or late rows remain unobserved; this is not a stream cursor.
