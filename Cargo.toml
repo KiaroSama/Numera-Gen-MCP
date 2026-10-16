@@ -364,6 +364,14 @@ path = "tests/rust/reference_requirements_acceptance.rs"
 name = "http_cleanup_acceptance"
 path = "tests/rust/http_cleanup_acceptance.rs"
 
+[[test]]
+name = "review_regression_acceptance"
+path = "tests/rust/review_regression_acceptance.rs"
+
+[[test]]
+name = "local_recovery_acceptance"
+path = "tests/rust/local_recovery_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

@@ -256,6 +256,18 @@ real EOF/reset with deliberately open response bodies, including the combined as
 DNS-hostname/autoSelectFamily cases remain unassigned. Current hosted execution and final literal
 acceptance are required. Suite navigation now points to the concrete cases; broader fixtures remain.
 
+At `68ac3f3`, all 81 targets and all five cleanup cases passed on six stable platforms and nightly.
+Clippy, release compilation, actual SDK checks, Node jobs and full 86.42% regions / 85.24% branches
+coverage passed. Only one asset-fetch formatter hunk failed; its actual correction is applied.
+Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 83 targets and 410 assignments, including partial mappings; 60 remain
+unassigned and all dispositions are pending. Ten exact review regressions cover eight refusal cases,
+two-Store concurrent finalization with original requirements/bytes and excessive-item rejection. Two
+local-recovery cases preserve pre-aborted inline completion, same-Store connectionless recovery and
+the exact 100-byte reservation/release schedule. Their hosted execution and final literal acceptance
+are pending. A fixture's discarded stamped receipt was corrected without changing production fences.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

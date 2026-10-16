@@ -483,7 +483,7 @@
         "tests/rust/crash_recovery.rs::actual_killed_children_preserve_all_eight_source_checkpoints_without_replay",
         "tests/rust/publication_contracts.rs::filesystem_sql_gap_reconciles_original_bytes_uuid_and_refuses_a_changed_publication_target",
         "tests/rust/migration.rs::legacy_wal_snapshot_preserves_receipts_and_refuses_future_or_incomplete_schemas",
-        "tests/rust/recovery.rs::completed_retained_bytes_recover_after_local_cancel_without_credentials_or_post"
+        "tests/rust/local_recovery_acceptance.rs::exact_source_aborted_inline_finish_recovers_original_with_same_store_without_connection"
       ],
       "status": "pending",
       "evidence": null,
@@ -519,13 +519,15 @@
       "source": "tests/integration/review-fixes.test.ts",
       "sha256": "d16b9a4cad25b99f779f1882e27f7c2e2a431a7ec74b373d89a5a26538a96583",
       "native": [
-        "tests/rust/policy.rs::source_oracle_policy_dimensions_and_effective_request_match",
-        "tests/rust/streams.rs::malformed_nested_results_refusals_and_fallbacks_match_source_error_and_partial_contracts",
-        "tests/rust/terminal.rs::shared_terminal_control_fences_old_writer_and_preserves_retained_originals"
+        "tests/rust/review_regression_acceptance.rs::exact_source_two_stores_admit_one_finalizer_and_restore_original_output_requirements",
+        "tests/rust/review_regression_acceptance.rs::exact_source_excessive_final_items_refuse_before_url_processing",
+        "tests/rust/review_regression_acceptance.rs::exact_source_gemini_rejects_ignored_native_batch"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["parameterized_accounting", "concurrent_finalizers"]
+      "gaps": [
+        "Remaining exact selectors are in the case ledger; hosted execution and final literal review pending."
+      ]
     },
     {
       "source": "tests/integration/setup.test.ts",

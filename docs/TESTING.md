@@ -470,6 +470,20 @@ preserve redirect, declared-size, streamed-size and SSE-error inputs, plus the c
 asset/unauthorized redirect schedule. The two DNS-hostname/autoSelectFamily cases remain unassigned.
 New cleanup execution and final literal review are pending; existing broader fixtures remain intact.
 
+At `68ac3f3`, all 81 targets and all five cleanup cases passed on six stable platforms and nightly.
+Strict Clippy, release compilation, actual SDK checks, all three Node jobs and full 86.42% regions /
+85.24% branches coverage passed. Only one asset-fetch call layout failed formatting; the actual
+hosted correction is applied. Notices, archives and extracted checks were skipped.
+
+The next source-only tree has 83 targets and 410 assignments, including partial mappings; 60 remain
+unassigned and all 470 dispositions are pending. Ten exact review-regression cases preserve batch,
+gateway-field and missing-job-ID refusals, two actual concurrent Store finalizers, original output
+requirements and excessive-item rejection. Two exact local-recovery cases preserve pre-aborted inline
+completion, same-Store connectionless recovery of original bytes and the 100-byte reservation/release
+schedule. Independent source review caught a discarded generation-stamped preparation receipt in the
+new fixture; it now passes the actual returned receipt without weakening production fencing. These
+12 cases still require their own hosted execution and final literal acceptance.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

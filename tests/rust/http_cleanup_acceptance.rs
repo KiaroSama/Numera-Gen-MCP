@@ -221,7 +221,12 @@ async fn exact_source_oversize_asset_releases_socket_and_refuses_unapproved_redi
         let signal = CancellationToken::new();
         let result = tokio::time::timeout(
             Duration::from_secs(2),
-            assets::fetch(&format!("{origin}/image").into(), &config.value, 100, &signal),
+            assets::fetch(
+                &format!("{origin}/image").into(),
+                &config.value,
+                100,
+                &signal,
+            ),
         )
         .await
         .expect("source rescue ceiling reached for oversized asset");
