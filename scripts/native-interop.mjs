@@ -11,6 +11,7 @@ import { compactAcceptance } from "./native-compact-acceptance.mjs";
 import { envAcceptance } from "./native-env-acceptance.mjs";
 import { negotiationAcceptance } from "./native-negotiation-acceptance.mjs";
 import { configReloadAcceptance } from "./native-config-reload-acceptance.mjs";
+import { terminalAcceptance } from "./native-terminal-acceptance.mjs";
 
 // Hosted differential acceptance: the actual native binary, two SDK hosts, two restarts.
 if (process.env.GITHUB_ACTIONS !== "true")
@@ -497,6 +498,16 @@ try {
     bounded,
   });
   await configReloadAcceptance({
+    root,
+    workspace,
+    configSchema,
+    Store,
+    connectionIdentity,
+    start,
+    closeHost,
+    bounded,
+  });
+  await terminalAcceptance({
     root,
     workspace,
     configSchema,

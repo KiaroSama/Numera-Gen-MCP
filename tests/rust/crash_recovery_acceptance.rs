@@ -122,12 +122,13 @@ fn literal_crash_child() {
     if ["prepared", "submitted", "finalizing", "running"].contains(&phase.as_str()) {
         checkpoint(&phase);
     }
-    store.reserve(
-        "child-crash",
-        config.value["files"]["maxAggregateBytes"].as_i64().unwrap(),
-        config.value["files"]["maxJournalBytes"].as_i64().unwrap(),
-    )
-    .unwrap();
+    store
+        .reserve(
+            "child-crash",
+            config.value["files"]["maxAggregateBytes"].as_i64().unwrap(),
+            config.value["files"]["maxJournalBytes"].as_i64().unwrap(),
+        )
+        .unwrap();
     let image = images::inspect(
         std::fs::read(root.join("sample.png")).unwrap(),
         &config.value,
@@ -271,7 +272,9 @@ fn killed(root: &Path, phase: &str) {
                             tail.drain(..excess);
                         }
                         if !signalled
-                            && tail.windows(expected.len()).any(|v| v == expected.as_bytes())
+                            && tail
+                                .windows(expected.len())
+                                .any(|v| v == expected.as_bytes())
                         {
                             if let Some(sender) = &ready {
                                 let _ = sender.send(());
@@ -422,7 +425,8 @@ fn scenario(phase: &str) {
     db.execute("UPDATE requests SET lease=0 WHERE id='child-crash'", [])
         .unwrap();
     if phase == "published" {
-        db.execute_batch("DROP TRIGGER reject_literal_crash_output").unwrap();
+        db.execute_batch("DROP TRIGGER reject_literal_crash_output")
+            .unwrap();
     }
     drop(db);
     runtime.block_on(async {

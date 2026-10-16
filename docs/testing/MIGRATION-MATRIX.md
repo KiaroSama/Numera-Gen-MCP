@@ -296,6 +296,20 @@ for the clock spy, and a restored SQL trigger represents the published commit fa
 remain partial. Reaping and reader cleanup are bounded on failure too, with incomplete cleanup reported
 to the outer CI owner. Current hosted execution and final literal acceptance are still required.
 
+At `ff4a47c`, all 87 targets and twelve new terminal/crash cases passed on six stable platforms and
+nightly; Clippy, Node jobs and full 86.51% regions / 85.33% branches coverage passed. Five release/SDK
+paths passed. Intel macOS release compilation reached the 360-second idle bound without a compiler
+diagnostic; SDK missing-executable failures followed. Five formatter hunks failed and their exact
+hosted corrections are applied; notices/archives/extracted checks were skipped. Real Cargo artifact
+progress is enabled for release compilation without increasing bounds or claiming a stall repair.
+
+The next source-only tree has 88 targets and 441 assignments, including partial mappings; 29 remain
+unassigned and all dispositions stay pending. Three actual-SDK terminal matrices preserve original
+results, admission/replay/cancellation and two-host/two-restart behavior. Startup run IDs substitute
+for across-restart PID nonreuse, an explicit fidelity gap. One exact Comfy original-waiter/refresher
+race preserves held-history synchronization, completed state, output/index counts and one POST.
+Applicable hosted/extracted execution and final independent literal acceptance remain required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

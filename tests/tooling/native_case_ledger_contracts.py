@@ -60,6 +60,7 @@ class CaseLedger(unittest.TestCase):
             ("scripts/native-env-acceptance.mjs", "envAcceptance"),
             ("scripts/native-negotiation-acceptance.mjs", "negotiationAcceptance"),
             ("scripts/native-config-reload-acceptance.mjs", "configReloadAcceptance"),
+            ("scripts/native-terminal-acceptance.mjs", "terminalAcceptance"),
         ]:
             with self.subTest(path=path):
                 self.assertIn(f"export async function {symbol}(", ledger.mapping_source(path, "::", symbol))

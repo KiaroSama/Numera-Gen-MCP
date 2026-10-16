@@ -183,7 +183,7 @@ def main() -> None:
                 (["cargo", "fmt", "--check"], 30, 20),
                 (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),
                 (["cargo", "test", "--locked", "--all-targets", "--no-fail-fast", "--message-format=json-render-diagnostics", "--", "--test-threads=2"], 900, 180),
-                (["cargo", "build", "--locked", "--release"], 900, 360 if sys.platform == "darwin" else 180),
+                (["cargo", "build", "--locked", "--release", "--message-format=json-render-diagnostics"], 900, 360 if sys.platform == "darwin" else 180),
                 (["node", "scripts/native-interop.mjs"], 180, 45),
                 (["node", "scripts/native-http-interop.mjs"], 90, 30),
             ]:

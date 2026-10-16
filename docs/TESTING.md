@@ -523,6 +523,25 @@ cleanup fails visibly to the outer owned CI command. The published checkpoint ad
 actual original target bytes and an empty index before termination. These cases require their own
 hosted execution and final independent literal acceptance; broader earlier fixtures remain intact.
 
+At `ff4a47c`, all 87 targets and all twelve terminal/crash cases passed on six stable platforms
+and nightly. Strict Clippy and all three Node jobs passed; full coverage was 86.51% regions / 85.33%
+branches. Five platforms also passed release compilation and actual SDK checks. Intel macOS release
+compilation stopped after 360 seconds without output; subsequent missing-executable SDK failures
+are downstream, not protocol evidence. No compiler diagnostic established the stall's cause.
+Five formatter hunks failed; their exact hosted corrections are applied. Notices, archives and
+extracted checks were skipped. Release compilation now emits real Cargo artifact progress at the
+unchanged wall/idle and two-worker bounds; this is diagnostic visibility, not a proven stall repair.
+
+The next source-only tree has 88 native targets and 441 assignments, including partial mappings;
+29 cases remain unassigned and all 470 dispositions stay pending. Three actual-SDK terminal cases
+retain the frozen terminal/control/cancellation matrices, two native hosts, two restarts, original
+bytes/output identities, admission probes and replay conflicts. Six startup run IDs plus simultaneous
+distinct PIDs replace the source's across-restart numeric PID uniqueness; that fidelity substitution
+remains explicit. Scenario cancellation awaits actual work and cleanup; diagnostics report only
+completed rounds, not timer heartbeats. One exact Comfy waiter/refresher case holds the first history
+socket, completes public recovery, releases and settles the original, and asserts one output/index
+and one submission. These additions require hosted and extracted execution and final literal review.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

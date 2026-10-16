@@ -388,6 +388,10 @@ path = "tests/rust/terminal_lifecycle_acceptance.rs"
 name = "crash_recovery_acceptance"
 path = "tests/rust/crash_recovery_acceptance.rs"
 
+[[test]]
+name = "comfy_waiter_acceptance"
+path = "tests/rust/comfy_waiter_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

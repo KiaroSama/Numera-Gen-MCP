@@ -92,10 +92,7 @@ async fn seed(host: &Host, kind: &str) -> String {
         .unwrap();
     let identity = connection_identity("local", &pinned).unwrap();
     let mut store = host.0.store.lock().unwrap();
-    let mut old = store
-        .prepare(receipt("old"), "hash", &identity)
-        .unwrap()
-        .1;
+    let mut old = store.prepare(receipt("old"), "hash", &identity).unwrap().1;
     assert!(store.admit("old", "local", 1, 1).unwrap());
     old.value["status"] = json!("running");
     old.value["generation_outcome"] = json!("running");
@@ -237,9 +234,7 @@ async fn poll(workspace: &Workspace, mode: &str) {
             let old = store.get("old").unwrap();
             assert!(old.value.get("upstream_terminal").is_none());
             assert_eq!(old.status(), "running");
-            store
-                .prepare(receipt("fresh"), "fresh", &identity)
-                .unwrap();
+            store.prepare(receipt("fresh"), "fresh", &identity).unwrap();
             assert!(!store.admit("fresh", "local", 1, 1).unwrap());
         }
         let captured = requests.lock().unwrap();
