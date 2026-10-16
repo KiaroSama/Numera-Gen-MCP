@@ -130,7 +130,11 @@ pub async fn request_observed(
         Body::Multipart(form) => request.multipart(form),
         Body::Empty => request,
     };
-    prepared(client_build_ms, started.elapsed().as_millis() as u64, timeout);
+    prepared(
+        client_build_ms,
+        started.elapsed().as_millis() as u64,
+        timeout,
+    );
     let operation = async {
         let mut response = request.send().await.map_err(network_error)?;
         let status = response.status().as_u16();

@@ -612,12 +612,12 @@ remains unknown. Only nightly SDK failed: Interactions/failed/round0, zero obser
 86.71% regions / 85.64% branches; it is not passing acceptance. A preparation-only observer now measures
 client-build/pre-send time before logging, without changing TLS, retries, request ordering or deadlines.
 
-The unverified tree has 93 targets, including four bounded DNS cases using a per-call resolver;
-production lookup, destination checks, first-address pinning and redirect revalidation stay shared.
-One fixture partially maps both Node `autoSelectFamily` cases, not their array/scalar callback branches.
-All 470 dispositions remain pending: 460 assignments including partial mappings and ten unassigned.
-[Credential limits](testing/CREDENTIAL-SNAPSHOTS.md) retain OS gaps. New code needs hosted proof;
-unsigned artifacts are not a signed Release.
+At `d506c69`, all 93 targets, four DNS cases and the preparation observer passed six stable targets
+and nightly; Clippy/release/SDK stdio/HTTP and Node jobs passed. Nightly coverage passed at 86.79% /
+85.70%, with the unchanged 700 ms probe; its earlier timeout cause remains unproven. Only formatting
+failed in three files; actual hosted output is applied, and this correction needs its own proof.
+Archives were skipped. The 460 assignments include partial Node callback-shape and
+[credential OS gaps](testing/CREDENTIAL-SNAPSHOTS.md); ten remain unassigned and all 470 pending.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

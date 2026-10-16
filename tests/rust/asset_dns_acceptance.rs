@@ -218,20 +218,15 @@ fn redirect_rechecks_hostname_resolution_and_path_allowance_before_connecting() 
         };
         let client = async {
             let url = format!("{origin}/image").into();
-            let error = assets::fetch_with_resolver(
-                &url,
-                &config,
-                4096,
-                &signal,
-                |host, selected_port| {
+            let error =
+                assets::fetch_with_resolver(&url, &config, 4096, &signal, |host, selected_port| {
                     assert_eq!(host, "fixture.invalid");
                     assert_eq!(selected_port, port);
                     resolves.fetch_add(1, Ordering::SeqCst);
                     std::future::ready(Ok(vec![IpAddr::V4(Ipv4Addr::LOCALHOST)]))
-                },
-            )
-            .await
-            .unwrap_err();
+                })
+                .await
+                .unwrap_err();
             assert_eq!(error.code, "unsafe_destination");
         };
         tokio::join!(server, client);

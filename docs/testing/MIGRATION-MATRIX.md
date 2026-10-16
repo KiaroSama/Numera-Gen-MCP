@@ -406,13 +406,15 @@ Only nightly SDK failed: Interactions/failed/round0, zero observed POSTs, `reque
 85.64% branches, not passing acceptance. The current preparation observer measures synchronous
 client-build and pre-send time before logging; no TLS, deadline, retry or ordering change is claimed.
 
-The unverified current tree adds four bounded DNS cases and a shared per-call resolver without global
-DNS mutation. One observable fixture partially maps both source `autoSelectFamily` expansions; native
-singleton pinning does not execute Node's array/scalar callback branches. The ledger retains 460
-assignments including partial mappings, ten unassigned and all 470 pending; 93 targets are registered.
-[Credential snapshot limits](CREDENTIAL-SNAPSHOTS.md) retain in-memory versus OS/Windows semantics and
-the Application owner-selection double-read gap. New DNS/observer code needs hosted execution; exact
-source/helper hashes and final independent literal acceptance remain required.
+At `d506c69`, all 93 targets and five new DNS/observer cases passed six stable platforms and nightly.
+Clippy/release/SDK stdio/HTTP and Node jobs passed; nightly coverage passed at 86.79% regions / 85.70%
+branches. The earlier admission timeout did not reproduce at unchanged 700 ms; its cause is unproven.
+Only formatting failed in three files; actual hosted output is applied, but the corrected tree needs
+its own verification. Archives were skipped. One DNS fixture partially maps both source
+`autoSelectFamily` expansions, not their array/scalar callback branches. The ledger retains 460
+assignments including partial mappings, ten unassigned and all 470 pending.
+[Credential snapshot limits](CREDENTIAL-SNAPSHOTS.md) retain OS/Windows and owner-selection gaps.
+Exact source/helper hashes and final independent literal acceptance remain required.
 
 **All-six packaged execution passed at `b83d872`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

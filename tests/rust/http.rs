@@ -20,7 +20,10 @@ fn transport_observer_runs_once_before_send_and_not_for_invalid_configuration() 
                 assert_eq!(request.method, "GET");
                 assert_eq!(request.path, "/v1/probe");
                 assert!(
-                    !request.headers.to_ascii_lowercase().contains("authorization:")
+                    !request
+                        .headers
+                        .to_ascii_lowercase()
+                        .contains("authorization:")
                 );
                 assert!(request.body.is_empty());
                 wire::json_reply(json!({"ok":true}))
