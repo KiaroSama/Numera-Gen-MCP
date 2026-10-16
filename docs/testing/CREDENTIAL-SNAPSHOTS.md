@@ -2,11 +2,13 @@
 
 ## Current evidence
 
-At `a7273cf`, all 91 native integration targets passed on six stable OS/CPU targets and nightly;
-all six stable jobs also passed quality, release compilation, SDK checks and extracted archives.
-That revision predates the shared environment source and the two cases below. The current authored
-tree has 92 registered targets, 458 case assignments including partial mappings, 12 unassigned cases
-and all 470 acceptance dispositions pending. No compilation or execution of this new tree is claimed.
+At `8b52164`, all 92 native targets and both credential cases/module regressions passed on six
+stable OS/CPU targets and nightly. All-six Clippy and five release/SDK paths passed. Two formatter
+hunks failed; Intel macOS release reached its wall ceiling and nightly SDK hit a separate admission
+probe timeout. The complete run failed and archives were skipped. Exact hosted formatting is applied,
+but the corrected tree needs its own verification. The ledger retains 458 assignments including
+partial mappings, 12 unassigned and all 470 dispositions pending. Earlier `a7273cf` passed all-six
+packaged execution before this shared source; it is not packaged proof for these changes.
 
 ## Selected-key environment source
 

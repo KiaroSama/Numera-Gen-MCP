@@ -53,10 +53,7 @@ impl Environment {
 
     pub fn remove(&self, name: &str) -> Result<()> {
         validate_name(name)?;
-        self.values
-            .write()
-            .map_err(|_| unavailable())?
-            .remove(name);
+        self.values.write().map_err(|_| unavailable())?.remove(name);
         Ok(())
     }
 }

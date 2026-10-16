@@ -605,15 +605,15 @@ lease-clock cases passed with unchanged SQL/fences and receipt timestamps. The e
 waiter timeout did not reproduce at its unchanged three-second bound; its original cause is unknown.
 Fixed-label diagnostics and runtime-before-workspace teardown are not claimed as that cause's repair.
 
-The current source-only tree has 92 targets and 458 assignments, including partial mappings; 12 cases
-remain unassigned and all 470 dispositions stay pending. Two same-Generation credential cases preserve
-queue pinning versus fresh-operation credentials and cancellation's nested completed-job recovery.
-The selected-key environment source returns owned strings under short locks; no guard crosses an await.
-State unit regressions cover sharing/removal, validation and sanitized lock poisoning. Existing fixture
-adaptations preserve assertions. These changes require their own hosted compilation/execution and
-final literal review. [Credential acceptance and limits](testing/CREDENTIAL-SNAPSHOTS.md) distinguish
-in-memory state from OS environment behavior. DNS/fault/DPAPI gaps remain. Unsigned internal artifacts
-are not a signed Release.
+At `8b52164`, all 92 targets, two same-Generation credential cases and two state regressions passed
+on six stable platforms and nightly; all six Clippy and three Node jobs passed. Two actual formatter
+hunks are applied. Five release/SDK paths passed; Intel macOS release hit its 900-second wall ceiling,
+with downstream missing-binary SDK failures. Nightly SDK separately observed zero admission-probe
+POSTs with `request_timeout` at the unchanged 700 ms deadline. Both causes remain unproven; fixed-stage,
+numeric-only diagnostics retain assertions and bounds. Coverage floors measured 86.75% / 85.64%, but
+the instrumented run failed. Archives were skipped. There are 458 assignments including partial
+mappings, 12 unassigned and all 470 dispositions pending. [Credential acceptance and limits](testing/CREDENTIAL-SNAPSHOTS.md)
+retain in-memory versus OS semantics. Unsigned internal artifacts are not a signed Release.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

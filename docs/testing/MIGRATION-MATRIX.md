@@ -389,13 +389,19 @@ quality/release/SDK checks, all-six notices/licenses/archives/checksums/extracte
 Complete coverage passed at 86.65% regions / 85.61% branches. The Responses waiter passed unchanged
 three-second bounds; the earlier timeout's root cause remains unknown, not claimed repaired.
 
-The current source-only tree has 92 targets and 458 assignments, including partial mappings; 12 remain
-unassigned and all 470 dispositions stay pending. Two same-Generation environment cases preserve queued
-credential pinning versus fresh operations and cancellation's nested completed-job recovery. The new
-selected-key shared source and mechanical fixture adaptations are not compiled or executed yet.
+At `8b52164`, all 92 targets and the exact two environment/two state cases passed on six stable
+platforms and nightly; all-six Clippy and Node jobs passed. Only two formatter hunks are applied.
+Five release/SDK paths passed. Intel macOS release reached its 900-second wall ceiling; missing-binary
+SDK failures are downstream. Nightly SDK's Responses completed/round0 admission probe observed zero
+POSTs and `request_timeout/network` at unchanged 700 ms. Neither cause is established. Sanitized
+available-row stage/duration diagnostics retain assertions, order and bounds; missing rows are not
+proof a stage was unreached. Coverage measured 86.75% regions / 85.64% branches from a failed run;
+archives were skipped. The corrected tree still needs its own hosted proof.
+
+The ledger retains 458 assignments including partial mappings, 12 unassigned and all 470 pending.
 [Credential snapshot limits](CREDENTIAL-SNAPSHOTS.md) retain in-memory versus OS/Windows semantics and
-the Application owner-selection double-read gap. Applicable hosted execution, source/helper hashes and
-final independent literal review remain required.
+the Application owner-selection double-read gap. Exact source/helper hashes and final independent
+literal acceptance remain required.
 
 **All-six packaged execution passed at `a7273cf`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

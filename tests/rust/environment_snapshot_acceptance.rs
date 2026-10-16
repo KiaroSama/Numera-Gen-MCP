@@ -323,9 +323,7 @@ async fn cancellation_case(workspace: &Workspace) {
                 store.release("cancel-recover", Some(&old)).unwrap();
             }
             let signal = CancellationToken::new();
-            let cancelled = jobs::cancel(&g, "cancel-recover", &signal)
-                .await
-                .unwrap();
+            let cancelled = jobs::cancel(&g, "cancel-recover", &signal).await.unwrap();
             assert_eq!(cancelled["refund_verified"], false);
             let result = jobs::get(&g, "cancel-recover", false, &signal, None)
                 .await

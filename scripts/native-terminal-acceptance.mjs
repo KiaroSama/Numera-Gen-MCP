@@ -11,6 +11,42 @@ import {
   ownedScenario,
 } from "./native-host-fixture.mjs";
 
+export function probeStages(before, after) {
+  if (!after.startsWith(before)) return { capture: "unobserved", stages: [] };
+  const stages = [];
+  for (const line of after.slice(before.length).split("\n").slice(0, -1)) {
+    let event;
+    try {
+      event = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (!event || typeof event !== "object") continue;
+    let stage;
+    if (event.component === "tool" && event.tool === "generate_image") {
+      stage =
+        event.message === "Tool started."
+          ? "started"
+          : event.message === "Tool completed."
+            ? "completed"
+            : event.message === "Tool failed."
+              ? "failed"
+              : undefined;
+    } else if (
+      event.component === "generation" &&
+      event.message === "Submission intent persisted."
+    )
+      stage = "intent";
+    if (!stage) continue;
+    const entry = { stage };
+    if (Number.isFinite(event.duration_ms) && event.duration_ms >= 0)
+      entry.duration_ms = event.duration_ms;
+    stages.push(entry);
+  }
+  // Missing, clipped or late rows remain unobserved; this is not a stream cursor.
+  return { capture: "available_rows_only", stages: stages.slice(-8) };
+}
+
 function receipt(id, connection, adapter) {
   return {
     request_id: id,
@@ -213,6 +249,8 @@ async function terminal(adapter, context, original) {
               assert.deepEqual(current.upstream_job, { id: mode, kind });
             }
             const before = posts.length;
+            const beforeStderr = hosts[1].stderr();
+            const probeStarted = performance.now();
             const probe = await call(
               hosts[1],
               "generate_image",
@@ -234,6 +272,9 @@ async function terminal(adapter, context, original) {
               receipt_errors: probe.structuredContent?.errors?.map(
                 ({ code, stage }) => ({ code, stage }),
               ),
+              elapsed_ms: Math.round(performance.now() - probeStarted),
+              observed_posts: posts.length - before,
+              native: probeStages(beforeStderr, hosts[1].stderr()),
             });
             assert.equal(
               posts.length - before,

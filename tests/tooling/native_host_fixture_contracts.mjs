@@ -2,6 +2,58 @@ import assert from "node:assert/strict";
 import { request } from "node:http";
 import { test } from "node:test";
 import { provider } from "../../scripts/native-host-fixture.mjs";
+import { probeStages } from "../../scripts/native-terminal-acceptance.mjs";
+
+test("probe diagnostics expose only fixed stages and numeric durations", () => {
+  const before = "Earlier capture\n";
+  const privateText = "synthetic-private";
+  const rows = [
+    {
+      component: "tool",
+      tool: "generate_image",
+      message: "Tool started.",
+      call_id: privateText,
+    },
+    {
+      component: "generation",
+      message: "Submission intent persisted.",
+      requestId: privateText,
+    },
+    {
+      component: "tool",
+      tool: "generate_image",
+      message: "Tool completed.",
+      duration_ms: 701,
+      prompt: privateText,
+    },
+    {
+      component: "tool",
+      tool: "generate_image",
+      message: "Tool failed.",
+      duration_ms: privateText,
+    },
+    { component: "tool", tool: "generate_image", message: "constructor" },
+    { component: "tool", tool: "get_job", message: "Tool started." },
+    null,
+  ];
+  const after =
+    before + rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
+  const projected = probeStages(before, after + '{"unfinished":');
+  assert.deepEqual(projected, {
+    capture: "available_rows_only",
+    stages: [
+      { stage: "started" },
+      { stage: "intent" },
+      { stage: "completed", duration_ms: 701 },
+      { stage: "failed" },
+    ],
+  });
+  assert.equal(JSON.stringify(projected).includes(privateText), false);
+  assert.deepEqual(probeStages(before, after.slice(before.length)), {
+    capture: "unobserved",
+    stages: [],
+  });
+});
 
 async function bounded(promise, ms = 1000) {
   let timer;
