@@ -223,8 +223,25 @@ async function terminal(adapter, context, original) {
               },
               context.bounded,
             );
-            assert.equal(posts.length - before, states.includes(mode) ? 1 : 0);
-            if (states.includes(mode)) assert.notEqual(probe.isError, true);
+            const admission = JSON.stringify({
+              adapter,
+              mode,
+              round,
+              is_error: probe.isError,
+              status: probe.structuredContent?.status,
+              error: probe.structuredContent?.error?.code,
+              stage: probe.structuredContent?.error?.stage,
+              receipt_errors: probe.structuredContent?.errors?.map(
+                ({ code, stage }) => ({ code, stage }),
+              ),
+            });
+            assert.equal(
+              posts.length - before,
+              states.includes(mode) ? 1 : 0,
+              admission,
+            );
+            if (states.includes(mode))
+              assert.notEqual(probe.isError, true, admission);
             const replay = await call(
               hosts[0],
               "generate_image",

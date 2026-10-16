@@ -392,6 +392,10 @@ path = "tests/rust/crash_recovery_acceptance.rs"
 name = "comfy_waiter_acceptance"
 path = "tests/rust/comfy_waiter_acceptance.rs"
 
+[[test]]
+name = "posix_acceptance"
+path = "tests/rust/posix_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

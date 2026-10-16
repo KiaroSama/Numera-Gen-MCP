@@ -323,7 +323,20 @@ two restarts, originals/output identities and exact request counts. Shared owner
 async provider errors after cleanup; a persistent two-case regression guards that failure path.
 Hosted/extracted execution and final independent literal acceptance remain required.
 
-**All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
+At `f09561c`, all 88 targets passed on six stable platforms and nightly. All six stable jobs also
+passed fmt/Clippy/release compilation, SDK stdio/HTTP, notices, archives/checksums and extracted SDK,
+including all seven new race cases. Node jobs passed. Nightly nevertheless failed the earlier terminal
+admission probe: zero POSTs instead of one. Its coverage floors passed at 86.55% regions / 85.39%
+branches, but the failed SDK gate remains failed and the seven new races were not reached there.
+The cause is unknown; unchanged assertions now carry sanitized adapter/mode/round/error diagnostics.
+No retry, timeout increase or production repair is claimed.
+
+The next source-only tree has 89 targets and 450 assignments, including partial mappings; 20 remain
+unassigned and all 470 dispositions stay pending. Two exact Linux/macOS permission/Unicode-config and
+escape/safe-symlink cases require hosted execution and final literal review. A separate Windows DPAPI
+script/native roundtrip draft is not integrated because abort-path descendant cleanup is unverified.
+
+**All-six packaged execution passed at `f09561c`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery

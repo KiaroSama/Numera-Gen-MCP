@@ -559,6 +559,22 @@ late failure propagation and preservation of an original scenario error. Cases r
 45-second host lifetimes and five-second event limits; the whole SDK gate remains 180s wall / 45s idle.
 These changes still require hosted/extracted execution and final independent literal acceptance.
 
+At `f09561c`, all 88 targets passed on six stable platforms and nightly. All six stable jobs also
+passed formatting, Clippy, release compilation, SDK stdio/HTTP, notices, archives/checksums and
+extracted SDK execution, including all seven new race cases. All three Node jobs passed. The nightly
+job nevertheless failed its SDK terminal admission probe: zero POSTs were observed where one was
+required. Coverage itself passed at 86.55% regions / 85.39% branches; this does not accept the failed
+job. The failure occurred before the seven new SDK race cases ran on nightly. Its cause is unknown.
+The unchanged admission assertions now include sanitized adapter/mode/round and result error codes,
+not prompts, private paths or raw responses. No retry, timeout increase or production repair is claimed.
+
+The next source-only tree has 89 targets and 450 assignments, including partial mappings; 20 cases
+remain unassigned and all 470 dispositions stay pending. Two exact Linux/macOS cases exercise private
+0600 credentials, 0644 refusal, Unicode compact configuration paths and safe/escaping symlinks with
+original image bytes. Windows retains the source's platform exclusion. These additions require their
+own hosted execution and final literal acceptance. A Windows DPAPI script/native roundtrip draft is
+not integrated: failure-path descendant ownership remains unresolved.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine
