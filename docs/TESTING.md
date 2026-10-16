@@ -426,6 +426,23 @@ unassigned cases and all 470 dispositions pending. Four new cases preserve exact
 for three polarities and detached Comfy recovery on the same Generation/Store. Synthetic GPU metadata
 and loopback images are not evidence of live inference. This repair and the new cases need hosted verification.
 
+At `0510b6e`, SQL recovery and all four new region/detached cases passed on all six stable
+platforms and nightly. Five stable platforms and nightly passed every one of the 78 targets. Linux
+x64 failed one readiness case before execution because the OS refused to start its owned child;
+the original error lacked an OS code, so its cause is unproven. Release compilation, actual SDK
+checks and all three Node jobs passed. Complete coverage passed at 86.41% regions / 85.14% branches.
+Strict Clippy found an unused captured header in the region fixture, and formatting failed in two
+fixtures; packaging was skipped. The correction asserts the real JSON Content-Type and preserves all
+mask assertions. Readiness now reports only ErrorKind and raw OS code without paths or credentials;
+no retry, timeout increase or speculative production repair is added.
+
+The next source-only tree has 79 targets and 389 assignments, including partial mappings; 81 cases
+remain unassigned and every disposition stays pending. Two literal credential cases test private
+file rotation across queue waiting on the same Generation/Store and ephemeral independent headers.
+Authorization values are compared exactly, not by substring. Same-Generation process-environment
+rotation and nested cancellation credential rotation remain explicit gaps. These cases and the
+readiness diagnostic require their own hosted execution.
+
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine

@@ -130,9 +130,13 @@ async fn readiness(
     }
     #[cfg(windows)]
     command.creation_flags(0x08000000);
-    let mut child = command
-        .spawn()
-        .map_err(|_| "Cannot start owned readiness executable.".to_owned())?;
+    let mut child = command.spawn().map_err(|error| {
+        format!(
+            "Cannot start owned readiness executable: kind={:?}, os_code={:?}.",
+            error.kind(),
+            error.raw_os_error()
+        )
+    })?;
     let stdout = child.stdout.take().expect("owned stdout pipe");
     let stderr = child.stderr.take().expect("owned stderr pipe");
     let capture = async {

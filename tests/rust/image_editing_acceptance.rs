@@ -83,6 +83,12 @@ async fn exact_region(polarity: &str) {
             posts += 1;
             assert_eq!(request.method, "POST");
             assert_eq!(request.path, "/v1/images/edits");
+            assert!(
+                request
+                    .headers
+                    .to_ascii_lowercase()
+                    .contains("content-type: application/json")
+            );
             let body =
                 Value::parse_with_limit(std::str::from_utf8(&request.body).unwrap(), 1048576)
                     .unwrap();
@@ -100,7 +106,11 @@ async fn exact_region(polarity: &str) {
             assert_eq!(decoded.color(), image::ColorType::Rgba8);
             let pixels = decoded.to_rgba8();
             assert_eq!(pixels.get_pixel(0, 0).0[3], 255);
-            let alpha = if polarity == "transparent-edit" { 0 } else { 255 };
+            let alpha = if polarity == "transparent-edit" {
+                0
+            } else {
+                255
+            };
             assert_eq!(pixels.get_pixel(2, 1).0[3], alpha);
             assert_eq!(pixels.get_pixel(4, 2).0[3], alpha);
             assert_eq!(pixels.get_pixel(5, 2).0[3], 255);
@@ -141,9 +151,11 @@ async fn exact_region(polarity: &str) {
             conflict["mask"] = input["reference_images"][0].clone();
             let mut generate = input.clone();
             generate["request_id"] = json!("generate-region");
-            for (invalid, operation) in
-                [(outside, "edit"), (conflict, "edit"), (generate, "generate")]
-            {
+            for (invalid, operation) in [
+                (outside, "edit"),
+                (conflict, "edit"),
+                (generate, "generate"),
+            ] {
                 let error = g.run(invalid, operation, &signal).await.unwrap_err();
                 assert_eq!(error.code, "invalid_input");
             }

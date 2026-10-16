@@ -219,6 +219,20 @@ original bytes remain asserted. Two new targets add three exact region-edit pola
 same-Generation/Store detached Comfy case. There are 78 targets and 387 assignments, including partial
 mappings; 83 remain unassigned and all 470 dispositions stay pending. Current hosted execution is required.
 
+At `0510b6e`, the SQL recovery repair and region/detached cases passed on all six stable platforms
+and nightly. Five stable platforms and nightly passed all 78 targets; Linux x64 failed one readiness
+case because its owned child could not start, with no OS code recorded. The cause remains unproven.
+Release compilation, actual SDK checks, Node jobs and complete 86.41% regions / 85.14% branches
+coverage passed. Strict Clippy reported an unread captured header in the region fixture, formatting
+failed in two fixtures and packaging was skipped. The correction asserts real JSON Content-Type;
+readiness adds safe ErrorKind/raw-OS-code diagnostics without retries or changed bounds.
+
+The next source-only tree has 79 targets and 389 assignments, including partial mappings; 81 remain
+unassigned and all 470 dispositions remain pending. Two exact credential cases cover same-Generation
+private-file queue rotation and ephemeral independent headers with unchanged serialized values.
+Same-Generation process-environment rotation and nested cancellation rotation remain unassigned.
+Current native execution and final literal review are still required.
+
 **All-six packaged execution passed at `544baa9`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file

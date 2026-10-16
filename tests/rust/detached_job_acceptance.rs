@@ -101,9 +101,11 @@ async fn exact_source_detached_job_refresh_saves_original_once_on_same_generatio
                             .to_ascii_lowercase()
                             .contains("content-type: application/json")
                     );
-                    let body =
-                        Value::parse_with_limit(std::str::from_utf8(&request.body).unwrap(), 1048576)
-                            .unwrap();
+                    let body = Value::parse_with_limit(
+                        std::str::from_utf8(&request.body).unwrap(),
+                        1048576,
+                    )
+                    .unwrap();
                     assert_eq!(body["prompt"]["text"]["inputs"]["text"], "exact prompt");
                     wire::json_reply(json!({"prompt_id":"job"}))
                 }

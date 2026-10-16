@@ -312,11 +312,16 @@
       "native": [
         "tests/rust/snapshot_races.rs::queued_file_and_explicit_environment_snapshots_keep_old_headers_until_next_operation",
         "tests/rust/config_parity.rs::operation_credentials_are_private_pinned_and_do_not_fall_back",
-        "tests/rust/job_recovery_contracts.rs::supplied_private_credential_snapshot_survives_rotation_for_existing_handle_recovery"
+        "tests/rust/job_recovery_contracts.rs::supplied_private_credential_snapshot_survives_rotation_for_existing_handle_recovery",
+        "tests/rust/credential_snapshot_acceptance.rs::exact_source_file_credentials_pin_across_queue_but_refresh_on_same_generation",
+        "tests/rust/credential_snapshot_acceptance.rs::exact_source_ephemeral_snapshot_preserves_identity_and_independent_headers"
       ],
       "status": "pending",
       "evidence": null,
-      "gaps": ["environment_reread", "nested_credentials"]
+      "gaps": [
+        "Same-Generation process environment rotation and nested cancellation credential rotation remain unassigned; native Generation receives explicit immutable environment values, not JavaScript process.env.",
+        "Applicable hosted execution and final independent literal acceptance pending."
+      ]
     },
     {
       "source": "tests/integration/detached-jobs.test.ts",
