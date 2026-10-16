@@ -57,7 +57,7 @@ fn generation_with_connection(
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
         store: Arc::new(Mutex::new(Store::open(&workspace.0.join("state")).unwrap())),
         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     }
 }

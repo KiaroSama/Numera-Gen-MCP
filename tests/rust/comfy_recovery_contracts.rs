@@ -65,7 +65,7 @@ fn generation(workspace: &Workspace, raw: &Value) -> Generation {
         store: Arc::new(Mutex::new(Store::open(&workspace.0.join("state")).unwrap())),
         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     }
 }

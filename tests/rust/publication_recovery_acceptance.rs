@@ -143,7 +143,7 @@ fn exact_source_published_file_recovers_by_journal_hash_without_duplicate_output
         store: Arc::new(Mutex::new(store)),
         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     };
     let done = runtime.block_on(async {

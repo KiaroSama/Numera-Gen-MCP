@@ -1,17 +1,17 @@
 use crate::compat::value::{Value, json};
 use crate::{
-    config::{Config, credentials, snapshot_credentials},
+    config::{Config, EnvironmentSource, credentials, snapshot_credentials},
     error::{NumeraError, Result},
     http::api::{self, Body},
     runtime_paths::{RuntimePaths, private_directory},
 };
 use reqwest::Method;
-use std::{collections::HashMap, path::Path};
+use std::path::Path;
 use tokio_util::sync::CancellationToken;
 
 pub async fn connections(
     config: &Config,
-    env: &HashMap<String, String>,
+    env: &impl EnvironmentSource,
     runtime: &RuntimePaths,
 ) -> Result<Value> {
     let mut results = Vec::new();
@@ -27,7 +27,7 @@ pub async fn connections(
 
 pub async fn health(
     config: &Config,
-    env: &HashMap<String, String>,
+    env: &impl EnvironmentSource,
     runtime: &RuntimePaths,
     probe: bool,
     cancel: &CancellationToken,

@@ -57,7 +57,7 @@ async fn completed_retained_bytes_recover_after_local_cancel_without_credentials
         store: Arc::new(Mutex::new(Store::open(&root).unwrap())),
         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
         config: Arc::new(config),
     };

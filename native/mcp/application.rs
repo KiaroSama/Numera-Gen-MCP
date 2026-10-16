@@ -56,7 +56,7 @@ impl Application {
             store: store.clone(),
             logger: logger.clone(),
             runtime,
-            env,
+            env: env.into(),
             active: Arc::new(Mutex::new(HashMap::new())),
         });
         Ok(Self {

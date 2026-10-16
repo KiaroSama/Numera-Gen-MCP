@@ -598,19 +598,22 @@ foreign locks and invalid JSON. Native executable/bridge argv and PID-bearing lo
 final source-format disposition. The exact requirements case preserves the 8x6 alpha PNG, opaque
 roundtrip, Flash 4:3/4K mismatch and all 56 Flash / 30 Pro metadata pairs; the broad 7x5 oracle is separate.
 
-The next source-only tree has 91 targets and 456 assignments, including partial mappings; 14 cases
-remain unassigned and all 470 dispositions stay pending. Three exact lease-clock cases exercise renewal
-and peer takeover, expired prepared admission without replay, and stale same-instance publication.
-A per-Store callback replaces only lease-time reads, defaulting to real UTC; receipt timestamps,
-migration deadlines and renewal scheduling remain unchanged. Tests use isolated SQLite, the original
-1000/30999/31001/61001 schedules and exact original bytes, not sleeps or SQL lease rewrites. They are
-synchronous, create no child/network/runtime tasks and retain the two-worker bounded hosted runner.
-At `5164efc`, the clock cases passed all six targets and nightly; Rust 1.99.1 setup/Clippy/release/SDK
-and Node jobs passed. Coverage passed at 86.68% regions / 85.67% branches. Two clock formatting hunks
-failed; Linux x86_64 alone hit the existing Responses waiter three-second deadline. Its cause is unknown.
-Actual hosted formatting is applied, and fixed-label stage/counter diagnostics plus runtime-before-
-workspace teardown preserve every assertion and deadline. Corrected-tree execution is pending; archives
-were skipped. Environment/DNS/fault/DPAPI gaps remain. Unsigned internal artifacts are not a signed Release.
+At `a7273cf`, all ten exact-commit jobs passed: all 91 targets on six stable platforms and nightly,
+Rust 1.99.1 fmt/Clippy/release compilation, SDK stdio/HTTP, notices/licenses, archives/checksums and
+extracted SDK execution. Complete coverage passed at 86.65% regions / 85.61% branches. Three exact
+lease-clock cases passed with unchanged SQL/fences and receipt timestamps. The earlier Linux Responses
+waiter timeout did not reproduce at its unchanged three-second bound; its original cause is unknown.
+Fixed-label diagnostics and runtime-before-workspace teardown are not claimed as that cause's repair.
+
+The current source-only tree has 92 targets and 458 assignments, including partial mappings; 12 cases
+remain unassigned and all 470 dispositions stay pending. Two same-Generation credential cases preserve
+queue pinning versus fresh-operation credentials and cancellation's nested completed-job recovery.
+The selected-key environment source returns owned strings under short locks; no guard crosses an await.
+State unit regressions cover sharing/removal, validation and sanitized lock poisoning. Existing fixture
+adaptations preserve assertions. These changes require their own hosted compilation/execution and
+final literal review. [Credential acceptance and limits](testing/CREDENTIAL-SNAPSHOTS.md) distinguish
+in-memory state from OS environment behavior. DNS/fault/DPAPI gaps remain. Unsigned internal artifacts
+are not a signed Release.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

@@ -276,7 +276,7 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
                         store: Arc::new(Mutex::new(store)),
                         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
                         runtime: RuntimePaths::new(&workspace.0).unwrap(),
-                        env: HashMap::new(),
+                        env: HashMap::new().into(),
                         active: Arc::new(Mutex::new(HashMap::new())),
                     };
                     let receipt = numera_image_gen_mcp::services::jobs::recover_local(

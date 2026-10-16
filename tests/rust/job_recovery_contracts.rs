@@ -38,7 +38,7 @@ fn make_generation(workspace: &Workspace, raw: &Value) -> Generation {
         store: Arc::new(Mutex::new(Store::open(&workspace.0.join("state")).unwrap())),
         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     }
 }
@@ -185,11 +185,13 @@ async fn changed_accounts_or_removed_connections_refuse_recovery_before_any_netw
         let mut generation = make_generation(&workspace, &raw);
         generation
             .env
-            .insert("SELECTED".into(), "synthetic-account-one".into());
+            .set("SELECTED", "synthetic-account-one")
+            .unwrap();
         seed(&generation, "changed", Some("responses"), true).await;
         generation
             .env
-            .insert("SELECTED".into(), "synthetic-account-two".into());
+            .set("SELECTED", "synthetic-account-two")
+            .unwrap();
         let signal = CancellationToken::new();
         assert_eq!(
             failure(jobs::get(&generation, "changed", true, &signal, None).await),
@@ -209,7 +211,7 @@ async fn changed_accounts_or_removed_connections_refuse_recovery_before_any_netw
                 .status(),
             "running"
         );
-        generation.env.remove("SELECTED");
+        generation.env.remove("SELECTED").unwrap();
         assert_eq!(
             failure(jobs::get(&generation, "changed", true, &signal, None).await),
             "missing_credentials"
@@ -337,10 +339,11 @@ async fn supplied_private_credential_snapshot_survives_rotation_for_existing_han
         let workspace = Workspace::new();
         let mut raw = workspace.config(&format!("{}/v1", server.origin), "openai-responses");
         raw["connections"]["test"]["auth"] = json!({"type":"bearer","secretEnv":"SELECTED"});
-        let mut generation = make_generation(&workspace, &raw);
+        let generation = make_generation(&workspace, &raw);
         generation
             .env
-            .insert("SELECTED".into(), "synthetic-account-one".into());
+            .set("SELECTED", "synthetic-account-one")
+            .unwrap();
         seed(&generation, "pinned", Some("responses"), true).await;
         let (_, connection) = generation.config.select(None).unwrap();
         let pinned = snapshot_credentials(&connection, &generation.env, &generation.runtime)
@@ -348,7 +351,8 @@ async fn supplied_private_credential_snapshot_survives_rotation_for_existing_han
             .unwrap();
         generation
             .env
-            .insert("SELECTED".into(), "synthetic-account-two".into());
+            .set("SELECTED", "synthetic-account-two")
+            .unwrap();
         let signal = CancellationToken::new();
         let result = jobs::get(&generation, "pinned", true, &signal, Some(&pinned))
             .await

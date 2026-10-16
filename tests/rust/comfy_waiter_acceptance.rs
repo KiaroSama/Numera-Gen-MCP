@@ -62,7 +62,7 @@ fn generation(root: &Path, origin: &str) -> Generation {
         store: Arc::new(Mutex::new(Store::open(&root.join("state")).unwrap())),
         logger: Arc::new(Logger::new(&root.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(root).unwrap(),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     }
 }

@@ -1,4 +1,4 @@
-use super::{invalid, js_trim, validate};
+use super::{EnvironmentSource, invalid, js_trim, validate};
 use crate::compat::value::Value;
 use crate::{
     error::{NumeraError, Result},
@@ -37,7 +37,7 @@ impl PinnedConnection {
 
 pub async fn snapshot_credentials(
     connection: &Value,
-    env: &HashMap<String, String>,
+    env: &impl EnvironmentSource,
     runtime: &RuntimePaths,
 ) -> Result<PinnedConnection> {
     let headers = credentials(connection, env, runtime).await?;
@@ -49,7 +49,7 @@ pub async fn snapshot_credentials(
 
 pub async fn credentials(
     connection: &Value,
-    env: &HashMap<String, String>,
+    env: &impl EnvironmentSource,
     _runtime: &RuntimePaths,
 ) -> Result<HashMap<String, String>> {
     let auth = &connection["auth"];
@@ -65,7 +65,7 @@ pub async fn credentials(
                 .to_owned(),
         )
     } else if let Some(name) = auth["secretEnv"].as_str().filter(|s| !s.is_empty()) {
-        env.get(name).cloned()
+        env.value(name)?
     } else if let Some(path) = auth["secretFile"].as_str().filter(|s| !s.is_empty()) {
         let path = Path::new(path);
         if !validate::absolute(path) {

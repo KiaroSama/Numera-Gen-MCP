@@ -404,6 +404,10 @@ path = "tests/rust/registration_acceptance.rs"
 name = "lease_clock_acceptance"
 path = "tests/rust/lease_clock_acceptance.rs"
 
+[[test]]
+name = "environment_snapshot_acceptance"
+path = "tests/rust/environment_snapshot_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

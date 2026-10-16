@@ -40,7 +40,7 @@ fn generation(workspace: &Workspace, raw: &Value, env: HashMap<String, String>) 
         store: Arc::new(Mutex::new(Store::open(&workspace.0.join("state")).unwrap())),
         logger: Arc::new(Logger::new(&workspace.0.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
-        env,
+        env: env.into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     }
 }
@@ -199,11 +199,12 @@ async fn queued_file_and_explicit_environment_snapshots_keep_old_headers_until_n
                 logger: generation.logger.clone(),
                 runtime: generation.runtime.clone(),
                 active: generation.active.clone(),
-                env: if kind == "file" {
+                env: (if kind == "file" {
                     HashMap::new()
                 } else {
                     HashMap::from([("SELECTED".into(), "synthetic-b".into())])
-                },
+                })
+                .into(),
             };
             // Environment branch injects the next operation's snapshot, never mutates process env.
             let next = rotated
@@ -319,7 +320,7 @@ async fn in_flight_generation_keeps_old_snapshot_while_reload_and_next_request_u
             store: old.store.clone(),
             logger: old.logger.clone(),
             runtime: old.runtime.clone(),
-            env: HashMap::new(),
+            env: HashMap::new().into(),
             active: old.active.clone(),
         };
         assert_eq!(

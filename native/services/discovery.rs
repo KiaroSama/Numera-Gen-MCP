@@ -1,7 +1,7 @@
 use crate::compat::value::{JsString, Value, json};
 use crate::{
     capabilities,
-    config::{Config, snapshot_credentials},
+    config::{Config, EnvironmentSource, snapshot_credentials},
     dimensions,
     error::{NumeraError, Result, array, object},
     http::api::{self, Body},
@@ -35,7 +35,7 @@ impl Discovery {
         &mut self,
         config: &Config,
         runtime: &RuntimePaths,
-        env: &HashMap<String, String>,
+        env: &impl EnvironmentSource,
         name: Option<&str>,
         refresh: bool,
         cancel: &CancellationToken,
@@ -140,7 +140,7 @@ impl Discovery {
     pub async fn model(
         config: &Config,
         runtime: &RuntimePaths,
-        env: &HashMap<String, String>,
+        env: &impl EnvironmentSource,
         name: Option<&str>,
         model: &JsString,
         cancel: &CancellationToken,

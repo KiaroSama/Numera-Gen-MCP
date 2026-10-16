@@ -86,7 +86,7 @@ async fn exact_source_aborted_inline_finish_recovers_original_with_same_store_wi
         store: store.clone(),
         logger: logger.clone(),
         runtime: RuntimePaths::new(&workspace.0).unwrap(),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     };
     let bytes = original();

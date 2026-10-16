@@ -12,7 +12,7 @@ use crate::{
     },
     capabilities,
     compat::canonical_json::fingerprint,
-    config::{Config, snapshot_credentials},
+    config::{Config, Environment, snapshot_credentials},
     error::{NumeraError, Result},
     files::{editing, images, output, paths},
     http::assets,
@@ -33,7 +33,7 @@ pub struct Generation {
     pub store: SharedStore,
     pub logger: Arc<Logger>,
     pub runtime: RuntimePaths,
-    pub env: HashMap<String, String>,
+    pub env: Environment,
     pub active: Arc<Mutex<HashMap<String, CancellationToken>>>,
 }
 impl Generation {

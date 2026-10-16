@@ -65,7 +65,7 @@ fn generation(config: Arc<Config>, store: Store, root: &Path, logger: Arc<Logger
         store: Arc::new(Mutex::new(store)),
         logger,
         runtime: RuntimePaths::new(root).unwrap(),
-        env: HashMap::new(),
+        env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     }
 }

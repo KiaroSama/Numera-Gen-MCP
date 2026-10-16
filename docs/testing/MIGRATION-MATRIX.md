@@ -384,7 +384,20 @@ failed. The timeout cause is unknown; fixed-label stage/counter diagnostics reta
 assertions, with owned Runtime destruction before workspace cleanup. Actual hosted formatting is
 applied. The corrected tree needs its own verification; notices/archives/extracted checks were skipped.
 
-**All-six packaged execution passed at `d58b316`; complete baseline-case assertion acceptance has not passed.** Passing
+At `a7273cf`, all ten jobs passed: all 91 targets on six stable platforms and nightly, Rust 1.99.1
+quality/release/SDK checks, all-six notices/licenses/archives/checksums/extracted SDK and Node jobs.
+Complete coverage passed at 86.65% regions / 85.61% branches. The Responses waiter passed unchanged
+three-second bounds; the earlier timeout's root cause remains unknown, not claimed repaired.
+
+The current source-only tree has 92 targets and 458 assignments, including partial mappings; 12 remain
+unassigned and all 470 dispositions stay pending. Two same-Generation environment cases preserve queued
+credential pinning versus fresh operations and cancellation's nested completed-job recovery. The new
+selected-key shared source and mechanical fixture adaptations are not compiled or executed yet.
+[Credential snapshot limits](CREDENTIAL-SNAPSHOTS.md) retain in-memory versus OS/Windows semantics and
+the Application owner-selection double-read gap. Applicable hosted execution, source/helper hashes and
+final independent literal review remain required.
+
+**All-six packaged execution passed at `a7273cf`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery

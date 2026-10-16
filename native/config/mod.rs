@@ -5,6 +5,7 @@ mod env;
 mod json;
 mod load;
 mod reload;
+mod runtime_environment;
 mod validate;
 
 use crate::compat::value::{Object, Value, json};
@@ -14,6 +15,7 @@ pub use env::{MAX_CONFIG_BYTES, parse_env_config, read_config_text};
 pub use json::{clone_json, drop_json};
 pub use load::{config_file, load_config, user_root};
 pub use reload::{ConfigReload, ReloadEvent, ReloadResult};
+pub use runtime_environment::{Environment, EnvironmentSource};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},

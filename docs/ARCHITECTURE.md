@@ -11,6 +11,11 @@ migration matrix records acceptance rather than implying that authored modules h
   Windows DPAPI and immutable last-good reload snapshots. Adjacent discovery is executable-relative,
   never caller CWD. Display names never replace exact model IDs. API credentials are pinned privately
   for the operation and not serialized into receipts/logs.
+  `runtime_environment.rs` supplies an instance-owned shared selected-key source; immutable startup
+  maps remain supported. A selected value is cloned under a short read lock before credential I/O.
+  Accepted config generations share that source, while already-pinned headers remain independent.
+  This is not process-global OS environment mutation or Windows environment-key alias emulation;
+  [credential snapshot boundaries](testing/CREDENTIAL-SNAPSHOTS.md) retain the acceptance limits.
 - `native/adapters/`: Images, Gemini, Interactions, Responses, dedicated OpenRouter, opt-in chat images
   and explicit ComfyUI workflow contracts. Tools construct no provider payloads. Gateway forwarding,
   native model capability and account entitlement are separate evidence layers.
