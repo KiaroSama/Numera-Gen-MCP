@@ -56,9 +56,9 @@ keys into prompts, tool arguments, source, screenshots or public host config. Co
 
 ## Windows DPAPI evidence
 
-The persistent Windows fixture executes protect-secret.ps1 with only Read-Host replaced by a
-non-secret value. Encryption, file creation, icacls restriction and Numera's decryption reader run
-for real. It checks current-user-only protected ACL, non-ASCII UTF-8 round trip, ciphertext not
+The persistent Windows fixture executes protect-secret.ps1 with Read-Host replaced by a non-secret
+value and an isolated noninheritable parent ACL. Encryption, exclusive creation with an explicit
+current-user-only DACL and Numera's decryption reader are real operations. It checks protected ACL, UTF-8 round trip, ciphertext not
 containing plaintext, corrupt ciphertext rejection and existing-file refusal. The Unicode fixture
 first reproduced codepage loss; credentials now sets Console.OutputEncoding to UTF-8 explicitly.
 Linux visibly skips this Windows-only case. This does not test another user's decryption denial,

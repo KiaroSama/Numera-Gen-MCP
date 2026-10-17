@@ -439,11 +439,16 @@ round-trip/corrupt/no-overwrite checks. ARM passed protection but failed before 
 both descendant-abort cases passed. All-six Clippy/release/SDK stdio/HTTP and nightly SDK passed;
 complete coverage was 86.90% regions / 85.63% branches. The unchanged 700 ms probe passed without
 establishing its intermittent timeout's cause. Two formatting files and ARM's main case kept CI red;
-archives were skipped. Exact hosted formatting plus fixed private ACL-stage/nested-exception-type
-booleans now await CI, with original ACL predicates/assertions and bounds intact. Numeric intent
-measurements do not change deadlines, retries, TLS or request ordering. There are 96 targets,
-467 assignments including partial mappings, three unassigned and all 470 pending. Exact hashes and
-final independent literal review remain required; DNS and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
+archives were skipped. At `39d1cbb`, nine jobs passed: all-six formatting/Clippy/release/SDK, five
+packaged targets and nightly 86.90% / 85.63% coverage. Only ARM DPAPI failed; fixed diagnostics showed
+stage4/protected/allow/foreign all true. Disabling inheritance and replacing the current user's grant
+did not remove other explicit grants. The script now supplies a protected current-SID-only DACL at
+exclusive creation; an owned synthetic reproduction passed, but hosted native confirmation remains.
+A noninheritable owned parent exercises default-DACL fallback; foreign token grants vary by account.
+Original ACL predicates/assertions and bounds remain intact. Numeric intent measurements do not alter
+deadlines, retries, TLS or request ordering. There are 96 targets, 467 assignments including partial
+mappings, three unassigned and all 470 pending. Exact hashes/final independent literal review remain;
+DNS and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
 
 **All-six packaged execution passed at `3bc2789`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

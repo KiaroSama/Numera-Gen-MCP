@@ -515,6 +515,10 @@ mod windows {
         let wrapper = root.join("fixture.ps1");
         fs::write(&wrapper, r#"
 $ErrorActionPreference='Stop'
+$directory=[Security.AccessControl.DirectorySecurity]::new()
+$directory.SetAccessRuleProtection($true,$false)
+$directory.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.WindowsIdentity]::GetCurrent().User,[Security.AccessControl.FileSystemRights]::FullControl,[Security.AccessControl.AccessControlType]::Allow))
+[IO.FileSystemAclExtensions]::SetAccessControl([IO.DirectoryInfo]::new($PSScriptRoot),$directory)
 function Read-Host { param([string]$Prompt,[switch]$AsSecureString); ConvertTo-SecureString 'non-secret-DPAPI-fixture-日本語' -AsPlainText -Force }
 & (Join-Path $PSScriptRoot 'scripts/protect-secret.ps1') -Path $env:NUMERA_FIXTURE_DPAPI
 $stage=0

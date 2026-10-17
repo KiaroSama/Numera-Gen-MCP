@@ -91,7 +91,9 @@ OPENAI_BASE_URL/OPENAI_API_KEY/OPENAI_MODEL apply only with --openai-compat.
 Auth is none for explicitly trusted local backends, bearer or header with exactly one private apiKey,
 secretEnv, absolute/private/bounded secretFile or Windows current-user secretDpapiFile (PowerShell7).
 auth.origin binds credentials to the destination. Environment variables are not encrypted.
-Run scripts/protect-secret.ps1 interactively only; no overwrites. Its decryption subprocess emits UTF-8.
+Run scripts/protect-secret.ps1 interactively only; no overwrites. It applies a protected current-user-only
+ACL when creating the encrypted file, independent of parent inheritance or token-default grants.
+Native decryption uses Windows DPAPI directly; the retained source-runtime helper emits UTF-8.
 Missing credentials never authorize reading another application's store.
 
 Per-model maxCount/maxReferences/supportedParameters/capabilities overrides need verified contracts.

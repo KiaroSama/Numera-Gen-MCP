@@ -6,13 +6,13 @@ At `3bc2789`, all ten jobs passed: all 94 native targets and both credential cas
 on six stable OS/CPU targets and nightly. All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/
 archives/checksums/extracted SDK and three Node jobs passed. Complete coverage was 86.86% regions /
 85.73% branches. The prior admission timeout's cause remains unknown despite its unchanged probe passing.
-At `b23f6e2`, Windows x64 passed full DPAPI/ACL/native Unicode round-trip/corrupt/no-overwrite checks;
-ARM reached successful protection but failed before ACL verification. Both descendant-abort cases
-passed. Forwarding the omitted `PATHEXT` corrected a reproduced lookup defect, not every ARM cause.
-All-six Clippy/release/SDK and nightly SDK passed; coverage was 86.90% / 85.63%. Formatting kept CI red
-and archives were skipped. Exact formatting and private ACL-stage/type diagnostics await hosted CI.
-The diagnostic catch checks at most eight nested exceptions and emits fixed booleans only; original
-ACL expressions and failure assertions remain. No raw capture, path, plaintext or ciphertext is reported.
+At `39d1cbb`, nine jobs passed, including full x64 DPAPI and five packaged targets. Only ARM DPAPI
+failed: stage4 showed a protected DACL with foreign allow grants, not a lookup or translation error.
+All-six fmt/Clippy/release/SDK and nightly SDK passed; coverage was 86.90% / 85.63%. Both actual
+parent-abort regressions passed. The script now supplies a protected, current-SID-only DACL at
+exclusive file creation; the former inheritance/grant command retained foreign explicit token grants.
+An owned synthetic reproduction changed from foreign grants to current-user-only with Unicode decrypt.
+Hosted native confirmation remains pending. Fixed diagnostics, original ACL assertions and bounds remain.
 Parent-owned noninheritable kill-on-close jobs contain a self-enrolled worker before helper launch;
 cleanup reaps that worker before terminating its job and requiring zero active processes under one
 two-second ceiling. The original 30-second case and 15-second wall/8-second idle source wrapper remain.
