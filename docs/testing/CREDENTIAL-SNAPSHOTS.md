@@ -2,14 +2,18 @@
 
 ## Current evidence
 
-At `b83d872`, all 92 native targets and both credential cases/module regressions passed on six
-stable OS/CPU targets and nightly. All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/archives
-and extracted SDK checks passed. Only nightly SDK failed a separate Interactions admission probe:
-zero observed POSTs and `request_timeout/network`, with its original 700 ms deadline unchanged.
-The complete run failed; its above-floor coverage report is not passing acceptance. These packaged
-checks include the shared credential source, but do not prove the newer DNS/observer changes.
-The current ledger retains 460 assignments including partial mappings, ten unassigned and all 470
-dispositions pending. No credential case has been promoted to final assertion acceptance.
+At `3bc2789`, all ten jobs passed: all 94 native targets and both credential cases/module regressions
+on six stable OS/CPU targets and nightly. All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/
+archives/checksums/extracted SDK and three Node jobs passed. Complete coverage was 86.86% regions /
+85.73% branches. The prior admission timeout's cause remains unknown despite its unchanged probe passing.
+The next tree adds `tests/rust/dpapi_acceptance.rs`: source script/current-user-only ACL, native
+Unicode DPAPI round-trip, corrupt input, no overwrite and private logs, plus a real descendant-abort
+regression. It is Windows-only and unexecuted until its own hosted batch. Parent-owned noninheritable
+kill-on-close jobs contain a self-enrolled worker before helper launch; cleanup reaps that worker
+before terminating the exact job and requiring zero active processes under one two-second ceiling.
+The original 30-second case and 15-second wall/8-second idle source wrapper remain bounded. Node and
+PowerShell are CI fixtures only, not native runtime dependencies. There are 95 targets/466 assignments,
+four unassigned and all 470 pending. No credential case is promoted to final assertion acceptance.
 
 ## Selected-key environment source
 

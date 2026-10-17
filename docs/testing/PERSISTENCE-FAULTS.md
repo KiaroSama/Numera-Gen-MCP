@@ -2,8 +2,8 @@
 
 `tests/rust/persistence_fault_acceptance.rs` covers the five frozen recovery cases for one-shot
 write, sync, link, unlink and receipt-update failure. All five passed on six stable targets and
-nightly at `93cc4dd`. That run still failed formatting and an existing SDK admission probe; it is
-not integrated acceptance. All 470 baseline dispositions remain pending.
+nightly at `93cc4dd`; its formatting and SDK failures blocked that run. The corrected `3bc2789`
+batch passed all ten jobs, including all-six packaged SDK checks. All 470 dispositions remain pending.
 
 ## Shared production path
 

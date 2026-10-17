@@ -416,6 +416,10 @@ path = "tests/rust/asset_dns_acceptance.rs"
 name = "persistence_fault_acceptance"
 path = "tests/rust/persistence_fault_acceptance.rs"
 
+[[test]]
+name = "dpapi_acceptance"
+path = "tests/rust/dpapi_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

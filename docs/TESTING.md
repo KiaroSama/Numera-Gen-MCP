@@ -612,12 +612,12 @@ remains unknown. Only nightly SDK failed: Interactions/failed/round0, zero obser
 86.71% regions / 85.64% branches; it is not passing acceptance. A preparation-only observer now measures
 client-build/pre-send time before logging, without changing TLS, retries, request ordering or deadlines.
 
-At `dc8f7ec`, all ten jobs passed: 93 targets on six stable platforms and nightly, all-six
-fmt/Clippy/release/SDK/notices/archives/checksums/extracted SDK and coverage 86.80% regions / 85.73%
-branches. At `93cc4dd`, all 94 targets and five [fault cases](testing/PERSISTENCE-FAULTS.md) passed
-six stable platforms and nightly; six formatting failures and one nightly SDK timeout kept CI red.
-Preparation measured 35 ms of 1574 ms elapsed; numeric relative-log timing aids diagnosis, not a fix.
-All 470 cases remain pending: 465 assignments/five unassigned; [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain.
+At `3bc2789`, all ten jobs passed: 94 targets on six stable platforms and nightly, all-six
+fmt/Clippy/release/SDK/notices/archives/checksums/extracted SDK and coverage 86.86% regions / 85.73%
+branches. All five [fault cases](testing/PERSISTENCE-FAULTS.md) passed; the earlier 700 ms admission
+probe passed unchanged, without establishing its timeout's cause. The next tree adds a Windows-only
+DPAPI/ACL/native round-trip and owned descendant-abort target, not yet executed. There are now 95
+targets/466 assignments/four unassigned/all 470 pending; [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

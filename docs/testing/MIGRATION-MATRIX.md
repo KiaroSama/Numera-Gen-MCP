@@ -420,11 +420,16 @@ only formatting in two files; nightly SDK failed Interactions/failed/round0 with
 700 ms deadline. The remaining delay is unmeasured. Relative wall-clock stage projection adds only
 numeric diagnostics, not a production repair, deadline increase or proof of network absence.
 Failed-run coverage was 86.80% regions / 85.64% branches, not passing acceptance; archives were skipped.
-There remain 465 assignments including partial mappings, five unassigned and all 470 pending.
-DNS Node callback branches and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open;
-exact helper/source/dependency hashes and final independent literal review are still required.
+At `3bc2789`, all ten jobs passed: all 94 targets and five persistence cases on six stable platforms
+and nightly, all-six strict quality/release/SDK/notices/licenses/archives/checksums/extracted SDK and
+three Node jobs. Complete coverage passed at 86.86% regions / 85.73% branches. The admission probe
+passed at its unchanged 700 ms deadline; diagnostics do not establish the earlier timeout's cause.
+The next tree adds a Windows-only DPAPI/ACL/native round-trip and actual descendant-abort fixture.
+It has 95 targets, 466 assignments including partial mappings, four unassigned and all 470 pending;
+new Windows execution, exact hashes and final independent literal review remain required.
+DNS Node callback branches and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
 
-**All-six packaged execution passed at `dc8f7ec`; complete baseline-case assertion acceptance has not passed.** Passing
+**All-six packaged execution passed at `3bc2789`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery
