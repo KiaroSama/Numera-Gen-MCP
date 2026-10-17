@@ -444,7 +444,12 @@ packaged targets and nightly 86.90% / 85.63% coverage. Only ARM DPAPI failed; fi
 stage4/protected/allow/foreign all true. Disabling inheritance and replacing the current user's grant
 did not remove other explicit grants. The script now supplies a protected current-SID-only DACL at
 exclusive creation; an owned synthetic reproduction passed, but hosted native confirmation remains.
-A noninheritable owned parent exercises default-DACL fallback; foreign token grants vary by account.
+At `a759e27`, eight jobs/four POSIX packaged targets passed, with 86.93% / 85.67% coverage. Both Windows
+main cases failed after changing the populated fixture parent's ACL denied child access; abort cases passed.
+An owned reproduction confirms this separate fixture defect. Only a fresh private destination directory
+now receives the noninheritable descriptor; original scripts/captures stay untouched. x64 inventory also
+hit its unchanged idle bound; real collection-boundary events add diagnosis, not a proven root fix.
+Default-DACL fallback/foreign token grants remain account-dependent; native confirmation is pending.
 Original ACL predicates/assertions and bounds remain intact. Numeric intent measurements do not alter
 deadlines, retries, TLS or request ordering. There are 96 targets, 467 assignments including partial
 mappings, three unassigned and all 470 pending. Exact hashes/final independent literal review remain;

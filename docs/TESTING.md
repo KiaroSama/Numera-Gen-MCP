@@ -612,11 +612,11 @@ remains unknown. Only nightly SDK failed: Interactions/failed/round0, zero obser
 86.71% regions / 85.64% branches; it is not passing acceptance. A preparation-only observer now measures
 client-build/pre-send time before logging, without changing TLS, retries, request ordering or deadlines.
 
-At `3bc2789`, all ten jobs/all-six packaged checks passed. At `39d1cbb`, nine jobs passed: all 96 targets
-on five stable platforms and nightly, all-six fmt/Clippy/release/SDK, five packaged checks and 86.90% /
-85.63% coverage. Only ARM DPAPI failed: the protected file still had foreign explicit grants.
-Both descendant-abort cases passed. The script now creates its file with an explicit current-user-only
-DACL rather than default-token grants. A synthetic reproduction passed; native hosted confirmation is pending.
+At `3bc2789`, all ten jobs/all-six packaged checks passed. At `a759e27`, eight jobs passed: all 96 targets
+on four POSIX platforms and nightly, all-six fmt/Clippy/release/SDK, four packaged checks and 86.93% /
+85.67% coverage. Both Windows main DPAPI cases failed with fixture-child access denied; abort cases passed. A fresh private destination parent leaves existing scripts/captures untouched.
+Atomic current-user-only DACL/strict assertions remain; hosted confirmation is pending. x64 inventory
+also hit its unchanged idle bound; real collection-boundary events narrow any recurrence.
 There are 96 targets/467 assignments/three unassigned/all 470 pending; [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six

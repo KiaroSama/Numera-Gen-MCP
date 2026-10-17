@@ -22,11 +22,14 @@ await maintenance("native-case-inventory", async (log) => {
   if (!contained(baseline, root))
     throw new Error("Baseline collection must remain in the hosted workspace.");
   const requireBaseline = createRequire(join(baseline, "package.json"));
+  log.emit("INFO", "Loading frozen collection API.");
   const { createVitest } = await import(
     pathToFileURL(requireBaseline.resolve("vitest/node")).href
   );
+  log.emit("INFO", "Frozen collection API loaded.");
   let context;
   try {
+    log.emit("INFO", "Creating frozen collection context.");
     context = await createVitest({
       root: baseline,
       watch: false,
@@ -42,8 +45,15 @@ await maintenance("native-case-inventory", async (log) => {
       throw new Error(
         "Frozen case collection requires the baseline Vitest version.",
       );
+    log.emit("INFO", "Frozen collection context created.");
     const specifications = await context.globTestSpecifications();
+    log.emit("INFO", "Frozen collection specifications discovered.", {
+      specifications: specifications.length,
+    });
     const collected = await context.collectTests(specifications);
+    log.emit("INFO", "Frozen runtime collection returned.", {
+      collected_modules: collected.testModules.length,
+    });
     if (collected.unhandledErrors.length || process.exitCode)
       throw new Error("Frozen baseline case collection failed.");
     const cases = [];
@@ -147,6 +157,8 @@ await maintenance("native-case-inventory", async (log) => {
       },
     );
   } finally {
+    log.emit("INFO", "Closing frozen collection context.");
     await context?.close();
+    log.emit("INFO", "Frozen collection context closed.");
   }
 });

@@ -57,7 +57,8 @@ keys into prompts, tool arguments, source, screenshots or public host config. Co
 ## Windows DPAPI evidence
 
 The persistent Windows fixture executes protect-secret.ps1 with Read-Host replaced by a non-secret
-value and an isolated noninheritable parent ACL. Encryption, exclusive creation with an explicit
+value and a freshly created private destination directory with a noninheritable ACL, never changing
+its populated workspace parent's permissions. Encryption, exclusive creation with an explicit
 current-user-only DACL and Numera's decryption reader are real operations. It checks protected ACL, UTF-8 round trip, ciphertext not
 containing plaintext, corrupt ciphertext rejection and existing-file refusal. The Unicode fixture
 first reproduced codepage loss; credentials now sets Console.OutputEncoding to UTF-8 explicitly.

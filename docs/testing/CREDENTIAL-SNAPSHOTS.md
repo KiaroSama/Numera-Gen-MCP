@@ -12,7 +12,10 @@ All-six fmt/Clippy/release/SDK and nightly SDK passed; coverage was 86.90% / 85.
 parent-abort regressions passed. The script now supplies a protected, current-SID-only DACL at
 exclusive file creation; the former inheritance/grant command retained foreign explicit token grants.
 An owned synthetic reproduction changed from foreign grants to current-user-only with Unicode decrypt.
-Hosted native confirmation remains pending. Fixed diagnostics, original ACL assertions and bounds remain.
+At `a759e27`, both Windows main cases failed with access denied after the fixture changed its populated
+parent ACL; eight jobs/four packaged targets passed, with 86.93% regions / 85.67% branches. An owned
+reproduction proved inherited child access loss. The fixture now creates only a fresh private destination
+parent, leaving scripts/captures untouched. Strict assertions/bounds remain; hosted confirmation is pending.
 Parent-owned noninheritable kill-on-close jobs contain a self-enrolled worker before helper launch;
 cleanup reaps that worker before terminating its job and requiring zero active processes under one
 two-second ceiling. The original 30-second case and 15-second wall/8-second idle source wrapper remain.

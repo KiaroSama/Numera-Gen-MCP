@@ -518,7 +518,7 @@ $ErrorActionPreference='Stop'
 $directory=[Security.AccessControl.DirectorySecurity]::new()
 $directory.SetAccessRuleProtection($true,$false)
 $directory.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.WindowsIdentity]::GetCurrent().User,[Security.AccessControl.FileSystemRights]::FullControl,[Security.AccessControl.AccessControlType]::Allow))
-[IO.FileSystemAclExtensions]::SetAccessControl([IO.DirectoryInfo]::new($PSScriptRoot),$directory)
+[IO.FileSystemAclExtensions]::Create([IO.DirectoryInfo]::new((Join-Path $PSScriptRoot 'private')),$directory)
 function Read-Host { param([string]$Prompt,[switch]$AsSecureString); ConvertTo-SecureString 'non-secret-DPAPI-fixture-日本語' -AsPlainText -Force }
 & (Join-Path $PSScriptRoot 'scripts/protect-secret.ps1') -Path $env:NUMERA_FIXTURE_DPAPI
 $stage=0
@@ -554,7 +554,7 @@ try {
     exit 1
 }
 "#.as_bytes()).unwrap();
-        let file = root.join("protected 日本語.txt");
+        let file = root.join("private").join("protected 日本語.txt");
         let (status, output) = run(root, &wrapper, &file, true, deadline);
         let acl = [
             "ACL_STAGE_0",
