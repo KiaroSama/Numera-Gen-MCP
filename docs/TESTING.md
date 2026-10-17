@@ -612,12 +612,12 @@ remains unknown. Only nightly SDK failed: Interactions/failed/round0, zero obser
 86.71% regions / 85.64% branches; it is not passing acceptance. A preparation-only observer now measures
 client-build/pre-send time before logging, without changing TLS, retries, request ordering or deadlines.
 
-At `3bc2789`, all ten jobs/all-six packaged checks passed. At `a759e27`, eight jobs passed: all 96 targets
-on four POSIX platforms and nightly, all-six fmt/Clippy/release/SDK, four packaged checks and 86.93% /
-85.67% coverage. Both Windows main DPAPI cases failed with fixture-child access denied; abort cases passed. A fresh private destination parent leaves existing scripts/captures untouched.
-Atomic current-user-only DACL/strict assertions remain; hosted confirmation is pending. x64 inventory
-also hit its unchanged idle bound; real collection-boundary events narrow any recurrence.
-There are 96 targets/467 assignments/three unassigned/all 470 pending; [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain.
+At `4f471d2`, all ten jobs passed: 96 targets on six stable platforms and nightly, all-six
+fmt/Clippy/release/SDK/notices/archives/checksums/extracted SDK, and 86.93% regions / 85.67% branches.
+Both Windows strict DPAPI/native Unicode/corrupt/no-overwrite and owned Job abort cases passed.
+The fresh private destination fixes fixture-child access; original ACL assertions/bounds remain.
+x64 inventory passed in 13.015 seconds; its earlier idle cause remains unknown, not a proven fix.
+New same-live-Generation/same-Store Comfy: 97 targets/467 assignments/three unassigned/all 470 pending; own hosted proof/final review and [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

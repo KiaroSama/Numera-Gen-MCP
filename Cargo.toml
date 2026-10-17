@@ -424,6 +424,10 @@ path = "tests/rust/dpapi_acceptance.rs"
 name = "comfy_polling_acceptance"
 path = "tests/rust/comfy_polling_acceptance.rs"
 
+[[test]]
+name = "comfy_same_store_acceptance"
+path = "tests/rust/comfy_same_store_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

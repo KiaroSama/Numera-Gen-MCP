@@ -449,13 +449,20 @@ main cases failed after changing the populated fixture parent's ACL denied child
 An owned reproduction confirms this separate fixture defect. Only a fresh private destination directory
 now receives the noninheritable descriptor; original scripts/captures stay untouched. x64 inventory also
 hit its unchanged idle bound; real collection-boundary events add diagnosis, not a proven root fix.
-Default-DACL fallback/foreign token grants remain account-dependent; native confirmation is pending.
-Original ACL predicates/assertions and bounds remain intact. Numeric intent measurements do not alter
-deadlines, retries, TLS or request ordering. There are 96 targets, 467 assignments including partial
-mappings, three unassigned and all 470 pending. Exact hashes/final independent literal review remain;
-DNS and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
+At `4f471d2`, all ten jobs passed: all 96 targets on six stable platforms and nightly, all-six
+fmt/Clippy/release/SDK/notices/archives/checksums/extracted SDK and 86.93% regions / 85.67% branches.
+Both Windows strict DPAPI/native Unicode/corrupt/no-overwrite and owned Job abort cases passed.
+x64 inventory passed in 13.015 seconds under unchanged bounds; the earlier idle cause remains unknown.
+Default-DACL fallback/foreign token grants remain account-dependent. Original ACL predicates and
+bounds remain intact; intent measurements do not alter deadlines, retries, TLS or request ordering.
+The new `comfy_same_store_acceptance` target preserves the two literal source schedules alongside
+existing reopen regressions: same live Generation refresh, and new Generation with removed connections
+but the same Store allocation/owner. It retains ordinary defaults, source receipt fields and exact
+8x6 PNG originals; synthetic CUDA metadata is not GPU execution. There are now 97 targets and 467
+assignments including partial mappings, three unassigned and all 470 pending. New hosted execution,
+exact hashes/final independent literal review, DNS and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain.
 
-**All-six packaged execution passed at `3bc2789`; complete baseline-case assertion acceptance has not passed.** Passing
+**All-six packaged execution passed at `4f471d2`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery

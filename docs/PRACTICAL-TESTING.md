@@ -62,8 +62,10 @@ its populated workspace parent's permissions. Encryption, exclusive creation wit
 current-user-only DACL and Numera's decryption reader are real operations. It checks protected ACL, UTF-8 round trip, ciphertext not
 containing plaintext, corrupt ciphertext rejection and existing-file refusal. The Unicode fixture
 first reproduced codepage loss; credentials now sets Console.OutputEncoding to UTF-8 explicitly.
-Linux visibly skips this Windows-only case. This does not test another user's decryption denial,
-actual human input, domain/service accounts or MSIX host identity differences.
+At `4f471d2`, both native Windows x86_64/ARM64 cases passed strict ACL/native Unicode decryption,
+corrupt-file refusal, no-overwrite and owned Job abort cleanup. Linux skips the Windows-only case.
+This does not test another user's decryption denial, actual human input, domain/service accounts or
+MSIX host identity differences; it is not owner-host activation evidence.
 
 ## Controlled gateway and live boundaries
 

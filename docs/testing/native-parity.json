@@ -16,7 +16,7 @@
     "directory_toctou": "Three exact two-ENOENT schedules passed four POSIX targets at ec60ae3. Both Windows jobs failed junction shell creation; corrected owned normal CWD/relative basename is source-only. All-platform final assertion acceptance remains pending.",
     "active_waiter_races": "Source async-waiter-race and stdio-terminal-races hold actual generation polls/downloads while another public caller refreshes/cancels. Seeded recovery and direct store fencing do not establish those schedules.",
     "cancelled_mixed_results": "Source cancelled-results combines URL and inline bytes, requires zero downloads and two retained entries; inline-only cancellation recovery is not the same assertion.",
-    "comfy_download_recovery": "At bc34fbf both real completed-history download failure/reopen fixtures passed; source-case/assertion reconciliation remains pending.",
+    "comfy_download_recovery": "Existing reopen regressions remain. New exact same-live-Generation and new-Generation/same-Store schedules preserve source defaults/receipt/8x6 originals; current hosted proof and final literal acceptance pending.",
     "reload_public_boundary": "Source config-reload and env-stdio keep SDK/child alive, reload saved models, count one rejection log, preserve old-handle routing and reject ambiguous route history. Parser/direct Application tests do not cover all those assertions.",
     "environment_reread": "Native snapshot_races env branch injects a new Generation environment. Source credential-snapshot mutates process.env and uses the same Generation; these are not identical acceptance contracts.",
     "nested_credentials": "Source credential-snapshot nested cancellation/completed-job recovery needs explicit pinned-account propagation assertions.",
@@ -270,7 +270,8 @@
       "native": [
         "tests/rust/comfy_results.rs::comfy_history_rejects_malformed_or_excessive_outputs_and_retains_only_completed_originals",
         "tests/rust/output_recovery.rs::mixed_provider_results_preserve_valid_originals_and_report_partial_storage_without_retry",
-        "tests/rust/comfy_recovery_contracts.rs::seeded_comfy_second_download_failure_retains_first_original_and_recovers_locally_after_removal"
+        "tests/rust/comfy_recovery_contracts.rs::seeded_comfy_second_download_failure_retains_first_original_and_recovers_locally_after_removal",
+        "tests/rust/comfy_same_store_acceptance.rs::exact_source_comfy_retained_original_recovers_with_new_generation_and_same_store"
       ],
       "status": "pending",
       "evidence": null,
@@ -282,7 +283,8 @@
       "native": [
         "tests/rust/comfy_results.rs::comfy_history_rejects_malformed_or_excessive_outputs_and_retains_only_completed_originals",
         "tests/rust/job_recovery_contracts.rs::retained_url_failure_keeps_journal_then_recovers_bytes_without_resubmitting_generation",
-        "tests/rust/comfy_recovery_contracts.rs::synchronous_comfy_completed_history_survives_first_download_failure_and_reopens_without_replay"
+        "tests/rust/comfy_recovery_contracts.rs::synchronous_comfy_completed_history_survives_first_download_failure_and_reopens_without_replay",
+        "tests/rust/comfy_same_store_acceptance.rs::exact_source_completed_comfy_first_download_failure_refreshes_same_live_generation"
       ],
       "status": "pending",
       "evidence": null,
