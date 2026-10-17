@@ -95,7 +95,12 @@ fn view(request: &wire::Request, filename: &str) {
         format!("/view?filename={filename}&subfolder=&type=output")
     );
     assert!(request.body.is_empty());
-    assert!(!request.headers.to_ascii_lowercase().contains("authorization:"));
+    assert!(
+        !request
+            .headers
+            .to_ascii_lowercase()
+            .contains("authorization:")
+    );
 }
 
 #[tokio::test]
@@ -212,12 +217,10 @@ async fn exact_source_comfy_retained_original_recovers_with_new_generation_and_s
                     {"filename":"two.png","type":"output"}
                 ]}}
             }})),
-            "/view" if request.path.starts_with("/view?filename=two.png&") => {
-                wire::Reply {
-                    status: 500,
-                    ..wire::json_reply(json!({}))
-                }
-            }
+            "/view" if request.path.starts_with("/view?filename=two.png&") => wire::Reply {
+                status: 500,
+                ..wire::json_reply(json!({}))
+            },
             "/view" => wire::Reply {
                 status: 200,
                 mime: "image/png",
@@ -289,11 +292,19 @@ async fn exact_source_comfy_retained_original_recovers_with_new_generation_and_s
             assert_eq!(recovered.status(), "partial");
             assert_eq!(recovered.value["outputs"].as_array().unwrap().len(), 1);
             let output = &recovered.value["outputs"][0];
-            assert_eq!(std::fs::read(output["path"].as_str().unwrap()).unwrap(), bytes);
+            assert_eq!(
+                std::fs::read(output["path"].as_str().unwrap()).unwrap(),
+                bytes
+            );
             assert_eq!(output["output_id"], retained_id);
             assert_eq!(recovery.store.lock().unwrap().owner, owner);
             assert_eq!(
-                recovery.store.lock().unwrap().identity("comfy-partial").unwrap(),
+                recovery
+                    .store
+                    .lock()
+                    .unwrap()
+                    .identity("comfy-partial")
+                    .unwrap(),
                 identity
             );
             let calls = requests.lock().unwrap();
