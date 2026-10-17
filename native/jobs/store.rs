@@ -59,6 +59,7 @@ pub struct Store {
     pub owner: String,
     pub(super) generations: HashMap<String, i64>,
     lease_clock: Box<dyn Fn() -> i64 + Send + Sync>,
+    pub(crate) persistence: Box<dyn super::Persistence>,
 }
 
 pub(super) fn timestamp() -> String {
@@ -82,11 +83,28 @@ impl Store {
         directory: &Path,
         clock: impl Fn() -> i64 + Send + Sync + 'static,
     ) -> Result<Self> {
+        Self::open_with_ports(directory, clock, super::NativePersistence)
+    }
+
+    /// Keeps ordinary file I/O while allowing an instance-owned persistence implementation.
+    pub fn open_with_persistence(
+        directory: &Path,
+        persistence: impl super::Persistence + 'static,
+    ) -> Result<Self> {
+        Self::open_with_ports(directory, || Utc::now().timestamp_millis(), persistence)
+    }
+
+    fn open_with_ports(
+        directory: &Path,
+        clock: impl Fn() -> i64 + Send + Sync + 'static,
+        persistence: impl super::Persistence + 'static,
+    ) -> Result<Self> {
         Ok(Self {
             db: super::migration::open(directory)?,
             owner: Uuid::new_v4().to_string(),
             generations: HashMap::new(),
             lease_clock: Box::new(clock),
+            persistence: Box::new(persistence),
         })
     }
 
@@ -199,6 +217,7 @@ impl Store {
     }
 
     pub fn update(&self, receipt: &mut Receipt) -> Result<()> {
+        self.persistence.before_receipt_update()?;
         let id = receipt.id()?.to_owned();
         self.fence(&id, None)?;
         if receipt.generation != self.generations.get(&id).copied() {

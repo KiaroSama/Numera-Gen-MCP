@@ -27,6 +27,9 @@ migration matrix records acceptance rather than implying that authored modules h
 - `native/jobs/`: bundled SQLite, preserved schema v2/WAL/FULL, renewable 30-second leases and
   generation fences. Journal phases waiting/retained/publishing/committed keep stable output identity
   across filesystem/SQL crash gaps. State remains local shared storage, not an unreliable network drive.
+  An instance-owned persistence port delegates publication write/sync/link/unlink to the original OS
+  operations by default. Its receipt-update entry seam supports scoped failure verification without
+  changing real SQL error sanitization, generation fences or the database schema.
 - `native/files/`, `native/http/`, `native/mcp/`, `native/cli/`: byte/container/path/mask validation,
   API transport separate from DNS-pinned credential-free assets, SDK protocol lifecycle and optional
   explicit host registration. Originals are never resized; derivative previews are separate.

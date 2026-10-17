@@ -7,11 +7,7 @@ use crate::{
     },
     jobs::{Receipt, Store},
 };
-use std::{
-    fs,
-    io::{Read, Write},
-    path::Path,
-};
+use std::{fs, io::Read, path::Path};
 use uuid::Uuid;
 
 struct Temporary(std::path::PathBuf);
@@ -115,8 +111,10 @@ pub fn save(
         options.mode(0o600);
     }
     let mut file = options.open(&temporary.0).map_err(|_| error())?;
-    file.write_all(&image.bytes)
-        .and_then(|_| file.sync_all())
+    store
+        .persistence
+        .write(&mut file, &image.bytes)
+        .and_then(|_| store.persistence.sync(&file))
         .map_err(|_| error())?;
     drop(file);
     if stable && !store.owns(id, expected)? {
@@ -126,12 +124,12 @@ pub fn save(
         )
         .stage("storage"));
     }
-    match fs::hard_link(&temporary.0, &target) {
+    match store.persistence.link(&temporary.0, &target) {
         Ok(()) => {}
         Err(e) if stable && e.kind() == std::io::ErrorKind::AlreadyExists => {}
         Err(_) => return Err(error()),
     }
-    fs::remove_file(&temporary.0).map_err(|_| error())?;
+    store.persistence.unlink(&temporary.0).map_err(|_| error())?;
     #[cfg(unix)]
     fs::File::open(&directory)
         .and_then(|f| f.sync_all())

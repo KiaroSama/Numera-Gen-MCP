@@ -406,17 +406,21 @@ Only nightly SDK failed: Interactions/failed/round0, zero observed POSTs, `reque
 85.64% branches, not passing acceptance. The current preparation observer measures synchronous
 client-build and pre-send time before logging; no TLS, deadline, retry or ordering change is claimed.
 
-At `d506c69`, all 93 targets and five new DNS/observer cases passed six stable platforms and nightly.
-Clippy/release/SDK stdio/HTTP and Node jobs passed; nightly coverage passed at 86.79% regions / 85.70%
-branches. The earlier admission timeout did not reproduce at unchanged 700 ms; its cause is unproven.
-Only formatting failed in three files; actual hosted output is applied, but the corrected tree needs
-its own verification. Archives were skipped. One DNS fixture partially maps both source
-`autoSelectFamily` expansions, not their array/scalar callback branches. The ledger retains 460
-assignments including partial mappings, ten unassigned and all 470 pending.
-[Credential snapshot limits](CREDENTIAL-SNAPSHOTS.md) retain OS/Windows and owner-selection gaps.
-Exact source/helper hashes and final independent literal acceptance remain required.
+At `dc8f7ec`, all ten jobs passed: all 93 targets on six stable platforms and nightly, strict
+fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/archives/checksums/extracted SDK and three Node jobs.
+Nightly coverage passed at 86.80% regions / 85.73% branches. The unchanged 700 ms admission probe passed;
+its earlier timeout cause is unproven. This is actual six-target internal distribution evidence,
+not a signed Release or full baseline acceptance.
 
-**All-six packaged execution passed at `b83d872`; complete baseline-case assertion acceptance has not passed.** Passing
+The unverified tree adds five exact write/sync/link/unlink/receipt-update recovery cases through an
+instance-owned persistence port. Default operations retain real files, OS errors and existing SQL;
+no global failpoint or permission/path substitute is used. See [persistence fault coverage](PERSISTENCE-FAULTS.md).
+There are 94 registered targets, 465 assignments including partial mappings, five unassigned and all
+470 pending. Shared DNS behavior does not execute Node's array/scalar callback branches;
+[credential limits](CREDENTIAL-SNAPSHOTS.md) retain OS/Windows and owner-selection gaps.
+New persistence code needs its own hosted execution, exact hashes and final independent literal review.
+
+**All-six packaged execution passed at `dc8f7ec`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
 production source remains authoritative until hosted differential verification passes. A file
 existing is not a verified mapping. Polling-case isolation and Comfy upload/preflight/recovery
