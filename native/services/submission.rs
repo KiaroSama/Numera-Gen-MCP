@@ -126,10 +126,12 @@ impl Generation {
                         adapters::comfy::OutputLimits {
                             item: config["files"]["maxOutputBytes"]
                                 .as_u64()
-                                .unwrap_or(50 * 1024 * 1024) as usize,
+                                .unwrap_or(50 * 1024 * 1024)
+                                as usize,
                             aggregate: config["files"]["maxAggregateBytes"]
                                 .as_u64()
-                                .unwrap_or(100 * 1024 * 1024) as usize,
+                                .unwrap_or(100 * 1024 * 1024)
+                                as usize,
                         },
                         |index, bytes| {
                             let mut state = shared.lock().map_err(|_| NumeraError::storage())?;

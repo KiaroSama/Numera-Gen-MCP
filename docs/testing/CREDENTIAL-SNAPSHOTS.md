@@ -6,12 +6,13 @@ At `3bc2789`, all ten jobs passed: all 94 native targets and both credential cas
 on six stable OS/CPU targets and nightly. All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/
 archives/checksums/extracted SDK and three Node jobs passed. Complete coverage was 86.86% regions /
 85.73% branches. The prior admission timeout's cause remains unknown despite its unchanged probe passing.
-At `12f2b36`, both Windows targets passed the real descendant-abort regression, but the main DPAPI
-fixture returned exit1 before its native decrypt and ACL/round-trip/no-overwrite assertions. Formatting
-and a separate nightly SDK timeout also kept CI red; archives were skipped. The selected environment
-omitted `PATHEXT`: an isolated lookup reproduced missing `icacls`, fixed by forwarding only that existing
-variable. The correction and fixed-boolean failure diagnostics await hosted confirmation, not a claim
-that every historical failure is resolved. No raw capture, path, plaintext or ciphertext is reported.
+At `b23f6e2`, Windows x64 passed full DPAPI/ACL/native Unicode round-trip/corrupt/no-overwrite checks;
+ARM reached successful protection but failed before ACL verification. Both descendant-abort cases
+passed. Forwarding the omitted `PATHEXT` corrected a reproduced lookup defect, not every ARM cause.
+All-six Clippy/release/SDK and nightly SDK passed; coverage was 86.90% / 85.63%. Formatting kept CI red
+and archives were skipped. Exact formatting and private ACL-stage/type diagnostics await hosted CI.
+The diagnostic catch checks at most eight nested exceptions and emits fixed booleans only; original
+ACL expressions and failure assertions remain. No raw capture, path, plaintext or ciphertext is reported.
 Parent-owned noninheritable kill-on-close jobs contain a self-enrolled worker before helper launch;
 cleanup reaps that worker before terminating its job and requiring zero active processes under one
 two-second ceiling. The original 30-second case and 15-second wall/8-second idle source wrapper remain.

@@ -18,8 +18,7 @@ use wire::{Reply, json_reply, serve};
 #[tokio::test]
 async fn source_comfy_wait_completes_first_poll_then_pre_cancel_preserves_selected_error() {
     let workspace = Workspace::new();
-    let file = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join(".ci-work/parity/image-acceptance.json");
+    let file = Path::new(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/image-acceptance.json");
     assert!(std::fs::metadata(&file).unwrap().len() <= 1048576);
     let rows = Value::parse_with_limit(&std::fs::read_to_string(file).unwrap(), 1048576).unwrap();
     let row = rows

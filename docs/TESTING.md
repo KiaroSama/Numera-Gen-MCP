@@ -612,11 +612,11 @@ remains unknown. Only nightly SDK failed: Interactions/failed/round0, zero obser
 86.71% regions / 85.64% branches; it is not passing acceptance. A preparation-only observer now measures
 client-build/pre-send time before logging, without changing TLS, retries, request ordering or deadlines.
 
-At `3bc2789`, all ten jobs/all-six packaged checks passed: 94 targets and 86.86% / 85.73% coverage.
-At `12f2b36`, all 95 targets passed on POSIX/nightly; Windows DPAPI returned exit1 before decrypt,
-while both descendant-abort cases passed. Formatting and a nightly SDK timeout kept CI red; archives
-were skipped. A reproduced missing-PATHEXT fixture defect is corrected, not yet verified in hosted CI.
-The new shared Comfy poll/first-result/pre-cancel case and numeric intent diagnostics also await CI.
+At `3bc2789`, all ten jobs/all-six packaged checks passed. At `b23f6e2`, all 96 targets passed on five
+stable platforms and nightly; shared Comfy polling passed on all seven. Windows x64 passed full DPAPI;
+ARM failed after protection, before ACL verification. Both descendant-abort cases passed. All-six
+Clippy/release/SDK and nightly SDK passed; coverage was 86.90% / 85.63%. Formatting kept CI red and
+archives were skipped. Exact formatting plus private ACL-stage diagnostics now await hosted CI.
 There are 96 targets/467 assignments/three unassigned/all 470 pending; [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six

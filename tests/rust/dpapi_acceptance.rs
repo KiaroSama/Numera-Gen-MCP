@@ -517,19 +517,59 @@ mod windows {
 $ErrorActionPreference='Stop'
 function Read-Host { param([string]$Prompt,[switch]$AsSecureString); ConvertTo-SecureString 'non-secret-DPAPI-fixture-日本語' -AsPlainText -Force }
 & (Join-Path $PSScriptRoot 'scripts/protect-secret.ps1') -Path $env:NUMERA_FIXTURE_DPAPI
-$acl=Get-Acl -LiteralPath $env:NUMERA_FIXTURE_DPAPI
-$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-$rules=@($acl.Access | Where-Object {$_.AccessControlType -eq 'Allow'})
-$foreign=@($rules | Where-Object {$_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -ne $sid})
-if (-not $acl.AreAccessRulesProtected -or $rules.Count -lt 1 -or $foreign.Count -ne 0) { throw 'Fixture ACL is not current-user only.' }
-Write-Output 'ACL_VERIFIED'
+$stage=0
+try {
+    $acl=Get-Acl -LiteralPath $env:NUMERA_FIXTURE_DPAPI
+    $stage=1
+    $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $stage=2
+    $rules=@($acl.Access | Where-Object {$_.AccessControlType -eq 'Allow'})
+    $stage=3
+    $foreign=@($rules | Where-Object {$_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -ne $sid})
+    $stage=4
+    if (-not $acl.AreAccessRulesProtected -or $rules.Count -lt 1 -or $foreign.Count -ne 0) { throw 'Fixture ACL is not current-user only.' }
+    Write-Output 'ACL_VERIFIED'
+} catch {
+    $missing=$false; $unmapped=$false; $denied=$false
+    $exception=$_.Exception
+    for ($depth=0; $null -ne $exception -and $depth -lt 8; $depth++) {
+        $missing=$missing -or ($exception -is [Management.Automation.CommandNotFoundException])
+        $unmapped=$unmapped -or ($exception -is [Security.Principal.IdentityNotMappedException])
+        $denied=$denied -or ($exception -is [UnauthorizedAccessException])
+        $exception=$exception.InnerException
+    }
+    [Console]::Error.WriteLine('ACL_STAGE_'+$stage)
+    [Console]::Error.WriteLine('ACL_COMMAND_MISSING_'+$missing)
+    [Console]::Error.WriteLine('ACL_IDENTITY_UNMAPPED_'+$unmapped)
+    [Console]::Error.WriteLine('ACL_PERMISSION_DENIED_'+$denied)
+    if ($stage -eq 4) {
+        [Console]::Error.WriteLine('ACL_PROTECTED_'+$acl.AreAccessRulesProtected)
+        [Console]::Error.WriteLine('ACL_HAS_ALLOW_'+($rules.Count -ge 1))
+        [Console]::Error.WriteLine('ACL_HAS_FOREIGN_'+($foreign.Count -ne 0))
+    }
+    exit 1
+}
 "#.as_bytes()).unwrap();
         let file = root.join("protected 日本語.txt");
         let (status, output) = run(root, &wrapper, &file, true, deadline);
+        let acl = [
+            "ACL_STAGE_0",
+            "ACL_STAGE_1",
+            "ACL_STAGE_2",
+            "ACL_STAGE_3",
+            "ACL_STAGE_4",
+            "ACL_COMMAND_MISSING_True",
+            "ACL_IDENTITY_UNMAPPED_True",
+            "ACL_PERMISSION_DENIED_True",
+            "ACL_PROTECTED_True",
+            "ACL_HAS_ALLOW_True",
+            "ACL_HAS_FOREIGN_True",
+        ]
+        .map(|marker| output.lines().any(|line| line.trim() == marker));
         assert_eq!(
             status.code(),
             Some(0),
-            "DPAPI fixture stages: protect_started={}, protect_succeeded={}, protect_failed={}, acl_verified={}, destination_exists={}",
+            "DPAPI fixture stages: protect_started={}, protect_succeeded={}, protect_failed={}, acl_verified={}, destination_exists={}, acl_stage0_4_command_identity_permission_protected_allow_foreign={acl:?}",
             output.contains("User-scoped secret protection requested; value and path are not logged."),
             output.contains("DPAPI secret created for the current Windows user; value not logged."),
             output.contains("Secret protection failed. Verify destination, current-user DPAPI and access restrictions before use."),

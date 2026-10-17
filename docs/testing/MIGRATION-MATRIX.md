@@ -431,15 +431,19 @@ a nightly SDK Interactions admission timeout kept CI red; archives were skipped.
 was 86.83% regions / 85.67% branches, not passing acceptance. Available stages placed intent at
 1173 ms, transport preparation at 1212 ms and completion at 1332 ms; this is not a root-cause trace.
 The fixture omitted `PATHEXT`; an isolated selected-environment probe reproduced failed `icacls`
-lookup and successful lookup when that one existing variable was forwarded. That correction and
-fixed-boolean failure diagnostics still require hosted Windows confirmation; bounds stay unchanged.
-A shared production Comfy scheduler now has source-original first-poll/two-GET/pre-cancel coverage;
-its caller-selected error factory is not arbitrary JavaScript reason transport through native tokens.
-The existing intent event adds numeric preparation/admission/reservation/update durations only,
-without deadline, retry, TLS or request-order changes. This tree has 96 targets, 467 assignments
-including partial mappings, three unassigned and all 470 pending. Current hosted execution, exact
-hashes and final independent literal review remain required. DNS Node callback branches and
-[credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
+lookup and successful lookup when that one existing variable was forwarded. At `b23f6e2`, all 96 targets
+passed on five stable platforms and nightly. Shared polling's three regressions and source-original
+first-poll/two-GET/pre-cancel case passed on all seven; its selected error factory remains distinct
+from arbitrary JavaScript cancellation-reason transport. Windows x64 passed full DPAPI/ACL/native
+round-trip/corrupt/no-overwrite checks. ARM passed protection but failed before ACL verification;
+both descendant-abort cases passed. All-six Clippy/release/SDK stdio/HTTP and nightly SDK passed;
+complete coverage was 86.90% regions / 85.63% branches. The unchanged 700 ms probe passed without
+establishing its intermittent timeout's cause. Two formatting files and ARM's main case kept CI red;
+archives were skipped. Exact hosted formatting plus fixed private ACL-stage/nested-exception-type
+booleans now await CI, with original ACL predicates/assertions and bounds intact. Numeric intent
+measurements do not change deadlines, retries, TLS or request ordering. There are 96 targets,
+467 assignments including partial mappings, three unassigned and all 470 pending. Exact hashes and
+final independent literal review remain required; DNS and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
 
 **All-six packaged execution passed at `3bc2789`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript
