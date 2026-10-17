@@ -13,11 +13,13 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
       tool: "generate_image",
       message: "Tool started.",
       call_id: privateText,
+      timestamp: "2026-10-17T00:00:00.000Z",
     },
     {
       component: "generation",
       message: "Submission intent persisted.",
       requestId: privateText,
+      timestamp: "2026-10-17T00:00:00.600Z",
     },
     {
       component: "http",
@@ -25,6 +27,7 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
       client_build_ms: 900,
       pre_send_ms: 901,
       timeout_ms: 700,
+      timestamp: "2026-10-17T00:00:00.635Z",
       url: privateText,
       authorization: privateText,
     },
@@ -40,6 +43,7 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
       tool: "generate_image",
       message: "Tool completed.",
       duration_ms: 701,
+      timestamp: "2026-10-17T00:00:01.572Z",
       prompt: privateText,
     },
     {
@@ -58,20 +62,57 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
   assert.deepEqual(projected, {
     capture: "available_rows_only",
     stages: [
-      { stage: "started" },
-      { stage: "intent" },
+      { stage: "started", elapsed_from_first_ms: 0 },
+      { stage: "intent", elapsed_from_first_ms: 600 },
       {
         stage: "transport_prepared",
         client_build_ms: 900,
         pre_send_ms: 901,
         timeout_ms: 700,
+        elapsed_from_first_ms: 635,
       },
       { stage: "transport_prepared" },
-      { stage: "completed", duration_ms: 701 },
+      { stage: "completed", duration_ms: 701, elapsed_from_first_ms: 1572 },
       { stage: "failed" },
     ],
   });
   assert.equal(JSON.stringify(projected).includes(privateText), false);
+  assert.equal(JSON.stringify(projected).includes("2026-10-17"), false);
+  const timed = (timestamp) =>
+    JSON.stringify({
+      component: "generation",
+      message: "Submission intent persisted.",
+      timestamp,
+    }) + "\n";
+  for (const timestamp of [
+    null,
+    0,
+    {},
+    privateText,
+    "2026-99-17T00:00:00.000Z",
+    "2026-10-17T00:00:00Z",
+  ])
+    assert.deepEqual(probeStages("", timed(timestamp)).stages, [
+      { stage: "intent" },
+    ]);
+  assert.deepEqual(
+    probeStages(
+      "",
+      [
+        "2026-10-17T00:00:00.600Z",
+        "2026-10-17T00:00:00.000Z",
+        "2026-10-17T00:00:00.635Z",
+      ]
+        .map(timed)
+        .join(""),
+    ).stages,
+    [
+      { stage: "intent", elapsed_from_first_ms: 0 },
+      { stage: "intent" },
+      { stage: "intent", elapsed_from_first_ms: 35 },
+    ],
+  );
+  assert.equal(probeStages("", after.repeat(3)).stages.length, 8);
   assert.deepEqual(probeStages(before, after.slice(before.length)), {
     capture: "unobserved",
     stages: [],

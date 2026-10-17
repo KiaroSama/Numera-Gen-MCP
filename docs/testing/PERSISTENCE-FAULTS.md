@@ -1,8 +1,9 @@
 # Persistence fault acceptance
 
 `tests/rust/persistence_fault_acceptance.rs` covers the five frozen recovery cases for one-shot
-write, sync, link, unlink and receipt-update failure. These newly authored cases are not verified
-until their own integrated commit passes hosted CI. All 470 baseline dispositions remain pending.
+write, sync, link, unlink and receipt-update failure. All five passed on six stable targets and
+nightly at `93cc4dd`. That run still failed formatting and an existing SDK admission probe; it is
+not integrated acceptance. All 470 baseline dispositions remain pending.
 
 ## Shared production path
 

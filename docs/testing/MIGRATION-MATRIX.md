@@ -412,13 +412,17 @@ Nightly coverage passed at 86.80% regions / 85.73% branches. The unchanged 700 m
 its earlier timeout cause is unproven. This is actual six-target internal distribution evidence,
 not a signed Release or full baseline acceptance.
 
-The unverified tree adds five exact write/sync/link/unlink/receipt-update recovery cases through an
-instance-owned persistence port. Default operations retain real files, OS errors and existing SQL;
-no global failpoint or permission/path substitute is used. See [persistence fault coverage](PERSISTENCE-FAULTS.md).
-There are 94 registered targets, 465 assignments including partial mappings, five unassigned and all
-470 pending. Shared DNS behavior does not execute Node's array/scalar callback branches;
-[credential limits](CREDENTIAL-SNAPSHOTS.md) retain OS/Windows and owner-selection gaps.
-New persistence code needs its own hosted execution, exact hashes and final independent literal review.
+At `93cc4dd`, all 94 targets and the five exact write/sync/link/unlink/receipt-update cases passed
+six stable platforms and nightly. Default real I/O, OS errors and existing SQL use the same
+instance-owned port; see [persistence fault coverage](PERSISTENCE-FAULTS.md). Six stable jobs failed
+only formatting in two files; nightly SDK failed Interactions/failed/round0 with zero POST handlers,
+`request_timeout/network`, 1574 ms elapsed and 35 ms client/pre-send preparation at the unchanged
+700 ms deadline. The remaining delay is unmeasured. Relative wall-clock stage projection adds only
+numeric diagnostics, not a production repair, deadline increase or proof of network absence.
+Failed-run coverage was 86.80% regions / 85.64% branches, not passing acceptance; archives were skipped.
+There remain 465 assignments including partial mappings, five unassigned and all 470 pending.
+DNS Node callback branches and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open;
+exact helper/source/dependency hashes and final independent literal review are still required.
 
 **All-six packaged execution passed at `dc8f7ec`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

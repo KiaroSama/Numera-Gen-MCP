@@ -614,10 +614,10 @@ client-build/pre-send time before logging, without changing TLS, retries, reques
 
 At `dc8f7ec`, all ten jobs passed: 93 targets on six stable platforms and nightly, all-six
 fmt/Clippy/release/SDK/notices/archives/checksums/extracted SDK and coverage 86.80% regions / 85.73%
-branches. Earlier timing causes remain unproven. The unverified tree adds five one-shot persistence
-fault cases through an instance-owned port preserving default real I/O. It has 94 targets and 465
-assignments, five unassigned and all 470 pending; [fault coverage](testing/PERSISTENCE-FAULTS.md) and
-[credential limits](testing/CREDENTIAL-SNAPSHOTS.md) distinguish authoring from acceptance.
+branches. At `93cc4dd`, all 94 targets and five [fault cases](testing/PERSISTENCE-FAULTS.md) passed
+six stable platforms and nightly; six formatting failures and one nightly SDK timeout kept CI red.
+Preparation measured 35 ms of 1574 ms elapsed; numeric relative-log timing aids diagnosis, not a fix.
+All 470 cases remain pending: 465 assignments/five unassigned; [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

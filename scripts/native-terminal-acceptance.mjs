@@ -14,6 +14,7 @@ import {
 export function probeStages(before, after) {
   if (!after.startsWith(before)) return { capture: "unobserved", stages: [] };
   const stages = [];
+  let firstTimestamp;
   for (const line of after.slice(before.length).split("\n").slice(0, -1)) {
     let event;
     try {
@@ -51,6 +52,17 @@ export function probeStages(before, after) {
     for (const field of fields)
       if (Number.isFinite(event[field]) && event[field] >= 0)
         entry[field] = event[field];
+    if (
+      typeof event.timestamp === "string" &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(event.timestamp)
+    ) {
+      const timestamp = Date.parse(event.timestamp);
+      if (Number.isFinite(timestamp)) {
+        firstTimestamp ??= timestamp;
+        if (timestamp >= firstTimestamp)
+          entry.elapsed_from_first_ms = timestamp - firstTimestamp;
+      }
+    }
     stages.push(entry);
   }
   // Missing, clipped or late rows remain unobserved; this is not a stream cursor.

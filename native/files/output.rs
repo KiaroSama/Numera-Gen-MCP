@@ -129,7 +129,10 @@ pub fn save(
         Err(e) if stable && e.kind() == std::io::ErrorKind::AlreadyExists => {}
         Err(_) => return Err(error()),
     }
-    store.persistence.unlink(&temporary.0).map_err(|_| error())?;
+    store
+        .persistence
+        .unlink(&temporary.0)
+        .map_err(|_| error())?;
     #[cfg(unix)]
     fs::File::open(&directory)
         .and_then(|f| f.sync_all())

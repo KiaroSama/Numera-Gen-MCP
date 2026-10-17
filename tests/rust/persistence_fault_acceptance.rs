@@ -209,7 +209,10 @@ fn recover(phase: Phase, name: &str) {
     } else {
         assert_eq!(first.unwrap().value["outputs"].as_array().unwrap().len(), 0);
     }
-    assert_eq!(generation.store.lock().unwrap().pending(&id).unwrap().len(), 1);
+    assert_eq!(
+        generation.store.lock().unwrap().pending(&id).unwrap().len(),
+        1
+    );
     let done = runtime.block_on(async {
         tokio::time::timeout(
             Duration::from_secs(3),
