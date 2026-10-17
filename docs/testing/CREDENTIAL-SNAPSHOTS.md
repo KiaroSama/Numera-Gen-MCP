@@ -6,14 +6,17 @@ At `3bc2789`, all ten jobs passed: all 94 native targets and both credential cas
 on six stable OS/CPU targets and nightly. All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/
 archives/checksums/extracted SDK and three Node jobs passed. Complete coverage was 86.86% regions /
 85.73% branches. The prior admission timeout's cause remains unknown despite its unchanged probe passing.
-The next tree adds `tests/rust/dpapi_acceptance.rs`: source script/current-user-only ACL, native
-Unicode DPAPI round-trip, corrupt input, no overwrite and private logs, plus a real descendant-abort
-regression. It is Windows-only and unexecuted until its own hosted batch. Parent-owned noninheritable
-kill-on-close jobs contain a self-enrolled worker before helper launch; cleanup reaps that worker
-before terminating the exact job and requiring zero active processes under one two-second ceiling.
-The original 30-second case and 15-second wall/8-second idle source wrapper remain bounded. Node and
-PowerShell are CI fixtures only, not native runtime dependencies. There are 95 targets/466 assignments,
-four unassigned and all 470 pending. No credential case is promoted to final assertion acceptance.
+At `12f2b36`, both Windows targets passed the real descendant-abort regression, but the main DPAPI
+fixture returned exit1 before its native decrypt and ACL/round-trip/no-overwrite assertions. Formatting
+and a separate nightly SDK timeout also kept CI red; archives were skipped. The selected environment
+omitted `PATHEXT`: an isolated lookup reproduced missing `icacls`, fixed by forwarding only that existing
+variable. The correction and fixed-boolean failure diagnostics await hosted confirmation, not a claim
+that every historical failure is resolved. No raw capture, path, plaintext or ciphertext is reported.
+Parent-owned noninheritable kill-on-close jobs contain a self-enrolled worker before helper launch;
+cleanup reaps that worker before terminating its job and requiring zero active processes under one
+two-second ceiling. The original 30-second case and 15-second wall/8-second idle source wrapper remain.
+Node and PowerShell are CI fixtures only, not native runtime dependencies. The current Comfy-polling
+addition brings 96 targets/467 assignments/three unassigned/all 470 pending. No acceptance promotion.
 
 ## Selected-key environment source
 

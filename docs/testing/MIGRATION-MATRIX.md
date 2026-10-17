@@ -424,10 +424,22 @@ At `3bc2789`, all ten jobs passed: all 94 targets and five persistence cases on 
 and nightly, all-six strict quality/release/SDK/notices/licenses/archives/checksums/extracted SDK and
 three Node jobs. Complete coverage passed at 86.86% regions / 85.73% branches. The admission probe
 passed at its unchanged 700 ms deadline; diagnostics do not establish the earlier timeout's cause.
-The next tree adds a Windows-only DPAPI/ACL/native round-trip and actual descendant-abort fixture.
-It has 95 targets, 466 assignments including partial mappings, four unassigned and all 470 pending;
-new Windows execution, exact hashes and final independent literal review remain required.
-DNS Node callback branches and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
+At `12f2b36`, all 95 targets passed on four stable POSIX targets and nightly. Both Windows jobs passed
+94 other targets and the actual descendant-abort regression, but the main DPAPI case returned exit1
+before native decrypt. All-six Clippy/release/SDK stdio/HTTP and Node jobs passed. DPAPI formatting and
+a nightly SDK Interactions admission timeout kept CI red; archives were skipped. Failed-run coverage
+was 86.83% regions / 85.67% branches, not passing acceptance. Available stages placed intent at
+1173 ms, transport preparation at 1212 ms and completion at 1332 ms; this is not a root-cause trace.
+The fixture omitted `PATHEXT`; an isolated selected-environment probe reproduced failed `icacls`
+lookup and successful lookup when that one existing variable was forwarded. That correction and
+fixed-boolean failure diagnostics still require hosted Windows confirmation; bounds stay unchanged.
+A shared production Comfy scheduler now has source-original first-poll/two-GET/pre-cancel coverage;
+its caller-selected error factory is not arbitrary JavaScript reason transport through native tokens.
+The existing intent event adds numeric preparation/admission/reservation/update durations only,
+without deadline, retry, TLS or request-order changes. This tree has 96 targets, 467 assignments
+including partial mappings, three unassigned and all 470 pending. Current hosted execution, exact
+hashes and final independent literal review remain required. DNS Node callback branches and
+[credential limits](CREDENTIAL-SNAPSHOTS.md) remain open.
 
 **All-six packaged execution passed at `3bc2789`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

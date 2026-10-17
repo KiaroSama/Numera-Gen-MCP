@@ -260,7 +260,9 @@ mod windows {
 
     impl Drop for Owned {
         fn drop(&mut self) {
-            if !self.cleaned && let Err(error) = self.stop() {
+            if !self.cleaned
+                && let Err(error) = self.stop()
+            {
                 let detail = format!(
                     "DPAPI fixture cleanup unverified: kind={:?}, os_code={:?}.",
                     error.kind(),
@@ -307,6 +309,7 @@ mod windows {
             .creation_flags(0x08000000);
         for key in [
             "PATH",
+            "PATHEXT",
             "SystemRoot",
             "WINDIR",
             "USERPROFILE",
@@ -329,7 +332,10 @@ mod windows {
         if let Some(destination) = destination {
             command.env("NUMERA_FIXTURE_DPAPI", destination);
         }
-        command.env("NUMERA_FIXTURE_DPAPI_WRAPPER", if wrapper { "1" } else { "0" });
+        command.env(
+            "NUMERA_FIXTURE_DPAPI_WRAPPER",
+            if wrapper { "1" } else { "0" },
+        );
         Ok(Owned {
             child: command.spawn()?,
             job,
@@ -406,7 +412,10 @@ mod windows {
             .collect::<Vec<_>>();
         assert_eq!(finishes.len(), 1);
         assert_eq!(finishes[0]["cleanup_verified"], true);
-        assert_eq!(finishes[0]["exit_code"].as_i64(), status.code().map(i64::from));
+        assert_eq!(
+            finishes[0]["exit_code"].as_i64(),
+            status.code().map(i64::from)
+        );
     }
 
     fn run(
@@ -517,7 +526,16 @@ Write-Output 'ACL_VERIFIED'
 "#.as_bytes()).unwrap();
         let file = root.join("protected 日本語.txt");
         let (status, output) = run(root, &wrapper, &file, true, deadline);
-        assert_eq!(status.code(), Some(0));
+        assert_eq!(
+            status.code(),
+            Some(0),
+            "DPAPI fixture stages: protect_started={}, protect_succeeded={}, protect_failed={}, acl_verified={}, destination_exists={}",
+            output.contains("User-scoped secret protection requested; value and path are not logged."),
+            output.contains("DPAPI secret created for the current Windows user; value not logged."),
+            output.contains("Secret protection failed. Verify destination, current-user DPAPI and access restrictions before use."),
+            output.lines().any(|line| line.trim() == "ACL_VERIFIED"),
+            file.is_file(),
+        );
         assert!(output.contains("ACL_VERIFIED"));
         assert!(
             !output.contains(PREFIX),
@@ -563,7 +581,10 @@ Write-Output 'ACL_VERIFIED'
                 "Bounded verification log"
             );
             let log = fs::read_to_string(path).unwrap();
-            assert!(!log.contains(PREFIX), "Synthetic plaintext must not enter logs");
+            assert!(
+                !log.contains(PREFIX),
+                "Synthetic plaintext must not enter logs"
+            );
             assert!(!log.contains(&ciphertext), "Ciphertext must not enter logs");
         }
         assert!(

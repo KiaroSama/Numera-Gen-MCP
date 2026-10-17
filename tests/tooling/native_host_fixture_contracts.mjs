@@ -20,6 +20,11 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
       message: "Submission intent persisted.",
       requestId: privateText,
       timestamp: "2026-10-17T00:00:00.600Z",
+      before_submit_ms: 1000,
+      prepare_ms: 900,
+      admission_ms: 80,
+      reserve_ms: 20,
+      update_ms: 1,
     },
     {
       component: "http",
@@ -63,7 +68,15 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
     capture: "available_rows_only",
     stages: [
       { stage: "started", elapsed_from_first_ms: 0 },
-      { stage: "intent", elapsed_from_first_ms: 600 },
+      {
+        stage: "intent",
+        before_submit_ms: 1000,
+        prepare_ms: 900,
+        admission_ms: 80,
+        reserve_ms: 20,
+        update_ms: 1,
+        elapsed_from_first_ms: 600,
+      },
       {
         stage: "transport_prepared",
         client_build_ms: 900,
@@ -78,6 +91,21 @@ test("probe diagnostics expose only fixed stages and numeric durations", () => {
   });
   assert.equal(JSON.stringify(projected).includes(privateText), false);
   assert.equal(JSON.stringify(projected).includes("2026-10-17"), false);
+  assert.deepEqual(
+    probeStages(
+      "",
+      JSON.stringify({
+        component: "generation",
+        message: "Submission intent persisted.",
+        before_submit_ms: privateText,
+        prepare_ms: -1,
+        admission_ms: Infinity,
+        reserve_ms: {},
+        update_ms: null,
+      }) + "\n",
+    ).stages,
+    [{ stage: "intent" }],
+  );
   const timed = (timestamp) =>
     JSON.stringify({
       component: "generation",

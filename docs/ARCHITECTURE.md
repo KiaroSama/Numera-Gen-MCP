@@ -24,6 +24,11 @@ migration matrix records acceptance rather than implying that authored modules h
   existing-job polling and continuation retention. Intent is persisted before paid submission;
   unknown outcomes are never resubmitted.
   Cancellation of local waiting does not establish upstream cancellation or a refund.
+  `polling.rs` supplies the production Comfy loop's immediate-first-poll/fixed-500ms/pre-cancel
+  scheduling; callers retain receipt/fence/retention and sanitized cancellation-error policy.
+  Intent diagnostics expose numeric preparation/admission/reservation/update durations only, without
+  changing deadlines or adding event bodies. The cumulative pre-submit duration includes preparation;
+  logging's own synchronous write cost is outside those measurements.
 - `native/jobs/`: bundled SQLite, preserved schema v2/WAL/FULL, renewable 30-second leases and
   generation fences. Journal phases waiting/retained/publishing/committed keep stable output identity
   across filesystem/SQL crash gaps. State remains local shared storage, not an unreliable network drive.

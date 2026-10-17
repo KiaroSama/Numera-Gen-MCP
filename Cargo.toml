@@ -420,6 +420,10 @@ path = "tests/rust/persistence_fault_acceptance.rs"
 name = "dpapi_acceptance"
 path = "tests/rust/dpapi_acceptance.rs"
 
+[[test]]
+name = "comfy_polling_acceptance"
+path = "tests/rust/comfy_polling_acceptance.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

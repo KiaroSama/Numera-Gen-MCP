@@ -29,6 +29,8 @@ pub(super) struct Submission<'a, 'input> {
     pub receipt: &'a mut Receipt,
     pub lease: &'a Lease,
     pub identity: &'a str,
+    pub before_submit_ms: u64,
+    pub prepare_ms: u64,
 }
 
 impl Generation {
@@ -44,7 +46,10 @@ impl Generation {
             receipt,
             lease,
             identity,
+            before_submit_ms,
+            prepare_ms,
         } = submission;
+        let admitting = std::time::Instant::now();
         let c = input.connection;
         let config = &self.config.value;
         if locked(&self.store)?.queued()? as u64
@@ -70,6 +75,8 @@ impl Generation {
         if cancel.is_cancelled() {
             return Err(cancelled());
         }
+        let admission_ms = admitting.elapsed().as_millis() as u64;
+        let reserving = std::time::Instant::now();
         locked(&self.store)?.reserve(
             id,
             config["files"]["maxAggregateBytes"]
@@ -79,14 +86,19 @@ impl Generation {
                 .as_i64()
                 .unwrap_or(256 * 1024 * 1024),
         )?;
+        let reserve_ms = reserving.elapsed().as_millis() as u64;
         receipt.value["status"] = json!("submitting");
         receipt.value["generation_outcome"] = json!("unknown");
+        let updating = std::time::Instant::now();
         locked(&self.store)?.update(receipt)?;
+        let update_ms = updating.elapsed().as_millis() as u64;
         self.logger.log(
             "INFO",
             "generation",
             "Submission intent persisted.",
-            json!({"requestId":id,"connection":name}),
+            json!({"requestId":id,"connection":name,"before_submit_ms":before_submit_ms,
+                "prepare_ms":prepare_ms,"admission_ms":admission_ms,
+                "reserve_ms":reserve_ms,"update_ms":update_ms}),
         );
         let mut claimed = false;
         let result = if let Some(workflow) = workflow {
@@ -102,72 +114,81 @@ impl Generation {
             if input.request["wait"] == false {
                 return Ok(receipt.clone());
             }
-            loop {
-                let shared = Mutex::new(receipt.clone());
-                let status = adapters::comfy::status(
-                    c,
-                    headers,
-                    &job.id,
-                    cancel,
-                    adapters::comfy::OutputLimits {
-                        item: config["files"]["maxOutputBytes"]
-                            .as_u64()
-                            .unwrap_or(50 * 1024 * 1024) as usize,
-                        aggregate: config["files"]["maxAggregateBytes"]
-                            .as_u64()
-                            .unwrap_or(100 * 1024 * 1024)
-                            as usize,
-                    },
-                    |index, bytes| {
-                        let mut current = shared.lock().map_err(|_| NumeraError::storage())?;
-                        if !claimed {
-                            if !locked(&self.store)?.claim(id, Some(&current), false)? {
-                                return Err(NumeraError::new(
-                                    "outcome_unknown",
-                                    "Another waiter owns output finalization.",
-                                )
-                                .stage("storage"));
+            let shared = Mutex::new((receipt.clone(), claimed));
+            let status = super::polling::wait(
+                cancel,
+                || async {
+                    let status = adapters::comfy::status(
+                        c,
+                        headers,
+                        &job.id,
+                        cancel,
+                        adapters::comfy::OutputLimits {
+                            item: config["files"]["maxOutputBytes"]
+                                .as_u64()
+                                .unwrap_or(50 * 1024 * 1024) as usize,
+                            aggregate: config["files"]["maxAggregateBytes"]
+                                .as_u64()
+                                .unwrap_or(100 * 1024 * 1024) as usize,
+                        },
+                        |index, bytes| {
+                            let mut state = shared.lock().map_err(|_| NumeraError::storage())?;
+                            let (current, claimed) = &mut *state;
+                            if !*claimed {
+                                if !locked(&self.store)?.claim(id, Some(current), false)? {
+                                    return Err(NumeraError::new(
+                                        "outcome_unknown",
+                                        "Another waiter owns output finalization.",
+                                    )
+                                    .stage("storage"));
+                                }
+                                *current = locked(&self.store)?.get(id)?;
+                                lease.update(current);
+                                *claimed = true;
                             }
-                            *current = locked(&self.store)?.get(id)?;
-                            lease.update(&current);
-                            claimed = true;
-                        }
-                        finalization::retain(
-                            config,
-                            &self.store,
-                            id,
-                            index,
-                            bytes.to_vec(),
-                            &current,
-                        )?;
-                        Ok(())
-                    },
-                    || {
-                        let mut current = shared.lock().map_err(|_| NumeraError::storage())?;
-                        current.value["generation_outcome"] = json!("completed");
-                        locked(&self.store)?.update(&mut current)
-                    },
-                )
-                .await;
-                *receipt = shared.into_inner().map_err(|_| NumeraError::storage())?;
-                let status = status?;
-                if let Some(terminal) = status.terminal {
-                    return locked(&self.store)?.terminate(
-                        id,
-                        terminal,
-                        &json!(
-                            NumeraError::new("provider_rejection", "ComfyUI workflow failed.")
-                                .stage("generation")
-                        ),
-                        Some(receipt),
-                        Some(&json!({"id":job.id,"kind":job.kind})),
-                    );
-                }
-                if let Some(result) = status.result {
-                    break result;
-                }
-                wait(cancel, 500).await?;
+                            finalization::retain(
+                                config,
+                                &self.store,
+                                id,
+                                index,
+                                bytes.to_vec(),
+                                current,
+                            )?;
+                            Ok(())
+                        },
+                        || {
+                            let mut state = shared.lock().map_err(|_| NumeraError::storage())?;
+                            state.0.value["generation_outcome"] = json!("completed");
+                            locked(&self.store)?.update(&mut state.0)
+                        },
+                    )
+                    .await?;
+                    Ok(if status.terminal.is_some() || status.result.is_some() {
+                        Some(status)
+                    } else {
+                        None
+                    })
+                },
+                cancelled,
+            )
+            .await;
+            let (current, was_claimed) = shared.into_inner().map_err(|_| NumeraError::storage())?;
+            *receipt = current;
+            claimed = was_claimed;
+            let status = status?;
+            if let Some(terminal) = status.terminal {
+                return locked(&self.store)?.terminate(
+                    id,
+                    terminal,
+                    &json!(
+                        NumeraError::new("provider_rejection", "ComfyUI workflow failed.")
+                            .stage("generation")
+                    ),
+                    Some(receipt),
+                    Some(&json!({"id":job.id,"kind":job.kind})),
+                );
             }
+            status.result.ok_or_else(NumeraError::runtime)?
         } else {
             let built = built.ok_or_else(NumeraError::runtime)?;
             let response = api::request_observed(

@@ -48,7 +48,15 @@ export function probeStages(before, after) {
     const fields =
       stage === "transport_prepared"
         ? ["client_build_ms", "pre_send_ms", "timeout_ms"]
-        : ["duration_ms"];
+        : stage === "intent"
+          ? [
+              "before_submit_ms",
+              "prepare_ms",
+              "admission_ms",
+              "reserve_ms",
+              "update_ms",
+            ]
+          : ["duration_ms"];
     for (const field of fields)
       if (Number.isFinite(event[field]) && event[field] >= 0)
         entry[field] = event[field];

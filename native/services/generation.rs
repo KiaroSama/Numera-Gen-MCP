@@ -111,6 +111,7 @@ impl Generation {
         operation: &str,
         host_cancel: &CancellationToken,
     ) -> Result<Receipt> {
+        let started = std::time::Instant::now();
         let original = editing::request(request::parse(raw)?, operation)?;
         let requested_connection = match original.get("connection") {
             Some(Value::String(value)) => Some(value.checked_str().map_err(|_| {
@@ -348,7 +349,9 @@ impl Generation {
             "upstream_model":null,"outputs":[],"warnings":warnings,"deviations":[],"errors":[],"generation_outcome":"not_submitted","storage_outcome":"not_started",
             "another_submission_may_charge":true,"output_requirements":required,"created_at":now,"updated_at":now}),
         );
+        let preparing = std::time::Instant::now();
         let (fresh, mut receipt) = locked(&self.store)?.prepare(initial, &hash, &identity)?;
+        let prepare_ms = preparing.elapsed().as_millis() as u64;
         if !fresh {
             return Ok(receipt);
         }
@@ -370,6 +373,8 @@ impl Generation {
                 receipt: &mut receipt,
                 lease: &lease,
                 identity: &identity,
+                before_submit_ms: started.elapsed().as_millis() as u64,
+                prepare_ms,
             }),
         )
         .await;
