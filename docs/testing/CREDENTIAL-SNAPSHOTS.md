@@ -18,7 +18,8 @@ reproduction proved inherited child access loss. The fixture now creates only a 
 parent, leaving scripts/captures untouched. Both Windows strict cases passed at `4f471d2` and `764a80e`.
 At `f723c4b`, ARM passed but x64 timed out after 8.53 seconds; its nested stage and cause are unknown.
 Timeout diagnostics now retain only fixed stage booleans after owned cleanup, never raw child output.
-The projection has a native privacy regression; its hosted execution remains pending, bounds unchanged.
+At `5b4ec24`, both Windows main/abort/privacy cases passed with unchanged bounds; the prior timeout's cause
+remains unknown. Only two formatting layouts failed; exact hosted formatting is applied, replacement CI pending.
 Parent-owned noninheritable kill-on-close jobs contain a self-enrolled worker before helper launch;
 cleanup reaps that worker before terminating its job and requiring zero active processes under one
 two-second ceiling. The original 30-second case and 15-second wall/8-second idle source wrapper remain.

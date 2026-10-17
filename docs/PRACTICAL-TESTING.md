@@ -64,8 +64,8 @@ containing plaintext, corrupt ciphertext rejection and existing-file refusal. Th
 first reproduced codepage loss; credentials now sets Console.OutputEncoding to UTF-8 explicitly.
 At `4f471d2`, both native Windows x86_64/ARM64 cases passed strict ACL/native Unicode decryption,
 corrupt-file refusal, no-overwrite and owned Job abort cleanup. At `f723c4b`, ARM passed but x64
-hit an eight-second idle deadline; the stalled nested stage is unknown. Fixed boolean-only diagnostics
-preserve failure evidence without raw child output or deadline changes. Linux skips Windows-only cases.
+hit an eight-second idle deadline; its cause remains unknown. At `5b4ec24`, both Windows main/abort/privacy
+cases passed; only formatting failed. Boolean-only diagnostics keep raw output private and bounds unchanged.
 This does not test another user's decryption denial, actual human input, domain/service accounts or
 MSIX host identity differences; it is not owner-host activation evidence.
 

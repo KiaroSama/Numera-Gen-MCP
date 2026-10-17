@@ -617,7 +617,7 @@ fmt/Clippy/release/SDK/notices/archives/checksums/extracted SDK, and 86.93% regi
 Both Windows strict DPAPI/native Unicode/corrupt/no-overwrite and owned Job abort cases passed.
 The fresh private destination fixes fixture-child access; original ACL assertions/bounds remain.
 x64 inventory passed in 13.015 seconds; its earlier idle cause remains unknown, not a proven fix.
-At `f723c4b`, all 97 targets/new Comfy cases passed except Windows x64 DPAPI (8.53-second idle timeout); nine jobs/five packaged targets passed, coverage 86.90% / 85.63%. Fixed boolean-only stage diagnostics now preserve timeout evidence without changing bounds. All 470 dispositions and [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain pending.
+At `5b4ec24`, all 97 targets passed six stable platforms and nightly, including both Windows DPAPI/abort/privacy cases; coverage was 86.90% / 85.63%. Only two formatting layouts failed, archives skipped. Exact hosted formatting is applied; the prior x64 timeout cause, all 470 dispositions and [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain open.
 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts

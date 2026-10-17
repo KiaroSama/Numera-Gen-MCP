@@ -459,11 +459,11 @@ The new `comfy_same_store_acceptance` target preserves the two literal source sc
 existing reopen regressions: same live Generation refresh, and new Generation with removed connections
 but the same Store allocation/owner. It retains ordinary defaults, source receipt fields and exact
 8x6 PNG originals; synthetic CUDA metadata is not GPU execution. There are now 97 targets and 467
-assignments including partial mappings, three unassigned and all 470 pending. At `f723c4b`, both new
-cases passed all six stable platforms and nightly; all-six fmt/Clippy/release/SDK and three Node jobs
-passed, with 86.90% regions / 85.63% branches. Only Windows x64 DPAPI failed its idle bound at 8.53s;
-five targets packaged. Fixed boolean-only timeout stages now retain evidence after owned cleanup,
-without changing deadlines. Exact hashes/final literal review, DNS and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain.
+assignments including partial mappings, three unassigned and all 470 pending. At `5b4ec24`, all 97
+and both new cases passed six stable platforms and nightly, including both Windows DPAPI/abort/privacy
+cases. All-six Clippy/release/SDK and three Node jobs passed, coverage 86.90% regions / 85.63% branches.
+Only two formatting layouts failed, archives skipped; exact hosted formatting is applied. The prior x64
+timeout cause, exact hashes/final literal review, DNS and [credential limits](CREDENTIAL-SNAPSHOTS.md) remain.
 
 **All-six packaged execution passed at `4f471d2`; complete baseline-case assertion acceptance has not passed.** Passing
 selected JSON integration fixtures is not full accepted-domain or 470-case parity. Old TypeScript

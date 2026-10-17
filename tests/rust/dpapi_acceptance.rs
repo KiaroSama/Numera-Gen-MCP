@@ -49,9 +49,14 @@ mod windows {
         let output = "private-path synthetic-plaintext ciphertext DPAPI_WORKER_ENROLLED\nBounded child started.\nACL_VERIFIED\n{\"cleanup_verified\":false}";
         assert_eq!(
             stage_flags(output),
-            [true, false, true, false, false, false, true, false, false, true]
+            [
+                true, false, true, false, false, false, true, false, false, true
+            ]
         );
-        assert_eq!(stage_flags("private-path plaintext ciphertext"), [false; 10]);
+        assert_eq!(
+            stage_flags("private-path plaintext ciphertext"),
+            [false; 10]
+        );
     }
 
     #[repr(C)]
