@@ -28,6 +28,32 @@ mod windows {
     const LIMIT: u64 = 1048576;
     type Handle = *mut c_void;
 
+    fn stage_flags(output: &str) -> [bool; 10] {
+        [
+            "DPAPI_WORKER_ENROLLED",
+            "Maintenance operation started.",
+            "Bounded child started.",
+            "User-scoped secret protection requested; value and path are not logged.",
+            "DPAPI secret created for the current Windows user; value not logged.",
+            "Secret protection failed. Verify destination, current-user DPAPI and access restrictions before use.",
+            "ACL_VERIFIED",
+            "Bounded child finished.",
+            "\"cleanup_verified\":true",
+            "\"cleanup_verified\":false",
+        ]
+        .map(|marker| output.contains(marker))
+    }
+
+    #[test]
+    fn timeout_stage_projection_retains_only_fixed_booleans() {
+        let output = "private-path synthetic-plaintext ciphertext DPAPI_WORKER_ENROLLED\nBounded child started.\nACL_VERIFIED\n{\"cleanup_verified\":false}";
+        assert_eq!(
+            stage_flags(output),
+            [true, false, true, false, false, false, true, false, false, true]
+        );
+        assert_eq!(stage_flags("private-path plaintext ciphertext"), [false; 10]);
+    }
+
     #[repr(C)]
     #[derive(Default)]
     struct BasicLimits {
@@ -245,10 +271,14 @@ mod windows {
                 if let Some(status) = self.child.try_wait()? {
                     break status;
                 }
-                if Instant::now() >= deadline || progress.elapsed() >= Duration::from_secs(8) {
+                let wall = Instant::now() >= deadline;
+                let idle = progress.elapsed() >= Duration::from_secs(8);
+                if wall || idle {
+                    self.stop()?;
+                    let stages = stage_flags(&self.text()?);
                     return Err(io::Error::new(
                         io::ErrorKind::TimedOut,
-                        "Fixture worker exceeded its wall or idle deadline.",
+                        format!("DPAPI timeout: wall={wall}, idle={idle}, stages={stages:?}."),
                     ));
                 }
                 pause(deadline);
@@ -352,6 +382,7 @@ mod windows {
         };
         // No helper can start before the parent-owned job contains this worker.
         join_job(name.to_str().unwrap()).unwrap();
+        eprintln!("DPAPI_WORKER_ENROLLED");
         let mode = std::env::var("NUMERA_FIXTURE_DPAPI_MODE").unwrap();
         let mut command = Command::new("node");
         if mode == "hang" {

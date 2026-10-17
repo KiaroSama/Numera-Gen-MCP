@@ -63,7 +63,9 @@ current-user-only DACL and Numera's decryption reader are real operations. It ch
 containing plaintext, corrupt ciphertext rejection and existing-file refusal. The Unicode fixture
 first reproduced codepage loss; credentials now sets Console.OutputEncoding to UTF-8 explicitly.
 At `4f471d2`, both native Windows x86_64/ARM64 cases passed strict ACL/native Unicode decryption,
-corrupt-file refusal, no-overwrite and owned Job abort cleanup. Linux skips the Windows-only case.
+corrupt-file refusal, no-overwrite and owned Job abort cleanup. At `f723c4b`, ARM passed but x64
+hit an eight-second idle deadline; the stalled nested stage is unknown. Fixed boolean-only diagnostics
+preserve failure evidence without raw child output or deadline changes. Linux skips Windows-only cases.
 This does not test another user's decryption denial, actual human input, domain/service accounts or
 MSIX host identity differences; it is not owner-host activation evidence.
 

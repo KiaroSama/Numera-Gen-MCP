@@ -15,12 +15,15 @@ An owned synthetic reproduction changed from foreign grants to current-user-only
 At `a759e27`, both Windows main cases failed with access denied after the fixture changed its populated
 parent ACL; eight jobs/four packaged targets passed, with 86.93% regions / 85.67% branches. An owned
 reproduction proved inherited child access loss. The fixture now creates only a fresh private destination
-parent, leaving scripts/captures untouched. Strict assertions/bounds remain; hosted confirmation is pending.
+parent, leaving scripts/captures untouched. Both Windows strict cases passed at `4f471d2` and `764a80e`.
+At `f723c4b`, ARM passed but x64 timed out after 8.53 seconds; its nested stage and cause are unknown.
+Timeout diagnostics now retain only fixed stage booleans after owned cleanup, never raw child output.
+The projection has a native privacy regression; its hosted execution remains pending, bounds unchanged.
 Parent-owned noninheritable kill-on-close jobs contain a self-enrolled worker before helper launch;
 cleanup reaps that worker before terminating its job and requiring zero active processes under one
 two-second ceiling. The original 30-second case and 15-second wall/8-second idle source wrapper remain.
 Node and PowerShell are CI fixtures only, not native runtime dependencies. The current Comfy-polling
-addition brings 96 targets/467 assignments/three unassigned/all 470 pending. No acceptance promotion.
+addition brings 97 targets/467 assignments/three unassigned/all 470 pending. No acceptance promotion.
 
 ## Selected-key environment source
 
