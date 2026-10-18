@@ -40,36 +40,67 @@ def environment() -> dict[str, str]:
             raise RuntimeError("CI managed directory escapes workspace")
         env[key] = str(directory)
     env.update({"CARGO_BUILD_JOBS": "2", "RUST_TEST_THREADS": "2", "NUMERA_TEST_WORKERS": "2",
-                "CARGO_TERM_COLOR": "never", "PYTHONDONTWRITEBYTECODE": "1"})
+                "CARGO_TERM_COLOR": "never", "PYTHONDONTWRITEBYTECODE": "1",
+                "NUMERA_BUILD_SHA": os.environ.get("GITHUB_SHA", "unverified-source")})
     env["PATH"] = str(Path(env["CARGO_HOME"]) / "bin") + os.pathsep + env["PATH"]
     return env
 
 
-def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT, capture: bool = False, capture_limit: int = 1048576) -> bytes:
+def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT, capture: bool = False, capture_limit: int = 1048576, input_data: bytes | None = None, private: bool = False) -> bytes:
+    if input_data is not None and (not private or len(input_data) > 4096):
+        raise ValueError("Protected stdin requires private mode and at most 4096 bytes")
     captured = bytearray()
+    received = 0
     started = time.monotonic()
-    events: queue.Queue[tuple[str, bytes | None]] = queue.Queue()
+    events: queue.Queue[tuple[str, bytes | None]] = queue.Queue(maxsize=64)
+    stop_readers = threading.Event()
     kwargs = {"creationflags": subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
-    child = subprocess.Popen(args, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, **kwargs)
+    child = subprocess.Popen(args, cwd=cwd, env=env, stdin=subprocess.PIPE if input_data is not None else subprocess.DEVNULL,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
     emit("INFO", "Owned command started.", command=Path(args[0]).name, pid=child.pid, wall_seconds=wall, idle_seconds=idle)
     readers = []
+    def record(name, chunk):
+        while not stop_readers.is_set():
+            try:
+                events.put((name, chunk), timeout=0.1)
+                return
+            except queue.Full:
+                continue
     def read(stream, name):
         try:
-            while chunk := stream.read1(8192):
-                events.put((name, chunk))
+            while not stop_readers.is_set() and (chunk := stream.read1(8192)):
+                record(name, chunk)
+        except OSError:
+            record("stream_error", b"")
         finally:
             stream.close()
-            events.put((name, None))
+            record(name, None)
     for name, stream in [("stdout", child.stdout), ("stderr", child.stderr)]:
         reader = threading.Thread(target=read, args=(stream, name), daemon=True)
         reader.start()
         readers.append(reader)
+    if input_data is not None:
+        def write_input():
+            try:
+                child.stdin.write(input_data)
+                child.stdin.flush()
+            except OSError:
+                record("stream_error", b"")
+            finally:
+                try:
+                    child.stdin.close()
+                except OSError:
+                    record("stream_error", b"")
+                finally:
+                    record("stdin", None)
+        writer = threading.Thread(target=write_input, daemon=True)
+        writer.start()
+        readers.append(writer)
     last = started
     ended = 0
     failed = False
     try:
-        while ended < 2:
+        while ended < (3 if input_data is not None else 2):
             now = time.monotonic()
             if now - started > wall or now - last > idle:
                 failed = True
@@ -78,16 +109,23 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
                 name, chunk = events.get(timeout=0.1)
             except queue.Empty:
                 continue
+            if name == "stream_error":
+                failed = True
+                raise RuntimeError("Owned command stream failed")
             if chunk is None:
                 ended += 1
                 continue
             last = time.monotonic()
+            received += len(chunk)
+            if private and received > capture_limit:
+                failed = True
+                raise RuntimeError("Private command output exceeds bound")
             if capture and name == "stdout":
                 captured.extend(chunk)
                 if len(captured) > capture_limit:
                     failed = True
                     raise RuntimeError("Owned command captured output exceeds limit")
-            else:
+            elif not private:
                 target = sys.stdout.buffer if name == "stdout" else sys.stderr.buffer
                 target.write(chunk)
                 target.flush()
@@ -95,6 +133,9 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
         if code:
             failed = True
             raise RuntimeError(f"Owned command failed with exit code {code}")
+    except BaseException:
+        failed = True
+        raise
     finally:
         if child.poll() is None or failed:
             if os.name == "nt":
@@ -109,6 +150,7 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
             if child.poll() is None:
                 child.kill()
         child.wait(timeout=8)
+        stop_readers.set()
         for reader in readers:
             reader.join(timeout=5)
             if reader.is_alive():
@@ -180,6 +222,7 @@ def main() -> None:
             for command, wall, idle in [
                 ([sys.executable, "-I", "-B", "tests/tooling/native_ci_contracts.py"], 30, 15),
                 ([sys.executable, "-I", "-B", "tests/tooling/native_case_ledger_contracts.py"], 30, 15),
+                ([sys.executable, "-I", "-B", "tests/tooling/native_signing_contracts.py"], 30, 15),
                 (["node", "--test", "--test-timeout=5000", "tests/tooling/native_host_fixture_contracts.mjs"], 10, 5),
                 (["cargo", "fmt", "--check"], 30, 20),
                 (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),

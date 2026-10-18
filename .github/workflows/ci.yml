@@ -110,17 +110,18 @@ jobs:
         env:
           NUMERA_NATIVE_TARGET: ${{ matrix.target }}
         run: python -B scripts/native-licenses.py
-      - name: Package allowlisted native distribution
-        run: python -B scripts/native-package.py --target ${{ matrix.target }}
-      - name: Verify extracted native archives without source runtime dependencies
+      # Internal compiler intermediates only; final signed distribution remains a separate gate.
+      - name: Package explicitly labeled internal compiler intermediate
+        run: python -B scripts/native-package.py --intermediate --target ${{ matrix.target }}
+      - name: Verify extracted internal intermediate without source runtime dependencies
         env:
           NUMERA_ORACLE_ROOT: ${{ github.workspace }}/.ci-work/baseline
-        run: python -B scripts/native-extract-check.py
-      - name: Preserve native archives
+        run: python -B scripts/native-extract-check.py --intermediate
+      - name: Preserve internal intermediates, not completed signed builds
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: native-${{ matrix.target }}
-          path: .ci-work/release/*
+          name: native-unsigned-intermediate-${{ matrix.target }}
+          path: .ci-work/intermediate/*
           if-no-files-found: error
           retention-days: 7
       - name: Preserve formatting evidence without accepting a failed check

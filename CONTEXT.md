@@ -58,3 +58,15 @@ _Avoid_: Provider API key, model entitlement.
 
 **Bridge**: A host-owned stdio connection that starts with the host without a separately running server.
 _Avoid_: Required launcher, background daemon.
+
+**Developer tool**: A separate maintenance and owned-command utility, not a public image operation.
+_Avoid_: Required image-server runtime, eleventh MCP tool.
+
+**Prepared artifact**: A completed distribution whose identity, integrity and compatibility can be verified.
+_Avoid_: Source checkout, permission to compile.
+
+**Publisher signature**: Cryptographic evidence binding an artifact to the approved signing identity.
+_Avoid_: Checksum, logo, public operating-system trust.
+
+**Self-signed identity**: A project-controlled signing identity verified through its approved public key.
+_Avoid_: Public certificate-authority endorsement, Apple Developer ID or notarization.

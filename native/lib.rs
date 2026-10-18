@@ -1,9 +1,11 @@
 pub mod adapters;
+pub mod build_identity;
 pub mod capabilities;
 pub mod cli;
 pub mod compat;
 pub mod config;
 pub mod dimensions;
+pub mod devtools;
 pub mod error;
 pub mod files;
 pub mod http;

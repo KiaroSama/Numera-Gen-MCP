@@ -499,6 +499,25 @@ and full assertion acceptance are separate gates; setting a completion flag alon
 | Native archives/hash/extraction/licenses/docs         | `scripts/native-package.py`                                           | Actual allowlist/checksum/notice/extracted SDK checks             | Passed all six native targets at544baa9; unsigned test artifacts, no verified signed Release                              |
 | Coverage                                              | Hosted nightly only                                                   | LLVM regions >=85%, branches >=80%                                | Complete544baa9 report:86.25% regions /84.61% branches; both unchanged floors passed                                      |
 
+## Native developer tooling and approved self-signing
+
+D-003 adds separate `numera-dev` supervision and prepared-artifact maintenance. The three remaining
+unassigned tooling IDs now have concrete native source assertions: actual bounded CLI and descendant
+observation, unrelated-process survival, and all five actual CLI dry-runs. Frozen IDs, source hashes,
+platform applicability and all 470 pending statuses remain unchanged; 470 assignments are not 470
+accepted cases. PowerShell AST acceptance is replaced only by the explicitly approved native contract.
+POSIX zombie-vs-`kill(pid,0)` behavior remains an explicit final-disposition gap for the generic CLI row.
+There are 100 registered native integration targets; the new source has not yet compiled or run.
+
+Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
+foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
+and exact approved-logo binding. Public synthetic fixture signatures were independently verified;
+synthetic executable bytes are never executed and are not native app-signature proof.
+[Developer tooling](../DEVELOPER-TOOLS.md) and [signing](../SIGNING.md) describe the boundaries.
+Platform-native application signatures, protected hosted custody, final extracted execution and
+full independent baseline-case acceptance remain release blockers. Prior green CI belongs only to
+its recorded tree; no new native runtime result is inferred from source review or fixture signatures.
+
 ## Release blockers
 
 Every applicable baseline case needs a concrete native case or a source-driven differential replay

@@ -61,6 +61,21 @@ configuration. `native/cli/menu.rs` supplies native start/port/guidance/exit int
 `bridge` never displays a menu. No OS service, OAuth relay or reference-project account features are
 added. HTTP/menu and their new CI paths remain unverified until the integrated candidate passes.
 
+## Native developer tooling and signing
+
+`native/devtools/` owns the separate optional `numera-dev` executable, bounded OS process ownership,
+private capture/ledger and prepared-artifact maintenance. Production MCP does not invoke it. Setup
+reuses the existing readiness and selected-entry registration boundaries, with explicit paths and
+all-five dry-runs before state/install mutations. See [developer tooling](DEVELOPER-TOOLS.md).
+
+The artifact verifier pins the approved public key inside the binary, checks current identity
+validity and exact approved logo/member hashes, then hands authenticated bytes to staged replacement
+and rollback. This is distinct from native Authenticode/Mach-O verification. Hosted signing helpers
+must verify those native formats and the detached manifest before final archive/extracted execution.
+Missing private custody or verifier capability blocks a finished distribution, not source checking.
+[Signing](SIGNING.md) records self-signed trust limits and pending protected-hosted prerequisites.
+No signing secret belongs to a normal build/test job or a downloadable artifact.
+
 ## JSON compatibility boundary
 
 Native application values use binary64 numbers and exact UTF-16 strings/keys rather than assuming

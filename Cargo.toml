@@ -15,12 +15,20 @@ path = "native/lib.rs"
 name = "numera-image-gen-mcp"
 path = "native/main.rs"
 
+[[bin]]
+name = "numera-dev"
+path = "native/devtools/main.rs"
+
+[target.'cfg(unix)'.dependencies]
+libc = "=0.2.190"
+
 [dependencies]
 rmcp = { version = "=3.5.1", default-features = false, features = ["server", "transport-streamable-http-server"] }
 hyper = { version = "=1.12.0", features = ["server", "http1"] }
 hyper-util = { version = "=0.1.21", features = ["tokio"] }
 http-body-util = "=0.1.5"
 subtle = "=2.6.1"
+ring = "=0.17.14"
 base64 = "=0.23.1"
 chrono = { version = "=0.4.45", default-features = false, features = ["clock", "serde"] }
 icu_collator = "=2.3.1"
@@ -427,6 +435,18 @@ path = "tests/rust/comfy_polling_acceptance.rs"
 [[test]]
 name = "comfy_same_store_acceptance"
 path = "tests/rust/comfy_same_store_acceptance.rs"
+
+[[test]]
+name = "artifact_signatures"
+path = "tests/rust/artifact_signatures.rs"
+
+[[test]]
+name = "devtool_setup"
+path = "tests/rust/devtool_setup.rs"
+
+[[test]]
+name = "devtool_supervisor"
+path = "tests/rust/devtool_supervisor.rs"
 
 [profile.release]
 lto = "thin"

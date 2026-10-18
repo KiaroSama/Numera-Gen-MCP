@@ -1,5 +1,6 @@
 """Hosted allowlist/hash/extracted-executable verification; no source/runtime installation."""
 from __future__ import annotations
+import argparse
 import hashlib
 import importlib.util
 import json
@@ -14,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MAX_ARCHIVE_BYTES = 256 * 1024 * 1024
 
 
-def check(archive: Path, runner) -> None:
+def check(archive: Path, runner, *, intermediate: bool = False) -> None:
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     checksum = Path(str(archive) + ".sha256").read_text(encoding="utf-8").split()
     if checksum != [digest, archive.name]:
@@ -55,7 +56,8 @@ def check(archive: Path, runner) -> None:
     if manifest["source_sha"] != os.environ["GITHUB_SHA"]:
         raise RuntimeError("Archive source SHA differs from verified candidate")
     expected = {prefix + "/" + row["path"]: row for row in manifest["files"]}
-    if set(expected) | {prefix + "/manifest.json"} != set(entries):
+    metadata = {prefix + "/manifest.json"} | (set() if intermediate else {prefix + "/manifest.sig"})
+    if set(expected) | metadata != set(entries):
         raise RuntimeError("Archive members differ from allowlisted manifest")
     protected = {"secrets.md", "config.local.json", "http-token", "http.json"}
     for name, data in entries.items():
@@ -72,16 +74,30 @@ def check(archive: Path, runner) -> None:
     executable = installed / "bin" / ("numera-image-gen-mcp.exe" if os.name == "nt" else "numera-image-gen-mcp")
     if hashlib.sha256(executable.read_bytes()).hexdigest() != manifest["binary_sha256"]:
         raise RuntimeError("Extracted executable hash differs")
+    spec = importlib.util.spec_from_file_location("extracted_signing", ROOT / "scripts/native-signing.py")
+    signing = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(signing)
+    if intermediate:
+        if not archive.name.startswith("unsigned-intermediate-") or not archive.resolve().is_relative_to(ROOT / ".ci-work/intermediate"):
+            raise RuntimeError("Only explicitly labeled owned compiler intermediates may skip final signing")
+        signing.manifest(installed, manifest["target"])
+    else:
+        signature_report = signing.verify(installed, manifest["target"])
+        if signature_report["source_sha"] != os.environ["GITHUB_SHA"]:
+            raise RuntimeError("Extracted signature source identity differs")
     env = runner.environment()
     temp = workspace / "temp"
     temp.mkdir()
     env.update({"TEMP": str(temp), "TMP": str(temp), "TMPDIR": str(temp), "NUMERA_NATIVE_BINARY": str(executable)})
     runner.run([str(executable), "--version"], wall=10, idle=5, env=env, cwd=ROOT)
+    developer = installed / "bin" / ("numera-dev.exe" if os.name == "nt" else "numera-dev")
+    runner.run([str(developer), "--version"], wall=10, idle=5, env=env, cwd=ROOT)
     # The actual same SDK fixtures exercise only the extracted binary, not its source build tree.
     runner.run(["node", str(ROOT / "scripts/native-interop.mjs")], wall=180, idle=45, env=env, cwd=ROOT)
     runner.run(["node", str(ROOT / "scripts/native-http-interop.mjs")], wall=90, idle=30, env=env, cwd=ROOT)
     shutil.rmtree(workspace)
-    print(json.dumps({"component": "native-extract", "archive": archive.name, "verified": True}))
+    print(json.dumps({"component": "native-extract", "archive": archive.name, "verified": True,
+                      "completed_signed_build": not intermediate, "internal_intermediate": intermediate}))
 
 
 def main() -> None:
@@ -90,11 +106,15 @@ def main() -> None:
     spec = importlib.util.spec_from_file_location("native_ci", ROOT / "scripts/native-ci.py")
     runner = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(runner)
-    archives = sorted(p for p in (ROOT / ".ci-work/release").iterdir() if p.name.endswith((".zip", ".tar.gz")))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--intermediate", action="store_true")
+    args = parser.parse_args()
+    directory = ROOT / (".ci-work/intermediate" if args.intermediate else ".ci-work/release")
+    archives = sorted(p for p in directory.iterdir() if p.name.endswith((".zip", ".tar.gz")))
     if not archives:
         raise RuntimeError("No native archive to verify")
     for archive in archives:
-        check(archive, runner)
+        check(archive, runner, intermediate=args.intermediate)
 
 
 if __name__ == "__main__":
