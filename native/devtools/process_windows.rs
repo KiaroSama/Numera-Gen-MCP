@@ -248,7 +248,11 @@ impl Owned {
             let mut member = 0;
             // SAFETY: live query-capable handles and initialized BOOL output.
             if unsafe {
-                IsProcessInJob(process.as_raw_handle(), self.job.as_raw_handle(), &mut member)
+                IsProcessInJob(
+                    process.as_raw_handle(),
+                    self.job.as_raw_handle(),
+                    &mut member,
+                )
             } == 0
             {
                 return Err(io::Error::last_os_error());

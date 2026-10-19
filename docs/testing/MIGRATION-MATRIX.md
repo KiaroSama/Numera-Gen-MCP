@@ -539,8 +539,12 @@ Both Windows jobs passed formatting, strict Clippy, DPAPI, release and SDK check
 creation-time-bound descendant observer. The original process, not a reused PID, was still nonsignaled
 after empty-job accounting. Windows cleanup now retains membership-checked handles from bounded
 nested-job snapshots and requires their signaled state as well as empty accounting under the same
-two-second ceiling. The original immediate-death assertions remain unchanged; current execution
-requires the replacement hosted run.
+two-second ceiling. The original immediate-death assertions remain unchanged. At `c2846b9`, all 100
+native targets passed on all six platforms and nightly, including both Windows original-instance
+observers and DPAPI cases. All-six strict Clippy/release/stdio/HTTP SDK checks and three Node jobs
+passed. Complete coverage passed at 86.07% regions / 83.76% branches. Only one `IsProcessInJob`
+formatter layout failed on all six stable jobs; archives were skipped. Its exact hosted formatting
+is applied without changing logic, assertions or bounds; the corrected tree needs its own hosted proof.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
