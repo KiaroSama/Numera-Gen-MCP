@@ -543,7 +543,10 @@ async fn exact_comfy_reload_retains_the_prepared_application_store_owner_without
             let current = app.current().unwrap();
             assert!(Arc::ptr_eq(&original_store, &current.store));
             assert_eq!(current.store.lock().unwrap().owner, owner);
-            assert_eq!(current.config.value["connections"], config.value["connections"]);
+            assert_eq!(
+                current.config.value["connections"],
+                config.value["connections"]
+            );
             let mut ambiguous = raw;
             ambiguous["connections"]["local"]["paths"] = json!({"history":"changed-history"});
             std::fs::write(&file, ambiguous.to_string()).unwrap();

@@ -572,9 +572,13 @@ the first saved origin-mode URL contains `/changed`, so both source and native v
 and retain the original connection. The test now checks that last-good connection, preserving all
 original routing/refusal assertions. Actual no-auth/body checks also address strict Clippy's unused
 capture-field error. Release/SDK checks passed, but tests failed and archives were skipped; 86.10%
-regions / 83.76% branches are failed-run measurements, not acceptance. Replacement verification and
-final literal acceptance remain pending. No production behavior, credential, host setting or timeout
-is changed.
+regions / 83.76% branches are failed-run measurements, not acceptance. At `e7e7f93`, all 100 native
+targets, including the corrected reload fixture, passed on six stable platforms and nightly. All-six
+strict Clippy, release and SDK checks passed; one assertion layout failed formatting. The exact hosted
+formatting is applied. Nightly SDK's existing 700ms Gemini admission probe separately failed after
+928ms with no observed provider POST; preparation measured 621ms, but its root cause remains unproven.
+No deadline, assertion or production behavior is weakened. Archives were skipped; replacement
+verification and final literal acceptance remain pending.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
