@@ -645,14 +645,16 @@ fn exact_enabled_connection_selection_preserves_the_source_failure_messages() {
     for selected in [Some("b"), Some("missing")] {
         let error = config
             .select(selected)
-            .err()
-            .expect("source selection must reject");
+            .expect_err("source selection must reject");
         assert!(error.message.contains("enabled"));
     }
-    config.value.as_object_mut().unwrap().remove("defaultConnection");
+    config
+        .value
+        .as_object_mut()
+        .unwrap()
+        .remove("defaultConnection");
     let error = config
         .select(None)
-        .err()
-        .expect("source missing default must reject");
+        .expect_err("source missing default must reject");
     assert!(error.message.contains("enabled"));
 }

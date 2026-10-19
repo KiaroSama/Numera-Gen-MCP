@@ -553,8 +553,12 @@ The next source-only acceptance additions directly test the bundled schema's spa
 with a valid-key positive control, exact selected-connection error messages and the original two-slot
 compact configuration/default directories/bearer credential. Invalid env suffixes now also perform the
 source's second load of the same file and check nondisclosure again. Existing 100-target discovery,
-all 470 pending dispositions and original assertions remain intact; these changes need their own
-hosted execution. No production behavior, credential, host setting or timeout is changed.
+all 470 pending dispositions and original assertions remain intact. At `0602c5f`, all three new cases,
+the second env load and every native target passed on six stable platforms and nightly; release/SDK
+and 86.06% regions / 83.73% branches coverage passed. Only two strict Clippy `err_expect` diagnostics
+and one formatter chain failed, so archives were skipped. The correction uses `expect_err` and the
+actual hosted layout without changing assertions; replacement verification remains required.
+No production behavior, credential, host setting or timeout is changed.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
