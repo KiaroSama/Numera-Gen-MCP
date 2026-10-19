@@ -2,8 +2,9 @@
 
 `numera-dev` is a separate optional developer executable. The MCP application still has exactly ten
 tools and runs directly as `numera-image-gen-mcp bridge`; it does not launch this helper.
-The native tooling candidate failed its first hosted compilation at `5781c32`; the type/Apple-binding
-and formatting corrections still require their own hosted build/test verification.
+At `6bffdf8`, all six targets compiled and passed release/SDK checks, and complete coverage passed
+at 86.10% regions / 83.73% branches. Strict Clippy, macOS exited-group cleanup and a Windows x64
+DPAPI fixture still failed; the corrective candidate requires replacement hosted verification.
 Do not replace a working installation or host entry with an unverified candidate.
 
 ## Bounded commands

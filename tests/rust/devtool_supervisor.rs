@@ -93,6 +93,18 @@ fn fixture_worker() {
             }
         }
         "exit" => std::process::exit(37),
+        "orphan" => {
+            let child = command(&root, "leaf")
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .unwrap();
+            let child = Guard(child);
+            wait_ready(&root.join("leaf-ready"));
+            fs::write(root.join("leaf-pid"), child.0.id().to_string()).unwrap();
+            // Exit bypasses Drop; the outer supervisor still owns the live descendant.
+            std::process::exit(37);
+        }
         "output" => {
             io::stdout()
                 .write_all(&vec![b'x'; 3 * 1024 * 1024])
@@ -253,6 +265,24 @@ fn actual_native_bounded_cli_propagates_idle_timeout_and_verified_descendant_cle
         && row["pid"] == inner["pid"]
         && row["exit_code"] == 124
         && row["cleanup_verified"] == true));
+}
+
+#[test]
+fn exited_leader_retains_status_and_cleans_its_live_descendant() {
+    let workspace = Workspace::new();
+    let logger = Logger::new(&workspace.0.join("logs"), "INFO");
+    let outcome = run(
+        &mut command(&workspace.0, "orphan"),
+        &workspace.0,
+        Bounds::new(5000, 2000).unwrap(),
+        &AtomicBool::new(false),
+        &logger,
+    )
+    .unwrap();
+    assert_eq!(outcome.code, 37);
+    assert!(outcome.reason.is_none());
+    assert!(outcome.cleanup_verified);
+    assert_descendant_stopped(&workspace.0);
 }
 
 #[test]

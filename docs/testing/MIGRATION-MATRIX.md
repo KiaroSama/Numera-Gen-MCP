@@ -514,7 +514,16 @@ targets; Rust tests, coverage and downstream artifacts therefore remain unverifi
 uses explicit existing map types and Apple's documented group selector, applies actual hosted
 formatting, and preserves all assertions and pending dispositions. A zero-byte macOS enumeration
 is rejected rather than mistaken for verified cleanup; the unreaped direct child anchors the group.
-The replacement hosted run is required; source correction is not a passing compiler/runtime result.
+At `6bffdf8`, all six compiled and passed release/stdio/HTTP SDK checks. Complete coverage passed
+at 86.10% regions / 83.73% branches. Linux x64/ARM64 and Windows ARM64 passed every native target;
+strict Clippy failed all six. Both macOS jobs failed six developer-helper cases because a zombie-only
+process group rejects the unconditional final signal; Windows x64 again stalled before the Node
+intermediary entered its script. Archives remained gated. The corrective candidate checks the
+anchored group's live state before signalling and reconciles signal races without ignoring permission
+errors. DPAPI uses the approved native supervisor with the same 15000/8000 bounds and unchanged ACL,
+Unicode, corruption, no-overwrite, privacy and cleanup assertions; a separate native worker tree tests
+parent-abort containment. Original Node startup failure is not claimed fixed. All pending case states
+remain unchanged; replacement hosted verification is still required.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

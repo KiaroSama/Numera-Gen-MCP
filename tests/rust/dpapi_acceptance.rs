@@ -1,5 +1,8 @@
 #[cfg(windows)]
 mod common;
+#[cfg(windows)]
+#[path = "common/dpapi_worker.rs"]
+mod dpapi_worker;
 
 #[cfg(windows)]
 mod windows {
@@ -385,40 +388,13 @@ mod windows {
         let Some(name) = std::env::var_os("NUMERA_FIXTURE_DPAPI_JOB") else {
             return;
         };
-        // No helper can start before the parent-owned job contains this worker.
-        join_job(name.to_str().unwrap()).unwrap();
-        eprintln!("DPAPI_WORKER_ENROLLED");
         let mode = std::env::var("NUMERA_FIXTURE_DPAPI_MODE").unwrap();
-        let mut command = Command::new("node");
-        if mode == "hang" {
-            command.args(["-e", "const{spawn}=require('node:child_process');const c=spawn(process.execPath,['-e','process.send(\"ready\");setInterval(()=>{},1000)'],{windowsHide:true,stdio:['ignore','ignore','ignore','ipc']});c.on('message',()=>console.log('fixture-descendant-ready'));setInterval(()=>{},1000)"]);
-        } else {
-            assert_eq!(mode, "script");
-            command
-                .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/bounded.mjs"))
-                .args([
-                    "15000",
-                    "8000",
-                    "--exec",
-                    "pwsh",
-                    "-NoProfile",
-                    "-NonInteractive",
-                    "-File",
-                ])
-                .arg(std::env::var_os("NUMERA_FIXTURE_DPAPI_SCRIPT").unwrap());
-            if std::env::var("NUMERA_FIXTURE_DPAPI_WRAPPER").unwrap() == "0" {
-                command
-                    .arg("-Path")
-                    .arg(std::env::var_os("NUMERA_FIXTURE_DPAPI").unwrap());
-            }
+        if matches!(mode.as_str(), "script" | "hang") {
+            // Descendants inherit this non-breakaway job; only the root enrolls itself.
+            join_job(name.to_str().unwrap()).unwrap();
+            eprintln!("DPAPI_WORKER_ENROLLED");
         }
-        command
-            .stdin(Stdio::null())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .creation_flags(0x08000000);
-        let status = command.status().unwrap();
-        std::process::exit(status.code().unwrap_or(1));
+        std::process::exit(super::dpapi_worker::run(&mode).unwrap());
     }
 
     fn wrapper_cleanup(root: &Path, offset: usize, status: &ExitStatus) {
@@ -521,7 +497,7 @@ mod windows {
         }
         assert!(
             owned.job.active().unwrap() >= 3,
-            "Actual worker and two Node generations must be contained."
+            "All three native worker generations must be contained."
         );
         owned.stop().unwrap();
         assert!(owned.child.try_wait().unwrap().is_some());

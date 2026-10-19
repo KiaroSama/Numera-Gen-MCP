@@ -70,11 +70,16 @@ impl Owned {
             return Err(io::Error::other("Owned command already reaped."));
         }
         let deadline = *self.cleanup_deadline.get_or_insert(deadline);
-        // The unreaped direct child anchors PGID identity until the final group signal.
-        if unsafe { libc::kill(-self.group, libc::SIGKILL) } == -1 {
+        // The unreaped child anchors PGID identity; macOS refuses signals to zombie-only groups.
+        if (!self.exited()? || live_group(self.group)?)
+            && unsafe { libc::kill(-self.group, libc::SIGKILL) } == -1
+        {
             let error = io::Error::last_os_error();
-            if error.raw_os_error() != Some(libc::ESRCH) {
-                return Err(error);
+            match error.raw_os_error() {
+                Some(libc::ESRCH) => {}
+                // A live group can exit between observation and signal; verify again, never ignore EPERM.
+                Some(libc::EPERM) if self.exited()? && !live_group(self.group)? => {}
+                _ => return Err(error),
             }
         }
         while !self.exited()? || live_group(self.group)? {
@@ -172,12 +177,12 @@ fn live_group(group: i32) -> io::Result<bool> {
     {
         let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
         let size = std::mem::size_of::<libc::proc_bsdinfo>();
-        // SAFETY: correctly sized native query structure; no process mutation.
+        // SAFETY: sized query-only structure; arg1 includes the anchored unreaped zombie.
         let bytes = unsafe {
             libc::proc_pidinfo(
                 pid,
                 libc::PROC_PIDTBSDINFO,
-                0,
+                1,
                 (&mut info as *mut libc::proc_bsdinfo).cast(),
                 size as i32,
             )

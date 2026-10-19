@@ -80,12 +80,12 @@ pub fn run(
     paths
         .verify(&ledger_path)
         .map_err(|_| io::Error::other("Process ledger escapes owning root."))?;
-    if let Ok(info) = fs::symlink_metadata(&ledger_path) {
-        if !info.is_file() || info.is_symlink() || info.len() > 16 * 1024 * 1024 {
-            return Err(io::Error::other(
-                "Process ledger is not a bounded regular file.",
-            ));
-        }
+    if let Ok(info) = fs::symlink_metadata(&ledger_path)
+        && (!info.is_file() || info.is_symlink() || info.len() > 16 * 1024 * 1024)
+    {
+        return Err(io::Error::other(
+            "Process ledger is not a bounded regular file.",
+        ));
     }
     let mut options = OpenOptions::new();
     options.append(true).create(true);
