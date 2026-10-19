@@ -258,6 +258,30 @@ fn local_boolean_schema_and_combinators_apply_exact_matching() {
 }
 
 #[test]
+fn exact_spaced_connection_key_is_rejected_by_the_bundled_schema_itself() {
+    let source = bundled(include_str!("../../schemas/config.schema.json"));
+    let schema = Schema::compile(&source).expect("advanced dialect");
+    let empty = r#"{"schemaVersion":1,"defaultConnection":"local","outputDir":"/out","stateDir":"/state","logging":{"directory":"/logs"},"files":{},"connections":{"bad name":{}}}"#;
+    assert!(
+        schema
+            .default_and_validate(&mut parse(empty).unwrap())
+            .is_err()
+    );
+    let complete = r#"{"schemaVersion":1,"outputDir":"/out","stateDir":"/state","logging":{"directory":"/logs"},"files":{},"connections":{"bad name":{"adapter":"openai-images","baseUrl":"https://api.example/v1","auth":{"type":"none"}}}}"#;
+    assert!(
+        schema
+            .default_and_validate(&mut parse(complete).unwrap())
+            .is_err()
+    );
+    let valid = complete.replace("\"bad name\"", "\"valid_name\"");
+    assert!(
+        schema
+            .default_and_validate(&mut parse(&valid).unwrap())
+            .is_ok()
+    );
+}
+
+#[test]
 fn deep_opaque_extensions_are_not_walked_or_converted() {
     std::thread::Builder::new()
         .stack_size(256 * 1024)

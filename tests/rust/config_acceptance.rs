@@ -578,3 +578,81 @@ async fn exact_bearer_file_credential_trims_private_bytes_and_rejects_source_fai
         .await
         .expect("bearer file credential scenario exceeded 8 seconds");
 }
+
+#[tokio::test]
+async fn exact_two_slot_compact_defaults_and_bearer_secret_match_the_frozen_source() {
+    let action = async {
+        let workspace = Workspace::new();
+        let raw = compact();
+        let config = load(&workspace, &raw, &[], &HashMap::new()).unwrap();
+        let runtime = RuntimePaths::new(&workspace.0).unwrap();
+        let (name, connection) = config.select(None).unwrap();
+        assert_eq!(name, "default");
+        assert_eq!(connection["adapter"], "openai-images");
+        assert_eq!(connection["baseUrl"], raw["api_endpoint"]);
+        assert_eq!(connection["defaultModel"], "antigravity/opaque-image");
+        assert_eq!(connection["configuredModels"], raw["models"]);
+        assert!(connection.get("gateway").is_none());
+        assert_eq!(
+            config.value["outputDir"],
+            workspace.0.join("outputs").to_str().unwrap()
+        );
+        assert_eq!(
+            config.value["stateDir"],
+            workspace.0.join("state").to_str().unwrap()
+        );
+        assert_eq!(
+            config.value["logging"]["directory"],
+            workspace.0.join("logs").to_str().unwrap()
+        );
+        assert_eq!(
+            config.value["files"]["allowedInputRoots"],
+            json!([workspace.0.join("inputs").to_str().unwrap()])
+        );
+        assert_eq!(
+            credentials(&connection, &HashMap::new(), &runtime)
+                .await
+                .unwrap(),
+            HashMap::from([(
+                "Authorization".into(),
+                "Bearer fixture-local-key-not-real".into(),
+            )])
+        );
+    };
+    tokio::time::timeout(Duration::from_secs(8), action)
+        .await
+        .expect("compact defaults source scenario exceeded 8 seconds");
+}
+
+#[test]
+fn exact_enabled_connection_selection_preserves_the_source_failure_messages() {
+    let workspace = Workspace::new();
+    let mut raw = workspace.config("https://api.example/v1", "openai-images");
+    let mut a = raw["connections"]["test"].clone();
+    a.as_object_mut().unwrap().remove("defaultModel");
+    a.as_object_mut().unwrap().remove("orchestrationModel");
+    a["requestTimeoutMs"] = json!(300000);
+    let mut b = a.clone();
+    b["adapter"] = json!("gemini");
+    b["enabled"] = json!(false);
+    raw["defaultConnection"] = json!("a");
+    raw["connections"] = json!({"a": a, "b": b});
+    let mut config = load(&workspace, &raw, &[], &HashMap::new()).unwrap();
+    assert_eq!(
+        config.select(Some("a")).unwrap().1["adapter"],
+        "openai-images"
+    );
+    for selected in [Some("b"), Some("missing")] {
+        let error = config
+            .select(selected)
+            .err()
+            .expect("source selection must reject");
+        assert!(error.message.contains("enabled"));
+    }
+    config.value.as_object_mut().unwrap().remove("defaultConnection");
+    let error = config
+        .select(None)
+        .err()
+        .expect("source missing default must reject");
+    assert!(error.message.contains("enabled"));
+}

@@ -11,8 +11,10 @@ descendant was still nonsignaled after empty-job accounting. At `c2846b9`, retai
 handles fixed the observed failure: all 100 native targets passed on all six platforms, including both
 Windows descendant observers and DPAPI cases, within the unchanged two-second cleanup ceiling. Strict
 Clippy, release and SDK checks passed; complete coverage passed at 86.07% regions / 83.76% branches.
-Only one formatter layout failed; its exact hosted correction still needs replacement verification.
-Archives were skipped. Do not replace a working installation or host entry with this candidate.
+At `443afc9`, all ten hosted jobs passed, including all-six formatting, native tests, release/SDK,
+notices, internal archives and extracted stdio/HTTP execution. These are unsigned internal intermediates;
+full baseline acceptance and final publisher signatures remain pending. Do not replace a working
+installation or host entry with an internal intermediate.
 
 ## Bounded commands
 

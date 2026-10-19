@@ -102,6 +102,14 @@ fn all_thirteen_invalid_env_suffixes_reject_file_loads_without_key_disclosure() 
     for suffix in INVALID_SUFFIXES {
         let text = format!("{VALID}{suffix}");
         invalid_configuration(load_file(&workspace, ".env", text.as_bytes()));
+        invalid_configuration(load_config(
+            &[
+                "--config".into(),
+                workspace.0.join(".env").to_str().unwrap().into(),
+            ],
+            &environment(&workspace),
+            &workspace.0,
+        ));
     }
 }
 

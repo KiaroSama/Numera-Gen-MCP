@@ -544,7 +544,17 @@ native targets passed on all six platforms and nightly, including both Windows o
 observers and DPAPI cases. All-six strict Clippy/release/stdio/HTTP SDK checks and three Node jobs
 passed. Complete coverage passed at 86.07% regions / 83.76% branches. Only one `IsProcessInJob`
 formatter layout failed on all six stable jobs; archives were skipped. Its exact hosted formatting
-is applied without changing logic, assertions or bounds; the corrected tree needs its own hosted proof.
+is applied without changing logic, assertions or bounds. At `443afc9`, all ten jobs passed, including
+all 100 native targets on six stable platforms and nightly, strict quality/release/SDK checks,
+all-six notices/internal archives/checksums/extracted stdio/HTTP execution and the same 86.07% / 83.76%
+coverage. These unsigned intermediates are not signed distributions or complete baseline acceptance.
+
+The next source-only acceptance additions directly test the bundled schema's spaced connection key
+with a valid-key positive control, exact selected-connection error messages and the original two-slot
+compact configuration/default directories/bearer credential. Invalid env suffixes now also perform the
+source's second load of the same file and check nondisclosure again. Existing 100-target discovery,
+all 470 pending dispositions and original assertions remain intact; these changes need their own
+hosted execution. No production behavior, credential, host setting or timeout is changed.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
