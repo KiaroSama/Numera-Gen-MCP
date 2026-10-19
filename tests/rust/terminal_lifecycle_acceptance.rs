@@ -82,7 +82,8 @@ fn receipt(id: &str) -> Receipt {
     }))
 }
 
-async fn seed(host: &Host, kind: &str) -> String {
+async fn seed(host: &Host, kind: &str, state: &str) -> String {
+    assert!(["running", "completed"].contains(&state));
     let current = host.0.current().unwrap();
     let (_, connection) = current.config.select(Some("local")).unwrap();
     assert_eq!(connection["requestTimeoutMs"], 300000);
@@ -94,8 +95,8 @@ async fn seed(host: &Host, kind: &str) -> String {
     let mut store = host.0.store.lock().unwrap();
     let mut old = store.prepare(receipt("old"), "hash", &identity).unwrap().1;
     assert!(store.admit("old", "local", 1, 1).unwrap());
-    old.value["status"] = json!("running");
-    old.value["generation_outcome"] = json!("running");
+    old.value["status"] = json!(state);
+    old.value["generation_outcome"] = json!(state);
     old.value["upstream_job"] = json!({"id":"job","kind":kind});
     store.update(&mut old).unwrap();
     store.release("old", Some(&old)).unwrap();
@@ -225,7 +226,7 @@ async fn poll(workspace: &Workspace, mode: &str) {
     let root = &workspace.0;
     fault(mode, |origin, requests| async move {
         let host = host(root, &origin, false);
-        let identity = seed(&host, "responses").await;
+        let identity = seed(&host, "responses", "running").await;
         // Source does not inspect the tool reply; persisted state/capacity and one GET
         // must establish the result even if the handler would return an error envelope.
         let _ = call(&host, "get_job", json!({"request_id":"old","refresh":true})).await;
@@ -263,28 +264,59 @@ async fn cancellation(
     mode: &str,
 ) {
     let host = host(root, origin, true);
-    let identity = seed(&host, "comfyui").await;
+    let state = if mode == "completed" {
+        "completed"
+    } else {
+        "running"
+    };
+    let identity = seed(&host, "comfyui", state).await;
     for _ in 0..2 {
         let result = call(&host, "cancel_job", json!({"request_id":"old"})).await;
-        if mode == "false" {
+        if mode != "ambiguous" {
             let result = result.unwrap();
             assert_eq!(result["refund_verified"], false);
-            assert_eq!(result["upstream_cancelled"], false);
+            assert_eq!(
+                result.get("upstream_cancelled"),
+                Some(&match mode {
+                    "confirmed" => json!(true),
+                    "missing" | "completed" => Value::Null,
+                    _ => json!(false),
+                })
+            );
         }
     }
     drop(host);
+    let available = ["confirmed", "completed"].contains(&mode);
+    let expected = if mode == "confirmed" {
+        "cancelled"
+    } else {
+        state
+    };
     for n in 0..2 {
         let mut store = Store::open(&root.join("state")).unwrap();
-        assert_eq!(store.get("old").unwrap().status(), "running");
+        assert_eq!(store.get("old").unwrap().status(), expected);
         let id = format!("fresh-{n}");
         store.prepare(receipt(&id), &id, &identity).unwrap();
-        assert!(!store.admit(&id, "local", 1, 1).unwrap());
+        assert_eq!(store.admit(&id, "local", 1, 1).unwrap(), available);
+        if available {
+            let mut end = store.get(&id).unwrap();
+            end.value["status"] = json!("failed");
+            store.update(&mut end).unwrap();
+            store.release(&id, Some(&end)).unwrap();
+        }
     }
     let captured = requests.lock().unwrap();
-    assert_eq!(captured.len(), 2);
-    for request in captured.iter() {
-        request_shape(request, true);
-    }
+    let cancellations = match mode {
+        "completed" => 0,
+        "confirmed" => 1,
+        _ => 2,
+    };
+    let polls = match mode {
+        "confirmed" => 1,
+        "dispatched" => 2,
+        _ => 0,
+    };
+    assert_eq!(captured.len(), cancellations + polls);
     assert_eq!(
         captured
             .iter()
@@ -297,28 +329,53 @@ async fn cancellation(
             .iter()
             .filter(|request| request.method == "POST" && request.path.ends_with("/cancel"))
             .count(),
-        2
+        cancellations
     );
+    for (index, request) in captured.iter().enumerate() {
+        if request.method == "POST" {
+            request_shape(request, true);
+        } else {
+            assert!(
+                !request
+                    .headers
+                    .to_ascii_lowercase()
+                    .contains("authorization:")
+            );
+            assert_eq!(request.method, "GET");
+            assert_eq!(request.path, "/api/jobs/job");
+            assert!(request.body.is_empty());
+        }
+        if polls > 0 {
+            assert_eq!(request.method, if index % 2 == 0 { "POST" } else { "GET" });
+        }
+    }
 }
 
 async fn cancel(workspace: &Workspace, mode: &str) {
     let root = &workspace.0;
-    if mode == "false" {
+    if mode == "ambiguous" {
+        fault(mode, |origin, requests| async move {
+            cancellation(root, &origin, &requests, mode).await;
+        })
+        .await;
+    } else {
+        assert!(["confirmed", "dispatched", "false", "missing", "completed"].contains(&mode));
         wire::serve(
             |request| {
-                request_shape(request, true);
-                wire::json_reply(json!({"cancelled":false}))
+                wire::json_reply(if request.method == "POST" {
+                    if mode == "missing" {
+                        json!({})
+                    } else {
+                        json!({"cancelled":mode != "false"})
+                    }
+                } else {
+                    json!({"id":"job","status":if mode == "confirmed" { "cancelled" } else { "in_progress" }})
+                })
             },
             |origin, requests| async move {
                 cancellation(root, &origin, &requests, mode).await;
             },
         )
-        .await;
-    } else {
-        assert_eq!(mode, "ambiguous");
-        fault(mode, |origin, requests| async move {
-            cancellation(root, &origin, &requests, mode).await;
-        })
         .await;
     }
 }
@@ -362,4 +419,44 @@ fn exact_source_ambiguous_cancel_preserves_capacity_across_two_reopens_without_g
         .build()
         .unwrap();
     runtime.block_on(cancel(&workspace, "ambiguous"));
+}
+
+#[test]
+fn exact_source_confirmed_cancel_frees_capacity_across_two_reopens_without_generation() {
+    let workspace = Workspace::new();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    runtime.block_on(cancel(&workspace, "confirmed"));
+}
+
+#[test]
+fn exact_source_dispatched_cancel_preserves_capacity_across_two_reopens_without_generation() {
+    let workspace = Workspace::new();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    runtime.block_on(cancel(&workspace, "dispatched"));
+}
+
+#[test]
+fn exact_source_missing_cancel_ack_preserves_capacity_across_two_reopens_without_generation() {
+    let workspace = Workspace::new();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    runtime.block_on(cancel(&workspace, "missing"));
+}
+
+#[test]
+fn exact_source_completed_cancel_keeps_capacity_across_two_reopens_without_network() {
+    let workspace = Workspace::new();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    runtime.block_on(cancel(&workspace, "completed"));
 }

@@ -577,8 +577,19 @@ targets, including the corrected reload fixture, passed on six stable platforms 
 strict Clippy, release and SDK checks passed; one assertion layout failed formatting. The exact hosted
 formatting is applied. Nightly SDK's existing 700ms Gemini admission probe separately failed after
 928ms with no observed provider POST; preparation measured 621ms, but its root cause remains unproven.
-No deadline, assertion or production behavior is weakened. Archives were skipped; replacement
-verification and final literal acceptance remain pending.
+No deadline, assertion or production behavior is weakened. Archives were skipped. At `b50e2c4`,
+run `39277473573` attempt 1 passed all ten jobs: six stable native platforms, nightly coverage and
+three Node platforms. Exact-source job steps confirm stable quality/tests/release, coverage floors,
+all-six notices/internal packages and extracted execution succeeded. Detailed log download timed out;
+no new per-test measurement is inferred from that failed download. Final literal acceptance remains pending.
+
+The remaining four source cancellation schedules now have dedicated assertions in the existing
+terminal-lifecycle target: confirmed, dispatched, missing acknowledgement and already completed.
+Each preserves the original local Comfy configuration, receipt and two public calls, then closes the
+application Store and verifies two actual reopens, admission and exact request counts. Existing false,
+ambiguous and uncertain-poll cases remain. These are public application-dispatch fixtures, not SDK
+handshake/error-envelope evidence; the new assertions require their own hosted execution. All 470
+canonical statuses stay pending, and no timeout, production behavior or coverage denominator changes.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
