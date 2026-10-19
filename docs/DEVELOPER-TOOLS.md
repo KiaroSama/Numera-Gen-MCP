@@ -6,7 +6,9 @@ At `6bffdf8`, all six targets compiled and passed release/SDK checks, and comple
 at 86.10% regions / 83.73% branches. Strict Clippy, macOS exited-group cleanup and a Windows x64
 DPAPI fixture still failed. At `0dbba1f`, the macOS ARM and Windows x64 regressions passed, but
 Windows ARM's new descendant observer failed and formatting still blocked the stable jobs. The
-observer now compares creation time as well as PID; replacement hosted verification remains required.
+observer compares creation time as well as PID. At `a8a8912`, it confirmed an original Windows
+descendant was still nonsignaled after empty-job accounting. Cleanup now also waits on retained,
+membership-checked process handles within the same two-second ceiling; hosted verification is pending.
 Do not replace a working installation or host entry with an unverified candidate.
 
 ## Bounded commands

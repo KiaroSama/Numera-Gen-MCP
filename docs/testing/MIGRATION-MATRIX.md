@@ -534,6 +534,14 @@ be signaled immediately. No production cleanup or deadline is relaxed. Complete 
 86.10% regions / 83.79% branches. One exact hosted helper-format correction also remains necessary;
 the replacement final tree still needs its own hosted verification.
 
+At `a8a8912`, all four POSIX stable jobs and full coverage passed (86.06% regions / 83.70% branches).
+Both Windows jobs passed formatting, strict Clippy, DPAPI, release and SDK checks but failed the
+creation-time-bound descendant observer. The original process, not a reused PID, was still nonsignaled
+after empty-job accounting. Windows cleanup now retains membership-checked handles from bounded
+nested-job snapshots and requires their signaled state as well as empty accounting under the same
+two-second ceiling. The original immediate-death assertions remain unchanged; current execution
+requires the replacement hosted run.
+
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
 and exact approved-logo binding. Public synthetic fixture signatures were independently verified;

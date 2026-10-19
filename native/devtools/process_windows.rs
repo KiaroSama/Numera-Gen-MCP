@@ -64,6 +64,9 @@ unsafe extern "system" {
         returned: *mut u32,
     ) -> i32;
     fn TerminateJobObject(job: Handle, code: u32) -> i32;
+    fn OpenProcess(access: u32, inherit: i32, pid: u32) -> Handle;
+    fn IsProcessInJob(process: Handle, job: Handle, member: *mut i32) -> i32;
+    fn WaitForSingleObject(handle: Handle, milliseconds: u32) -> u32;
     fn CreateToolhelp32Snapshot(flags: u32, pid: u32) -> Handle;
     fn Thread32First(snapshot: Handle, entry: *mut ThreadEntry) -> i32;
     fn Thread32Next(snapshot: Handle, entry: *mut ThreadEntry) -> i32;
@@ -200,6 +203,63 @@ impl Owned {
         Ok(accounting.active)
     }
 
+    fn members(&self, deadline: Instant) -> io::Result<Vec<OwnedHandle>> {
+        // Two DWORD counts precede an aligned ULONG_PTR array on both supported 64-bit targets.
+        let mut buffer = vec![0usize; 65537];
+        // SAFETY: initialized, pointer-aligned buffer; class3 includes nested jobs, bounded to65536PIDs.
+        if unsafe {
+            QueryInformationJobObject(
+                self.job.as_raw_handle(),
+                3,
+                buffer.as_mut_ptr().cast(),
+                std::mem::size_of_val(buffer.as_slice()) as u32,
+                std::ptr::null_mut(),
+            )
+        } == 0
+        {
+            return Err(io::Error::last_os_error());
+        }
+        let counts = buffer[0];
+        let assigned = counts as u32;
+        let returned = (counts >> 32) as u32;
+        if assigned != returned || returned as usize > 65536 {
+            return Err(io::Error::other("Owned job member list is incomplete."));
+        }
+        let mut members = Vec::new();
+        for pid in &buffer[1..1 + returned as usize] {
+            if Instant::now() >= deadline {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "Owned job member inspection exceeded its ceiling.",
+                ));
+            }
+            let pid = u32::try_from(*pid)
+                .map_err(|_| io::Error::other("Owned job member identity is invalid."))?;
+            // SAFETY: query/synchronize only; membership is rechecked before retaining the handle.
+            let raw = unsafe { OpenProcess(0x00101000, 0, pid) };
+            if raw.is_null() {
+                let error = io::Error::last_os_error();
+                if error.raw_os_error() == Some(87) {
+                    continue;
+                }
+                return Err(error);
+            }
+            let process = handle(raw)?;
+            let mut member = 0;
+            // SAFETY: live query-capable handles and initialized BOOL output.
+            if unsafe {
+                IsProcessInJob(process.as_raw_handle(), self.job.as_raw_handle(), &mut member)
+            } == 0
+            {
+                return Err(io::Error::last_os_error());
+            }
+            if member != 0 {
+                members.push(process);
+            }
+        }
+        Ok(members)
+    }
+
     pub fn stop(&mut self, deadline: Instant) -> io::Result<i32> {
         let deadline = *self.cleanup_deadline.get_or_insert(deadline);
         let original = self.child.try_wait()?;
@@ -215,10 +275,26 @@ impl Owned {
             }
             pause(deadline);
         }
+        let members = self.members(deadline);
         if unsafe { TerminateJobObject(self.job.as_raw_handle(), 1) } == 0 {
             return Err(io::Error::last_os_error());
         }
-        while self.active()? != 0 {
+        let mut members = members?;
+        members.extend(self.members(deadline)?);
+        loop {
+            let mut pending = Vec::new();
+            for process in members {
+                // SAFETY: retained immutable process handle; zero-time state observation only.
+                match unsafe { WaitForSingleObject(process.as_raw_handle(), 0) } {
+                    0 => {}
+                    258 => pending.push(process),
+                    _ => return Err(io::Error::last_os_error()),
+                }
+            }
+            members = pending;
+            if self.active()? == 0 && members.is_empty() {
+                break;
+            }
             if Instant::now() >= deadline {
                 return Err(io::Error::new(
                     io::ErrorKind::TimedOut,
