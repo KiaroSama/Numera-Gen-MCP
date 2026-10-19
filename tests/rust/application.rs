@@ -396,6 +396,18 @@ async fn exact_comfy_reload_retains_the_prepared_application_store_owner_without
     let root = &workspace.0;
     reload_wire::serve(
         |request| {
+            assert!(
+                !request
+                    .headers
+                    .to_ascii_lowercase()
+                    .contains("authorization:")
+            );
+            if request.method == "POST" {
+                assert_eq!(request.body, b"{}");
+            } else {
+                assert_eq!(request.method, "GET");
+                assert!(request.body.is_empty());
+            }
             reload_wire::json_reply(if request.method == "POST" {
                 json!({"cancelled":true})
             } else if request.path.starts_with("/api/jobs/") {
@@ -531,10 +543,7 @@ async fn exact_comfy_reload_retains_the_prepared_application_store_owner_without
             let current = app.current().unwrap();
             assert!(Arc::ptr_eq(&original_store, &current.store));
             assert_eq!(current.store.lock().unwrap().owner, owner);
-            assert_eq!(
-                current.config.value["connections"]["local"]["defaultModel"],
-                "new-model"
-            );
+            assert_eq!(current.config.value["connections"], config.value["connections"]);
             let mut ambiguous = raw;
             ambiguous["connections"]["local"]["paths"] = json!({"history":"changed-history"});
             std::fs::write(&file, ambiguous.to_string()).unwrap();

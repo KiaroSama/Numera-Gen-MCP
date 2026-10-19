@@ -567,8 +567,14 @@ A new source-only Comfy reload fixture now prepares the exact running receipts i
 Application Store without admission, update, release or reopen. It checks the same Store allocation,
 writer ownership, original three paths and both no-extra-request refusals across configuration saves.
 This complements the existing actual SDK child fixture; it is not an in-memory SDK client or protocol
-error-envelope assertion. Its own hosted execution and final literal acceptance remain pending.
-No production behavior, credential, host setting or timeout is changed.
+error-envelope assertion. At `39d7720`, all six and nightly exposed an unsupported added assertion:
+the first saved origin-mode URL contains `/changed`, so both source and native validation reject it
+and retain the original connection. The test now checks that last-good connection, preserving all
+original routing/refusal assertions. Actual no-auth/body checks also address strict Clippy's unused
+capture-field error. Release/SDK checks passed, but tests failed and archives were skipped; 86.10%
+regions / 83.76% branches are failed-run measurements, not acceptance. Replacement verification and
+final literal acceptance remain pending. No production behavior, credential, host setting or timeout
+is changed.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
