@@ -595,8 +595,11 @@ logs confirm each new case. No timeout, production behavior or coverage denomina
 Three additional expiry fixtures now reuse the existing instance-owned lease clock: same-Store
 running receipts with and without a recoverable handle, and an already-completed empty receipt.
 They preserve the source clock values, receipt defaults and duplicate-prepare schedule instead of
-substituting a peer Store or direct SQL expiry. These assertions require their own hosted execution;
-all 470 canonical statuses remain pending until final independent literal acceptance.
+substituting a peer Store or direct SQL expiry. At `f6c7520`, all three and all 100 native targets
+passed on six stable platforms and nightly. Strict Clippy, release/SDK checks and 86.10% regions /
+83.79% branches passed; only one expression layout failed formatting, so archives were skipped.
+The exact hosted formatter layout is applied without changing assertions. All 470 canonical statuses
+remain pending until final independent literal acceptance; the correction needs its own hosted pass.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

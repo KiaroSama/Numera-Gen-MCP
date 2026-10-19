@@ -225,7 +225,11 @@ fn expired_running_receipt(has_job: bool) {
         .prepare(receipt("request-1"), "hash", "identity")
         .unwrap();
     assert!(!fresh);
-    let status = if has_job { "running" } else { "outcome_unknown" };
+    let status = if has_job {
+        "running"
+    } else {
+        "outcome_unknown"
+    };
     let outcome = if has_job { "running" } else { "unknown" };
     assert_eq!(recovered.status(), status);
     assert_eq!(recovered.value["generation_outcome"], outcome);
