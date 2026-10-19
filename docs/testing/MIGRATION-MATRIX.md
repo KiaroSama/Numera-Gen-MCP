@@ -608,7 +608,13 @@ changing deadlines or security assertions; the original latency cause is still u
 The killed-child recovery fixture now advances the existing instance-owned lease clock on its first
 reopen instead of rewriting SQL lease values. All eight phase assertions and the second ordinary
 reopen remain unchanged. Receipt timestamps, the published-phase SQL fault and checkpoint transport
-are separate equivalence limits; this source change requires its own hosted verification.
+are separate equivalence limits. At `fd4e361`, all eight passed on six stable platforms and nightly;
+nine jobs passed. Windows x64 alone repeated the eight-second DPAPI pre-script timeout with native
+worker/start/finish/verified-cleanup flags but no wrapper-entry flag. Source review found a separate
+resume-selection defect: ToolHelp's first matching thread is not guaranteed to be the primary.
+The Windows supervisor now checks all opened thread owners and resumes every owned snapshot entry,
+with deterministic selection regressions and unchanged job/timeout/cleanup boundaries. This repairs
+the source defect; its contribution to the observed startup delay still needs hosted evidence.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

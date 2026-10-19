@@ -73,6 +73,7 @@ unsafe extern "system" {
     fn OpenThread(access: u32, inherit: i32, id: u32) -> Handle;
     fn ResumeThread(thread: Handle) -> u32;
     fn GetLastError() -> u32;
+    fn GetProcessIdOfThread(thread: Handle) -> u32;
 }
 
 fn handle(raw: Handle) -> io::Result<OwnedHandle> {
@@ -139,30 +140,42 @@ impl Owned {
         if unsafe { Thread32First(snapshot.as_raw_handle(), &mut entry) } == 0 {
             return Err(io::Error::last_os_error());
         }
+        let mut threads = Vec::new();
         loop {
             if entry.size < 16 {
                 return Err(io::Error::other("Incomplete owned thread identity."));
             }
             if entry.owner == self.child.id() {
-                // Child's live handle anchors PID; only its suspended primary thread is resumed.
-                let thread = handle(unsafe { OpenThread(2, 0, entry.id) })?;
-                if unsafe { ResumeThread(thread.as_raw_handle()) } != 1 {
-                    return Err(io::Error::other(
-                        "Owned primary thread was not suspended exactly once.",
-                    ));
+                // Snapshot order does not identify the primary thread; retain all owned handles.
+                let thread = handle(unsafe { OpenThread(0x802, 0, entry.id) })?;
+                // SAFETY: live query-capable handle, checked before any thread state changes.
+                let owner = unsafe { GetProcessIdOfThread(thread.as_raw_handle()) };
+                if owner == 0 {
+                    return Err(io::Error::last_os_error());
                 }
-                return Ok(());
+                if owner != self.child.id() {
+                    return Err(io::Error::other("Owned thread identity changed."));
+                }
+                threads.push(thread);
             }
             entry.size = std::mem::size_of::<ThreadEntry>() as u32;
             if unsafe { Thread32Next(snapshot.as_raw_handle(), &mut entry) } == 0 {
                 let error = unsafe { GetLastError() };
-                return Err(if error == 18 {
-                    io::Error::other("Owned suspended primary thread is missing.")
-                } else {
-                    io::Error::from_raw_os_error(error as i32)
-                });
+                if error == 18 {
+                    break;
+                }
+                return Err(io::Error::from_raw_os_error(error as i32));
             }
         }
+        resume_all(threads.iter().map(|thread| {
+            // SAFETY: retained handle belongs to the suspended, already job-assigned child.
+            let previous = unsafe { ResumeThread(thread.as_raw_handle()) };
+            if previous == u32::MAX {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(previous)
+            }
+        }))
     }
 
     pub fn id(&self) -> u32 {
@@ -312,6 +325,26 @@ impl Owned {
     }
 }
 
+fn resume_all(counts: impl IntoIterator<Item = io::Result<u32>>) -> io::Result<()> {
+    let mut resumed = false;
+    for previous in counts {
+        match previous? {
+            0 => {}
+            1 => resumed = true,
+            _ => {
+                return Err(io::Error::other(
+                    "Owned thread remains suspended after one resume.",
+                ));
+            }
+        }
+    }
+    if resumed {
+        Ok(())
+    } else {
+        Err(io::Error::other("Owned suspended primary thread is missing."))
+    }
+}
+
 fn pause(deadline: Instant) {
     std::thread::park_timeout(
         Duration::from_millis(10).min(deadline.saturating_duration_since(Instant::now())),
@@ -322,5 +355,32 @@ impl Drop for Owned {
         if !self.stopped && self.stop(Instant::now() + Duration::from_secs(2)).is_err() {
             eprintln!("ERROR: Owned Windows job cleanup remains unverified.");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resume_all;
+    use std::cell::Cell;
+
+    #[test]
+    fn resumes_every_owned_snapshot_thread_instead_of_stopping_at_the_first() {
+        let calls = Cell::new(0);
+        let counts = [1, 1].into_iter().map(|count| {
+            calls.set(calls.get() + 1);
+            Ok(count)
+        });
+        resume_all(counts).unwrap();
+        assert_eq!(calls.get(), 2);
+    }
+
+    #[test]
+    fn running_auxiliary_does_not_hide_the_suspended_primary() {
+        resume_all([Ok(0), Ok(1), Ok(0)]).unwrap();
+        assert!(resume_all([Ok(0)]).is_err());
+        assert!(resume_all([]).is_err());
+        assert!(resume_all([Ok(1), Ok(2)]).is_err());
+        let failure = std::io::Error::other("Controlled resume failure");
+        assert!(resume_all([Ok(1), Err(failure)]).is_err());
     }
 }

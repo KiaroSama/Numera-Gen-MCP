@@ -31,8 +31,10 @@ Normal child exit codes propagate. Timeout, cancellation or excess output return
 cleanup or operation error returns 1. One two-second cleanup ceiling applies to the owned tree.
 POSIX supervision uses a newly created process group anchored by an unreaped direct child; it is
 not containment for a hostile child deliberately escaping its group. Windows starts the child
-suspended, assigns it to a private non-breakaway Job Object, then resumes its primary thread.
-Unrelated processes are never selected by name or a recycled numeric PID.
+suspended, assigns it to a private non-breakaway Job Object, then resumes its owned snapshot threads.
+Thread enumeration does not identify the primary by position: every opened handle's process identity
+is rechecked, already-running auxiliary threads are harmless, and an unreleased suspension fails
+closed. Unrelated processes are never selected by name or a recycled numeric PID.
 
 A sanitized process ledger records start/bounds, termination reason, exit and cleanup evidence.
 Managed scratch and ledger stay under the owning root. Existing UTF-8 UTC structured logging uses
