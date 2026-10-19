@@ -14,7 +14,11 @@ use std::{
     io::{Read, Write},
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
-    sync::{Arc, Mutex, mpsc},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicI64, Ordering},
+        mpsc,
+    },
     time::{Duration, Instant},
 };
 use tokio_util::sync::CancellationToken;
@@ -420,25 +424,23 @@ fn scenario(phase: &str) {
     std::fs::write(workspace.0.join("sample.png"), &bytes).unwrap();
     killed(&workspace.0, phase);
     let state = workspace.0.join("state");
-    // The native clock is fixed; SQL expiry models the elapsed lease, not Date.now parity.
-    let db = rusqlite::Connection::open(state.join("receipts.sqlite")).unwrap();
-    db.execute("UPDATE requests SET lease=0 WHERE id='child-crash'", [])
-        .unwrap();
     if phase == "published" {
+        let db = rusqlite::Connection::open(state.join("receipts.sqlite")).unwrap();
         db.execute_batch("DROP TRIGGER reject_literal_crash_output")
             .unwrap();
     }
-    drop(db);
+    let clock = Arc::new(AtomicI64::new(chrono::Utc::now().timestamp_millis()));
+    let lease_clock = Arc::clone(&clock);
+    let store =
+        Store::open_with_lease_clock(&state, move || lease_clock.load(Ordering::SeqCst)).unwrap();
+    clock.store(
+        chrono::Utc::now().timestamp_millis() + Store::LEASE_MS + 1,
+        Ordering::SeqCst,
+    );
     runtime.block_on(async {
         tokio::time::timeout(
             Duration::from_secs(3),
-            recover(
-                &workspace.0,
-                phase,
-                Store::open(&state).unwrap(),
-                config,
-                &bytes,
-            ),
+            recover(&workspace.0, phase, store, config, &bytes),
         )
         .await
         .unwrap();

@@ -31,7 +31,7 @@ mod windows {
     const LIMIT: u64 = 1048576;
     type Handle = *mut c_void;
 
-    fn stage_flags(output: &str) -> [bool; 10] {
+    fn stage_flags(output: &str) -> [bool; 13] {
         [
             "DPAPI_WORKER_ENROLLED",
             "Maintenance operation started.",
@@ -43,6 +43,9 @@ mod windows {
             "Bounded child finished.",
             "\"cleanup_verified\":true",
             "\"cleanup_verified\":false",
+            "DPAPI_WRAPPER_STARTED",
+            "DPAPI_PARENT_SECURITY_READY",
+            "DPAPI_PARENT_CREATED",
         ]
         .map(|marker| output.contains(marker))
     }
@@ -51,14 +54,16 @@ mod windows {
     fn timeout_stage_projection_retains_only_fixed_booleans() {
         let output = "private-path synthetic-plaintext ciphertext DPAPI_WORKER_ENROLLED\nBounded child started.\nACL_VERIFIED\n{\"cleanup_verified\":false}";
         assert_eq!(
-            stage_flags(output),
+            stage_flags(output)[..10],
             [
                 true, false, true, false, false, false, true, false, false, true
             ]
         );
+        let milestones = "DPAPI_WRAPPER_STARTED DPAPI_PARENT_SECURITY_READY DPAPI_PARENT_CREATED";
+        assert_eq!(stage_flags(milestones)[10..], [true; 3]);
         assert_eq!(
             stage_flags("private-path plaintext ciphertext"),
-            [false; 10]
+            [false; 13]
         );
     }
 
@@ -527,10 +532,13 @@ mod windows {
         let wrapper = root.join("fixture.ps1");
         fs::write(&wrapper, r#"
 $ErrorActionPreference='Stop'
+Write-Output 'DPAPI_WRAPPER_STARTED'
 $directory=[Security.AccessControl.DirectorySecurity]::new()
 $directory.SetAccessRuleProtection($true,$false)
 $directory.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.WindowsIdentity]::GetCurrent().User,[Security.AccessControl.FileSystemRights]::FullControl,[Security.AccessControl.AccessControlType]::Allow))
+Write-Output 'DPAPI_PARENT_SECURITY_READY'
 [IO.FileSystemAclExtensions]::Create([IO.DirectoryInfo]::new((Join-Path $PSScriptRoot 'private')),$directory)
+Write-Output 'DPAPI_PARENT_CREATED'
 function Read-Host { param([string]$Prompt,[switch]$AsSecureString); ConvertTo-SecureString 'non-secret-DPAPI-fixture-日本語' -AsPlainText -Force }
 & (Join-Path $PSScriptRoot 'scripts/protect-secret.ps1') -Path $env:NUMERA_FIXTURE_DPAPI
 $stage=0
@@ -582,10 +590,11 @@ try {
             "ACL_HAS_FOREIGN_True",
         ]
         .map(|marker| output.lines().any(|line| line.trim() == marker));
+        let stages = stage_flags(&output);
         assert_eq!(
             status.code(),
             Some(0),
-            "DPAPI fixture stages: protect_started={}, protect_succeeded={}, protect_failed={}, acl_verified={}, destination_exists={}, acl_stage0_4_command_identity_permission_protected_allow_foreign={acl:?}",
+            "DPAPI fixture stages: worker_bound_protect_cleanup_wrapper={stages:?}, protect_started={}, protect_succeeded={}, protect_failed={}, acl_verified={}, destination_exists={}, acl_stage0_4_command_identity_permission_protected_allow_foreign={acl:?}",
             output.contains("User-scoped secret protection requested; value and path are not logged."),
             output.contains("DPAPI secret created for the current Windows user; value not logged."),
             output.contains("Secret protection failed. Verify destination, current-user DPAPI and access restrictions before use."),

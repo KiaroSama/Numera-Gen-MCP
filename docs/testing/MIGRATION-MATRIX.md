@@ -599,7 +599,16 @@ substituting a peer Store or direct SQL expiry. At `f6c7520`, all three and all 
 passed on six stable platforms and nightly. Strict Clippy, release/SDK checks and 86.10% regions /
 83.79% branches passed; only one expression layout failed formatting, so archives were skipped.
 The exact hosted formatter layout is applied without changing assertions. All 470 canonical statuses
-remain pending until final independent literal acceptance; the correction needs its own hosted pass.
+remain pending until final independent literal acceptance. At `47f7bb3`, all six formatter checks and
+all three expiry cases passed; nine jobs passed. Windows x64 alone repeated the DPAPI startup timeout
+before protection/ACL markers; the other five internal packages and nightly 86.06% / 83.73% passed.
+Fixed wrapper milestones and the existing worker/cleanup projection now expose that boundary without
+changing deadlines or security assertions; the original latency cause is still unproven.
+
+The killed-child recovery fixture now advances the existing instance-owned lease clock on its first
+reopen instead of rewriting SQL lease values. All eight phase assertions and the second ordinary
+reopen remain unchanged. Receipt timestamps, the published-phase SQL fault and checkpoint transport
+are separate equivalence limits; this source change requires its own hosted verification.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
