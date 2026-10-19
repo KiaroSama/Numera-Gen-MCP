@@ -760,7 +760,7 @@
       "sha256": "0c8de1306d536ad883043d3603991360a4a3554f2ce176cd8ed7aafffbec1bf2",
       "native": [
         "tests/rust/canonical_parity.rs::generated_source_canonicalization_cases_are_nonempty_and_exact",
-        "tests/rust/state.rs::existing_request_identity_survives_reopen_and_never_replays",
+        "tests/rust/lease_clock_acceptance.rs::exact_source_same_store_expired_running_handle_preserves_recoverable_job",
         "tests/rust/terminal.rs::two_real_store_instances_enforce_global_and_connection_admission_limits",
         "tests/rust/generation_contracts.rs::input_reference_mask_pixel_and_owned_byte_limits_reject_before_submission",
         "tests/rust/generation_acceptance.rs::exact_source_preintent_refusals_leave_no_queued_or_active_work",

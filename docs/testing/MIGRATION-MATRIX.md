@@ -588,8 +588,15 @@ terminal-lifecycle target: confirmed, dispatched, missing acknowledgement and al
 Each preserves the original local Comfy configuration, receipt and two public calls, then closes the
 application Store and verifies two actual reopens, admission and exact request counts. Existing false,
 ambiguous and uncertain-poll cases remain. These are public application-dispatch fixtures, not SDK
-handshake/error-envelope evidence; the new assertions require their own hosted execution. All 470
-canonical statuses stay pending, and no timeout, production behavior or coverage denominator changes.
+handshake/error-envelope evidence. At `6d407ee`, all four passed on six stable platforms and nightly;
+all ten jobs and six internal packages passed, with 86.07% regions / 83.73% branches. Complete native
+logs confirm each new case. No timeout, production behavior or coverage denominator changed.
+
+Three additional expiry fixtures now reuse the existing instance-owned lease clock: same-Store
+running receipts with and without a recoverable handle, and an already-completed empty receipt.
+They preserve the source clock values, receipt defaults and duplicate-prepare schedule instead of
+substituting a peer Store or direct SQL expiry. These assertions require their own hosted execution;
+all 470 canonical statuses remain pending until final independent literal acceptance.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

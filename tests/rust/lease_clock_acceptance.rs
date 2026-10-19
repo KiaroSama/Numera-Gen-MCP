@@ -208,3 +208,62 @@ fn exact_source_stale_same_instance_publication_is_fenced_after_recovery_generat
     assert!(store.owns(id, None).unwrap());
     assert!(store.list_outputs(0, 100).unwrap().is_empty());
 }
+
+fn expired_running_receipt(has_job: bool) {
+    let workspace = Workspace::new();
+    let clock = Arc::new(AtomicI64::new(1000));
+    let mut store = open_store(&workspace.0.join("state"), &clock);
+    let mut initial = receipt("request-1");
+    initial.value["status"] = json!("running");
+    initial.value["generation_outcome"] = json!("running");
+    if has_job {
+        initial.value["upstream_job"] = json!({"id":"upstream-owned","kind":"responses"});
+    }
+    store.prepare(initial, "hash", "identity").unwrap();
+    clock.store(3601001, Ordering::SeqCst);
+    let (fresh, recovered) = store
+        .prepare(receipt("request-1"), "hash", "identity")
+        .unwrap();
+    assert!(!fresh);
+    let status = if has_job { "running" } else { "outcome_unknown" };
+    let outcome = if has_job { "running" } else { "unknown" };
+    assert_eq!(recovered.status(), status);
+    assert_eq!(recovered.value["generation_outcome"], outcome);
+    assert_eq!(store.get("request-1").unwrap().status(), recovered.status());
+    if has_job {
+        assert_eq!(
+            recovered.value["upstream_job"],
+            json!({"id":"upstream-owned","kind":"responses"})
+        );
+    }
+}
+
+#[test]
+fn exact_source_same_store_expired_running_handle_preserves_recoverable_job() {
+    expired_running_receipt(true);
+}
+
+#[test]
+fn exact_source_same_store_expired_running_without_handle_retains_unknown_outcome() {
+    expired_running_receipt(false);
+}
+
+#[test]
+fn exact_source_same_store_expired_completed_receipt_remains_completed() {
+    let workspace = Workspace::new();
+    let clock = Arc::new(AtomicI64::new(0));
+    let mut store = open_store(&workspace.0.join("state"), &clock);
+    let mut initial = receipt("request-1");
+    initial.value["status"] = json!("completed");
+    initial.value["generation_outcome"] = json!("completed");
+    store.prepare(initial, "hash", "identity").unwrap();
+    clock.store(3600001, Ordering::SeqCst);
+    assert_eq!(
+        store
+            .prepare(receipt("request-1"), "hash", "identity")
+            .unwrap()
+            .1
+            .status(),
+        "completed"
+    );
+}
