@@ -525,6 +525,15 @@ Unicode, corruption, no-overwrite, privacy and cleanup assertions; a separate na
 parent-abort containment. Original Node startup failure is not claimed fixed. All pending case states
 remain unchanged; replacement hosted verification is still required.
 
+At `0dbba1f`, Linux x64/ARM64, macOS x64/ARM64 and Windows x64 passed all native targets,
+including normal exits, exited-leader/live-descendant cleanup and the native DPAPI wrapper. Windows
+ARM64 passed DPAPI but failed the new descendant observer: a reopened numeric PID was nonsignaled
+without a retained creation-time identity. That does not identify whether it was the original process;
+the observer now records creation time before the leader exits and requires the original instance to
+be signaled immediately. No production cleanup or deadline is relaxed. Complete coverage passed at
+86.10% regions / 83.79% branches. One exact hosted helper-format correction also remains necessary;
+the replacement final tree still needs its own hosted verification.
+
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
 and exact approved-logo binding. Public synthetic fixture signatures were independently verified;

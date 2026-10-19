@@ -4,7 +4,9 @@
 tools and runs directly as `numera-image-gen-mcp bridge`; it does not launch this helper.
 At `6bffdf8`, all six targets compiled and passed release/SDK checks, and complete coverage passed
 at 86.10% regions / 83.73% branches. Strict Clippy, macOS exited-group cleanup and a Windows x64
-DPAPI fixture still failed; the corrective candidate requires replacement hosted verification.
+DPAPI fixture still failed. At `0dbba1f`, the macOS ARM and Windows x64 regressions passed, but
+Windows ARM's new descendant observer failed and formatting still blocked the stable jobs. The
+observer now compares creation time as well as PID; replacement hosted verification remains required.
 Do not replace a working installation or host entry with an unverified candidate.
 
 ## Bounded commands

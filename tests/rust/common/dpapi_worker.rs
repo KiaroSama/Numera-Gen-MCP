@@ -78,7 +78,14 @@ pub fn run(mode: &str) -> io::Result<i32> {
         let mut command = Command::new(env!("CARGO_BIN_EXE_numera-dev"));
         command
             .args([
-                "bounded", "15000", "8000", "--exec", "pwsh", "-NoProfile", "-NonInteractive", "-File",
+                "bounded",
+                "15000",
+                "8000",
+                "--exec",
+                "pwsh",
+                "-NoProfile",
+                "-NonInteractive",
+                "-File",
             ])
             .arg(std::env::var_os("NUMERA_FIXTURE_DPAPI_SCRIPT").unwrap());
         if std::env::var("NUMERA_FIXTURE_DPAPI_WRAPPER").unwrap() == "0" {

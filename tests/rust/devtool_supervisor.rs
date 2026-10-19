@@ -50,6 +50,36 @@ fn command(root: &Path, mode: &str) -> Command {
     command
 }
 
+fn record_leaf(root: &Path, child: &Child) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::io::AsRawHandle;
+        let created = creation_time(child.as_raw_handle()).unwrap();
+        fs::write(root.join("leaf-created"), created.to_string()).unwrap();
+    }
+    fs::write(root.join("leaf-pid"), child.id().to_string()).unwrap();
+}
+
+#[cfg(windows)]
+fn creation_time(handle: *mut std::ffi::c_void) -> io::Result<u64> {
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn GetProcessTimes(
+            handle: *mut std::ffi::c_void,
+            created: *mut u64,
+            exited: *mut u64,
+            kernel: *mut u64,
+            user: *mut u64,
+        ) -> i32;
+    }
+    let (mut created, mut exited, mut kernel, mut user) = (0, 0, 0, 0);
+    // SAFETY: live query-capable process handle and four correctly sized FILETIME outputs.
+    if unsafe { GetProcessTimes(handle, &mut created, &mut exited, &mut kernel, &mut user) } == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(created)
+}
+
 fn wait_ready(path: &Path) {
     let until = Instant::now() + Duration::from_secs(2);
     while !path.exists() {
@@ -77,7 +107,7 @@ fn fixture_worker() {
                     .unwrap(),
             );
             wait_ready(&root.join("leaf-ready"));
-            fs::write(root.join("leaf-pid"), child.0.id().to_string()).unwrap();
+            record_leaf(&root, &child.0);
             println!("fixture-ready");
             io::stdout().flush().unwrap();
             let until = Instant::now() + Duration::from_secs(6);
@@ -101,7 +131,7 @@ fn fixture_worker() {
                 .unwrap();
             let child = Guard(child);
             wait_ready(&root.join("leaf-ready"));
-            fs::write(root.join("leaf-pid"), child.0.id().to_string()).unwrap();
+            record_leaf(&root, &child.0);
             // Exit bypasses Drop; the outer supervisor still owns the live descendant.
             std::process::exit(37);
         }
@@ -210,11 +240,20 @@ fn assert_descendant_stopped(root: &Path) {
         }
         // SAFETY: query-only handle; no PID-based termination, always closed.
         unsafe {
-            let handle = OpenProcess(0x00100000, 0, pid);
+            let handle = OpenProcess(0x00101000, 0, pid);
             if !handle.is_null() {
+                let created = creation_time(handle);
                 let result = WaitForSingleObject(handle, 0);
                 CloseHandle(handle);
-                assert_eq!(result, 0);
+                let expected: u64 = fs::read_to_string(root.join("leaf-created"))
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                if created.unwrap() == expected {
+                    assert_eq!(result, 0, "The original owned descendant is still alive.");
+                }
+            } else {
+                assert_eq!(io::Error::last_os_error().raw_os_error(), Some(87));
             }
         }
     }
