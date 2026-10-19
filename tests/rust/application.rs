@@ -5,15 +5,18 @@ mod config_fixture;
 mod http_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
+#[path = "common/wire.rs"]
+mod reload_wire;
 use common::Workspace;
 use http_fixture::{Reply, Server};
 use numera_image_gen_mcp::compat::value::json;
 use numera_image_gen_mcp::{
-    config::{Config, ConfigReload},
+    config::{Config, ConfigReload, snapshot_credentials},
+    jobs::Receipt,
     logging::Logger,
     mcp::application::Application,
     runtime_paths::RuntimePaths,
-    services::request,
+    services::{identity::connection_identity, request},
 };
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio_util::sync::CancellationToken;
@@ -377,4 +380,180 @@ fn public_request_schema_rejects_invalid_inputs_without_coercion() {
     ] {
         request::validate_source(&value).unwrap();
     }
+}
+
+struct ReloadHost(Application);
+impl Drop for ReloadHost {
+    fn drop(&mut self) {
+        self.0.shutdown();
+    }
+}
+
+// Same-owner application dispatch complements the separate SDK child fixture.
+#[tokio::test]
+async fn exact_comfy_reload_retains_the_prepared_application_store_owner_without_release() {
+    let workspace = Workspace::new();
+    let root = &workspace.0;
+    reload_wire::serve(
+        |request| {
+            reload_wire::json_reply(if request.method == "POST" {
+                json!({"cancelled":true})
+            } else if request.path.starts_with("/api/jobs/") {
+                json!({"id":"original-handle","status":"cancelled"})
+            } else {
+                json!({})
+            })
+        },
+        |origin, requests| async move {
+            let file = root.join("config.json");
+            let raw = json!({
+                "schemaVersion":1,"defaultConnection":"local",
+                "outputDir":root.join("outputs").to_str().unwrap(),
+                "stateDir":root.join("state").to_str().unwrap(),
+                "logging":{"directory":root.join("logs").to_str().unwrap()},
+                "files":{"allowedInputRoots":[root.join("inputs").to_str().unwrap()]},
+                "connections":{"local":{
+                    "adapter":"comfyui","baseUrl":origin,"baseUrlMode":"origin",
+                    "auth":{"type":"none"}
+                }}
+            });
+            std::fs::write(&file, raw.to_string()).unwrap();
+            let config = Config::parse(&raw.to_string(), &file, &[], &HashMap::new()).unwrap();
+            let reload = ConfigReload::new(
+                config.clone(),
+                file.clone(),
+                vec!["--config".into(), file.to_str().unwrap().into()],
+                HashMap::new(),
+            );
+            let runtime = RuntimePaths::new(root).unwrap();
+            let host = ReloadHost(
+                Application::new(
+                    config.clone(),
+                    Some(reload),
+                    Arc::new(Logger::new(&root.join("logs"), "ERROR")),
+                    runtime.clone(),
+                    HashMap::new(),
+                    CancellationToken::new(),
+                )
+                .unwrap(),
+            );
+            let app = &host.0;
+            let original_store = app.store.clone();
+            let owner = original_store.lock().unwrap().owner.clone();
+            let (_, connection) = config.select(Some("local")).unwrap();
+            assert_eq!(connection["requestTimeoutMs"], 300000);
+            assert_eq!(connection["discoveryTimeoutMs"], 15000);
+            let pinned = snapshot_credentials(&connection, &HashMap::new(), &runtime)
+                .await
+                .unwrap();
+            let identity = connection_identity("local", &pinned).unwrap();
+            let old = json!({
+                "request_id":"existing","connection":"local","adapter":"comfyui",
+                "operation":"generate","status":"running","requested_model":"image-model",
+                "upstream_model":null,"outputs":[],"warnings":[],"deviations":[],"errors":[],
+                "generation_outcome":"not_submitted","storage_outcome":"not_started",
+                "another_submission_may_charge":false,
+                "created_at":"2026-10-02T00:00:00.000Z","updated_at":"2026-10-02T00:00:00.000Z",
+                "upstream_job":{"kind":"comfyui","id":"original-handle"}
+            });
+            {
+                let mut store = app.store.lock().unwrap();
+                for (id, identity) in [
+                    ("existing", identity.as_str()),
+                    ("unknown", "unavailable-account"),
+                ] {
+                    let mut value = old.clone();
+                    value["request_id"] = json!(id);
+                    let (fresh, prepared) = store
+                        .prepare(Receipt::new(value.clone()), "fixture-fingerprint", identity)
+                        .unwrap();
+                    assert!(fresh);
+                    assert_eq!(prepared.generation, Some(1));
+                    assert!(store.owns(id, Some(&prepared)).unwrap());
+                    assert_eq!(store.owner, owner);
+                    assert_eq!(store.get(id).unwrap().value, value);
+                }
+            }
+            let mut changed = raw.clone();
+            changed["connections"]["local"]["baseUrl"] = json!(format!("{origin}/changed"));
+            changed["connections"]["local"]["defaultModel"] = json!("new-model");
+            std::fs::write(&file, changed.to_string()).unwrap();
+            let signal = CancellationToken::new();
+            tokio::time::timeout(
+                Duration::from_secs(5),
+                app.call(
+                    "get_job",
+                    json!({"request_id":"existing","refresh":true}),
+                    &signal,
+                ),
+            )
+            .await
+            .expect("Source retained-handle poll exceeded five seconds")
+            .unwrap();
+            let cancelled = tokio::time::timeout(
+                Duration::from_secs(5),
+                app.call("cancel_job", json!({"request_id":"existing"}), &signal),
+            )
+            .await
+            .expect("Source retained-handle cancellation exceeded five seconds")
+            .unwrap();
+            assert_eq!(cancelled["upstream_requested"], true);
+            assert_eq!(cancelled["upstream_cancelled"], true);
+            let paths = || {
+                requests
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .map(|request| request.path.clone())
+                    .collect::<Vec<_>>()
+            };
+            assert_eq!(
+                paths(),
+                [
+                    "/history/original-handle",
+                    "/api/jobs/original-handle/cancel",
+                    "/api/jobs/original-handle",
+                ]
+            );
+            let unknown = tokio::time::timeout(
+                Duration::from_secs(5),
+                app.call(
+                    "get_job",
+                    json!({"request_id":"unknown","refresh":true}),
+                    &signal,
+                ),
+            )
+            .await
+            .expect("Source unavailable-identity refusal exceeded five seconds")
+            .unwrap_err();
+            assert_eq!(unknown.code, "permission_denied");
+            assert_eq!(paths().len(), 3);
+            let current = app.current().unwrap();
+            assert!(Arc::ptr_eq(&original_store, &current.store));
+            assert_eq!(current.store.lock().unwrap().owner, owner);
+            assert_eq!(
+                current.config.value["connections"]["local"]["defaultModel"],
+                "new-model"
+            );
+            let mut ambiguous = raw;
+            ambiguous["connections"]["local"]["paths"] = json!({"history":"changed-history"});
+            std::fs::write(&file, ambiguous.to_string()).unwrap();
+            let error = tokio::time::timeout(
+                Duration::from_secs(5),
+                app.call(
+                    "get_job",
+                    json!({"request_id":"existing","refresh":true}),
+                    &signal,
+                ),
+            )
+            .await
+            .expect("Source ambiguous-route refusal exceeded five seconds")
+            .unwrap_err();
+            assert_eq!(error.code, "permission_denied");
+            assert_eq!(paths().len(), 3);
+            assert!(Arc::ptr_eq(&original_store, &app.current().unwrap().store));
+            assert_eq!(app.store.lock().unwrap().owner, owner);
+        },
+    )
+    .await;
 }

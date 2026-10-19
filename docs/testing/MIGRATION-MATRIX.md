@@ -557,7 +557,17 @@ all 470 pending dispositions and original assertions remain intact. At `0602c5f`
 the second env load and every native target passed on six stable platforms and nightly; release/SDK
 and 86.06% regions / 83.73% branches coverage passed. Only two strict Clippy `err_expect` diagnostics
 and one formatter chain failed, so archives were skipped. The correction uses `expect_err` and the
-actual hosted layout without changing assertions; replacement verification remains required.
+actual hosted layout without changing assertions. At `4f43f47`, all six passed formatting, strict
+Clippy, release and SDK checks; the new cases passed everywhere. Only Windows x64 DPAPI startup hit
+its unchanged eight-second idle bound. One same-SHA failed-job confirmation passed, including all
+100 targets and its extracted archive; the aggregate ten checks are green. All-six internal packages
+and 86.11% regions / 83.81% branches are verified. The original startup cause remains unproven.
+
+A new source-only Comfy reload fixture now prepares the exact running receipts in the live
+Application Store without admission, update, release or reopen. It checks the same Store allocation,
+writer ownership, original three paths and both no-extra-request refusals across configuration saves.
+This complements the existing actual SDK child fixture; it is not an in-memory SDK client or protocol
+error-envelope assertion. Its own hosted execution and final literal acceptance remain pending.
 No production behavior, credential, host setting or timeout is changed.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,

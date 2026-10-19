@@ -295,15 +295,15 @@
       "sha256": "6cfec679560326b7e658171684524e4543d892d1d2d2c5bc062d167a1aa91bcc",
       "native": [
         "tests/rust/config_parity.rs::reload_retains_last_good_fixed_policy_and_sixty_four_snapshots",
-        "tests/rust/application.rs::public_tools_validate_arguments_store_outputs_and_reload_last_good_config",
+        "tests/rust/application.rs::exact_comfy_reload_retains_the_prepared_application_store_owner_without_release",
         "tests/rust/snapshot_races.rs::in_flight_generation_keeps_old_snapshot_while_reload_and_next_request_use_new_model",
         "scripts/native-config-reload-acceptance.mjs::configReloadAcceptance"
       ],
       "status": "pending",
       "evidence": null,
       "gaps": [
-        "Applicable hosted execution and final independent literal acceptance pending.",
-        "Partial ownership schedule: source app.store prepares within the same Store owner; actual child fixture requires explicit public release of the external seed Store. Same-owner seeding/claim schedule remains required."
+        "Applicable hosted execution of the new same-owner fixture and final independent literal acceptance pending.",
+        "SDK child retains an external seed ownership handoff; complementary same-owner Application dispatch does not establish an in-memory SDK client or its protocol error envelope."
       ]
     },
     {
