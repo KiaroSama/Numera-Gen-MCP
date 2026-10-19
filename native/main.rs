@@ -168,7 +168,10 @@ fn main() {
         args.first().map(String::as_str),
         Some("--version" | "version")
     ) {
-        println!("{}", numera_image_gen_mcp::build_identity::version("numera-image-gen-mcp"));
+        println!(
+            "{}",
+            numera_image_gen_mcp::build_identity::version("numera-image-gen-mcp")
+        );
         return;
     }
     if matches!(args.first().map(String::as_str), Some("--help" | "help")) {

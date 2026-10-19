@@ -507,7 +507,14 @@ observation, unrelated-process survival, and all five actual CLI dry-runs. Froze
 platform applicability and all 470 pending statuses remain unchanged; 470 assignments are not 470
 accepted cases. PowerShell AST acceptance is replaced only by the explicitly approved native contract.
 POSIX zombie-vs-`kill(pid,0)` behavior remains an explicit final-disposition gap for the generic CLI row.
-There are 100 registered native integration targets; the new source has not yet compiled or run.
+There are 100 registered native integration targets. At `5781c32`, all three Node jobs and the
+18 Python tooling contracts on all six stable platforms passed. Native compilation failed in the
+setup map's inferred key type on every target and a missing macOS selector constant on both Apple
+targets; Rust tests, coverage and downstream artifacts therefore remain unverified. The correction
+uses explicit existing map types and Apple's documented group selector, applies actual hosted
+formatting, and preserves all assertions and pending dispositions. A zero-byte macOS enumeration
+is rejected rather than mistaken for verified cleanup; the unreaped direct child anchors the group.
+The replacement hosted run is required; source correction is not a passing compiler/runtime result.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

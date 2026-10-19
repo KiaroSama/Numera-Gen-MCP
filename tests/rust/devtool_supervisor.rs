@@ -1,6 +1,9 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::{devtools::supervisor::{Bounds, run}, logging::Logger};
+use numera_image_gen_mcp::{
+    devtools::supervisor::{Bounds, run},
+    logging::Logger,
+};
 use std::{
     fs,
     io::{self, Write},
@@ -18,18 +21,24 @@ impl Drop for Guard {
         loop {
             match self.0.try_wait() {
                 Ok(Some(_)) => return,
-                Ok(None) if Instant::now() < until => std::thread::park_timeout(Duration::from_millis(10)),
+                Ok(None) if Instant::now() < until => {
+                    std::thread::park_timeout(Duration::from_millis(10))
+                }
                 _ => break,
             }
         }
-        if std::thread::panicking() { eprintln!("Native fixture child cleanup is unverified."); }
-        else { panic!("Native fixture child cleanup is unverified."); }
+        if std::thread::panicking() {
+            eprintln!("Native fixture child cleanup is unverified.");
+        } else {
+            panic!("Native fixture child cleanup is unverified.");
+        }
     }
 }
 
 fn command(root: &Path, mode: &str) -> Command {
     let mut command = Command::new(std::env::current_exe().unwrap());
-    command.args(["--exact", "fixture_worker", "--nocapture"])
+    command
+        .args(["--exact", "fixture_worker", "--nocapture"])
         .env("NUMERA_DEV_FIXTURE", mode)
         .env("NUMERA_DEV_FIXTURE_ROOT", root)
         .stdin(Stdio::null());
@@ -44,18 +53,29 @@ fn command(root: &Path, mode: &str) -> Command {
 fn wait_ready(path: &Path) {
     let until = Instant::now() + Duration::from_secs(2);
     while !path.exists() {
-        assert!(Instant::now() < until, "Native fixture readiness timed out.");
+        assert!(
+            Instant::now() < until,
+            "Native fixture readiness timed out."
+        );
         std::thread::park_timeout(Duration::from_millis(10));
     }
 }
 
 #[test]
 fn fixture_worker() {
-    let Ok(mode) = std::env::var("NUMERA_DEV_FIXTURE") else { return };
+    let Ok(mode) = std::env::var("NUMERA_DEV_FIXTURE") else {
+        return;
+    };
     let root = std::path::PathBuf::from(std::env::var_os("NUMERA_DEV_FIXTURE_ROOT").unwrap());
     match mode.as_str() {
         "tree" => {
-            let mut child = Guard(command(&root, "leaf").stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap());
+            let mut child = Guard(
+                command(&root, "leaf")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .spawn()
+                    .unwrap(),
+            );
             wait_ready(&root.join("leaf-ready"));
             fs::write(root.join("leaf-pid"), child.0.id().to_string()).unwrap();
             println!("fixture-ready");
@@ -68,10 +88,16 @@ fn fixture_worker() {
         "leaf" | "unrelated" => {
             fs::write(root.join(format!("{mode}-ready")), b"ready").unwrap();
             let until = Instant::now() + Duration::from_secs(6);
-            while Instant::now() < until { std::thread::park_timeout(Duration::from_millis(10)); }
+            while Instant::now() < until {
+                std::thread::park_timeout(Duration::from_millis(10));
+            }
         }
         "exit" => std::process::exit(37),
-        "output" => { io::stdout().write_all(&vec![b'x'; 3 * 1024 * 1024]).unwrap(); }
+        "output" => {
+            io::stdout()
+                .write_all(&vec![b'x'; 3 * 1024 * 1024])
+                .unwrap();
+        }
         _ => panic!("Unknown native fixture mode."),
     }
 }
@@ -80,40 +106,85 @@ fn fixture_worker() {
 fn idle_timeout_reaps_owned_tree_preserves_unrelated_and_records_cleanup() {
     let workspace = Workspace::new();
     let root = &workspace.0;
-    let mut unrelated = Guard(command(root, "unrelated").stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap());
+    let mut unrelated = Guard(
+        command(root, "unrelated")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
     wait_ready(&root.join("unrelated-ready"));
     let logger = Logger::new(&root.join("logs"), "DEBUG");
-    let result = run(&mut command(root, "tree"), root, Bounds::new(5000, 500).unwrap(), &AtomicBool::new(false), &logger).unwrap();
+    let result = run(
+        &mut command(root, "tree"),
+        root,
+        Bounds::new(5000, 500).unwrap(),
+        &AtomicBool::new(false),
+        &logger,
+    )
+    .unwrap();
     assert_eq!(result.code, 124);
     assert_eq!(result.reason.as_deref(), Some("idle"));
     assert!(result.cleanup_verified);
-    assert!(String::from_utf8(result.stdout).unwrap().contains("fixture-ready"));
+    assert!(
+        String::from_utf8(result.stdout)
+            .unwrap()
+            .contains("fixture-ready")
+    );
     assert!(unrelated.0.try_wait().unwrap().is_none());
     assert_descendant_stopped(root);
     let events = fs::read_to_string(root.join(".ci-work/processes.jsonl")).unwrap();
-    let rows = events.lines().map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap()).collect::<Vec<_>>();
-    assert!(rows.iter().any(|row| row["event"] == "start" && row["wall_ms"] == 5000 && row["idle_ms"] == 500));
-    assert!(rows.iter().any(|row| row["event"] == "terminate" && row["reason"] == "idle"));
-    assert!(rows.iter().any(|row| row["event"] == "finish" && row["exit_code"] == 124 && row["cleanup_verified"] == true));
+    let rows = events
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    assert!(
+        rows.iter()
+            .any(|row| row["event"] == "start" && row["wall_ms"] == 5000 && row["idle_ms"] == 500)
+    );
+    assert!(
+        rows.iter()
+            .any(|row| row["event"] == "terminate" && row["reason"] == "idle")
+    );
+    assert!(rows.iter().any(|row| row["event"] == "finish"
+        && row["exit_code"] == 124
+        && row["cleanup_verified"] == true));
     assert!(!events.contains("NUMERA_DEV_FIXTURE"));
     assert!(!events.contains(&root.to_string_lossy().into_owned()));
 }
 
 fn assert_descendant_stopped(root: &Path) {
-    let pid: u32 = fs::read_to_string(root.join("leaf-pid")).unwrap().parse().unwrap();
+    let pid: u32 = fs::read_to_string(root.join("leaf-pid"))
+        .unwrap()
+        .parse()
+        .unwrap();
     #[cfg(unix)]
     {
-        let status = Command::new("ps").args(["-o", "stat=", "-p", &pid.to_string()])
-            .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null()).spawn().unwrap();
+        let status = Command::new("ps")
+            .args(["-o", "stat=", "-p", &pid.to_string()])
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
         let mut status = Guard(status);
         let until = Instant::now() + Duration::from_secs(2);
         while status.0.try_wait().unwrap().is_none() {
-            assert!(Instant::now() < until, "Bounded process inspection timed out.");
+            assert!(
+                Instant::now() < until,
+                "Bounded process inspection timed out."
+            );
             std::thread::park_timeout(Duration::from_millis(10));
         }
         let mut bytes = String::new();
         use std::io::Read;
-        status.0.stdout.take().unwrap().read_to_string(&mut bytes).unwrap();
+        status
+            .0
+            .stdout
+            .take()
+            .unwrap()
+            .read_to_string(&mut bytes)
+            .unwrap();
         assert!(bytes.trim().is_empty() || bytes.trim().starts_with('Z'));
     }
     #[cfg(windows)]
@@ -144,22 +215,44 @@ fn actual_native_bounded_cli_propagates_idle_timeout_and_verified_descendant_cle
     let executable = std::env::current_exe().unwrap();
     let mut cli = Command::new(env!("CARGO_BIN_EXE_numera-dev"));
     cli.args(["bounded", "5000", "500", "--exec"])
-        .arg(executable).args(["--exact", "fixture_worker", "--nocapture"])
-        .env("NUMERA_DEV_FIXTURE", "tree").env("NUMERA_DEV_FIXTURE_ROOT", &workspace.0);
-    let result = run(&mut cli, &workspace.0, Bounds::new(12000, 5000).unwrap(),
-        &AtomicBool::new(false), &logger).unwrap();
+        .arg(executable)
+        .args(["--exact", "fixture_worker", "--nocapture"])
+        .env("NUMERA_DEV_FIXTURE", "tree")
+        .env("NUMERA_DEV_FIXTURE_ROOT", &workspace.0);
+    let result = run(
+        &mut cli,
+        &workspace.0,
+        Bounds::new(12000, 5000).unwrap(),
+        &AtomicBool::new(false),
+        &logger,
+    )
+    .unwrap();
     assert_eq!(result.code, 124);
     assert!(result.reason.is_none());
     assert!(result.cleanup_verified);
-    assert!(String::from_utf8(result.stdout).unwrap().contains("fixture-ready"));
+    assert!(
+        String::from_utf8(result.stdout)
+            .unwrap()
+            .contains("fixture-ready")
+    );
     assert_descendant_stopped(&workspace.0);
-    let rows = fs::read_to_string(workspace.0.join(".ci-work/processes.jsonl")).unwrap()
-        .lines().map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap()).collect::<Vec<_>>();
-    let inner = rows.iter().find(|row| row["event"] == "start" && row["idle_ms"] == 500).unwrap();
+    let rows = fs::read_to_string(workspace.0.join(".ci-work/processes.jsonl"))
+        .unwrap()
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    let inner = rows
+        .iter()
+        .find(|row| row["event"] == "start" && row["idle_ms"] == 500)
+        .unwrap();
     assert_eq!(inner["wall_ms"], 5000);
-    assert!(rows.iter().any(|row| row["event"] == "terminate" && row["pid"] == inner["pid"] && row["reason"] == "idle"));
-    assert!(rows.iter().any(|row| row["event"] == "finish" && row["pid"] == inner["pid"]
-        && row["exit_code"] == 124 && row["cleanup_verified"] == true));
+    assert!(rows.iter().any(|row| row["event"] == "terminate"
+        && row["pid"] == inner["pid"]
+        && row["reason"] == "idle"));
+    assert!(rows.iter().any(|row| row["event"] == "finish"
+        && row["pid"] == inner["pid"]
+        && row["exit_code"] == 124
+        && row["cleanup_verified"] == true));
 }
 
 #[test]
@@ -169,18 +262,46 @@ fn bounds_exit_wall_cancellation_and_output_limit_are_observable() {
     }
     let workspace = Workspace::new();
     let logger = Logger::new(&workspace.0.join("logs"), "INFO");
-    let normal = run(&mut command(&workspace.0, "exit"), &workspace.0, Bounds::new(5000, 2000).unwrap(), &AtomicBool::new(false), &logger).unwrap();
+    let normal = run(
+        &mut command(&workspace.0, "exit"),
+        &workspace.0,
+        Bounds::new(5000, 2000).unwrap(),
+        &AtomicBool::new(false),
+        &logger,
+    )
+    .unwrap();
     assert_eq!(normal.code, 37);
     assert!(normal.cleanup_verified);
-    let wall = run(&mut command(&workspace.0, "leaf"), &workspace.0, Bounds::new(500, 5000).unwrap(), &AtomicBool::new(false), &logger).unwrap();
+    let wall = run(
+        &mut command(&workspace.0, "leaf"),
+        &workspace.0,
+        Bounds::new(500, 5000).unwrap(),
+        &AtomicBool::new(false),
+        &logger,
+    )
+    .unwrap();
     assert_eq!(wall.reason.as_deref(), Some("wall"));
     assert_eq!(wall.code, 124);
     assert!(wall.cleanup_verified);
-    let output = run(&mut command(&workspace.0, "output"), &workspace.0, Bounds::new(5000, 2000).unwrap(), &AtomicBool::new(false), &logger).unwrap();
+    let output = run(
+        &mut command(&workspace.0, "output"),
+        &workspace.0,
+        Bounds::new(5000, 2000).unwrap(),
+        &AtomicBool::new(false),
+        &logger,
+    )
+    .unwrap();
     assert_eq!(output.reason.as_deref(), Some("output_limit"));
     assert_eq!(output.code, 124);
     assert!(output.cleanup_verified);
-    let cancel = run(&mut command(&workspace.0, "leaf"), &workspace.0, Bounds::new(5000, 2000).unwrap(), &AtomicBool::new(true), &logger).unwrap();
+    let cancel = run(
+        &mut command(&workspace.0, "leaf"),
+        &workspace.0,
+        Bounds::new(5000, 2000).unwrap(),
+        &AtomicBool::new(true),
+        &logger,
+    )
+    .unwrap();
     assert_eq!(cancel.reason.as_deref(), Some("cancelled"));
     assert_eq!(cancel.code, 124);
     assert!(cancel.cleanup_verified);

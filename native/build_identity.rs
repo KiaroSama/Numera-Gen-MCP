@@ -9,5 +9,8 @@ pub const LOGO: &[u8] = include_bytes!("../docs/assets/logo.png");
 pub const SIGNER: &str = "31ccb588ae7e529535dcccd94f06d8d39ae1b8847b7003e884ad8f44cd340c80";
 
 pub fn version(product: &str) -> String {
-    format!("{product} {VERSION}\nPublisher: {PUBLISHER}\nSource: {SOURCE}\nSigner: {SIGNER}\nTrust: self-signed; not public OS trust or Apple notarization\nLogo: {} embedded bytes", LOGO.len())
+    format!(
+        "{product} {VERSION}\nPublisher: {PUBLISHER}\nSource: {SOURCE}\nSigner: {SIGNER}\nTrust: self-signed; not public OS trust or Apple notarization\nLogo: {} embedded bytes",
+        LOGO.len()
+    )
 }
