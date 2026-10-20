@@ -206,6 +206,17 @@ fn actual_diagnose_cli_reports_only_local_readiness_and_never_generation() {
             .to_string(),
     )
     .unwrap();
+    let bin = workspace.0.join("bin");
+    fs::create_dir(&bin).unwrap();
+    fs::copy(
+        env!("CARGO_BIN_EXE_numera-image-gen-mcp"),
+        bin.join(if cfg!(windows) {
+            "numera-image-gen-mcp.exe"
+        } else {
+            "numera-image-gen-mcp"
+        }),
+    )
+    .unwrap();
     let mut command = Command::new(env!("CARGO_BIN_EXE_numera-dev"));
     command
         .args(["setup", "Diagnose", "--root"])

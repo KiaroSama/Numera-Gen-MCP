@@ -178,10 +178,30 @@ impl Owned {
         }))
     }
 
+    pub fn spawn_direct(command: &mut Command) -> io::Result<Self> {
+        Self::spawn(command)
+    }
+
+    pub fn pipes(&mut self) -> io::Result<super::Pipes> {
+        Ok(super::Pipes {
+            stdin: self.child.stdin.take(),
+            stdout: self
+                .child
+                .stdout
+                .take()
+                .ok_or_else(|| io::Error::other("Owned stdout is missing."))?,
+            stderr: self
+                .child
+                .stderr
+                .take()
+                .ok_or_else(|| io::Error::other("Owned stderr is missing."))?,
+        })
+    }
+
     pub fn id(&self) -> u32 {
         self.child.id()
     }
-    pub fn capture(&mut self) -> io::Result<super::capture::Capture> {
+    pub(super) fn capture(&mut self) -> io::Result<super::capture::Capture> {
         let stdout = self
             .child
             .stdout

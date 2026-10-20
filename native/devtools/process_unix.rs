@@ -7,7 +7,7 @@ use std::{
 
 pub struct Owned {
     child: Child,
-    group: i32,
+    group: Option<i32>,
     stopped: bool,
     cleanup_deadline: Option<Instant>,
 }
@@ -20,9 +20,36 @@ impl Owned {
             .map_err(|_| io::Error::other("Child identity exceeds process-group range."))?;
         Ok(Self {
             child,
-            group,
+            group: Some(group),
             stopped: false,
             cleanup_deadline: None,
+        })
+    }
+
+    // A bridge creates no descendants. Keep its caller's process group so an outer owner
+    // can contain readiness and bridge together even when the readiness parent is killed.
+    pub fn spawn_direct(command: &mut Command) -> io::Result<Self> {
+        Ok(Self {
+            child: command.spawn()?,
+            group: None,
+            stopped: false,
+            cleanup_deadline: None,
+        })
+    }
+
+    pub fn pipes(&mut self) -> io::Result<super::Pipes> {
+        Ok(super::Pipes {
+            stdin: self.child.stdin.take(),
+            stdout: self
+                .child
+                .stdout
+                .take()
+                .ok_or_else(|| io::Error::other("Owned stdout is missing."))?,
+            stderr: self
+                .child
+                .stderr
+                .take()
+                .ok_or_else(|| io::Error::other("Owned stderr is missing."))?,
         })
     }
 
@@ -30,7 +57,7 @@ impl Owned {
         self.child.id()
     }
 
-    pub fn capture(&mut self) -> io::Result<super::capture::Capture> {
+    pub(super) fn capture(&mut self) -> io::Result<super::capture::Capture> {
         let stdout = self
             .child
             .stdout
@@ -70,19 +97,23 @@ impl Owned {
             return Err(io::Error::other("Owned command already reaped."));
         }
         let deadline = *self.cleanup_deadline.get_or_insert(deadline);
-        // The unreaped child anchors PGID identity; macOS refuses signals to zombie-only groups.
-        if (!self.exited()? || live_group(self.group)?)
-            && unsafe { libc::kill(-self.group, libc::SIGKILL) } == -1
-        {
-            let error = io::Error::last_os_error();
-            match error.raw_os_error() {
-                Some(libc::ESRCH) => {}
-                // A live group can exit between observation and signal; verify again, never ignore EPERM.
-                Some(libc::EPERM) if self.exited()? && !live_group(self.group)? => {}
-                _ => return Err(error),
+        // The unreaped child anchors PID/PGID identity; direct bridges inherit outer containment.
+        if let Some(group) = self.group {
+            if (!self.exited()? || live_group(group)?)
+                && unsafe { libc::kill(-group, libc::SIGKILL) } == -1
+            {
+                let error = io::Error::last_os_error();
+                match error.raw_os_error() {
+                    Some(libc::ESRCH) => {}
+                    // macOS refuses zombie-only groups; recheck without ignoring live EPERM.
+                    Some(libc::EPERM) if self.exited()? && !live_group(group)? => {}
+                    _ => return Err(error),
+                }
             }
+        } else if !self.exited()? {
+            self.child.kill()?;
         }
-        while !self.exited()? || live_group(self.group)? {
+        while !self.exited()? || self.group.map(live_group).transpose()?.unwrap_or(false) {
             if Instant::now() >= deadline {
                 return Err(io::Error::new(
                     io::ErrorKind::TimedOut,

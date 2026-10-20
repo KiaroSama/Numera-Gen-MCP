@@ -3,17 +3,19 @@ mod common;
 mod config_fixture;
 
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
+use numera_image_gen_mcp::{
+    compat::value::{Value, json},
+    devtools::Owned,
+};
 use std::{
     path::PathBuf,
-    process::{ExitStatus, Stdio},
+    process::{Command as StdCommand, Stdio},
     sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
 use tokio::{
-    io::{AsyncRead, AsyncReadExt, AsyncWriteExt},
+    io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
-    process::Command,
     time::{Instant, timeout, timeout_at},
 };
 use tokio_util::sync::CancellationToken;
@@ -21,8 +23,8 @@ use tokio_util::sync::CancellationToken;
 type FixtureResult<T> = std::result::Result<T, String>;
 
 // Frozen fc7da25 tests/integration/readiness.test.ts:44-209 supplies these four scenarios.
-// Native readiness is a direct maintenance command, not an inner MCP/stdio child. Reaping below
-// proves the actual executable closed; it does not invent the source wrapper's cleanup log marker.
+// Readiness calls the selected native bridge through real SDK stdio. The fixture parent owns
+// its entire process tree; normal shutdown additionally requires the bridge's explicit cleanup event.
 struct Fixture {
     workspace: Workspace,
     executable: PathBuf,
@@ -72,7 +74,7 @@ impl Fixture {
 }
 
 struct Captured {
-    status: ExitStatus,
+    code: i32,
     stdout: String,
     stderr: String,
 }
@@ -103,7 +105,7 @@ async fn readiness(
         return Err("Readiness case exhausted its child budget.".into());
     }
     let root = &fixture.workspace.0;
-    let mut command = Command::new(&fixture.executable);
+    let mut command = StdCommand::new(&fixture.executable);
     command
         .arg("readiness")
         .args(args)
@@ -119,8 +121,7 @@ async fn readiness(
         .env("NUMERA_LOG_DIR", root.join("logs"))
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .kill_on_drop(true);
+        .stderr(Stdio::piped());
     // Preserve only OS prerequisites and the CI-owned instrumentation destination, never provider
     // credentials, proxies, host settings or application overrides from the parent environment.
     for key in ["SystemRoot", "WINDIR", "LLVM_PROFILE_FILE"] {
@@ -128,53 +129,40 @@ async fn readiness(
             command.env(key, value);
         }
     }
-    #[cfg(windows)]
-    command.creation_flags(0x08000000);
-    let mut child = command.spawn().map_err(|error| {
-        format!(
-            "Cannot start owned readiness executable: kind={:?}, os_code={:?}.",
-            error.kind(),
-            error.raw_os_error()
-        )
-    })?;
-    let stdout = child.stdout.take().expect("owned stdout pipe");
-    let stderr = child.stderr.take().expect("owned stderr pipe");
+    let mut child = Owned::spawn(&mut command)
+        .map_err(|_| "Cannot start owned readiness executable.".to_owned())?;
+    let pipes = child
+        .pipes()
+        .map_err(|_| "Owned readiness pipes are missing.".to_owned())?;
+    let stdout = tokio::process::ChildStdout::from_std(pipes.stdout)
+        .map_err(|_| "Cannot capture readiness stdout.".to_owned())?;
+    let stderr = tokio::process::ChildStderr::from_std(pipes.stderr)
+        .map_err(|_| "Cannot capture readiness stderr.".to_owned())?;
     let capture = async {
-        let (status, stdout, stderr) =
-            tokio::join!(child.wait(), captured_bytes(stdout), captured_bytes(stderr),);
-        Ok::<_, String>((
-            status.map_err(|_| "Cannot reap owned readiness executable.".to_owned())?,
-            stdout?,
-            stderr?,
-        ))
+        let wait = async {
+            while !child
+                .exited()
+                .map_err(|_| "Cannot observe readiness child.".to_owned())?
+            {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+            Ok::<_, String>(())
+        };
+        let (_, stdout, stderr) =
+            tokio::try_join!(wait, captured_bytes(stdout), captured_bytes(stderr))?;
+        Ok::<_, String>((stdout, stderr))
     };
     let result = timeout(budget, capture).await;
-    match result {
-        Ok(result) => {
-            if !matches!(child.try_wait(), Ok(Some(_))) {
-                timeout(Duration::from_secs(2), child.kill())
-                    .await
-                    .map_err(|_| "Readiness child fallback reap exceeded 2 seconds.".to_owned())?
-                    .map_err(|_| "Cannot reap readiness child after capture failure.".to_owned())?;
-                return Err("Readiness capture returned before its child was reaped.".into());
-            }
-            let (status, stdout, stderr) = result?;
-            Ok(Captured {
-                status,
-                stdout: String::from_utf8(stdout)
-                    .map_err(|_| "Readiness stdout is not UTF-8.".to_owned())?,
-                stderr: String::from_utf8(stderr)
-                    .map_err(|_| "Readiness stderr is not UTF-8.".to_owned())?,
-            })
-        }
-        Err(_) => {
-            timeout(Duration::from_secs(2), child.kill())
-                .await
-                .map_err(|_| "Readiness child kill/reap exceeded 2 seconds.".to_owned())?
-                .map_err(|_| "Cannot kill/reap timed-out readiness child.".to_owned())?;
-            Err("Owned readiness executable exceeded its at-most-5-second deadline.".into())
-        }
-    }
+    let code = child
+        .stop(std::time::Instant::now() + Duration::from_secs(2))
+        .map_err(|_| "Cannot reap owned readiness process tree within 2 seconds.".to_owned())?;
+    let (stdout, stderr) = result
+        .map_err(|_| "Owned readiness executable exceeded its at-most-5-second deadline.".to_owned())??;
+    Ok(Captured {
+        code,
+        stdout: String::from_utf8(stdout).map_err(|_| "Readiness stdout is not UTF-8.".to_owned())?,
+        stderr: String::from_utf8(stderr).map_err(|_| "Readiness stderr is not UTF-8.".to_owned())?,
+    })
 }
 
 async fn reply(
@@ -305,14 +293,14 @@ async fn exercise(
         stop.cancel();
         result
     };
-    // Neither branch is spawned. Both children and socket work finish before any test assertion;
-    // unwinding or cancellation drops the scoped listener/socket and kill-on-drop child owner.
+    // Neither branch is spawned. The anchored group/private Job contains the readiness parent
+    // and bridge before execution; cancellation drops that owner before workspace cleanup.
     let (methods, outputs) = tokio::join!(server, client);
     Ok((outputs?, methods?))
 }
 
 fn report(output: &Captured, code: i32) -> Value {
-    assert_eq!(output.status.code(), Some(code));
+    assert_eq!(output.code, code);
     Value::parse_with_limit(&output.stdout, 1048576)
         .expect("readiness stdout must be one JSON report")
 }
@@ -343,6 +331,211 @@ async fn executable_readiness_probes_get_only_and_never_discloses_the_exact_cata
     assert!(methods.iter().all(|method| method == "GET"));
     assert!(!outputs[0].stdout.contains("do-not-print-fixture"));
     assert!(!outputs[0].stderr.contains("do-not-print-fixture"));
+    let events = outputs[0]
+        .stderr
+        .lines()
+        .filter_map(|line| Value::parse(line).ok())
+        .collect::<Vec<_>>();
+    let cleanup = events
+        .iter()
+        .find(|event| event["component"] == "readiness" && event["cleanup_verified"] == true)
+        .expect("actual stdio readiness must report verified child cleanup");
+    assert_eq!(cleanup["stdio_verified"], true);
+    assert_eq!(cleanup["tool_count"], 10);
+    let pid = cleanup["pid"].as_u64().expect("owned readiness child PID");
+    assert!(pid > 0 && pid != u64::from(std::process::id()));
+    assert_eq!(cleanup["exit_success"], true);
+}
+
+#[tokio::test]
+async fn startup_protocol_failure_keeps_json_report_and_reaps_the_bridge() {
+    let fixture = Fixture::new().await;
+    let args = fixture.configuration(json!({"type":"none"}));
+    // Parent config parsing succeeds; only the real bridge's database initialization fails.
+    std::fs::write(fixture.workspace.0.join("state"), b"must-not-print-private-state").unwrap();
+    let (outputs, methods) = exercise(&fixture, json!({"data":[]}), vec![(args, false)])
+        .await
+        .unwrap();
+    let result = report(&outputs[0], 2);
+    assert_eq!(result["tool_count"], 0);
+    assert_eq!(result["local_ready"], false);
+    assert_eq!(result["credentials_ready"], false);
+    assert_eq!(result["connection_ready"], Value::Null);
+    assert_eq!(result["generation_verified"], false);
+    assert_eq!(result["blockers"], json!(["protocol_or_read_only_probe_failed"]));
+    assert!(methods.is_empty());
+    assert!(!outputs[0].stdout.contains("must-not-print-private-state"));
+    assert!(!outputs[0].stderr.contains("must-not-print-private-state"));
+    let cleanup = outputs[0]
+        .stderr
+        .lines()
+        .filter_map(|line| Value::parse(line).ok())
+        .find(|event| event["component"] == "readiness" && event["cleanup_verified"] == true)
+        .expect("failed initialization must still reap the owned bridge");
+    assert_eq!(cleanup["stdio_verified"], false);
+}
+
+#[tokio::test]
+async fn cancelling_readiness_during_real_bridge_initialization_reaps_its_child() {
+    let fixture = Fixture::new().await;
+    let args = fixture.configuration(json!({"type":"none"}));
+    let root = &fixture.workspace.0;
+    std::fs::create_dir(root.join("state")).unwrap();
+    let lock = rusqlite::Connection::open(root.join("state/receipts.sqlite")).unwrap();
+    lock.execute_batch("PRAGMA locking_mode=EXCLUSIVE; PRAGMA journal_mode=WAL; BEGIN EXCLUSIVE; CREATE TABLE held(value);").unwrap();
+    let paths = numera_image_gen_mcp::runtime_paths::RuntimePaths::new(root).unwrap();
+    let mut env = std::collections::HashMap::new();
+    for key in ["SystemRoot", "WINDIR", "LLVM_PROFILE_FILE"] {
+        if let Ok(value) = std::env::var(key) {
+            env.insert(key.to_owned(), value);
+        }
+    }
+    let mut operation = Box::pin(numera_image_gen_mcp::cli::readiness::run(
+        &args,
+        root,
+        &env,
+        &paths,
+        &fixture.executable,
+    ));
+    let observe = async {
+        loop {
+            if let Ok(entries) = std::fs::read_dir(root.join("logs")) {
+                for entry in entries.flatten() {
+                    if let Ok(text) = std::fs::read_to_string(entry.path()) {
+                        for event in text.lines().filter_map(|line| Value::parse(line).ok()) {
+                            if event["component"] == "readiness"
+                                && event["message"] == "Owned stdio readiness child started."
+                            {
+                                return event["pid"].as_u64().unwrap() as u32;
+                            }
+                        }
+                    }
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    };
+    let pid = tokio::select! {
+        result = &mut operation => panic!("Initialization unexpectedly completed: {}", result.is_ok()),
+        result = timeout(Duration::from_secs(2), observe) => result.expect("owned bridge startup event"),
+    };
+    #[cfg(windows)]
+    let observer = windows_child_handle(pid);
+    // Dropping the future must synchronously close its scoped pipes and reap the exact child.
+    drop(operation);
+    #[cfg(unix)]
+    {
+        let mut status = 0;
+        assert_eq!(unsafe { libc::waitpid(pid as i32, &mut status, libc::WNOHANG) }, -1);
+        assert_eq!(std::io::Error::last_os_error().raw_os_error(), Some(libc::ECHILD));
+    }
+    #[cfg(windows)]
+    assert_windows_stopped(&observer);
+    drop(lock);
+}
+
+#[tokio::test]
+async fn held_initialization_parent_timeout_contains_the_nested_bridge() {
+    let fixture = Fixture::new().await;
+    let args = fixture.configuration(json!({"type":"none"}));
+    let root = &fixture.workspace.0;
+    std::fs::create_dir(root.join("state")).unwrap();
+    let lock = rusqlite::Connection::open(root.join("state/receipts.sqlite")).unwrap();
+    lock.execute_batch("PRAGMA locking_mode=EXCLUSIVE; PRAGMA journal_mode=WAL; BEGIN EXCLUSIVE; CREATE TABLE held(value);").unwrap();
+    let mut command = StdCommand::new(&fixture.executable);
+    command
+        .arg("readiness")
+        .args(args)
+        .env_clear()
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    for key in ["SystemRoot", "WINDIR", "LLVM_PROFILE_FILE"] {
+        if let Some(value) = std::env::var_os(key) {
+            command.env(key, value);
+        }
+    }
+    let mut parent = Owned::spawn(&mut command).unwrap();
+    let pipes = parent.pipes().unwrap();
+    let stderr = tokio::process::ChildStderr::from_std(pipes.stderr).unwrap();
+    let mut lines = tokio::io::BufReader::new(stderr).lines();
+    let observe = async {
+        while let Some(line) = lines.next_line().await.unwrap() {
+            if let Ok(event) = Value::parse(&line)
+                && event["component"] == "readiness"
+                && event["message"] == "Owned stdio readiness child started."
+            {
+                return event["pid"].as_u64().unwrap() as u32;
+            }
+        }
+        panic!("readiness parent ended before its bridge started");
+    };
+    let pid = timeout(Duration::from_secs(2), observe).await.unwrap();
+    assert!(!parent.exited().unwrap(), "held initialization must still be pending");
+    #[cfg(windows)]
+    let observer = windows_child_handle(pid);
+    parent
+        .stop(std::time::Instant::now() + Duration::from_secs(2))
+        .unwrap();
+    #[cfg(unix)]
+    {
+        // Signal zero observes only; group cleanup must leave no live bridge.
+        let status = unsafe { libc::kill(pid as i32, 0) };
+        if status == 0 {
+            #[cfg(target_os = "linux")]
+            {
+                match std::fs::read_to_string(format!("/proc/{pid}/stat")) {
+                    Ok(text) => assert!(text.rsplit_once(')').unwrap().1.trim_start().starts_with('Z')),
+                    Err(error) => assert_eq!(error.kind(), std::io::ErrorKind::NotFound),
+                }
+            }
+            #[cfg(target_os = "macos")]
+            {
+                let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
+                let size = std::mem::size_of::<libc::proc_bsdinfo>();
+                // SAFETY: sized query-only structure for the fixture's observed child.
+                let bytes = unsafe {
+                    libc::proc_pidinfo(
+                        pid as i32,
+                        libc::PROC_PIDTBSDINFO,
+                        1,
+                        (&mut info as *mut libc::proc_bsdinfo).cast(),
+                        size as i32,
+                    )
+                };
+                assert!(bytes == 0 || (bytes as usize == size && info.pbi_status == 5));
+            }
+        } else {
+            assert_eq!(std::io::Error::last_os_error().raw_os_error(), Some(libc::ESRCH));
+        }
+    }
+    #[cfg(windows)]
+    assert_windows_stopped(&observer);
+    drop(lock);
+}
+
+#[cfg(windows)]
+fn windows_child_handle(pid: u32) -> std::os::windows::io::OwnedHandle {
+    use std::os::windows::io::FromRawHandle;
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn OpenProcess(access: u32, inherit: i32, pid: u32) -> *mut std::ffi::c_void;
+    }
+    // SAFETY: query/synchronize only; retain the live original handle before cancellation.
+    let handle = unsafe { OpenProcess(0x00101000, 0, pid) };
+    assert!(!handle.is_null(), "owned child must be live before cancellation");
+    unsafe { std::os::windows::io::OwnedHandle::from_raw_handle(handle) }
+}
+
+#[cfg(windows)]
+fn assert_windows_stopped(handle: &std::os::windows::io::OwnedHandle) {
+    use std::os::windows::io::AsRawHandle;
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn WaitForSingleObject(handle: *mut std::ffi::c_void, milliseconds: u32) -> u32;
+    }
+    // SAFETY: retained immutable original process handle, query only and no wait.
+    assert_eq!(unsafe { WaitForSingleObject(handle.as_raw_handle(), 0) }, 0);
 }
 
 #[tokio::test]
@@ -390,12 +583,12 @@ async fn executable_readiness_local_only_has_null_connection_and_relative_config
         methods.is_empty(),
         "Local-only checks must never contact the provider."
     );
-    assert_eq!(outputs[1].status.code(), Some(1));
+    assert_eq!(outputs[1].code, 1);
 }
 
 #[tokio::test]
 async fn executable_readiness_unlisted_model_and_failed_catalog_exit_two_without_post_or_error_leak()
- {
+{
     let fixture = Fixture::new().await;
     let mut failed = fixture.configuration(json!({"type":"none"}));
     failed.push("--probe".into());

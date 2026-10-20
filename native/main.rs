@@ -205,13 +205,13 @@ fn main() {
             .first()
             .is_some_and(|s| s == "readiness" || s == "diagnose")
         {
-            let (report, ready) =
-                executor.block_on(numera_image_gen_mcp::cli::maintenance::readiness(
-                    &args[1..],
-                    &root,
-                    &env,
-                    &runtime,
-                ))?;
+            let (report, ready) = executor.block_on(numera_image_gen_mcp::cli::readiness::run(
+                &args[1..],
+                &root,
+                &env,
+                &runtime,
+                &executable,
+            ))?;
             println!("{report}");
             return if ready {
                 Ok(())

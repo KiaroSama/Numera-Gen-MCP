@@ -77,7 +77,7 @@ before the later operation pins them again. Rotation between those reads can fai
 `permission_denied`; the identity recheck prevents a mismatched-account request. These cases do not
 prove one snapshot across the complete public dispatch. Proxy environment lookup is unchanged.
 
-Applicable hosted execution, exact native/dependency/helper hashes and final independent literal
-review remain acceptance gates. A passing source review, target registration or earlier green SHA
-cannot satisfy them. See [migration matrix](MIGRATION-MATRIX.md) and the
-[pending case ledger](native-cases/index.json).
+Both cases passed on all six stable targets and nightly at `886c5f6`. Exact native/helper/source
+hashes, retained image inputs and qualified execution logs are bound in the canonical case ledger.
+Independent review accepts the asserted string-key rotation/account observables with the mechanism
+limits above, not universal OS-environment equivalence. See [migration matrix](MIGRATION-MATRIX.md).

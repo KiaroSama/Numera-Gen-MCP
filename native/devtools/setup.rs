@@ -1,5 +1,5 @@
 use crate::{
-    cli::{maintenance, registration},
+    cli::{readiness, registration},
     compat::value::{Value, json},
     error::{NumeraError, Result},
     logging::Logger,
@@ -174,11 +174,12 @@ pub fn execute(
                     .enable_all()
                     .build()
                     .map_err(|_| NumeraError::runtime())?;
-                let (value, ready) = runtime.block_on(maintenance::readiness(
+                let (value, ready) = runtime.block_on(readiness::run(
                     &["--config".into(), options.values["config"].clone()],
                     &options.root,
                     env,
                     &paths,
+                    executable,
                 ))?;
                 if !ready {
                     return Err(NumeraError::new(

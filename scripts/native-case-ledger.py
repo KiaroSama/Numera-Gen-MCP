@@ -72,6 +72,8 @@ def validate(source: Path, collection: dict, ledger_root: Path, acceptance: bool
         raise RuntimeError("Every expanded source case must appear exactly once")
     hashes = {}
     source_lines = {}
+    mapping_sources = {}
+    native_hashes = {}
     pending = 0
     mapped = 0
     for row in rows:
@@ -94,8 +96,12 @@ def validate(source: Path, collection: dict, ledger_root: Path, acceptance: bool
         native_files = {}
         for mapping in row["native"]:
             path, separator, symbol = mapping.partition("::")
-            text = mapping_source(path, separator, symbol)
+            if mapping not in mapping_sources:
+                mapping_sources[mapping] = mapping_source(path, separator, symbol)
+            text = mapping_sources[mapping]
             native_files[path] = text
+            if path not in native_hashes:
+                native_hashes[path] = hashlib.sha256(contained(ROOT, path).read_bytes()).hexdigest()
         for assertion in row["assertions"]:
             text = native_files.get(assertion["native_file"])
             if text is None or not assertion.get("claim"):
@@ -117,7 +123,7 @@ def validate(source: Path, collection: dict, ledger_root: Path, acceptance: bool
             if not evidence or not evidence.get("native_sha256") or not evidence.get("passed_targets") or not evidence.get("run_id"):
                 raise RuntimeError("Verified case has no exact native execution evidence")
             for path in native_files:
-                if evidence["native_sha256"].get(path) != hashlib.sha256(contained(ROOT, path).read_bytes()).hexdigest():
+                if evidence["native_sha256"].get(path) != native_hashes[path]:
                     raise RuntimeError("Native assertion evidence is stale")
             if any(modes[platform] == "run" and platform not in evidence["passed_targets"] for platform in modes):
                 raise RuntimeError("Applicable native case execution is missing")

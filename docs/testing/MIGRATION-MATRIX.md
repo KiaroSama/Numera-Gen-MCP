@@ -629,26 +629,28 @@ cancellation variants, original receipt/config defaults, no generation POST and 
 Native stdio opens a separate Store, unlike the source in-memory transport; independent review
 accepted the asserted public/state observables as behavior-equivalent, not identical infrastructure.
 
-The canonical ledger now verifies 59 cases against frozen inputs, independently reviewed assertions,
-exact native/helper/dependency hashes and the seven execution logs: foundation13, env-config17,
-dimensions7, capability-descriptors2, workflow-branches1, workflow-validation1 and lifecycle18.
-The other 411 remain pending; all 50 suite-navigation records and full acceptance remain pending.
-Config/normalization review cannot substitute for the actual generated oracle bytes, absent from
-prior retained artifacts. Hosted verification now captures only config/policy/normalization JSON
-and hash-only source/compiled/dependency provenance in an explicit evidence ZIP, verifies unchanged
-inputs after native checks and retains it on every target. DPAPI/private state is never included.
+The canonical ledger now verifies 465 cases against frozen inputs, independently reviewed assertions,
+exact native/helper/dependency hashes, actual generated inputs and seven qualified execution logs.
+Five readiness/setup cases await the corrected real-SDK readiness path and its fresh hosted proof.
+All 50 suite-navigation records and full acceptance remain pending until every case is accepted.
+Review never substitutes for actual oracle bytes: seven fifteen-input bundles were downloaded and
+checked against GitHub artifact digests, exact nested inventories and original lengths/hashes.
+Hosted capture binds source/compiled/dependency provenance before execution and verifies unchanged
+inputs afterward. DPAPI/private state is never included.
 Two fixture-input corrections restore source Gemini `/v1beta` and local/default-timeout/no-orchestrator
 partial-result configuration. At `18c8b92`, all ten jobs passed after one unchanged Windows x64
 confirmation; the original intermittent pre-wrapper DPAPI delay remains unexplained. Capture/verify
 passed on all seven native jobs; exact three-input bundles were downloaded and independently checked.
 Full coverage was 86.07% regions / 83.73% branches. These are not completed signed distributions.
 
-The next batch retains 15 explicitly reviewed synthetic input files, never DPAPI/private state. Twelve
-source transport cases now additionally require actual SDK structured receipts, matching error flags,
-original bytes, deduplication and admission; existing same-owner Application fixtures remain. A real
-SDK Comfy history case checks persisted `provider_rejection` without image fetches. The stream tier
-case now asserts `1K, 2K or 4K`; native setup requires POSIX signal-zero `ESRCH`, not a zombie allowance.
-These additions await hosted/extracted execution and independent acceptance; no status is promoted.
+At `886c5f6`, all ten jobs passed on the exact SHA. Twelve source transport cases additionally prove
+actual SDK structured receipts, matching error flags, originals, deduplication and admission; existing
+same-owner Application fixtures remain. A real SDK Comfy history case proved persisted
+`provider_rejection` without image fetches. The exact tier message and POSIX signal-zero `ESRCH`
+assertions passed; all-six archives/extracted checks passed with 86.07% regions / 83.76% branches.
+Native readiness now adds actual SDK bridge calls, report-preserving failures and scoped stderr drain.
+Anchored child/fixture-tree ownership and held-startup cancellation tests still need hosted proof;
+force-killing an unsupervised POSIX parent is not claimed to execute Rust cleanup.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

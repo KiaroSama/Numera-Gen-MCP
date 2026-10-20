@@ -23,7 +23,7 @@ path = "native/devtools/main.rs"
 libc = "=0.2.190"
 
 [dependencies]
-rmcp = { version = "=3.5.1", default-features = false, features = ["server", "transport-streamable-http-server"] }
+rmcp = { version = "=3.5.1", default-features = false, features = ["client", "server", "transport-streamable-http-server"] }
 hyper = { version = "=1.12.0", features = ["server", "http1"] }
 hyper-util = { version = "=0.1.21", features = ["tokio"] }
 http-body-util = "=0.1.5"

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("native_case_ledger", ROOT / "scripts/native-case-ledger.py")
@@ -34,6 +35,23 @@ class CaseLedger(unittest.TestCase):
         self.assertFalse(result["acceptance_verified"])
         with self.assertRaisesRegex(RuntimeError, "pending"):
             ledger.validate(self.source, self.collection, self.directory, True)
+
+    def test_mapping_cache_is_per_validation_and_never_hides_changed_file_bytes(self):
+        # Two references share a mapping, but only inside one immutable validation pass.
+        with patch.object(ledger, "mapping_source", wraps=ledger.mapping_source) as mapped:
+            ledger.validate(self.source, self.collection, self.directory, False)
+            calls = mapped.call_count
+            self.assertEqual(calls, len({mapping for row in self.rows for mapping in row["native"]}))
+        verified = next(row for row in self.rows if row["status"] == "verified")
+        path = verified["native"][0].partition("::")[0]
+        original = Path.read_bytes
+
+        def changed(file):
+            data = original(file)
+            return data + b"\n" if file.resolve() == (ROOT / path).resolve() else data
+
+        with patch.object(Path, "read_bytes", changed), self.assertRaisesRegex(RuntimeError, "stale"):
+            ledger.validate(self.source, self.collection, self.directory, False)
 
     def test_duplicate_missing_and_changed_identities_are_rejected(self):
         for mutation in ["duplicate", "missing", "name", "mode"]:
