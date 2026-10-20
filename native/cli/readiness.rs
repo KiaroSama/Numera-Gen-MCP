@@ -156,7 +156,13 @@ async fn inspect(
     {
         blockers.push("tool_contract_mismatch");
     }
-    let health = call(client, "health_check", serde_json::json!({"probe":false}), blockers).await?;
+    let health = call(
+        client,
+        "health_check",
+        serde_json::json!({"probe":false}),
+        blockers,
+    )
+    .await?;
     let local = health["configuration_valid"] == true
         && health["storage"]
             .as_object()
@@ -175,9 +181,15 @@ async fn inspect(
         blockers.push("declared_credentials_missing");
     }
     if flags.contains_key("probe") && credentials {
-        let catalog = call(client, "list_models", serde_json::json!({
-            "connection":name,"refresh":true,"limit":100,"offset":0
-        }), blockers).await?;
+        let catalog = call(
+            client,
+            "list_models",
+            serde_json::json!({
+                "connection":name,"refresh":true,"limit":100,"offset":0
+            }),
+            blockers,
+        )
+        .await?;
         let models = crate::error::array(&catalog["models"]);
         let complete = catalog["complete"] == true;
         let ready = complete && !models.is_empty();
@@ -190,9 +202,15 @@ async fn inspect(
         if let Some(model) = flags.get("model") {
             let found = models.iter().any(|item| item["id"] == model.as_str());
             report["selected_model_found"] = json!(found);
-            call(client, "get_model_capabilities", serde_json::json!({
-                "connection":name,"model":model
-            }), blockers).await?;
+            call(
+                client,
+                "get_model_capabilities",
+                serde_json::json!({
+                    "connection":name,"model":model
+                }),
+                blockers,
+            )
+            .await?;
             if !found {
                 blockers.push("model_not_in_first_catalog_page");
             }
@@ -264,10 +282,10 @@ pub async fn run(
     let operation = async {
         let pipes = child.pipes().map_err(|_| unavailable())?;
         let input = ChildStdout::from_std(pipes.stdout).map_err(|_| unavailable())?;
-        let output =
-            ChildStdin::from_std(pipes.stdin.ok_or_else(unavailable)?).map_err(|_| unavailable())?;
-        let mut stderr = tokio::process::ChildStderr::from_std(pipes.stderr)
+        let output = ChildStdin::from_std(pipes.stdin.ok_or_else(unavailable)?)
             .map_err(|_| unavailable())?;
+        let mut stderr =
+            tokio::process::ChildStderr::from_std(pipes.stderr).map_err(|_| unavailable())?;
         let protocol = async {
             let transport = Pipes {
                 input: BufReader::new(input),
@@ -308,7 +326,10 @@ pub async fn run(
         tokio::try_join!(protocol, diagnostics)?;
         Ok::<(), NumeraError>(())
     };
-    let verified = matches!(timeout(Duration::from_secs(60), operation).await, Ok(Ok(())));
+    let verified = matches!(
+        timeout(Duration::from_secs(60), operation).await,
+        Ok(Ok(()))
+    );
     let waiting = async {
         while !child.exited().map_err(|_| unavailable())? {
             tokio::time::sleep(Duration::from_millis(10)).await;
@@ -329,9 +350,8 @@ pub async fn run(
     if !verified || !graceful || !clean || !exited {
         blockers.push("protocol_or_read_only_probe_failed");
     }
-    let ready = report["local_ready"] == true
-        && report["credentials_ready"] == true
-        && blockers.is_empty();
+    let ready =
+        report["local_ready"] == true && report["credentials_ready"] == true && blockers.is_empty();
     report["blockers"] = json!(blockers);
     logger.log(
         if ready { "INFO" } else { "WARNING" },

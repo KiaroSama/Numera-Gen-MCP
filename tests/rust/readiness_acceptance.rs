@@ -156,12 +156,15 @@ async fn readiness(
     let code = child
         .stop(std::time::Instant::now() + Duration::from_secs(2))
         .map_err(|_| "Cannot reap owned readiness process tree within 2 seconds.".to_owned())?;
-    let (stdout, stderr) = result
-        .map_err(|_| "Owned readiness executable exceeded its at-most-5-second deadline.".to_owned())??;
+    let (stdout, stderr) = result.map_err(|_| {
+        "Owned readiness executable exceeded its at-most-5-second deadline.".to_owned()
+    })??;
     Ok(Captured {
         code,
-        stdout: String::from_utf8(stdout).map_err(|_| "Readiness stdout is not UTF-8.".to_owned())?,
-        stderr: String::from_utf8(stderr).map_err(|_| "Readiness stderr is not UTF-8.".to_owned())?,
+        stdout: String::from_utf8(stdout)
+            .map_err(|_| "Readiness stdout is not UTF-8.".to_owned())?,
+        stderr: String::from_utf8(stderr)
+            .map_err(|_| "Readiness stderr is not UTF-8.".to_owned())?,
     })
 }
 
@@ -352,7 +355,11 @@ async fn startup_protocol_failure_keeps_json_report_and_reaps_the_bridge() {
     let fixture = Fixture::new().await;
     let args = fixture.configuration(json!({"type":"none"}));
     // Parent config parsing succeeds; only the real bridge's database initialization fails.
-    std::fs::write(fixture.workspace.0.join("state"), b"must-not-print-private-state").unwrap();
+    std::fs::write(
+        fixture.workspace.0.join("state"),
+        b"must-not-print-private-state",
+    )
+    .unwrap();
     let (outputs, methods) = exercise(&fixture, json!({"data":[]}), vec![(args, false)])
         .await
         .unwrap();
@@ -362,7 +369,10 @@ async fn startup_protocol_failure_keeps_json_report_and_reaps_the_bridge() {
     assert_eq!(result["credentials_ready"], false);
     assert_eq!(result["connection_ready"], Value::Null);
     assert_eq!(result["generation_verified"], false);
-    assert_eq!(result["blockers"], json!(["protocol_or_read_only_probe_failed"]));
+    assert_eq!(
+        result["blockers"],
+        json!(["protocol_or_read_only_probe_failed"])
+    );
     assert!(methods.is_empty());
     assert!(!outputs[0].stdout.contains("must-not-print-private-state"));
     assert!(!outputs[0].stderr.contains("must-not-print-private-state"));
@@ -426,8 +436,14 @@ async fn cancelling_readiness_during_real_bridge_initialization_reaps_its_child(
     #[cfg(unix)]
     {
         let mut status = 0;
-        assert_eq!(unsafe { libc::waitpid(pid as i32, &mut status, libc::WNOHANG) }, -1);
-        assert_eq!(std::io::Error::last_os_error().raw_os_error(), Some(libc::ECHILD));
+        assert_eq!(
+            unsafe { libc::waitpid(pid as i32, &mut status, libc::WNOHANG) },
+            -1
+        );
+        assert_eq!(
+            std::io::Error::last_os_error().raw_os_error(),
+            Some(libc::ECHILD)
+        );
     }
     #[cfg(windows)]
     assert_windows_stopped(&observer);
@@ -471,7 +487,10 @@ async fn held_initialization_parent_timeout_contains_the_nested_bridge() {
         panic!("readiness parent ended before its bridge started");
     };
     let pid = timeout(Duration::from_secs(2), observe).await.unwrap();
-    assert!(!parent.exited().unwrap(), "held initialization must still be pending");
+    assert!(
+        !parent.exited().unwrap(),
+        "held initialization must still be pending"
+    );
     #[cfg(windows)]
     let observer = windows_child_handle(pid);
     parent
@@ -485,7 +504,13 @@ async fn held_initialization_parent_timeout_contains_the_nested_bridge() {
             #[cfg(target_os = "linux")]
             {
                 match std::fs::read_to_string(format!("/proc/{pid}/stat")) {
-                    Ok(text) => assert!(text.rsplit_once(')').unwrap().1.trim_start().starts_with('Z')),
+                    Ok(text) => assert!(
+                        text.rsplit_once(')')
+                            .unwrap()
+                            .1
+                            .trim_start()
+                            .starts_with('Z')
+                    ),
                     Err(error) => assert_eq!(error.kind(), std::io::ErrorKind::NotFound),
                 }
             }
@@ -506,7 +531,10 @@ async fn held_initialization_parent_timeout_contains_the_nested_bridge() {
                 assert!(bytes == 0 || (bytes as usize == size && info.pbi_status == 5));
             }
         } else {
-            assert_eq!(std::io::Error::last_os_error().raw_os_error(), Some(libc::ESRCH));
+            assert_eq!(
+                std::io::Error::last_os_error().raw_os_error(),
+                Some(libc::ESRCH)
+            );
         }
     }
     #[cfg(windows)]
@@ -523,7 +551,10 @@ fn windows_child_handle(pid: u32) -> std::os::windows::io::OwnedHandle {
     }
     // SAFETY: query/synchronize only; retain the live original handle before cancellation.
     let handle = unsafe { OpenProcess(0x00101000, 0, pid) };
-    assert!(!handle.is_null(), "owned child must be live before cancellation");
+    assert!(
+        !handle.is_null(),
+        "owned child must be live before cancellation"
+    );
     unsafe { std::os::windows::io::OwnedHandle::from_raw_handle(handle) }
 }
 
@@ -588,7 +619,7 @@ async fn executable_readiness_local_only_has_null_connection_and_relative_config
 
 #[tokio::test]
 async fn executable_readiness_unlisted_model_and_failed_catalog_exit_two_without_post_or_error_leak()
-{
+ {
     let fixture = Fixture::new().await;
     let mut failed = fixture.configuration(json!({"type":"none"}));
     failed.push("--probe".into());

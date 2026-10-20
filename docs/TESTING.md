@@ -10,7 +10,7 @@ exact bytes, source/helper/dependency hashes and named native executions. Twelve
 Comfy error conversion, tier-message and strict POSIX PID-absence assertions passed. See
 [the migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
 are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
-coverage floors, with quality/package gates incomplete. All current native verification is hosted-only.
+coverage floors. At `1f52f0a`, stale maintenance-test calls blocked native test compilation; corrected calls and hosted formatting await replacement CI. Native verification is hosted-only.
 
 The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
 Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child

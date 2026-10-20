@@ -650,7 +650,11 @@ same-owner Application fixtures remain. A real SDK Comfy history case proved per
 assertions passed; all-six archives/extracted checks passed with 86.07% regions / 83.76% branches.
 Native readiness now adds actual SDK bridge calls, report-preserving failures and scoped stderr drain.
 Anchored child/fixture-tree ownership and held-startup cancellation tests still need hosted proof;
-force-killing an unsupervised POSIX parent is not claimed to execute Rust cleanup.
+force-killing an unsupervised POSIX parent is not claimed to execute Rust cleanup. At `1f52f0a`,
+all three offline jobs passed, but every native test context failed compilation on three stale
+maintenance-test calls; no native harness ran. All-six release/SDK paths passed, while two-file
+formatting failed and archives were skipped. The calls and exact hosted formatting are corrected;
+new readiness execution and complete coverage still require the replacement hosted run.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
