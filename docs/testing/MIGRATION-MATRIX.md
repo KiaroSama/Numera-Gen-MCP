@@ -614,7 +614,11 @@ worker/start/finish/verified-cleanup flags but no wrapper-entry flag. Source rev
 resume-selection defect: ToolHelp's first matching thread is not guaranteed to be the primary.
 The Windows supervisor now checks all opened thread owners and resumes every owned snapshot entry,
 with deterministic selection regressions and unchanged job/timeout/cleanup boundaries. This repairs
-the source defect; its contribution to the observed startup delay still needs hosted evidence.
+the source defect; its contribution to the observed startup delay remains unproven. At `ca39e72`,
+all 100 native targets passed on all six platforms and nightly; both Windows DPAPI cases and new
+resume-selection regressions passed. Strict Clippy, release/SDK and 86.07% regions / 83.76% branches
+passed. Only one error-expression layout failed formatting on all six, so archives were skipped;
+the exact hosted formatter correction preserves behavior and requires its own final quality pass.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

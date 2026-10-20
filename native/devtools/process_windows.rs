@@ -341,7 +341,9 @@ fn resume_all(counts: impl IntoIterator<Item = io::Result<u32>>) -> io::Result<(
     if resumed {
         Ok(())
     } else {
-        Err(io::Error::other("Owned suspended primary thread is missing."))
+        Err(io::Error::other(
+            "Owned suspended primary thread is missing.",
+        ))
     }
 }
 
