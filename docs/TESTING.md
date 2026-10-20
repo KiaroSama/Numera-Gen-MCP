@@ -2,12 +2,13 @@
 
 ## Native Rust migration — partial acceptance
 
-At `bf0d958`, all ten jobs, 100 native targets on six stable platforms plus nightly, built/extracted
-SDK checks and unchanged 85/80 coverage gates passed. The canonical ledger verifies 59/470 cases;
-full parity, final signatures and owner cutover remain pending. Hosted oracle evidence now retains
-three synthetic JSON inputs and exact frozen/native/dependency hashes, excluding private config and
-DPAPI material; this evidence-pipeline correction still requires its own hosted run. See the
-[current migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
+At `18c8b92`, all ten jobs, 100 native targets on six stable platforms plus nightly, built/extracted
+SDK checks and unchanged 85/80 coverage gates passed after one unchanged Windows confirmation.
+The canonical ledger verifies 59/470 cases; full parity, final signatures and cutover remain pending.
+Three retained synthetic oracle inputs were independently verified. The next batch expands
+that explicit allowlist to 15, adds twelve actual SDK transport cases and a Comfy error conversion,
+and strengthens tier-message/POSIX PID-absence assertions; its hosted execution remains pending. See
+[the migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
 are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
 coverage floors, with quality/package gates incomplete. All current native verification is hosted-only.
 

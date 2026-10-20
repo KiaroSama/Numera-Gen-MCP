@@ -287,6 +287,18 @@ fn actual_native_bounded_cli_propagates_idle_timeout_and_verified_descendant_cle
             .contains("fixture-ready")
     );
     assert_descendant_stopped(&workspace.0);
+    #[cfg(unix)]
+    {
+        let pid: i32 = fs::read_to_string(workspace.0.join("leaf-pid"))
+            .unwrap()
+            .parse()
+            .unwrap();
+        // Frozen setup.test.ts requires PID absence, not merely a stopped or zombie child.
+        assert!(pid > 0);
+        // SAFETY: signal zero only observes this fixture's positive PID; it sends no signal.
+        assert_eq!(unsafe { libc::kill(pid, 0) }, -1);
+        assert_eq!(io::Error::last_os_error().raw_os_error(), Some(libc::ESRCH));
+    }
     let rows = fs::read_to_string(workspace.0.join(".ci-work/processes.jsonl"))
         .unwrap()
         .lines()

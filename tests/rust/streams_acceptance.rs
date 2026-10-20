@@ -225,6 +225,12 @@ fn exact_source_json_edits_settings_and_all_unsupported_options_and_masks_match(
             references: &references,
             mask,
         });
+        if name == "omniroute-clamped-tier" {
+            let Err(error) = &built else {
+                panic!("unsupported tier must fail");
+            };
+            assert!(error.message.contains("1K, 2K or 4K"));
+        }
         let actual = outcome(built.map(|prepared| {
             let Body::Json(body) = prepared.body else {
                 panic!("pure source JSON case {name} unexpectedly built multipart")

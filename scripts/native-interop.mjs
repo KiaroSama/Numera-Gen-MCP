@@ -14,6 +14,7 @@ import { configReloadAcceptance } from "./native-config-reload-acceptance.mjs";
 import { terminalAcceptance } from "./native-terminal-acceptance.mjs";
 import { racesAcceptance } from "./native-races-acceptance.mjs";
 import { lifecycleAcceptance } from "./native-lifecycle-acceptance.mjs";
+import { transportAcceptance } from "./native-transport-acceptance.mjs";
 
 // Hosted differential acceptance: the actual native binary, two SDK hosts, two restarts.
 if (process.env.GITHUB_ACTIONS !== "true")
@@ -520,6 +521,16 @@ try {
     bounded,
   });
   await lifecycleAcceptance({
+    root,
+    workspace,
+    configSchema,
+    Store,
+    connectionIdentity,
+    start,
+    closeHost,
+    bounded,
+  });
+  await transportAcceptance({
     root,
     workspace,
     configSchema,

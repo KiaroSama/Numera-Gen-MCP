@@ -12,7 +12,12 @@ import subprocess
 import zipfile
 
 BASELINE = "fc7da25c3b470199949b1b4c67127d77afa0c34a"
-INPUTS = ("config.json", "policy.json", "normalization-acceptance.json")
+INPUTS = (
+    "config.json", "policy.json", "normalization-acceptance.json", "canonical.json",
+    "adapters.json", "base64.json", "image-acceptance.json", "images.json", "animated-webp.json",
+    "output-requirements.json", "stream-acceptance.json", "streams.json", "raw-json.json",
+    "raw-js-schema.json", "sqlite-utf16-text.json",
+)
 LIMIT = 16 * 1024 * 1024
 
 
@@ -83,7 +88,7 @@ def capture(root: Path, baseline: Path, sha: str, baseline_sha: str) -> Path:
 
 def verify(root: Path, baseline: Path, sha: str) -> None:
     archive = archive_path(root)
-    if archive.is_symlink() or archive.stat().st_size > 4 * LIMIT:
+    if archive.is_symlink() or archive.stat().st_size > (len(INPUTS) + 1) * LIMIT:
         raise RuntimeError("Oracle evidence archive is invalid")
     with zipfile.ZipFile(archive) as bundle:
         members = bundle.infolist()

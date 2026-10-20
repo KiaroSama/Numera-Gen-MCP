@@ -144,6 +144,12 @@ class OracleEvidence(unittest.TestCase):
     def test_exact_allowlisted_inputs_bind_source_and_reject_tampering_without_private_files(self):
         self.assertTrue((ROOT / "scripts/native-oracle-evidence.py").is_file(), "Hosted oracle evidence capture is missing")
         evidence = load("oracle_evidence_contract", "native-oracle-evidence.py")
+        self.assertEqual(set(evidence.INPUTS), {
+            "config.json", "policy.json", "normalization-acceptance.json", "canonical.json",
+            "adapters.json", "base64.json", "image-acceptance.json", "images.json", "animated-webp.json",
+            "output-requirements.json", "stream-acceptance.json", "streams.json", "raw-json.json",
+            "raw-js-schema.json", "sqlite-utf16-text.json",
+        }, "Every reviewed synthetic native oracle consumer must have retained input bytes")
         import zipfile
         directory = ROOT / ".ci-work/native/tooling-tests"
         directory.mkdir(parents=True, exist_ok=True)
@@ -170,6 +176,7 @@ class OracleEvidence(unittest.TestCase):
             for name in evidence.INPUTS:
                 (inputs / name).write_text('{"fixture":"تصویر"}\n', encoding="utf-8")
             (inputs / "current-user-dpapi.txt").write_text("excluded private fixture", encoding="utf-8")
+            (inputs / "config-dpapi.json").write_text('{"excluded":"private fixture"}', encoding="utf-8")
             (root / "secrets.md").write_text("excluded registry fixture", encoding="utf-8")
             sha = "a" * 40
             archive = evidence.capture(root, baseline, sha, evidence.BASELINE)
