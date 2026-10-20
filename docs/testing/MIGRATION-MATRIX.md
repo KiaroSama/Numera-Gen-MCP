@@ -618,7 +618,14 @@ the source defect; its contribution to the observed startup delay remains unprov
 all 100 native targets passed on all six platforms and nightly; both Windows DPAPI cases and new
 resume-selection regressions passed. Strict Clippy, release/SDK and 86.07% regions / 83.76% branches
 passed. Only one error-expression layout failed formatting on all six, so archives were skipped;
-the exact hosted formatter correction preserves behavior and requires its own final quality pass.
+the exact hosted formatter correction preserves behavior. At `38473e4`, all ten jobs passed:
+all 100 native targets on six stable platforms and nightly, strict quality, both Windows DPAPI and
+resume regressions, 86.07% regions / 83.76% branches, all-six notices and extracted internal archives.
+These compiler intermediates are not completed signed distributions. The next actual-SDK fixture
+adds the frozen four terminal, eight uncertain-poll and six cancellation schedules with original
+receipt/config literals, no generation POST and direct admission checks. Native stdio opens its own
+Store instead of the source's in-memory shared Store; that boundary and independent acceptance
+remain explicit, and this new fixture requires its own exact-tree hosted execution.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
