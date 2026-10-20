@@ -209,6 +209,7 @@ def main() -> None:
             return
         if not (ROOT / "Cargo.lock").exists() or os.environ.get("NUMERA_RESOLVE_HTTP_LOCK") == "true":
             run(["cargo", "generate-lockfile"], wall=180, idle=90, env=env)
+        run([sys.executable, "-I", "-B", "scripts/native-oracle-evidence.py", "capture"], wall=30, idle=15, env=env)
         if args.phase == "stable":
             failures = []
             if os.environ.get("NUMERA_COLLECT_SOURCE_CASES") == "true":
@@ -237,6 +238,7 @@ def main() -> None:
                     gate = command[-1] if command[0] == sys.executable else command[1]
                     failures.append(gate)
                     emit("ERROR", "Required native gate failed.", gate=gate, error_type=type(error).__name__)
+            run([sys.executable, "-I", "-B", "scripts/native-oracle-evidence.py", "verify"], wall=30, idle=15, env=env)
             if "fmt" in failures:
                 # Keep the failed check failed; generated formatting is reviewed and committed later.
                 run(["cargo", "fmt"], wall=30, idle=20, env=env)
@@ -284,6 +286,7 @@ def main() -> None:
                 except (RuntimeError, TimeoutError) as error:
                     failures.append(command[1])
                     emit("ERROR", "Required instrumented gate failed.", gate=command[1], error_type=type(error).__name__)
+            run([sys.executable, "-I", "-B", "scripts/native-oracle-evidence.py", "verify"], wall=30, idle=15, env=env)
             # Preserve measured evidence after a failed suite; it never makes that suite passing.
             coverage_gate()
             if failures:

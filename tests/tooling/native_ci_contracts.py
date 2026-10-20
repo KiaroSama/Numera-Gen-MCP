@@ -140,5 +140,71 @@ class NativeTooling(unittest.TestCase):
             request.assert_not_called()
 
 
+class OracleEvidence(unittest.TestCase):
+    def test_exact_allowlisted_inputs_bind_source_and_reject_tampering_without_private_files(self):
+        self.assertTrue((ROOT / "scripts/native-oracle-evidence.py").is_file(), "Hosted oracle evidence capture is missing")
+        evidence = load("oracle_evidence_contract", "native-oracle-evidence.py")
+        import zipfile
+        directory = ROOT / ".ci-work/native/tooling-tests"
+        directory.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="oracle evidence ", dir=directory) as temp:
+            root = Path(temp)
+            baseline = root / "baseline"
+            files = {
+                "Cargo.toml": "fixture", "Cargo.lock": "locked", "rust-toolchain.toml": "stable",
+                "native/main.rs": "fn main() {}", "tests/rust/common/mod.rs": "fixture",
+                "schemas/config.schema.json": '{"type":"object"}',
+                "scripts/rust-oracle.mjs": "fixture", "scripts/rust-normalization-oracle.mjs": "fixture",
+                "scripts/native-ci.py": "fixture runner",
+                "baseline/src/config/schema.ts": "fixture source", "baseline/dist/config/schema.js": "fixture compiled",
+                "baseline/package.json": '{"version":"1"}', "baseline/package-lock.json": '{"lockfileVersion":3}',
+                "baseline/node_modules/sharp/package.json": '{"version":"0.35.5"}',
+                "baseline/node_modules/zod/package.json": '{"version":"4.6.5"}',
+            }
+            for name, text in files.items():
+                file = root / name
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text(text, encoding="utf-8")
+            inputs = root / ".ci-work/parity"
+            inputs.mkdir(parents=True)
+            for name in evidence.INPUTS:
+                (inputs / name).write_text('{"fixture":"تصویر"}\n', encoding="utf-8")
+            (inputs / "current-user-dpapi.txt").write_text("excluded private fixture", encoding="utf-8")
+            (root / "secrets.md").write_text("excluded registry fixture", encoding="utf-8")
+            sha = "a" * 40
+            archive = evidence.capture(root, baseline, sha, evidence.BASELINE)
+            with zipfile.ZipFile(archive) as bundle:
+                self.assertEqual(set(bundle.namelist()), {"provenance.json", *evidence.INPUTS})
+                manifest = json.loads(bundle.read("provenance.json"))
+                self.assertEqual(manifest["source_sha"], sha)
+                self.assertEqual(manifest["baseline"], evidence.BASELINE)
+                for name in evidence.INPUTS:
+                    data = (inputs / name).read_bytes()
+                    self.assertEqual(bundle.read(name), data)
+                    self.assertEqual(manifest["inputs"][name]["sha256"], hashlib.sha256(data).hexdigest())
+                self.assertIn("dist/config/schema.js", manifest["baseline_files"])
+                self.assertIn("native/main.rs", manifest["native_files"])
+                self.assertIn("schemas/config.schema.json", manifest["native_files"])
+                self.assertIn("scripts/native-ci.py", manifest["harness_files"])
+                self.assertNotIn("secrets.md", manifest["native_files"])
+            evidence.verify(root, baseline, sha)
+            (inputs / "config.json").write_text('{"changed":true}', encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "input changed"):
+                evidence.verify(root, baseline, sha)
+            (inputs / "config.json").write_text('{"fixture":"تصویر"}\n', encoding="utf-8")
+            (baseline / "dist/config/schema.js").write_text("changed", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "dependency changed"):
+                evidence.verify(root, baseline, sha)
+            (baseline / "dist/config/schema.js").write_text("fixture compiled", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "identity changed"):
+                evidence.verify(root, baseline, "b" * 40)
+            with zipfile.ZipFile(archive, "a") as bundle:
+                bundle.writestr("unexpected.txt", b"not an input")
+            with self.assertRaisesRegex(RuntimeError, "unexpected members"):
+                evidence.verify(root, baseline, sha)
+            with self.assertRaisesRegex(RuntimeError, "already exists"):
+                evidence.capture(root, baseline, sha, evidence.BASELINE)
+
+
 if __name__ == "__main__":
     unittest.main()

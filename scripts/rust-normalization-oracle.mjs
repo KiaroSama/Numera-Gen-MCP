@@ -175,7 +175,12 @@ export async function normalizationOracle({ source, emit, sharp }) {
       { candidates: [{ content: { parts: [{ text: "hello" }] } }] },
     ],
   ].map(([name, adapter, raw]) => {
-    const c = connection(adapter);
+    const c = connection(
+      adapter,
+      name === "gemini-text-only"
+        ? { baseUrl: "https://api.example/v1beta" }
+        : {},
+    );
     return {
       name,
       connection: c,

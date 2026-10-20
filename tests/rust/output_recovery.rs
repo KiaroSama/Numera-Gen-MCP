@@ -209,10 +209,28 @@ async fn exact_source_two_item_partial_receipt_saves_original_and_repeated_reque
         let reply = raw.to_string();
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let origin = format!("http://{}", listener.local_addr().unwrap());
-        let mut config = workspace.config(&format!("{origin}/v1"), "openai-images");
-        config["connections"]["test"]["defaultModel"] = json!("fixture");
-        config["connections"]["test"]["modelOverrides"] = json!({"fixture": {"maxCount": 2}});
+        let config = json!({
+            "schemaVersion":1,"defaultConnection":"local",
+            "outputDir":workspace.0.join("outputs").to_str().unwrap(),
+            "stateDir":workspace.0.join("state").to_str().unwrap(),
+            "logging":{"directory":workspace.0.join("logs").to_str().unwrap()},
+            "files":{"allowedInputRoots":[workspace.0.join("inputs").to_str().unwrap()]},
+            "connections":{"local":{
+                "adapter":"openai-images","baseUrl":format!("{origin}/v1"),"auth":{"type":"none"},
+                "defaultModel":"fixture","modelOverrides":{"fixture":{"maxCount":2}}
+            }}
+        });
         let g = generation(&workspace, &config);
+        assert_eq!(g.config.value["defaultConnection"], "local");
+        assert_eq!(
+            g.config.value["connections"]["local"]["requestTimeoutMs"],
+            300000
+        );
+        assert!(
+            g.config.value["connections"]["local"]
+                .get("orchestrationModel")
+                .is_none()
+        );
         let request = json!({"prompt": "fixture", "count": 2, "request_id": "mixed"});
         assert_eq!(oracle["mixed"]["request"], request);
         let client = async {

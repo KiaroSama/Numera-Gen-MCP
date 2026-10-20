@@ -621,11 +621,25 @@ passed. Only one error-expression layout failed formatting on all six, so archiv
 the exact hosted formatter correction preserves behavior. At `38473e4`, all ten jobs passed:
 all 100 native targets on six stable platforms and nightly, strict quality, both Windows DPAPI and
 resume regressions, 86.07% regions / 83.76% branches, all-six notices and extracted internal archives.
-These compiler intermediates are not completed signed distributions. The next actual-SDK fixture
-adds the frozen four terminal, eight uncertain-poll and six cancellation schedules with original
-receipt/config literals, no generation POST and direct admission checks. Native stdio opens its own
-Store instead of the source's in-memory shared Store; that boundary and independent acceptance
-remain explicit, and this new fixture requires its own exact-tree hosted execution.
+These compiler intermediates are not completed signed distributions. At `bf0d958`, all ten jobs
+passed again: all 100 native targets on six stable platforms and nightly, 86.06% regions / 83.73%
+branches, notices and extracted internal archives. Eighteen literal SDK schedules passed both built
+and extracted binaries on all six targets and nightly: four terminal, eight uncertain-poll and six
+cancellation variants, original receipt/config defaults, no generation POST and direct admission.
+Native stdio opens a separate Store, unlike the source in-memory transport; independent review
+accepted the asserted public/state observables as behavior-equivalent, not identical infrastructure.
+
+The canonical ledger now verifies 59 cases against frozen inputs, independently reviewed assertions,
+exact native/helper/dependency hashes and the seven execution logs: foundation13, env-config17,
+dimensions7, capability-descriptors2, workflow-branches1, workflow-validation1 and lifecycle18.
+The other 411 remain pending; all 50 suite-navigation records and full acceptance remain pending.
+Config/normalization review cannot substitute for the actual generated oracle bytes, absent from
+prior retained artifacts. Hosted verification now captures only config/policy/normalization JSON
+and hash-only source/compiled/dependency provenance in an explicit evidence ZIP, verifies unchanged
+inputs after native checks and retains it on every target. DPAPI/private state is never included.
+Two fixture-input corrections restore source Gemini `/v1beta` and local/default-timeout/no-orchestrator
+partial-result configuration. This correction and evidence pipeline require their own hosted run;
+they do not change the production protocol or authorize local Rust execution.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

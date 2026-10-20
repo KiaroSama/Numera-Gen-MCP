@@ -1,16 +1,15 @@
 # Testing
 
-## Native Rust migration — pending hosted verification
+## Native Rust migration — partial acceptance
 
-Hosted revision `05ed820` passed selected native runtime suites and actual two-client HTTP SDK
-acceptance on completed targets; strict formatting still blocked publication. Its measured coverage
-was 78.33% executable regions / 70.93% branches. The following `b4e466a` runtime fixtures passed,
-including active SSE shutdown; coverage reached 81.87% regions / 76.67% branches, still below the
-unchanged 85% / 80% gates. Formatting and one nested-condition Clippy warning remained. Packaged distribution and full baseline-case migration acceptance have not passed. Existing Node evidence below is historical regression
-evidence, not proof that the Rust migration passes. Hosted stable jobs run
-rustfmt, strict Clippy, all discovered Rust suites, native release compilation and archive checks on
-Windows/Linux/macOS x86_64/ARM64. A separate isolated nightly job enforces 85% executable regions and
-80% branches from actual LLVM summaries, with no runtime exclusion or weakened floor.
+At `bf0d958`, all ten jobs, 100 native targets on six stable platforms plus nightly, built/extracted
+SDK checks and unchanged 85/80 coverage gates passed. The canonical ledger verifies 59/470 cases;
+full parity, final signatures and owner cutover remain pending. Hosted oracle evidence now retains
+three synthetic JSON inputs and exact frozen/native/dependency hashes, excluding private config and
+DPAPI material; this evidence-pipeline correction still requires its own hosted run. See the
+[current migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
+are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
+coverage floors, with quality/package gates incomplete. All current native verification is hosted-only.
 
 The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
 Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child
