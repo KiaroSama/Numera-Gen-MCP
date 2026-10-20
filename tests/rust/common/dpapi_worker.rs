@@ -6,6 +6,72 @@ use std::{
     time::{Duration, Instant},
 };
 
+pub fn diagnostic_summary(output: &str) -> serde_json::Value {
+    let mut events = Vec::new();
+    for line in output.lines() {
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        if value["component"] != "bounded" {
+            continue;
+        }
+        let mut fields = serde_json::Map::new();
+        for key in [
+            "pid",
+            "startup_ms",
+            "resumed_threads",
+            "running_threads",
+            "kernel_ms",
+            "user_ms",
+            "elapsed_ms",
+            "idle_ms",
+            "stdout_bytes",
+            "stderr_bytes",
+        ] {
+            if value[key].is_u64() {
+                fields.insert(key.into(), value[key].clone());
+            }
+        }
+        if value["child_running"].is_boolean() {
+            fields.insert("child_running".into(), value["child_running"].clone());
+        }
+        if matches!(
+            value["reason"].as_str(),
+            Some("idle" | "wall" | "cancelled" | "output_limit")
+        ) {
+            fields.insert("reason".into(), value["reason"].clone());
+        }
+        if !fields.is_empty() {
+            events.push(serde_json::Value::Object(fields));
+        }
+        if events.len() == 8 {
+            break;
+        }
+    }
+    serde_json::Value::Array(events)
+}
+
+#[test]
+fn bounded_diagnostic_projection_never_forwards_private_fields_or_invalid_types() {
+    let input = r#"{"component":"bounded","pid":7,"resumed_threads":2,"running_threads":1,"child_running":true,"kernel_ms":3,"reason":"idle","path":"private","user_ms":"private","message":"private","stderr_bytes":0}
+{"component":"bounded","pid":"private","reason":"private","child_running":"private"}
+{"component":"other","pid":9}"#;
+    let actual = diagnostic_summary(input);
+    let expected = serde_json::json!([{
+        "pid":7,"resumed_threads":2,"running_threads":1,"child_running":true,
+        "kernel_ms":3,"reason":"idle","stderr_bytes":0
+    }]);
+    assert_eq!(actual, expected);
+    assert!(!actual.to_string().contains("private"));
+    assert_eq!(
+        diagnostic_summary(&format!("{input}\n").repeat(20))
+            .as_array()
+            .unwrap()
+            .len(),
+        8
+    );
+}
+
 struct Guard(Child);
 impl Drop for Guard {
     fn drop(&mut self) {

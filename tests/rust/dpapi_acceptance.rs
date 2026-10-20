@@ -288,10 +288,12 @@ mod windows {
                 let idle = progress.elapsed() >= Duration::from_secs(8);
                 if wall || idle {
                     self.stop()?;
-                    let stages = stage_flags(&self.text()?);
+                    let output = self.text()?;
+                    let stages = stage_flags(&output);
+                    let diagnostic = super::dpapi_worker::diagnostic_summary(&output);
                     return Err(io::Error::new(
                         io::ErrorKind::TimedOut,
-                        format!("DPAPI timeout: wall={wall}, idle={idle}, stages={stages:?}."),
+                        format!("DPAPI timeout: wall={wall}, idle={idle}, stages={stages:?}, bounded_numeric_diagnostic={diagnostic}."),
                     ));
                 }
                 pause(deadline);
@@ -591,10 +593,11 @@ try {
         ]
         .map(|marker| output.lines().any(|line| line.trim() == marker));
         let stages = stage_flags(&output);
+        let diagnostic = super::dpapi_worker::diagnostic_summary(&output);
         assert_eq!(
             status.code(),
             Some(0),
-            "DPAPI fixture stages: worker_bound_protect_cleanup_wrapper={stages:?}, protect_started={}, protect_succeeded={}, protect_failed={}, acl_verified={}, destination_exists={}, acl_stage0_4_command_identity_permission_protected_allow_foreign={acl:?}",
+            "DPAPI fixture stages: worker_bound_protect_cleanup_wrapper={stages:?}, protect_started={}, protect_succeeded={}, protect_failed={}, acl_verified={}, destination_exists={}, acl_stage0_4_command_identity_permission_protected_allow_foreign={acl:?}, bounded_numeric_diagnostic={diagnostic}",
             output.contains("User-scoped secret protection requested; value and path are not logged."),
             output.contains("DPAPI secret created for the current Windows user; value not logged."),
             output.contains("Secret protection failed. Verify destination, current-user DPAPI and access restrictions before use."),

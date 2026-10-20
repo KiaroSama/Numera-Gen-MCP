@@ -74,6 +74,13 @@ unsafe extern "system" {
     fn ResumeThread(thread: Handle) -> u32;
     fn GetLastError() -> u32;
     fn GetProcessIdOfThread(thread: Handle) -> u32;
+    fn GetProcessTimes(
+        process: Handle,
+        created: *mut u64,
+        exited: *mut u64,
+        kernel: *mut u64,
+        user: *mut u64,
+    ) -> i32;
 }
 
 fn handle(raw: Handle) -> io::Result<OwnedHandle> {
@@ -89,10 +96,14 @@ pub struct Owned {
     job: OwnedHandle,
     stopped: bool,
     cleanup_deadline: Option<Instant>,
+    startup_ms: u64,
+    resumed_threads: usize,
+    running_threads: usize,
 }
 
 impl Owned {
     pub fn spawn(command: &mut Command) -> io::Result<Self> {
+        let begin = Instant::now();
         // A suspended command cannot create descendants before assignment to its owned job.
         let job = handle(unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) })?;
         let mut limits = ExtendedLimits::default();
@@ -115,6 +126,9 @@ impl Owned {
             job,
             stopped: false,
             cleanup_deadline: None,
+            startup_ms: 0,
+            resumed_threads: 0,
+            running_threads: 0,
         };
         if unsafe {
             AssignProcessToJobObject(owned.job.as_raw_handle(), owned.child.as_raw_handle())
@@ -124,14 +138,21 @@ impl Owned {
             owned.stop(Instant::now() + Duration::from_secs(2))?;
             return Err(error);
         }
-        if let Err(error) = owned.resume() {
-            owned.stop(Instant::now() + Duration::from_secs(2))?;
-            return Err(error);
+        match owned.resume() {
+            Ok((resumed, running)) => {
+                owned.resumed_threads = resumed;
+                owned.running_threads = running;
+            }
+            Err(error) => {
+                owned.stop(Instant::now() + Duration::from_secs(2))?;
+                return Err(error);
+            }
         }
+        owned.startup_ms = begin.elapsed().as_millis().try_into().unwrap_or(u64::MAX);
         Ok(owned)
     }
 
-    fn resume(&self) -> io::Result<()> {
+    fn resume(&self) -> io::Result<(usize, usize)> {
         let snapshot = handle(unsafe { CreateToolhelp32Snapshot(4, 0) })?;
         let mut entry = ThreadEntry {
             size: std::mem::size_of::<ThreadEntry>() as u32,
@@ -216,6 +237,31 @@ impl Owned {
     }
     pub fn exited(&mut self) -> io::Result<bool> {
         Ok(self.child.try_wait()?.is_some())
+    }
+
+    pub(super) fn diagnostics(&mut self) -> crate::compat::value::Value {
+        use crate::compat::value::json;
+        let (mut created, mut exited, mut kernel, mut user) = (0, 0, 0, 0);
+        // SAFETY: retained owned process handle and four correctly sized FILETIME outputs;
+        // only CPU durations are reported, never process arguments, paths or environment.
+        let times = unsafe {
+            GetProcessTimes(
+                self.child.as_raw_handle(),
+                &mut created,
+                &mut exited,
+                &mut kernel,
+                &mut user,
+            )
+        } != 0;
+        json!({
+            "pid": self.child.id(),
+            "startup_ms": self.startup_ms,
+            "resumed_threads": self.resumed_threads,
+            "running_threads": self.running_threads,
+            "child_running": self.child.try_wait().ok().map(|status| status.is_none()),
+            "kernel_ms": times.then_some(kernel / 10000),
+            "user_ms": times.then_some(user / 10000),
+        })
     }
 
     fn active(&self) -> io::Result<u32> {
@@ -345,12 +391,12 @@ impl Owned {
     }
 }
 
-fn resume_all(counts: impl IntoIterator<Item = io::Result<u32>>) -> io::Result<()> {
-    let mut resumed = false;
+fn resume_all(counts: impl IntoIterator<Item = io::Result<u32>>) -> io::Result<(usize, usize)> {
+    let (mut resumed, mut running) = (0, 0);
     for previous in counts {
         match previous? {
-            0 => {}
-            1 => resumed = true,
+            0 => running += 1,
+            1 => resumed += 1,
             _ => {
                 return Err(io::Error::other(
                     "Owned thread remains suspended after one resume.",
@@ -358,8 +404,8 @@ fn resume_all(counts: impl IntoIterator<Item = io::Result<u32>>) -> io::Result<(
             }
         }
     }
-    if resumed {
-        Ok(())
+    if resumed > 0 {
+        Ok((resumed, running))
     } else {
         Err(io::Error::other(
             "Owned suspended primary thread is missing.",
@@ -384,6 +430,14 @@ impl Drop for Owned {
 mod tests {
     use super::resume_all;
     use std::cell::Cell;
+
+    #[test]
+    fn resume_summary_counts_every_owned_thread_without_claiming_primary_identity() {
+        assert_eq!(resume_all([Ok(0), Ok(1), Ok(1), Ok(0)]).unwrap(), (2, 2));
+        assert_eq!(resume_all([Ok(1)]).unwrap(), (1, 0));
+        assert!(resume_all([Ok(0), Ok(0)]).is_err());
+        assert!(resume_all([Ok(1), Ok(2)]).is_err());
+    }
 
     #[test]
     fn resumes_every_owned_snapshot_thread_instead_of_stopping_at_the_first() {

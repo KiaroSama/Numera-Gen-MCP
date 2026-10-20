@@ -4,13 +4,13 @@
 
 At `886c5f6`, all ten jobs, 100 native targets on six stable platforms plus nightly, built/extracted
 SDK checks and unchanged 85/80 coverage gates passed. Coverage was 86.07% regions / 83.76% branches.
-The canonical ledger verifies 465/470 cases; five affected readiness/setup cases await fresh execution.
+The canonical ledger verifies 464/470 cases; six readiness/setup/DPAPI cases await final acceptance.
 All seven retained fifteen-input oracle bundles were independently checked against artifact digests,
 exact bytes, source/helper/dependency hashes and named native executions. Twelve SDK transport cases,
 Comfy error conversion, tier-message and strict POSIX PID-absence assertions passed. See
 [the migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
 are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
-coverage floors. At `1f52f0a`, stale maintenance-test calls blocked native test compilation; corrected calls and hosted formatting await replacement CI. Native verification is hosted-only.
+coverage floors. At `af83bd0`, all new readiness regressions passed in seven contexts; coverage passed85.77/83.35. Windows x64 DPAPI failed before script entry twice; numeric diagnostics await hosted proof. Native verification is hosted-only.
 
 The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
 Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child

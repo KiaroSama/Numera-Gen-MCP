@@ -629,9 +629,9 @@ cancellation variants, original receipt/config defaults, no generation POST and 
 Native stdio opens a separate Store, unlike the source in-memory transport; independent review
 accepted the asserted public/state observables as behavior-equivalent, not identical infrastructure.
 
-The canonical ledger now verifies 465 cases against frozen inputs, independently reviewed assertions,
+The canonical ledger now verifies 464 cases against frozen inputs, independently reviewed assertions,
 exact native/helper/dependency hashes, actual generated inputs and seven qualified execution logs.
-Five readiness/setup cases await the corrected real-SDK readiness path and its fresh hosted proof.
+Six readiness/setup/DPAPI cases await final acceptance; failed DPAPI and changed test bytes reopen it.
 All 50 suite-navigation records and full acceptance remain pending until every case is accepted.
 Review never substitutes for actual oracle bytes: seven fifteen-input bundles were downloaded and
 checked against GitHub artifact digests, exact nested inventories and original lengths/hashes.
@@ -655,6 +655,10 @@ all three offline jobs passed, but every native test context failed compilation 
 maintenance-test calls; no native harness ran. All-six release/SDK paths passed, while two-file
 formatting failed and archives were skipped. The calls and exact hosted formatting are corrected;
 new readiness execution and complete coverage still require the replacement hosted run.
+At `af83bd0`, all new readiness/report/cancellation/maintenance/Diagnose tests passed in seven contexts;
+coverage passed85.77% regions/83.35% branches. Windows x64 DPAPI alone failed before script entry in
+both the original and one confirmation,8.14s/8.42s, with verified cleanup but no wrapper/ACL markers.
+Numeric startup/resume/CPU/liveness/capture diagnostics are source-only; bounds and assertions stay.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures

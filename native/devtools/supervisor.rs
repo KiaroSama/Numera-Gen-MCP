@@ -147,12 +147,11 @@ pub fn run(
             json!({"event":"start","pid":pid,"owner_pid":std::process::id(),
             "wall_ms":bounds.wall.as_millis() as u64,"idle_ms":bounds.idle.as_millis() as u64}),
         )?;
-        logger.log(
-            "DEBUG",
-            "bounded",
-            "Bounded child started.",
-            json!({"pid":pid}),
-        );
+        #[cfg(windows)]
+        let started = child.diagnostics();
+        #[cfg(unix)]
+        let started = json!({"pid":pid});
+        logger.log("DEBUG", "bounded", "Bounded child started.", started);
         let mut progress = begin;
         loop {
             if captures.poll()? {
@@ -171,12 +170,16 @@ pub fn run(
             };
             if let Some(reason) = reason {
                 ledger.record(json!({"event":"terminate","pid":pid,"reason":reason}))?;
-                logger.log(
-                    "ERROR",
-                    "bounded",
-                    "Bounded command terminated.",
-                    json!({"pid":pid,"reason":reason}),
-                );
+                #[cfg(windows)]
+                let mut diagnostic = child.diagnostics();
+                #[cfg(unix)]
+                let mut diagnostic = json!({"pid":pid});
+                diagnostic["reason"] = json!(reason);
+                diagnostic["elapsed_ms"] = json!(begin.elapsed().as_millis() as u64);
+                diagnostic["idle_ms"] = json!(progress.elapsed().as_millis() as u64);
+                diagnostic["stdout_bytes"] = json!(captures.stdout_bytes.len());
+                diagnostic["stderr_bytes"] = json!(captures.stderr_bytes.len());
+                logger.log("ERROR", "bounded", "Bounded command terminated.", diagnostic);
                 return Ok(Some(reason.into()));
             }
             if child.exited()? {

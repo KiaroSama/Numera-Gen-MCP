@@ -37,6 +37,13 @@ is rechecked, already-running auxiliary threads are harmless, and an unreleased 
 closed. Unrelated processes are never selected by name or a recycled numeric PID.
 
 A sanitized process ledger records start/bounds, termination reason, exit and cleanup evidence.
+Windows start and termination logs additionally report measured startup milliseconds, resumed/running
+snapshot-thread counts, query-only CPU milliseconds and child liveness. Unavailable observations are
+null. Termination reports elapsed/idle time and captured byte counts, never child output. These are
+one-time boundary observations, not watchdog heartbeats or a claim that a particular thread is primary.
+At `af83bd0`, readiness regressions passed in all seven native contexts, but Windows x64's DPAPI script
+failed before entry in both the original run and its single confirmation (8.14s / 8.42s). Its cause
+remains unresolved; diagnostics do not increase deadlines, retry the script or weaken ACL assertions.
 Managed scratch and ledger stay under the owning root. Existing UTF-8 UTC structured logging uses
 `logs/numera-image-gen-mcp_<date>_<time>_UTC-<pid>-<uuid>.log`, stderr, redaction and 14-day retention.
 Credentials, private arguments, prompts and environment values are not logged. Failure to create a
