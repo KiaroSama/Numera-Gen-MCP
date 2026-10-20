@@ -10,7 +10,7 @@ exact bytes, source/helper/dependency hashes and named native executions. Twelve
 Comfy error conversion, tier-message and strict POSIX PID-absence assertions passed. See
 [the migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
 are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
-coverage floors. At `af83bd0`, all new readiness regressions passed in seven contexts; coverage passed85.77/83.35. Windows x64 DPAPI failed before script entry twice; numeric diagnostics await hosted proof. Native verification is hosted-only.
+coverage floors. At `26d4224`, readiness passed in seven contexts; coverage passed85.78/83.35. Windows x64 DPAPI again failed before script entry with zero CPU/output; new snapshot diagnostics await hosted proof. Native verification is hosted-only.
 
 The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
 Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child

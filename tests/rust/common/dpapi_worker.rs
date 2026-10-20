@@ -27,13 +27,19 @@ pub fn diagnostic_summary(output: &str) -> serde_json::Value {
             "idle_ms",
             "stdout_bytes",
             "stderr_bytes",
+            "observed_threads",
+            "suspended_threads",
+            "max_suspend_count",
+            "snapshot_error",
         ] {
             if value[key].is_u64() {
                 fields.insert(key.into(), value[key].clone());
             }
         }
-        if value["child_running"].is_boolean() {
-            fields.insert("child_running".into(), value["child_running"].clone());
+        for key in ["child_running", "snapshot_cleanup_verified"] {
+            if value[key].is_boolean() {
+                fields.insert(key.into(), value[key].clone());
+            }
         }
         if matches!(
             value["reason"].as_str(),
@@ -63,6 +69,12 @@ fn bounded_diagnostic_projection_never_forwards_private_fields_or_invalid_types(
     }]);
     assert_eq!(actual, expected);
     assert!(!actual.to_string().contains("private"));
+    let snapshot = r#"{"component":"bounded","observed_threads":2,"suspended_threads":1,"max_suspend_count":1,"snapshot_error":5,"snapshot_cleanup_verified":false,"teb":"private"}"#;
+    let expected = serde_json::json!([{
+        "observed_threads":2,"suspended_threads":1,"max_suspend_count":1,
+        "snapshot_error":5,"snapshot_cleanup_verified":false
+    }]);
+    assert_eq!(diagnostic_summary(snapshot), expected);
     assert_eq!(
         diagnostic_summary(&format!("{input}\n").repeat(20))
             .as_array()

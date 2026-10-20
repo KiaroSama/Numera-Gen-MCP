@@ -43,7 +43,10 @@ null. Termination reports elapsed/idle time and captured byte counts, never chil
 one-time boundary observations, not watchdog heartbeats or a claim that a particular thread is primary.
 At `af83bd0`, readiness regressions passed in all seven native contexts, but Windows x64's DPAPI script
 failed before entry in both the original run and its single confirmation (8.14s / 8.42s). Its cause
-remains unresolved; diagnostics do not increase deadlines, retry the script or weaken ACL assertions.
+remains unresolved. At `26d4224`, the child was alive after 8009ms with zero measured CPU and no
+captured bytes, despite one recorded thread resume. A timeout-only thread snapshot now reports numeric
+suspension counts or an explicit query error; it captures no memory, addresses or context. This new
+observation requires hosted verification. Diagnostics never retry, increase deadlines or weaken ACLs.
 Managed scratch and ledger stay under the owning root. Existing UTF-8 UTC structured logging uses
 `logs/numera-image-gen-mcp_<date>_<time>_UTC-<pid>-<uuid>.log`, stderr, redaction and 14-day retention.
 Credentials, private arguments, prompts and environment values are not logged. Failure to create a

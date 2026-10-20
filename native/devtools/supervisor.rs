@@ -179,7 +179,20 @@ pub fn run(
                 diagnostic["idle_ms"] = json!(progress.elapsed().as_millis() as u64);
                 diagnostic["stdout_bytes"] = json!(captures.stdout_bytes.len());
                 diagnostic["stderr_bytes"] = json!(captures.stderr_bytes.len());
-                logger.log("ERROR", "bounded", "Bounded command terminated.", diagnostic);
+                #[cfg(windows)]
+                if matches!(reason, "idle" | "wall")
+                    && let Some(fields) = child.thread_snapshot().as_object()
+                {
+                    for (key, value) in fields {
+                        diagnostic[key] = value.clone();
+                    }
+                }
+                logger.log(
+                    "ERROR",
+                    "bounded",
+                    "Bounded command terminated.",
+                    diagnostic,
+                );
                 return Ok(Some(reason.into()));
             }
             if child.exited()? {

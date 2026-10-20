@@ -239,6 +239,10 @@ impl Owned {
         Ok(self.child.try_wait()?.is_some())
     }
 
+    pub(super) fn thread_snapshot(&self) -> crate::compat::value::Value {
+        super::windows_snapshot::observe(self.child.as_raw_handle(), self.child.id())
+    }
+
     pub(super) fn diagnostics(&mut self) -> crate::compat::value::Value {
         use crate::compat::value::json;
         let (mut created, mut exited, mut kernel, mut user) = (0, 0, 0, 0);

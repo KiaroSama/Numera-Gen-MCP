@@ -293,7 +293,9 @@ mod windows {
                     let diagnostic = super::dpapi_worker::diagnostic_summary(&output);
                     return Err(io::Error::new(
                         io::ErrorKind::TimedOut,
-                        format!("DPAPI timeout: wall={wall}, idle={idle}, stages={stages:?}, bounded_numeric_diagnostic={diagnostic}."),
+                        format!(
+                            "DPAPI timeout: wall={wall}, idle={idle}, stages={stages:?}, bounded_numeric_diagnostic={diagnostic}."
+                        ),
                     ));
                 }
                 pause(deadline);

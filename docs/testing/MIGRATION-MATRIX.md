@@ -658,7 +658,9 @@ new readiness execution and complete coverage still require the replacement host
 At `af83bd0`, all new readiness/report/cancellation/maintenance/Diagnose tests passed in seven contexts;
 coverage passed85.77% regions/83.35% branches. Windows x64 DPAPI alone failed before script entry in
 both the original and one confirmation,8.14s/8.42s, with verified cleanup but no wrapper/ACL markers.
-Numeric startup/resume/CPU/liveness/capture diagnostics are source-only; bounds and assertions stay.
+At `26d4224`, Windows x64 again failed8.51s: child alive at8009ms, CPU0/output0/resumed1; ARM passed.
+All stable jobs also required two formatter corrections. Coverage passed85.78/83.35. Exact hosted
+formatting is applied; timeout-only numeric thread-snapshot diagnostics still require their own proof.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
