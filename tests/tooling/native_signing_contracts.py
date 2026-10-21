@@ -112,6 +112,96 @@ class NativeSigning(unittest.TestCase):
         self.assertEqual(set(threading.enumerate()), before)
         self.assertIn("Owned command stopped", errors.getvalue())
 
+    def test_private_keychain_command_is_one_bounded_stdin_line(self):
+        import shlex
+        arguments = ["import", '/owned/space 日本語/quote"and\\slash.pfx', "-P", "fixturepassword"]
+        with patch.object(signing, "command") as command:
+            signing.security_input(arguments)
+            args, kwargs = command.call_args
+            self.assertEqual(args[0], ["/usr/bin/security", "-i"])
+            self.assertEqual(shlex.split(kwargs["secret"].decode("utf-8")), arguments)
+            self.assertEqual(kwargs["secret"].count(b"\n"), 1)
+            for invalid in ([], ["x"] * 33, ["import", "file\nother-command"], ["x" * 4096]):
+                with self.subTest(invalid=invalid[:1]):
+                    command.reset_mock()
+                    with self.assertRaises(signing.SigningError):
+                        signing.security_input(invalid)
+                    command.assert_not_called()
+
+    def test_macos_signer_owns_restricted_keychain_and_cleans_after_failure(self):
+        import shlex
+        certificate = (ROOT / "docs/signing/publisher-cert.der").read_bytes()
+        identity = signing.public_identity()
+        private = self.root / ".ci-work/signing"
+        private.mkdir(parents=True, mode=0o700)
+        pfx = private / "approved.pfx"
+        pfx.write_bytes(b"synthetic encrypted identity; never imported")
+        calls = []
+        failure = {"import": False, "certificate": False, "preferences": False}
+
+        def command(args, **kwargs):
+            calls.append((args, kwargs))
+            if args in (["/usr/bin/security", "list-keychains", "-d", "user"],
+                        ["/usr/bin/security", "default-keychain", "-d", "user"]):
+                return b'"changed.keychain-db"\n' if failure["preferences"] else b'"existing.keychain-db"\n'
+            if args == ["/usr/bin/security", "-i"]:
+                line = kwargs["secret"]
+                self.assertLess(len(line), 4096)
+                tokens = shlex.split(line.decode("utf-8"))
+                if tokens[0] == "create-keychain":
+                    Path(tokens[-1]).write_bytes(b"owned keychain fixture")
+                elif tokens[0] == "import":
+                    self.assertIn("-x", tokens)
+                    self.assertNotIn("-A", tokens)
+                    self.assertEqual(tokens[tokens.index("-T") + 1], "/usr/bin/codesign")
+                    self.assertEqual(tokens[tokens.index("-P") + 1], "fixturepassword")
+                    if failure["import"]:
+                        raise signing.SigningError("controlled_import_failure")
+                elif tokens[0] == "set-key-partition-list":
+                    self.assertEqual(tokens[tokens.index("-S") + 1], "apple-tool:,apple:")
+                return b""
+            if args[1:4] == ["find-certificate", "-a", "-p"]:
+                return signing.pem("CERTIFICATE", b"wrong signer" if failure["certificate"] else certificate)
+            if args[1] == "delete-keychain":
+                Path(args[2]).unlink()
+                return b""
+            self.fail("Unexpected keychain operation")
+
+        with patch.object(signing, "ROOT", self.root), patch.object(signing.sys, "platform", "darwin"), \
+                patch.object(signing, "command", side_effect=command):
+            with self.assertRaisesRegex(RuntimeError, "controlled signing failure"):
+                with signing.macos_identity(pfx, b"fixturepassword\n", identity) as keychain:
+                    self.assertTrue(keychain.is_file())
+                    self.assertTrue(keychain.is_relative_to(private))
+                    raise RuntimeError("controlled signing failure")
+            for field, code in (("import", "controlled_import_failure"),
+                                ("certificate", "imported_native_identity_mismatch"),
+                                ("preferences", "keychain_preferences_changed")):
+                with self.subTest(rejection=field):
+                    failure[field] = field != "preferences"
+                    with self.assertRaisesRegex(signing.SigningError, code):
+                        with signing.macos_identity(pfx, b"fixturepassword\n", identity):
+                            if field == "preferences":
+                                failure[field] = True
+                            else:
+                                self.fail("Invalid native identity was accepted")
+                    failure[field] = False
+                    self.assertEqual(list(private.iterdir()), [pfx])
+            calls.clear()
+            with signing.macos_identity(pfx, b"fixturepassword\n", identity) as keychain:
+                self.assertTrue(keychain.is_file())
+            self.assertEqual([shlex.split(kwargs["secret"].decode("utf-8"))[0]
+                              for args, kwargs in calls if args == ["/usr/bin/security", "-i"]],
+                             ["create-keychain", "unlock-keychain", "import", "set-key-partition-list"])
+            self.assertEqual(sum(args[1] == "find-certificate" for args, _ in calls), 1)
+            self.assertEqual(sum(args[1] == "list-keychains" for args, _ in calls), 3)
+            self.assertEqual(sum(args[1] == "default-keychain" for args, _ in calls), 3)
+        self.assertEqual(list(private.iterdir()), [pfx])
+        self.assertTrue(any(args[1] == "delete-keychain" for args, _ in calls))
+        for args, _ in calls:
+            self.assertNotIn("fixturepassword", " ".join(args))
+            self.assertFalse(set(args) & {"-v", "add-trusted-cert"})
+
     def test_unsigned_final_archive_is_rejected_before_any_output(self):
         spec = importlib.util.spec_from_file_location("signing_package", ROOT / "scripts/native-package.py")
         package = importlib.util.module_from_spec(spec)

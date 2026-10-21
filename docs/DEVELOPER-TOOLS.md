@@ -13,7 +13,9 @@ Windows descendant observers and DPAPI cases, within the unchanged two-second cl
 Clippy, release and SDK checks passed; complete coverage passed at 86.07% regions / 83.76% branches.
 At `443afc9`, all ten hosted jobs passed, including all-six formatting, native tests, release/SDK,
 notices, internal archives and extracted stdio/HTTP execution. These are unsigned internal intermediates;
-full baseline acceptance and final publisher signatures remain pending. Do not replace a working
+full baseline acceptance subsequently passed at `b513884` / run `39519759155`, including all 470 cases,
+50 suites and 103 harnesses per native context. Final publisher signatures remain pending; later
+signing-preparation changes need their own hosted verification. Do not replace a working
 installation or host entry with an internal intermediate.
 
 ## Bounded commands

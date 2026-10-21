@@ -667,9 +667,10 @@ foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine 
 and exact approved-logo binding. Public synthetic fixture signatures were independently verified;
 synthetic executable bytes are never executed and are not native app-signature proof.
 [Developer tooling](../DEVELOPER-TOOLS.md) and [signing](../SIGNING.md) describe the boundaries.
-Platform-native application signatures, protected hosted custody and final retirement-tree/extracted
-verification remain release blockers. All470 frozen cases are accepted; prior green CI belongs only to
-its recorded tree; no new native runtime result is inferred from source review or fixture signatures.
+Retirement tree `b513884` / run `39519759155` passed all ten jobs, all seven 103-harness contexts,
+full470/50 parity and all six internal extracted archives; coverage85.81% regions/83.41% branches.
+Platform-native signatures, protected custody and final signed-package verification remain blockers.
+That run does not certify later signing changes; source review or fixture signatures are not native proof.
 
 ## Release blockers
 

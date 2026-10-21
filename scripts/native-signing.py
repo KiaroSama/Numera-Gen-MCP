@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+from contextlib import contextmanager, nullcontext
 import datetime as dt
 import hashlib
 import importlib.util
@@ -242,6 +243,64 @@ def signing_inputs() -> tuple[Path, bytes]:
     return paths[0], password + b"\n"
 
 
+def security_input(arguments: list[str]) -> None:
+    # security -i returns only the last command's status: submit exactly one bounded command.
+    if not arguments or len(arguments) > 32 or any(re.search(r"[\x00-\x1f\x7f]", item) for item in arguments):
+        raise SigningError("invalid_private_keychain_command")
+    line = " ".join('"' + item.replace("\\", "\\\\").replace('"', '\\"') + '"' for item in arguments)
+    payload = (line + "\n").encode("utf-8")
+    if len(payload) >= 4096:
+        raise SigningError("private_keychain_command_bound")
+    command(["/usr/bin/security", "-i"], secret=payload)
+
+
+def keychain_state() -> tuple[bytes, bytes]:
+    return tuple(command(["/usr/bin/security", action, "-d", "user"], capture=True)
+                 for action in ("list-keychains", "default-keychain"))
+
+
+@contextmanager
+def macos_identity(pfx: Path, password: bytes, identity: dict):
+    if sys.platform != "darwin":
+        raise SigningError("native_macos_signer_required")
+    private = ROOT / ".ci-work/signing"
+    if not private.resolve(strict=True).is_relative_to(ROOT.resolve(strict=True)):
+        raise SigningError("owned_keychain_staging_required")
+    if not pfx.is_absolute() or not pfx.resolve(strict=True).is_relative_to(private.resolve(strict=True)):
+        raise SigningError("protected_signing_input_required")
+    if not re.fullmatch(rb"[A-Za-z0-9+/=]{1,4095}\n", password):
+        raise SigningError("protected_password_format")
+    passphrase = password[:-1].decode("ascii")
+    before = keychain_state()
+    with tempfile.TemporaryDirectory(prefix="identity-", dir=private) as directory:
+        scratch = Path(directory)
+        scratch.chmod(0o700)
+        keychain = scratch / "numera-signing.keychain-db"
+        try:
+            security_input(["create-keychain", "-p", passphrase, str(keychain)])
+            security_input(["unlock-keychain", "-p", passphrase, str(keychain)])
+            security_input(["import", str(pfx), "-k", str(keychain), "-f", "pkcs12", "-t", "agg",
+                            "-x", "-T", "/usr/bin/codesign", "-P", passphrase])
+            security_input(["set-key-partition-list", "-S", "apple-tool:,apple:", "-s", "-k",
+                            passphrase, str(keychain)])
+            certificates = command(["/usr/bin/security", "find-certificate", "-a", "-p", str(keychain)], capture=True)
+            blocks = re.findall(rb"-----BEGIN CERTIFICATE-----\s*([A-Za-z0-9+/=\s]+?)-----END CERTIFICATE-----", certificates)
+            if len(blocks) != 1 or hashlib.sha256(base64.b64decode(re.sub(rb"\s", b"", blocks[0]), validate=True)).hexdigest() != identity["certificate_sha256"]:
+                raise SigningError("imported_native_identity_mismatch")
+            if keychain_state() != before:
+                raise SigningError("keychain_preferences_changed")
+            yield keychain
+        finally:
+            try:
+                if keychain.exists():
+                    command(["/usr/bin/security", "delete-keychain", str(keychain)])
+                    if keychain.exists():
+                        raise SigningError("owned_keychain_cleanup_failed")
+            finally:
+                if keychain_state() != before:
+                    raise SigningError("keychain_preferences_changed")
+
+
 def sign(directory: Path, target: str) -> dict:
     identity = public_identity()
     pfx, password = signing_inputs()
@@ -251,25 +310,19 @@ def sign(directory: Path, target: str) -> dict:
     value, _ = manifest(root, target)
     if value["source_sha"] != os.environ.get("GITHUB_SHA") or (root / "manifest.sig").exists():
         raise SigningError("signing_candidate_identity")
-    # macOS needs a separately provisioned isolated identity, never a login/system keychain search.
-    keychain = None
-    if "apple" in target:
-        raw = os.environ.get("NUMERA_SIGNING_KEYCHAIN")
-        keychain = Path(raw) if raw else Path()
-        if sys.platform != "darwin" or not keychain.is_absolute() or not keychain.resolve(strict=True).is_relative_to(ROOT / ".ci-work/signing"):
-            raise SigningError("isolated_macos_identity_unavailable")
-    for row in value["files"]:
-        if not row["path"].startswith("bin/"):
-            continue
-        file = member(root, row["path"])
-        if "windows" in target:
-            signed = file.with_name(file.name + ".signed-" + uuid.uuid4().hex)
-            command([tool("osslsigncode"), "sign", "-pkcs12", str(pfx), "-readpass", "-", "-h", "sha256",
-                     "-n", "Numera Image-Gen MCP", "-in", str(file), "-out", str(signed)], secret=password)
-            os.replace(signed, file)
-        elif "apple" in target:
-            command(["/usr/bin/codesign", "--force", "--sign", identity["certificate_thumbprint"],
-                     "--keychain", str(keychain), "--timestamp=none", str(file)])
+    with macos_identity(pfx, password, identity) if "apple" in target else nullcontext() as keychain:
+        for row in value["files"]:
+            if not row["path"].startswith("bin/"):
+                continue
+            file = member(root, row["path"])
+            if "windows" in target:
+                signed = file.with_name(file.name + ".signed-" + uuid.uuid4().hex)
+                command([tool("osslsigncode"), "sign", "-pkcs12", str(pfx), "-readpass", "-", "-h", "sha256",
+                         "-n", "Numera Image-Gen MCP", "-in", str(file), "-out", str(signed)], secret=password)
+                os.replace(signed, file)
+            elif "apple" in target:
+                command(["/usr/bin/codesign", "--force", "--sign", identity["certificate_thumbprint"],
+                         "--keychain", str(keychain), "--timestamp=none", str(file)])
     for row in value["files"]:
         data = read(member(root, row["path"]), MAX_BYTES)
         row.update(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())

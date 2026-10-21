@@ -62,6 +62,15 @@ artifacts. Keep the existing encrypted exportable identity in access-restricted 
 retain its recovery information. Never upload a whole credential registry or private custody folder.
 Only exact separately authorized signing inputs may enter a reviewed protected GitHub environment.
 
+The hosted signing helper provisions a fresh private macOS keychain only after explicit hosted
+signing authorization. Each `security -i` invocation receives one bounded UTF-8 command through
+protected stdin; passwords never enter process arguments. Import is non-extractable and permits
+codesign only, with scoped Apple signing partitions. The imported certificate must match the pinned
+DER fingerprint. Default/search keychain preferences are compared before and after, and the owned
+keychain is deleted on success or failure. Offline controls cover import failure, wrong certificate,
+preference drift, cleanup and command framing; actual macOS import/codesign remains unverified until
+the protected hosted stage runs. No login/system keychain or trust store is modified.
+
 A workflow job referencing a nonexistent environment can create it **without protection rules**.
 Do not treat an environment name in YAML as evidence that the route is protected. Before activation,
 verify the intended repository, exact SHA, trusted workflow/actions, allowed refs, protection rules,
@@ -78,7 +87,9 @@ installation or actual host registration is implicit in these instructions.
 version/binary bytes, unrelated signer, tampering and a genuinely signed but unapproved logo. Their
 synthetic executable bytes are never run. DER certificates/public keys and raw signatures are binary;
 JSON manifests are exact UTF-8 bytes excluded from formatting because whitespace is signed.
-The native test execution and real platform-signature tests still need hosted evidence.
+These native manifest fixtures passed all seven execution contexts at `b513884` / run `39519759155`.
+That proves pinned manifest acceptance/rejection, not real Authenticode or Mach-O signing. Later
+signing-preparation changes require their own hosted checks; real platform-signature tests remain pending.
 
 References: [Microsoft SignTool](https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool),
 [Apple Code Signing In Depth](https://developer.apple.com/library/archive/technotes/tn2206/_index.html),

@@ -3,7 +3,8 @@
 Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated ten tools -> application
 services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
 transactional receipts. The tracked production runtime is Rust. All 470 frozen cases and 50 suites have reviewed mappings
-and hosted execution at `49dde41`; final retirement-tree CI and signed distribution remain separate.
+and retirement-tree hosted execution at `b513884` / run `39519759155`; signed distribution remains
+separate, and later signing-preparation changes require their own hosted verification.
 
 ## Boundaries
 

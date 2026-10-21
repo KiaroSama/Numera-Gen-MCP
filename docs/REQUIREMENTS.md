@@ -17,8 +17,9 @@ never a local build or Node/Rust runtime installation. Native `bridge` is launch
 MCP host with `args: ["bridge"]`; no manual launcher startup is required. All managed temp/cache stays
 inside the project/install root. Old local runtime/dependencies are removed only after owner config
 cutover and verified native reconnection. Private config, originals, journals, snapshots and Git
-history are preserved. All470 baseline cases have reviewed applicable native execution at `49dde41`;
-final retirement-tree verification and signed Release remain pending; see the acceptance matrix.
+history are preserved. All470 baseline cases have reviewed applicable native execution; retirement
+tree `b513884` passed run `39519759155` on all six targets. Final signed Release remains pending;
+that run does not certify later signing-preparation changes. See the acceptance matrix.
 
 ## Required release contracts
 

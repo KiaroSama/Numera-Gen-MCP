@@ -140,6 +140,27 @@ class NativeTooling(unittest.TestCase):
             request.assert_not_called()
 
 
+class ClientExamples(unittest.TestCase):
+    def test_examples_launch_only_native_bridge_and_keep_credentials_out_of_host_config(self):
+        import tomllib
+        desktop = json.loads((ROOT / "examples/claude-desktop.json").read_text(encoding="utf-8"))
+        project = json.loads((ROOT / "examples/claude-project.json").read_text(encoding="utf-8"))
+        codex = tomllib.loads((ROOT / "examples/codex.toml").read_text(encoding="utf-8"))
+        self.assertEqual(set(desktop), {"mcpServers"})
+        self.assertEqual(set(project), {"mcpServers"})
+        self.assertEqual(set(codex), {"mcp_servers"})
+        for value in (desktop["mcpServers"], project["mcpServers"], codex["mcp_servers"]):
+            self.assertEqual(set(value), {"numera-image-gen"})
+            entry = value["numera-image-gen"]
+            self.assertEqual(entry["args"], ["bridge"])
+            self.assertEqual(entry["command"], "C:/tools/numera-image-gen-mcp/bin/numera-image-gen-mcp.exe")
+            self.assertEqual(entry["env"], {"NUMERA_CONFIG": "C:/tools/numera-image-gen-mcp/.env"})
+        self.assertNotIn("type", desktop["mcpServers"]["numera-image-gen"])
+        self.assertEqual(project["mcpServers"]["numera-image-gen"]["type"], "stdio")
+        self.assertEqual(codex["mcp_servers"]["numera-image-gen"]["startup_timeout_sec"], 10)
+        self.assertEqual(codex["mcp_servers"]["numera-image-gen"]["tool_timeout_sec"], 360)
+
+
 class OracleEvidence(unittest.TestCase):
     def test_exact_allowlisted_inputs_bind_source_and_reject_tampering_without_private_files(self):
         self.assertTrue((ROOT / "scripts/native-oracle-evidence.py").is_file(), "Hosted oracle evidence capture is missing")

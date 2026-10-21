@@ -1,9 +1,10 @@
 # Codex setup
 
 The native target runs directly over stdio. No launcher, Node runtime or manually started service is
-needed: Codex runs the absolute native executable with `args = ["bridge"]`. The Rust migration is
-still awaiting hosted verification and a Release; do not switch a live host before installing the
-verified binary.
+needed: Codex runs the absolute native executable with `args = ["bridge"]`. Retirement-tree native
+parity and internal packaged SDK checks passed on all six targets at `b513884` / run `39519759155`.
+Publisher signatures and a verified Release remain pending; do not switch a live host before
+installing the verified binary. Later signing changes require their own hosted evidence.
 
 Merge only Numera's table into the actual user configuration, preserving other entries:
 

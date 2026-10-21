@@ -27,11 +27,13 @@ profiles, native image protocols and configured GPU ComfyUI workflows. No paid P
 uploads, prompt enhancement or automatic provider/model fallback.
 
 **Migration status:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
-mappings and applicable hosted execution at `49dde41` (run `39451614262`). All six native targets,
-strict quality checks, packaged SDK execution and coverage floors passed: 85.81% regions / 83.38% branches.
+mappings and applicable hosted execution. The retirement tree `b513884` passed
+[run `39519759155`](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/39519759155):
+all six native targets, strict quality checks and internal packaged SDK execution; coverage was
+85.81% regions / 83.41% branches, above the unchanged 85% / 80% floors.
 The tracked production implementation is Rust; Node is used only for the frozen CI oracle and SDK tests.
-No native Release is published yet. Final retirement-tree verification, publisher signatures and
-protected signing custody remain release gates. The owner's working Node installation stays intact
+No native Release is published yet. Publisher signatures, protected signing custody and final signed
+package verification remain release gates; the newer signing-preparation changes need their own CI. The owner's working Node installation stays intact
 until they change the host entry and verify the native connection.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
 
