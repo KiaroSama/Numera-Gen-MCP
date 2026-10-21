@@ -26,11 +26,13 @@ image work is an explicitly selected tool operation. Named connections, separate
 profiles, native image protocols and configured GPU ComfyUI workflows. No paid POST retries, hidden
 uploads, prompt enhancement or automatic provider/model fallback.
 
-**Migration status:** the native Rust replacement is under implementation. No native Release is
-published yet. At `7199441`, hosted native tests, strict quality checks, coverage floors and
-packaged SDK execution passed on all six targets. Complete baseline-case parity remains pending;
-newer acceptance changes require their own hosted verification.
-The previously tested Node implementation remains available until the native replacement is verified.
+**Migration status:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
+mappings and applicable hosted execution at `49dde41` (run `39451614262`). All six native targets,
+strict quality checks, packaged SDK execution and coverage floors passed: 85.81% regions / 83.38% branches.
+The tracked production implementation is Rust; Node is used only for the frozen CI oracle and SDK tests.
+No native Release is published yet. Final retirement-tree verification, publisher signatures and
+protected signing custody remain release gates. The owner's working Node installation stays intact
+until they change the host entry and verify the native connection.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
 
 The native target also adds an optional direct HTTP MCP endpoint at `http://127.0.0.1:1969/mcp`,

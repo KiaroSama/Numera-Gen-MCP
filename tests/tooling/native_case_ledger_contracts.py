@@ -29,12 +29,18 @@ class CaseLedger(unittest.TestCase):
                           "platform": "linux", "cases": [{**{key: row[key] for key in ["id", "source", "source_sha256", "name", "location"]},
                                                          "mode": row["platform_modes"]["linux"]} for row in cls.rows]}
 
-    def test_pending_rows_validate_structure_but_never_accept_migration(self):
+    def test_current_ledger_structure_and_acceptance_match_explicit_dispositions(self):
         result = ledger.validate(self.source, self.collection, self.directory, False)
         self.assertEqual(result["cases"], 470)
         self.assertFalse(result["acceptance_verified"])
-        with self.assertRaisesRegex(RuntimeError, "pending"):
-            ledger.validate(self.source, self.collection, self.directory, True)
+        complete = self.index["mapping_complete"] is True and all(row["status"] == "verified" for row in self.rows)
+        if complete:
+            accepted = ledger.validate(self.source, self.collection, self.directory, True)
+            self.assertEqual(accepted["pending"], 0)
+            self.assertTrue(accepted["acceptance_verified"])
+        else:
+            with self.assertRaisesRegex(RuntimeError, "pending"):
+                ledger.validate(self.source, self.collection, self.directory, True)
 
     def test_mapping_cache_is_per_validation_and_never_hides_changed_file_bytes(self):
         # Two references share a mapping, but only inside one immutable validation pass.
@@ -102,8 +108,13 @@ class CaseLedger(unittest.TestCase):
             root = Path(temp)
             index = {**self.index, "mapping_complete": True}
             (root / "index.json").write_text(json.dumps(index), encoding="utf-8")
+            pending_written = False
             for name in self.index["files"]:
-                (root / name).write_bytes((self.directory / name).read_bytes())
+                rows = [json.loads(line) for line in (self.directory / name).read_text(encoding="utf-8").splitlines()]
+                if not pending_written:
+                    rows[0]["status"] = "pending"
+                    pending_written = True
+                (root / name).write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
             with self.assertRaisesRegex(RuntimeError, "pending"):
                 ledger.validate(self.source, self.collection, root, True)
 

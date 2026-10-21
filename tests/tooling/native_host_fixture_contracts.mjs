@@ -3,6 +3,37 @@ import { request } from "node:http";
 import { test } from "node:test";
 import { provider } from "../../scripts/native-host-fixture.mjs";
 import { probeStages } from "../../scripts/native-terminal-acceptance.mjs";
+import { cleanupProof } from "../../scripts/bounded.mjs";
+
+const denied = { phase: "group_kill", code: "EPERM" };
+const cleanupInput = (changes = {}) => ({
+  closed: true,
+  groupAbsent: true,
+  survivors: [],
+  failures: [denied],
+  ...changes,
+});
+
+test("post-close denied kill requires definitive group absence", () => {
+  assert.deepEqual(cleanupProof(cleanupInput()), {
+    verified: true,
+    failures: [],
+    resolved: [{ ...denied, resolution: "closed_group_absent" }],
+  });
+});
+
+for (const changes of [
+  { closed: false },
+  { groupAbsent: false },
+  { survivors: [314] },
+  { failures: [denied, { phase: "group_probe", code: "EPERM" }] },
+  { failures: [denied, { phase: "group_deadline", code: "ETIMEDOUT" }] },
+  { failures: [{ phase: "group_kill", code: "EACCES" }] },
+]) {
+  test(`unresolved cleanup cannot pass: ${JSON.stringify(changes)}`, () => {
+    assert.equal(cleanupProof(cleanupInput(changes)).verified, false);
+  });
+}
 
 test("probe diagnostics expose only fixed stages and numeric durations", () => {
   const before = "Earlier capture\n";

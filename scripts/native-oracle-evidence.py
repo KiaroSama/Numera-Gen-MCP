@@ -53,7 +53,6 @@ def dependencies(root: Path, baseline: Path) -> dict:
         baseline_files += files(baseline, directory, suffixes)
     harness = [file.relative_to(root).as_posix() for file in (root / "scripts").glob("native-*")
                if file.is_file() and file.suffix in {".py", ".mjs"}]
-    harness += ["package.json", "package-lock.json"] if (root / "package-lock.json").exists() else []
     return {"native_files": hashes(root, native), "generators": hashes(root, generators),
             "harness_files": hashes(root, harness), "baseline_files": hashes(baseline, baseline_files)}
 

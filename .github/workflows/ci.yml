@@ -26,21 +26,28 @@ jobs:
       - name: Create project-contained work directories
         shell: bash
         run: mkdir -p .ci-work/temp .ci-cache/npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run check
-      - run: npm run format:check
-        id: formatting
-      - name: Show formatting corrections without weakening the check
-        if: failure() && steps.formatting.conclusion == 'failure'
-        shell: bash
-        run: |
-          node -e 'console.error(JSON.stringify({timestamp:new Date().toISOString(),level:"WARNING",component:"ci-format",message:"Formatting failed; printing corrections without accepting them."}))'
-          npm run format
-          git diff --no-ext-diff
-      - run: npm run coverage
-      - run: npm run smoke
-      - run: npm run package:check
-      - run: npm audit --omit=dev
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: fc7da25c3b470199949b1b4c67127d77afa0c34a
+          path: .ci-work/baseline
+      - name: Install frozen oracle dependencies only
+        run: npm --prefix .ci-work/baseline ci --no-audit --no-fund
+      - name: Check current native repository hygiene
+        run: node scripts/check.mjs
+      - name: Check current CI scripts, schemas, examples and documentation formatting
+        run: node .ci-work/baseline/node_modules/prettier/bin/prettier.cjs --check --ignore-unknown scripts tests/tooling examples schemas docs "*.md" .github
+      - name: Check frozen source types, lint and build
+        run: npm --prefix .ci-work/baseline run check
+      - name: Check frozen source formatting
+        run: npm --prefix .ci-work/baseline run format:check
+      - name: Execute frozen source coverage
+        run: npm --prefix .ci-work/baseline run coverage
+      - name: Verify frozen source stdio
+        run: npm --prefix .ci-work/baseline run smoke
+      - name: Verify frozen source packed installation
+        run: npm --prefix .ci-work/baseline run package:check
+      - name: Audit frozen production dependencies
+        run: npm --prefix .ci-work/baseline audit --omit=dev
   native:
     strategy:
       fail-fast: false

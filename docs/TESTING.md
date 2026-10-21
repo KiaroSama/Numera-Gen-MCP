@@ -1,16 +1,16 @@
 # Testing
 
-## Native Rust migration — partial acceptance
+## Native Rust migration — baseline acceptance
 
-At `886c5f6`, all ten jobs, 100 native targets on six stable platforms plus nightly, built/extracted
-SDK checks and unchanged 85/80 coverage gates passed. Coverage was 86.07% regions / 83.76% branches.
-The canonical ledger verifies 464/470 cases; six readiness/setup/DPAPI cases await final acceptance.
-All seven retained fifteen-input oracle bundles were independently checked against artifact digests,
-exact bytes, source/helper/dependency hashes and named native executions. Twelve SDK transport cases,
+At `49dde41` / run `39451614262`, all ten jobs and 103 native harnesses in each of six stable
+platforms plus nightly passed, including built/extracted SDK checks and unchanged 85/80 coverage gates.
+Coverage was 85.81% regions / 83.38% branches. All 470 cases and 50 suites have reviewed mappings
+and applicable execution evidence; final retirement-tree CI and signatures remain separate.
+Seven fifteen-input bundles bind exact artifact digests, bytes, source/helper hashes and named runs. Twelve SDK transport cases,
 Comfy error conversion, tier-message and strict POSIX PID-absence assertions passed. See
 [the migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
 are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
-coverage floors. At `26d4224`, readiness passed in seven contexts; coverage passed85.78/83.35. Windows x64 DPAPI again failed before script entry with zero CPU/output; new snapshot diagnostics await hosted proof. Native verification is hosted-only.
+coverage floors. At `26d4224`, Windows x64 DPAPI failed before script entry with zero CPU/output; `49dde41` passed both Windows DPAPI and PSS snapshot tests without changing bounds. Its historical intermittent startup cause remains unresolved. Native verification is hosted-only.
 
 The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
 Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child
@@ -86,8 +86,8 @@ runner's cleanup-verification record; original cleanup assertions remain require
 adds named phase/errno diagnostics and actual close-event identity rather than probing a reusable
 numeric PID. Real process-group disappearance remains mandatory within the existing two-second bound.
 
-A pending [source mapping](testing/native-parity.json) records all 50 frozen suite hashes, concrete
-native counterparts and unresolved assertion gaps; it explicitly does not mark full case equivalence.
+The accepted [source mapping](testing/native-parity.json) records all 50 frozen suite hashes and
+verified native case unions. The following paragraphs retain earlier, superseded acceptance states.
 Hosted case collection uses the frozen Vitest runtime to expand declaration loops without running test
 bodies. Unlike CLI `list` JSON, it retains skipped platform cases with their names/locations/modes.
 Collection must produce exactly 50 suites / 470 cases and close its pool under a 60-second wall /
@@ -630,9 +630,9 @@ two workers and documented wall/idle ceilings. No Rust toolchain install/build/f
 for this migration. [Acceptance matrix](testing/MIGRATION-MATRIX.md) records incomplete source-case,
 crash/restart, multipart, packaging and live/GUI verification rather than calling them passing.
 
-## Historical Node implementation
+## Historical Node implementation (frozen checkout only)
 
-The native TypeScript7.0.2 compiler runs build/typecheck single-threaded through an explicit
+The frozen TypeScript7.0.2 compiler runs build/typecheck single-threaded through an explicit
 @typescript/native npm alias. Type-aware ESLint retains the supported TypeScript6.0.3 API via
 Microsoft's @typescript/typescript6 compatibility alias. Normal npm ci resolves both without forced
 peers or parser patches. The check entrypoint asserts both versions and the lint API before running

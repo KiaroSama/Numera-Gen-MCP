@@ -1,9 +1,9 @@
 # Practical testing
 
-## Native migration checks — pending verification
+## Native readiness
 
-The target native readiness command calls the same read-only application services directly, not a
-separate SDK child. It does not submit images or change host configuration:
+The native readiness command launches the selected executable's `bridge` through an official SDK
+stdio client, verifies read-only tools and reaps its child. It submits no image or host configuration:
 
 ```bash
 ./bin/numera-image-gen-mcp readiness --config /absolute/numera/.env --connection default --probe
@@ -12,7 +12,7 @@ separate SDK child. It does not submit images or change host configuration:
 Omit `--probe` for provider-free checks. The result distinguishes configuration/storage/credentials
 from an optional bounded catalog; `generation_verified` remains false. This direct command is not
 actual host/GUI reconnection evidence. After owner cutover, call the real host's `health_check` and
-`list_connections` before approving cleanup. No native runtime verification is claimed yet.
+`list_connections` before approving cleanup. Hosted native readiness passed all seven contexts at `49dde41`; actual owner-host cutover is not claimed.
 
 ## Historical Node prepared checks
 
@@ -20,7 +20,7 @@ The readiness command uses a real SDK stdio client and only read-only tools. It 
 image generation/editing, uploads, job cancellation or host registration. It creates normal local
 Numera state/log/storage directories. Logs use the shared UTF-8 UTC maintenance logger; raw provider
 errors, catalog/model strings, credentials and config paths are excluded from its summary.
-Use the existing bounded owner (90-second wall / 20-second idle ceiling):
+This historical command applies only to the frozen Node baseline checkout, not the native distribution (90-second wall / 20-second idle ceiling):
 
 ```bash
 node scripts/bounded.mjs 90000 20000 scripts/readiness.mjs --config "C:/projects/numera-image-gen-mcp/.env" --connection default --probe
@@ -89,8 +89,8 @@ No sample user image was available for live semantic editing in this task.
 
 ## Host and GPU handoff
 
-Host registration remains opt-in: select the exact Claude Code/Desktop/Codex config, use setup
--WhatIf first, then the explicit Register action; preserve backup/unrelated settings. Existing
+Host registration remains opt-in: select the exact Claude Code/Desktop/Codex config, use native
+setup Register --dry-run first, then explicit Register; preserve backup/unrelated settings. Existing
 examples and docs/CLAUDE.md, docs/CODEX.md provide entry shapes. Reconnect the host and call
 health_check/list_connections; actual GUI preview rendering is separate from SDK success.
 No host settings were changed by preparation.

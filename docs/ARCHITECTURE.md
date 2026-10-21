@@ -2,8 +2,8 @@
 
 Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated ten tools -> application
 services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
-transactional receipts. Native implementation and distribution verification are in progress; the
-migration matrix records acceptance rather than implying that authored modules have passed tests.
+transactional receipts. The tracked production runtime is Rust. All 470 frozen cases and 50 suites have reviewed mappings
+and hosted execution at `49dde41`; final retirement-tree CI and signed distribution remain separate.
 
 ## Boundaries
 
@@ -45,7 +45,7 @@ migration matrix records acceptance rather than implying that authored modules h
   anchored child owner has bounded Drop cleanup. Protocol failures retain JSON reports and exit2.
   POSIX direct bridges inherit outer process-group containment; Windows uses private kill-on-close
   Jobs. Force-killing an unsupervised POSIX parent cannot run destructors. Developer Diagnose uses
-  the selected installed executable. These newest paths still require hosted execution.
+  the selected installed executable. These paths passed all seven native contexts at `49dde41`.
   Asset hostname resolution has a per-call seam; default Tokio lookup, all-address validation,
   first-address pinning and redirect checks remain shared. Submission transport observation reports
   numeric client-build/pre-send durations only; preparation is not proof of a network write.
@@ -67,7 +67,7 @@ requests before dispatch. SDK-negotiated modern/legacy session and cancellation 
 `native/cli/http_settings.rs` owns private persistent port/token files independently of image provider
 configuration. `native/cli/menu.rs` supplies native start/port/guidance/exit interaction; explicit
 `bridge` never displays a menu. No OS service, OAuth relay or reference-project account features are
-added. HTTP/menu and their new CI paths remain unverified until the integrated candidate passes.
+added. HTTP/menu SDK, CLI and extracted-archive paths passed on all six targets at `49dde41`.
 
 ## Native developer tooling and signing
 
@@ -95,7 +95,8 @@ and stdio/HTTP boundary codecs carry exact tool arguments and restore IDs/struct
 
 URL and SQLite plain-TEXT boundaries retain the source runtime's documented USVString/UTF-8 coercion;
 JSON receipt text preserves escaped code units. No database schema change, payload sentinel or hidden
-runtime is introduced. This integration is awaiting hosted verification; it is not a full-parity claim.
+runtime is introduced. Its frozen assertions are included in the 470-case acceptance at `49dde41`;
+final release signatures and owner-host cutover are separate verification gates.
 
 ## Decisions and recovery
 

@@ -17,7 +17,8 @@ never a local build or Node/Rust runtime installation. Native `bridge` is launch
 MCP host with `args: ["bridge"]`; no manual launcher startup is required. All managed temp/cache stays
 inside the project/install root. Old local runtime/dependencies are removed only after owner config
 cutover and verified native reconnection. Private config, originals, journals, snapshots and Git
-history are preserved. Migration is currently unverified; see the acceptance matrix.
+history are preserved. All470 baseline cases have reviewed applicable native execution at `49dde41`;
+final retirement-tree verification and signed Release remain pending; see the acceptance matrix.
 
 ## Required release contracts
 
@@ -45,12 +46,13 @@ no credential forwarding or hidden upload service. Atomic output writes, private
 
 ## Deliverables and evidence
 
-Strict Node24 ESM build, pinned lockfile, complete licensing/notices, schema/examples, PowerShell7
-setup/diagnostics/opt-in safe registration/removal with backups and WhatIf, separate Windows/WSL and
-Claude/Codex docs. Offline unit/contract/real-client/packed install checks on Windows/Linux CI,
-85 percent statement and80 percent branch coverage without broad exclusions. Requirement matrix,
-work log, truthful compatibility/test results. Paid generation, GUI registration, GPU/model installs,
-npm publication and public releases require separate authorization. Unavailable live checks not_run.
+Stable Rust native binaries with locked dependencies, licensing/notices, schemas/examples, separate
+native maintenance with five dry-runs and selected-entry backup/concurrency protection; platform and
+Claude/Codex docs. Hosted six-target native unit/contract/real-client/extracted archive checks and
+85 percent executable-region/80 percent branch coverage without broad exclusions. The frozen Node24
+baseline is a CI-only compatibility oracle. A signed GitHub Release is authorized only after all gates;
+paid generation, actual owner-host edits, GPU/model installs and npm publication are not authorized.
+Unavailable live checks remain not_run.
 
 ## Request updates
 

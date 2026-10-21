@@ -660,23 +660,23 @@ coverage passed85.77% regions/83.35% branches. Windows x64 DPAPI alone failed be
 both the original and one confirmation,8.14s/8.42s, with verified cleanup but no wrapper/ACL markers.
 At `26d4224`, Windows x64 again failed8.51s: child alive at8009ms, CPU0/output0/resumed1; ARM passed.
 All stable jobs also required two formatter corrections. Coverage passed85.78/83.35. Exact hosted
-formatting is applied; timeout-only numeric thread-snapshot diagnostics still require their own proof.
+formatting is applied. At `49dde41` / run `39451614262`, all ten jobs and 103 harnesses in each of seven native contexts passed; both Windows DPAPI/PSS tests passed. Coverage85.81/83.38. All470 case assertions and50 suites have applicable execution evidence; historical startup cause remains unknown.
 
 Tests now include changed-version authenticated updates, Windows locked-second-member rollback,
 foreign-lock/unowned-file preservation, local Diagnose, FIFO rejection, genuine wrong-key signatures
 and exact approved-logo binding. Public synthetic fixture signatures were independently verified;
 synthetic executable bytes are never executed and are not native app-signature proof.
 [Developer tooling](../DEVELOPER-TOOLS.md) and [signing](../SIGNING.md) describe the boundaries.
-Platform-native application signatures, protected hosted custody, final extracted execution and
-full independent baseline-case acceptance remain release blockers. Prior green CI belongs only to
+Platform-native application signatures, protected hosted custody and final retirement-tree/extracted
+verification remain release blockers. All470 frozen cases are accepted; prior green CI belongs only to
 its recorded tree; no new native runtime result is inferred from source review or fixture signatures.
 
 ## Release blockers
 
-Every applicable baseline case needs a concrete native case or a source-driven differential replay
-through the native public boundary. Suite-level grouping above is a navigation index, **not all 470
-cases accounted for**. Case inventory and acceptance must fail if a case is unassigned, pending,
-unexecuted or relies solely on the old Node implementation. No blanket "covered" or "retired" state.
+Every applicable baseline case now has reviewed native assertions and qualified execution evidence:
+470 cases,50 suites,273 unique mappings and3788 applicable mapping/target observations. The canonical
+case ledger preserves frozen identities and explicit mechanism adaptations; the suite index derives
+from those cases. CI fails on missing, pending, stale or unexecuted mappings; no blanket retirement.
 
 Ordinary users will need no Node, Rust or Python runtime. Node is retained only in hosted pinned-source
 oracle checks; Python helpers are CI tooling, never dependencies of the shipped binary. Release and

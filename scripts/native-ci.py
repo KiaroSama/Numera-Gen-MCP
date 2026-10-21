@@ -217,6 +217,8 @@ def main() -> None:
                     run(["node", "scripts/native-case-inventory.mjs"], wall=60, idle=30, env=env)
                     run([sys.executable, "-I", "-B", "scripts/native-case-ledger.py", "--source", env["NUMERA_ORACLE_ROOT"],
                          "--collection", str(ROOT / ".ci-work/parity/source-cases.json")], wall=30, idle=15, env=env)
+                    run([sys.executable, "-I", "-B", "scripts/parity.py", "--source", env["NUMERA_ORACLE_ROOT"],
+                         "--collection", str(ROOT / ".ci-work/parity/source-cases.json")], wall=30, idle=15, env=env)
                 except (RuntimeError, TimeoutError) as error:
                     failures.append("case-inventory")
                     emit("ERROR", "Expanded source case collection failed.", error_type=type(error).__name__)

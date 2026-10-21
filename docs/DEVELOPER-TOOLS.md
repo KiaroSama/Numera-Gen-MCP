@@ -46,7 +46,9 @@ failed before entry in both the original run and its single confirmation (8.14s 
 remains unresolved. At `26d4224`, the child was alive after 8009ms with zero measured CPU and no
 captured bytes, despite one recorded thread resume. A timeout-only thread snapshot now reports numeric
 suspension counts or an explicit query error; it captures no memory, addresses or context. This new
-observation requires hosted verification. Diagnostics never retry, increase deadlines or weaken ACLs.
+observation passed its real current-process and layout tests on both Windows targets at `49dde41`;
+the DPAPI case also passed. Historical startup failures remain unexplained. Diagnostics never retry,
+increase deadlines or weaken ACLs.
 Managed scratch and ledger stay under the owning root. Existing UTF-8 UTC structured logging uses
 `logs/numera-image-gen-mcp_<date>_<time>_UTC-<pid>-<uuid>.log`, stderr, redaction and 14-day retention.
 Credentials, private arguments, prompts and environment values are not logged. Failure to create a

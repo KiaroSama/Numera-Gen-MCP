@@ -44,6 +44,28 @@
 *.profdata
 __pycache__/
 
+# Retired source remains locally until verified native host cutover.
+/src/
+/tests/unit/
+/tests/contract/
+/tests/integration/
+/tests/fixtures/runtime.ts
+/tests/fixtures/stdio-hosts.ts
+/tests/fixtures/result-crash.mjs
+/tests/fixtures/lifecycle-store.mjs
+/package.json
+/package-lock.json
+/tsconfig.json
+/tsconfig.build.json
+/vitest.config.ts
+/eslint.config.mjs
+/scripts/package-check.mjs
+/scripts/readiness.mjs
+/scripts/register.mjs
+/scripts/schema.mjs
+/scripts/setup.ps1
+/scripts/smoke.mjs
+
 # Hook Maker: local/private files (auto-managed)
 /.env
 /.env.*
