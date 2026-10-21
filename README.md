@@ -32,8 +32,9 @@ mappings and applicable hosted execution. The retirement tree `b513884` passed
 all six native targets, strict quality checks and internal packaged SDK execution; coverage was
 85.81% regions / 83.41% branches, above the unchanged 85% / 80% floors.
 The tracked production implementation is Rust; Node is used only for the frozen CI oracle and SDK tests.
-No native Release is published yet. Publisher signatures, protected signing custody and final signed
-package verification remain release gates; the newer signing-preparation changes need their own CI. The owner's working Node installation stays intact
+No native Release is published yet. Owner-authorized protected signing custody is configured with
+human review. The six-target native signing and final signed-package checks must pass their own
+exact-SHA CI before delivery; current internal artifacts are not final signed builds. The owner's working Node installation stays intact
 until they change the host entry and verify the native connection.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
 

@@ -226,6 +226,7 @@ def main() -> None:
                 ([sys.executable, "-I", "-B", "tests/tooling/native_ci_contracts.py"], 30, 15),
                 ([sys.executable, "-I", "-B", "tests/tooling/native_case_ledger_contracts.py"], 30, 15),
                 ([sys.executable, "-I", "-B", "tests/tooling/native_signing_contracts.py"], 30, 15),
+                ([sys.executable, "-I", "-B", "tests/tooling/native_signing_stage_contracts.py"], 30, 15),
                 (["node", "--test", "--test-timeout=5000", "tests/tooling/native_host_fixture_contracts.mjs"], 10, 5),
                 (["cargo", "fmt", "--check"], 30, 20),
                 (["cargo", "clippy", "--locked", "--all-targets", "--", "-D", "warnings"], 900, 180),

@@ -8,8 +8,10 @@ The project has an approved RSA-3072 self-signed code-signing identity. Its publ
 ## Current delivery status
 
 Public signed test manifests have been authenticated independently. They do **not** establish that
-a native executable or release archive has been signed. Platform-native signing, protected hosted
-custody, final package/extraction verification and release acceptance remain pending. Existing
+a native executable or release archive has been signed. Owner-authorized protected custody is now
+configured for the migration branch, with human review required. The isolated six-target signing
+stage, real native positive/negative checks and final package/extraction verification must pass on
+their own exact source SHA before signed delivery can be claimed. Release acceptance is pending. Existing
 unsigned CI archives are internal migration test artifacts, not completed signed distributions.
 Do not install them over a working runtime or describe them as a verified Release.
 
@@ -77,6 +79,18 @@ verify the intended repository, exact SHA, trusted workflow/actions, allowed ref
 explicitly selected inputs and private temporary-storage cleanup. Build/test jobs receive no signing
 key. No untrusted PR code receives signing secrets. Missing custody/verifier/protection blocks final
 artifacts and Release, while independent source/test work may continue.
+
+The manual workflow waits for all unprivileged checks, then requires owner review of the protected
+signing environment. Its exact branch restriction is migration-only; a future branch needs a fresh
+owner decision. Only the existing encrypted publisher PFX and its password are selected inputs.
+The signing step verifies the certificate pin before import, writes owner-only temporary files,
+passes passwords through protected stdin and removes its inputs before any extracted app executes.
+Two jobs at most sign concurrently. Each target authenticates the current-run intermediate and
+its source/target/member hashes, then verifies native signatures, tampered copies, an unrelated
+disposable fixture signer, final packaging and extracted SDK behavior. Test keys never leave the
+runner; no publisher key appears in logs or artifact uploads. A failed or unavailable native tool
+blocks that target; no unsigned final fallback exists. Required deployment review is performed by
+the human owner, not the agent.
 
 No certificate purchase, paid signing service, new account, external timestamp authority, trust
 installation or actual host registration is implicit in these instructions.

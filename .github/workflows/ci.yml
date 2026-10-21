@@ -164,6 +164,94 @@ jobs:
           path: Cargo.lock
           if-no-files-found: error
           retention-days: 7
+  signing:
+    needs: [offline, native, native-coverage]
+    if: github.repository == 'KiaroSama/Numera-Image-Gen-MCP' && github.ref == 'refs/heads/feature/native-rust-distribution' && github.event_name == 'workflow_dispatch'
+    environment: numera-signing
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      NUMERA_TEST_WORKERS: "2"
+      PYTHONDONTWRITEBYTECODE: "1"
+      npm_config_cache: ${{ github.workspace }}/.ci-cache/npm
+      TEMP: ${{ github.workspace }}/.ci-work/native/temp
+      TMP: ${{ github.workspace }}/.ci-work/native/temp
+      TMPDIR: ${{ github.workspace }}/.ci-work/native/temp
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create signing work directories
+        shell: bash
+        run: mkdir -p .ci-work/native/temp .ci-cache/npm
+      - name: Download exact current-run intermediate
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: native-unsigned-intermediate-${{ matrix.target }}
+          path: .ci-work/signing-download
+          digest-mismatch: error
+      - name: Authenticate prepared signing inventory
+        run: python -B scripts/native-signing-stage.py stage --target ${{ matrix.target }}
+      - name: Qualify platform signing tools
+        run: python -B scripts/native-signing-stage.py tools --target ${{ matrix.target }}
+      - name: Sign approved binaries and dispose selected private inputs
+        shell: pwsh
+        env:
+          NUMERA_SIGNING_PFX_BASE64: ${{ secrets.NUMERA_SIGNING_PFX_BASE64 }}
+          NUMERA_SIGNING_PASSWORD: ${{ secrets.NUMERA_SIGNING_PASSWORD }}
+        run: ./scripts/native-signing-inputs.ps1 -Target '${{ matrix.target }}'
+      - name: Verify real native signature positive and negative cases
+        run: python -B scripts/native-signing-acceptance.py --target ${{ matrix.target }}
+      - name: Package verified signed distribution
+        run: python -B scripts/native-package.py --target ${{ matrix.target }} --prepared .ci-work/prepared/${{ matrix.target }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: fc7da25c3b470199949b1b4c67127d77afa0c34a
+          path: .ci-work/baseline
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.21.0"
+          package-manager-cache: false
+      - name: Prepare frozen SDK acceptance inputs without signing credentials
+        env:
+          NUMERA_ORACLE_ROOT: ${{ github.workspace }}/.ci-work/baseline
+        shell: bash
+        run: |
+          npm --prefix .ci-work/baseline ci --no-audit --no-fund
+          npm --prefix .ci-work/baseline run build
+          node scripts/rust-oracle.mjs
+      - name: Verify extracted signed distribution without private inputs
+        env:
+          NUMERA_ORACLE_ROOT: ${{ github.workspace }}/.ci-work/baseline
+        run: python -B scripts/native-extract-check.py
+      - name: Preserve verified signed distributions
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-signed-${{ matrix.target }}
+          path: .ci-work/release/*
+          if-no-files-found: error
+          retention-days: 7
   native-coverage:
     runs-on: ubuntu-latest
     timeout-minutes: 50

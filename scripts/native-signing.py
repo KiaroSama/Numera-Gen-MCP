@@ -240,7 +240,20 @@ def signing_inputs() -> tuple[Path, bytes]:
     password = read(paths[1], 4096)
     if not re.fullmatch(rb"[A-Za-z0-9+/=]{1,4095}", password):
         raise SigningError("protected_password_format")
+    check_pfx_certificate(paths[0], password + b"\n", public_identity())
     return paths[0], password + b"\n"
+
+
+def check_pfx_certificate(pfx: Path, password: bytes, identity: dict) -> None:
+    output = command([tool("openssl"), "pkcs12", "-in", str(pfx), "-clcerts", "-nokeys",
+                      "-passin", "stdin"], secret=password, capture=True)
+    blocks = re.findall(rb"-----BEGIN CERTIFICATE-----\s*([A-Za-z0-9+/=\s]+?)-----END CERTIFICATE-----", output)
+    try:
+        if (len(blocks) != 1 or hashlib.sha256(base64.b64decode(re.sub(rb"\s", b"", blocks[0]), validate=True)).hexdigest()
+                != identity["certificate_sha256"]):
+            raise SigningError("selected_pfx_certificate_mismatch")
+    except ValueError:
+        raise SigningError("selected_pfx_certificate_mismatch") from None
 
 
 def security_input(arguments: list[str]) -> None:

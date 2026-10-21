@@ -58,12 +58,31 @@ class NativeSigning(unittest.TestCase):
         password = private / "password.txt"
         env = {"GITHUB_ACTIONS": "true", "NUMERA_SIGNING_AUTHORIZED": "true",
                "NUMERA_SIGNING_PFX": str(pfx), "NUMERA_SIGNING_PASSWORD_FILE": str(password)}
-        with patch.object(signing, "ROOT", self.root), patch.dict(signing.os.environ, env, clear=True):
+        with patch.object(signing, "ROOT", self.root), patch.dict(signing.os.environ, env, clear=True), \
+                patch.object(signing, "check_pfx_certificate"), patch.object(signing, "public_identity"):
             password.write_bytes(b"x" * 4095)
             self.assertEqual(len(signing.signing_inputs()[1]), 4096)
             password.write_bytes(b"x" * 4096)
             with self.assertRaisesRegex(signing.SigningError, "password_format"):
                 signing.signing_inputs()
+
+    def test_selected_pfx_certificate_is_pinned_before_any_native_import(self):
+        self.assertTrue(hasattr(signing, "check_pfx_certificate"), "Portable no-import PFX pin check is missing")
+        identity = signing.public_identity()
+        certificate = (ROOT / "docs/signing/publisher-cert.der").read_bytes()
+        with patch.object(signing, "tool", return_value="openssl"), patch.object(signing, "command") as command:
+            command.return_value = signing.pem("CERTIFICATE", certificate)
+            signing.check_pfx_certificate(self.root / "fixture.pfx", b"fixturepassword\n", identity)
+            args, kwargs = command.call_args
+            self.assertIn("-nokeys", args[0])
+            self.assertIn("-clcerts", args[0])
+            self.assertEqual(kwargs, {"secret": b"fixturepassword\n", "capture": True})
+            self.assertNotIn("fixturepassword", " ".join(args[0]))
+            for invalid in (b"not a certificate", signing.pem("CERTIFICATE", b"wrong signer"),
+                            signing.pem("CERTIFICATE", certificate) * 2):
+                command.return_value = invalid
+                with self.assertRaises(signing.SigningError):
+                    signing.check_pfx_certificate(self.root / "fixture.pfx", b"fixturepassword\n", identity)
 
     def test_public_native_verifier_uses_pinned_leaf_and_never_changes_os_trust(self):
         identity = signing.public_identity()
