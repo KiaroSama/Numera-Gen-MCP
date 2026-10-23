@@ -30,24 +30,36 @@ jobs:
         with:
           ref: fc7da25c3b470199949b1b4c67127d77afa0c34a
           path: .ci-work/baseline
-      - name: Install frozen oracle dependencies only
-        run: npm --prefix .ci-work/baseline ci --no-audit --no-fund
+      - name: Prepare separate maintained validation without changing the parity oracle
+        run: python -I -B scripts/native-validation.py prepare
+      - name: Install maintained validation dependencies
+        run: npm --prefix .ci-work/validation ci --no-audit --no-fund
       - name: Check current native repository hygiene
         run: node scripts/check.mjs
       - name: Check current CI scripts, schemas, examples and documentation formatting
-        run: node .ci-work/baseline/node_modules/prettier/bin/prettier.cjs --check --ignore-unknown scripts tests/tooling examples schemas docs "*.md" .github
-      - name: Check frozen source types, lint and build
-        run: npm --prefix .ci-work/baseline run check
-      - name: Check frozen source formatting
-        run: npm --prefix .ci-work/baseline run format:check
-      - name: Execute frozen source coverage
-        run: npm --prefix .ci-work/baseline run coverage
-      - name: Verify frozen source stdio
-        run: npm --prefix .ci-work/baseline run smoke
-      - name: Verify frozen source packed installation
-        run: npm --prefix .ci-work/baseline run package:check
-      - name: Audit frozen production dependencies
-        run: npm --prefix .ci-work/baseline audit --omit=dev
+        run: node .ci-work/validation/node_modules/prettier/bin/prettier.cjs --check --ignore-unknown scripts tests/tooling examples schemas docs "*.md" .github
+      - name: Check maintained source types, lint and build
+        run: npm --prefix .ci-work/validation run check
+      - name: Check maintained source formatting
+        run: npm --prefix .ci-work/validation run format:check
+      - name: Execute unchanged source coverage assertions
+        run: npm --prefix .ci-work/validation run coverage
+      - name: Verify maintained source stdio
+        run: npm --prefix .ci-work/validation run smoke
+      - name: Verify maintained source packed installation
+        run: npm --prefix .ci-work/validation run package:check
+      - name: Verify validation delta and patched collection behavior
+        run: python -I -B scripts/native-validation.py check
+      - name: Audit maintained production dependencies
+        run: npm --prefix .ci-work/validation audit --omit=dev
+      - name: Preserve exact validation source delta
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: validation-source-${{ matrix.os }}
+          path: .ci-work/native/validation-source.json
+          if-no-files-found: error
+          retention-days: 7
   native:
     strategy:
       fail-fast: false

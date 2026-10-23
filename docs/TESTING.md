@@ -12,8 +12,8 @@ Comfy error conversion, tier-message and strict POSIX PID-absence assertions pas
 are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
 coverage floors. At `26d4224`, Windows x64 DPAPI failed before script entry with zero CPU/output; `49dde41` passed both Windows DPAPI and PSS snapshot tests without changing bounds. Its historical intermittent startup cause remains unresolved. Native verification is hosted-only.
 
-The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI.
-Native tests require nonempty fixtures and compare real decoded original bytes/metadata. Real child
+The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI;
+[maintained validation](testing/SOURCE-VALIDATION.md) is separate. Native tests compare nonempty original fixtures. Real child
 `bridge` tests launch without a launcher from another CWD, list all ten tools and require bounded EOF
 shutdown. The hosted interoperability fixture also exercises two actual SDK hosts sharing source-seeded
 SQLite receipts and restarts both twice, preserving original bytes and asserting that recovery sends

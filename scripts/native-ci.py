@@ -232,6 +232,7 @@ def main() -> None:
                     emit("ERROR", "Expanded source case collection failed.", error_type=type(error).__name__)
             for command, wall, idle in [
                 ([sys.executable, "-I", "-B", "tests/tooling/native_ci_contracts.py"], 30, 15),
+                ([sys.executable, "-I", "-B", "tests/tooling/native_validation_contracts.py"], 15, 8),
                 ([sys.executable, "-I", "-B", "tests/tooling/native_case_ledger_contracts.py"], 30, 15),
                 ([sys.executable, "-I", "-B", "tests/tooling/native_signing_contracts.py"], 30, 15),
                 ([sys.executable, "-I", "-B", "tests/tooling/native_macos_signing_contracts.py"], 30, 15),
