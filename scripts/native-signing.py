@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import argparse
 import base64
-from contextlib import contextmanager, nullcontext
 import datetime as dt
 import hashlib
 import importlib.util
@@ -86,6 +85,12 @@ def tool(name: str) -> str:
 
 def codesign_failure(code: int, output: bytes) -> None:
     diagnostic = output.lower()
+    for reason in ("capability_unavailable", "allocation_failed", "native_operation_failed",
+                   "single_identity_required", "identity_not_found", "certificate_bound",
+                   "certificate_mismatch", "native_signature_failed"):
+        code = "macos_signing_" + reason
+        if ('"code": "' + code + '"').encode("ascii") in diagnostic:
+            raise SigningError(code)
     for messages, reason in (
         ((b"no identity found", b"specified item could not be found in the keychain"), "identity_not_found"),
         ((b"unable to build chain to self-signed root",), "chain_unavailable"),
@@ -103,7 +108,8 @@ def command(args: list[str], *, secret: bytes | None = None, capture: bool = Fal
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("NUMERA_SIGNING_") and key not in {"GH_TOKEN", "GITHUB_TOKEN"}}
     try:
-        options = {"private_error": codesign_failure} if args[0] == "/usr/bin/codesign" else {}
+        options = {"private_error": codesign_failure} if (args[0] == "/usr/bin/codesign"
+            or args[:4] == [sys.executable, "-I", "-B", str(ROOT / "scripts/native-macos-signing.py")]) else {}
         return RUNNER.run(args, input_data=secret, private=True, capture=capture,
                           capture_limit=1024 * 1024, wall=30, idle=15, cwd=ROOT, env=env, **options)
     except SigningError:
@@ -214,9 +220,9 @@ def native_verify(file: Path, target: str, scratch: Path, identity: dict) -> Non
             raise SigningError("native_macos_verifier_required")
         certificate = ROOT / "docs/signing/publisher-cert.der"
         command(["/usr/bin/codesign", "--verify", "--strict", "--all-architectures", "-R",
-                 f'anchor "{certificate}"', str(file)])
+                 f'=anchor "{certificate}"', str(file)])
         prefix = scratch / (file.name + "-certificate-")
-        command(["/usr/bin/codesign", "--display", "--extract-certificates", str(prefix), str(file)])
+        command(["/usr/bin/codesign", "--display", "--extract-certificates=" + str(prefix), str(file)])
         if hashlib.sha256(read(Path(str(prefix) + "0"), 16384)).hexdigest() != CERT_PIN:
             raise SigningError("native_signer_mismatch")
     # Linux ELF bytes are authenticated by the verified manifest, not imaginary ELF OS enforcement.
@@ -273,73 +279,19 @@ def check_pfx_certificate(pfx: Path, password: bytes, identity: dict) -> None:
         raise SigningError("selected_pfx_certificate_mismatch") from None
 
 
-def security_input(arguments: list[str]) -> None:
-    # security -i returns only the last command's status: submit exactly one bounded command.
-    if not arguments or len(arguments) > 32 or any(re.search(r"[\x00-\x1f\x7f]", item) for item in arguments):
-        raise SigningError("invalid_private_keychain_command")
-    line = " ".join('"' + item.replace("\\", "\\\\").replace('"', '\\"') + '"' for item in arguments)
-    payload = (line + "\n").encode("utf-8")
-    if len(payload) >= 4096:
-        raise SigningError("private_keychain_command_bound")
-    command(["/usr/bin/security", "-i"], secret=payload)
-
-
 def keychain_state() -> tuple[bytes, bytes]:
     return tuple(command(["/usr/bin/security", action, "-d", "user"], capture=True)
                  for action in ("list-keychains", "default-keychain"))
 
 
-def macos_identity_status(keychain: Path, identity: dict) -> dict[str, bool]:
-    output = command(["/usr/bin/security", "find-identity", "-p", "codesigning", str(keychain)], capture=True)
-    matching, separator, valid = output.partition(b"Valid identities only")
-    pin = re.escape(identity["certificate_thumbprint"].encode("ascii"))
-    pattern = rb"(?m)^\s*[0-9]+\)\s+" + pin + rb"\s"
-    return {"matching_identity_present": bool(re.search(pattern, matching)),
-            "policy_valid_identity_present": bool(separator and re.search(pattern, valid))}
-
-
-@contextmanager
-def macos_identity(pfx: Path, password: bytes, identity: dict):
+def macos_sign(pfx: Path, password: bytes, certificate_sha256: str, files: list[Path]) -> None:
     if sys.platform != "darwin":
         raise SigningError("native_macos_signer_required")
-    private = ROOT / ".ci-work/signing"
-    if not private.resolve(strict=True).is_relative_to(ROOT.resolve(strict=True)):
-        raise SigningError("owned_keychain_staging_required")
-    if not pfx.is_absolute() or not pfx.resolve(strict=True).is_relative_to(private.resolve(strict=True)):
-        raise SigningError("protected_signing_input_required")
-    if not re.fullmatch(rb"[A-Za-z0-9+/=]{1,4095}\n", password):
-        raise SigningError("protected_password_format")
-    passphrase = password[:-1].decode("ascii")
-    before = keychain_state()
-    with tempfile.TemporaryDirectory(prefix="identity-", dir=private) as directory:
-        scratch = Path(directory)
-        scratch.chmod(0o700)
-        keychain = scratch / "numera-signing.keychain-db"
-        try:
-            security_input(["create-keychain", "-p", passphrase, str(keychain)])
-            security_input(["unlock-keychain", "-p", passphrase, str(keychain)])
-            security_input(["import", str(pfx), "-k", str(keychain), "-f", "pkcs12", "-t", "agg",
-                            "-x", "-T", "/usr/bin/codesign", "-P", passphrase])
-            security_input(["set-key-partition-list", "-S", "apple-tool:,apple:", "-s", "-k",
-                            passphrase, str(keychain)])
-            certificates = command(["/usr/bin/security", "find-certificate", "-a", "-p", str(keychain)], capture=True)
-            blocks = re.findall(rb"-----BEGIN CERTIFICATE-----\s*([A-Za-z0-9+/=\s]+?)-----END CERTIFICATE-----", certificates)
-            if len(blocks) != 1 or hashlib.sha256(base64.b64decode(re.sub(rb"\s", b"", blocks[0]), validate=True)).hexdigest() != identity["certificate_sha256"]:
-                raise SigningError("imported_native_identity_mismatch")
-            if keychain_state() != before:
-                raise SigningError("keychain_preferences_changed")
-            RUNNER.emit("INFO", "Pinned native identity availability inspected without changing trust.",
-                        **macos_identity_status(keychain, identity))
-            yield keychain
-        finally:
-            try:
-                if keychain.exists():
-                    command(["/usr/bin/security", "delete-keychain", str(keychain)])
-                    if keychain.exists():
-                        raise SigningError("owned_keychain_cleanup_failed")
-            finally:
-                if keychain_state() != before:
-                    raise SigningError("keychain_preferences_changed")
+    arguments = [sys.executable, "-I", "-B", str(ROOT / "scripts/native-macos-signing.py"),
+                 "--pfx", str(pfx), "--certificate-sha256", certificate_sha256]
+    for file in files:
+        arguments.extend(["--file", str(file)])
+    command(arguments, secret=password)
 
 
 def sign(directory: Path, target: str) -> dict:
@@ -351,19 +303,20 @@ def sign(directory: Path, target: str) -> dict:
     value, _ = manifest(root, target)
     if value["source_sha"] != os.environ.get("GITHUB_SHA") or (root / "manifest.sig").exists():
         raise SigningError("signing_candidate_identity")
-    with macos_identity(pfx, password, identity) if "apple" in target else nullcontext() as keychain:
-        for row in value["files"]:
-            if not row["path"].startswith("bin/"):
-                continue
-            file = member(root, row["path"])
-            if "windows" in target:
-                signed = file.with_name(file.name + ".signed-" + uuid.uuid4().hex)
-                command([tool("osslsigncode"), "sign", "-pkcs12", str(pfx), "-readpass", "-", "-h", "sha256",
-                         "-n", "Numera Image-Gen MCP", "-in", str(file), "-out", str(signed)], secret=password)
-                os.replace(signed, file)
-            elif "apple" in target:
-                command(["/usr/bin/codesign", "--force", "--sign", identity["certificate_thumbprint"],
-                         "--keychain", str(keychain), "--timestamp=none", str(file)])
+    binaries = [member(root, row["path"]) for row in value["files"] if row["path"].startswith("bin/")]
+    if "apple" in target:
+        before = keychain_state()
+        try:
+            macos_sign(pfx, password, identity["certificate_sha256"], binaries)
+        finally:
+            if keychain_state() != before:
+                raise SigningError("keychain_preferences_changed")
+    elif "windows" in target:
+        for file in binaries:
+            signed = file.with_name(file.name + ".signed-" + uuid.uuid4().hex)
+            command([tool("osslsigncode"), "sign", "-pkcs12", str(pfx), "-readpass", "-", "-h", "sha256",
+                     "-n", "Numera Image-Gen MCP", "-in", str(file), "-out", str(signed)], secret=password)
+            os.replace(signed, file)
     for row in value["files"]:
         data = read(member(root, row["path"]), MAX_BYTES)
         row.update(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())

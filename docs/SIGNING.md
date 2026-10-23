@@ -65,14 +65,23 @@ artifacts. Keep the existing encrypted exportable identity in access-restricted 
 retain its recovery information. Never upload a whole credential registry or private custody folder.
 Only exact separately authorized signing inputs may enter a reviewed protected GitHub environment.
 
-The hosted signing helper provisions a fresh private macOS keychain only after explicit hosted
-signing authorization. Each `security -i` invocation receives one bounded UTF-8 command through
-protected stdin; passwords never enter process arguments. Import is non-extractable and permits
-codesign only, with scoped Apple signing partitions. The imported certificate must match the pinned
-DER fingerprint. Default/search keychain preferences are compared before and after, and the owned
-keychain is deleted on success or failure. Offline controls cover import failure, wrong certificate,
-preference drift, cleanup and command framing; actual macOS import/codesign remains unverified until
-the protected hosted stage runs. No login/system keychain or trust store is modified.
+The hosted macOS signer imports the selected PKCS12 identity into process memory only, using
+Apple's `kSecImportToMemoryOnly` on macOS 15 or newer. It never imports a keychain item or changes
+keychain search/default preferences or trust. The actual imported certificate must match the pinned
+DER fingerprint before signing. A bounded isolated Python child calls Apple's native signing service;
+Python is CI tooling, never an end-user dependency. Passwords use protected stdin, never process
+arguments. All owned CoreFoundation references are released on success or failure, and child exit
+ends their lifetime. Missing memory-only support fails before import; no persistence fallback exists.
+Default/search preferences are independently compared before and after signing.
+
+`SecCodeSignerCreate` and `SecCodeSignerAddSignatureWithErrors` are exported Apple signing SPI,
+not a stable public API. The job qualifies their availability before receiving publisher inputs;
+missing or rejected capability blocks delivery. Apple constructs the genuine Mach-O signature;
+Numera does not implement that format. Independent `/usr/bin/codesign --verify --strict` checks
+integrity and the pinned certificate, then extraction checks its exact DER hash. Synthetic ABI
+controls cover failed import, wrong/multiple identities, missing capability and reference cleanup;
+only actual hosted native positive/negative tests establish platform acceptance. The previous
+isolated-keychain CLI lookup failed on both architectures and is not a fallback.
 
 A workflow job referencing a nonexistent environment can create it **without protection rules**.
 Do not treat an environment name in YAML as evidence that the route is protected. Before activation,
@@ -84,7 +93,7 @@ artifacts and Release, while independent source/test work may continue.
 The manual workflow waits for all unprivileged checks, then enters the branch-restricted signing
 environment without a separate deployment review, as requested by the owner. Its exact branch
 restriction is migration-only; a future branch needs a fresh owner decision. Only the existing encrypted publisher PFX and its password are selected inputs.
-The signing step verifies the certificate pin before import, writes owner-only temporary files,
+The signing step verifies the certificate pin before native import, writes owner-only temporary files,
 passes passwords through protected stdin and removes its inputs before any extracted app executes.
 Two jobs at most sign concurrently. Each target authenticates the current-run intermediate and
 its source/target/member hashes, then verifies native signatures, tampered copies, an unrelated
@@ -96,8 +105,8 @@ used. Removing the review does not remove validation, branch restrictions or sig
 Private cryptographic-tool output is never printed. A failed Apple `codesign` operation is mapped
 in memory to a fixed diagnostic code for missing identity, chain, interaction, internal component,
 extended attributes or an unclassified rejection. The private output remains bounded and is discarded.
-The isolated-keychain diagnostic reports only whether the pinned identity appears in the matching
-and policy-valid sets; these booleans neither grant trust nor replace actual signing/verification.
+The memory-only helper likewise reports fixed allowlisted failure codes, never private Apple error
+objects. Neither successful import nor a listed identity replaces actual signing and verification.
 
 No certificate purchase, paid signing service, new account, external timestamp authority, trust
 installation or actual host registration is implicit in these instructions.

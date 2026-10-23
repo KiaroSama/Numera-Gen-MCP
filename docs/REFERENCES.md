@@ -24,6 +24,24 @@ verified merely because these sources were read.
 - https://modelcontextprotocol.io/docs/develop/build-server: host command/args launch local stdio;
   stdout must contain only protocol, and local/cloud file access is not interchangeable.
 
+## Native macOS signing references, checked 2026-10-24
+
+- [Apple memory-only PKCS12 import](https://developer.apple.com/documentation/security/ksecimporttomemoryonly),
+  macOS 15+: required true flag prevents keychain persistence; missing support fails closed.
+- [SecPKCS12Import](<https://developer.apple.com/documentation/security/secpkcs12import(_:_:_:)>) returns
+  identities/certificates. Authenticate the actual imported certificate before using its private key.
+- [Apple signing declarations](https://github.com/apple-oss-distributions/Security/blob/db15acbe6a7f257a859ad9a3bb86097bfe0679d9/OSX/libsecurity_codesigning/lib/SecCodeSigner.h)
+  and implementation at the same revision define exported signing SPI, not stable public API.
+  Explicit timestamp false avoids a TSA; Apple creates embedded signatures, not project-written CMS.
+- [Apple's codesign signing source](https://github.com/apple-oss-distributions/security_systemkeychain/blob/218eea5c6db7b10e9c26193d16878b6a32e213c7/src/cs_sign.cpp)
+  establishes the native service boundary; it is historical source, not current CLI lookup proof.
+- [Code Signing In Depth](https://developer.apple.com/library/archive/technotes/tn2206/_index.html)
+  distinguishes explicit certificate requirements from OS trust. Native verifier requirement source
+  uses `=anchor "<authenticated-certificate>"`, not an implicitly interpreted filename.
+
+No upstream implementation was copied. These API facts do not establish hosted signing success;
+real native verification, wrong-signer/tamper rejection and extracted-byte acceptance remain gates.
+
 ## Historical protocol and Node implementation references
 
 Checked2026-10-03. Interfaces and test patterns only; no third-party implementation copied.

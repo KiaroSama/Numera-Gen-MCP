@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
 import hashlib
 import importlib.util
 import json
@@ -26,27 +25,6 @@ def reject(action, label):
         print(json.dumps({"component": "native-signing-acceptance", "rejected": label}), flush=True)
         return
     raise RuntimeError("Invalid signature accepted: " + label)
-
-
-@contextmanager
-def unrelated_keychain(scratch, pfx, password):
-    before = signing.keychain_state()
-    path = scratch / "wrong-signer.keychain-db"
-    value = password.decode("ascii").strip()
-    try:
-        signing.security_input(["create-keychain", "-p", value, str(path)])
-        signing.security_input(["unlock-keychain", "-p", value, str(path)])
-        signing.security_input(["import", str(pfx), "-k", str(path), "-f", "pkcs12", "-t", "agg",
-                                "-x", "-T", "/usr/bin/codesign", "-P", value])
-        signing.security_input(["set-key-partition-list", "-S", "apple-tool:,apple:", "-s", "-k", value, str(path)])
-        if signing.keychain_state() != before:
-            raise RuntimeError("Wrong-signer fixture changed keychain preferences")
-        yield path
-    finally:
-        if path.exists():
-            signing.command(["/usr/bin/security", "delete-keychain", str(path)])
-        if path.exists() or signing.keychain_state() != before:
-            raise RuntimeError("Wrong-signer fixture cleanup failed")
 
 
 def main():
@@ -122,9 +100,14 @@ def main():
             elif "apple" in args.target:
                 signing.command(["/usr/bin/codesign", "--remove-signature", str(unsigned)])
                 reject(lambda: signing.native_verify(unsigned, args.target, scratch, identity), "unsigned-native-" + original.name)
-                with unrelated_keychain(scratch, pfx, password) as keychain:
-                    signing.command(["/usr/bin/codesign", "--force", "--sign", "Unrelated fixture signer", "--keychain",
-                                     str(keychain), "--timestamp=none", str(unsigned)])
+                certificate = signing.command([signing.tool("openssl"), "x509", "-in", str(cert), "-outform", "DER"], capture=True)
+                before = signing.keychain_state()
+                try:
+                    signing.macos_sign(pfx, password, hashlib.sha256(certificate).hexdigest(), [unsigned])
+                finally:
+                    if signing.keychain_state() != before:
+                        raise RuntimeError("Wrong-signer fixture changed keychain preferences")
+                signing.command(["/usr/bin/codesign", "--verify", "--strict", str(unsigned)])
                 reject(lambda: signing.native_verify(unsigned, args.target, scratch, identity), "wrong-native-signer-" + original.name)
         signing.verify(prepared, args.target)
     print(json.dumps({"component": "native-signing-acceptance", "target": args.target,

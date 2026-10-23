@@ -123,6 +123,9 @@ def tools(target: str) -> None:
     if openssl is None:
         raise RuntimeError("Compatible preinstalled OpenSSL 3 is required; no legacy fallback")
     values = {"NUMERA_OPENSSL": str(openssl)}
+    if "apple" in target:
+        signing.RUNNER.run([sys.executable, "-I", "-B", str(ROOT / "scripts/native-macos-signing.py"), "--qualify"],
+                           wall=10, idle=5, env=os.environ.copy())
     if "windows" in target:
         directory = ROOT / ".ci-work/signing-tools/osslsigncode-2.14"
         directory.mkdir(parents=True, exist_ok=False)
