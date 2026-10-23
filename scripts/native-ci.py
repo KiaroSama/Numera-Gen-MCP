@@ -46,10 +46,13 @@ def environment() -> dict[str, str]:
     return env
 
 
-def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT, capture: bool = False, capture_limit: int = 1048576, input_data: bytes | None = None, private: bool = False) -> bytes:
+def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path = ROOT, capture: bool = False, capture_limit: int = 1048576, input_data: bytes | None = None, private: bool = False, private_error=None) -> bytes:
     if input_data is not None and (not private or len(input_data) > 4096):
         raise ValueError("Protected stdin requires private mode and at most 4096 bytes")
+    if private_error is not None and not private:
+        raise ValueError("Private error classification requires private mode")
     captured = bytearray()
+    private_stderr = bytearray()
     received = 0
     started = time.monotonic()
     events: queue.Queue[tuple[str, bytes | None]] = queue.Queue(maxsize=64)
@@ -120,6 +123,8 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
             if private and received > capture_limit:
                 failed = True
                 raise RuntimeError("Private command output exceeds bound")
+            if private_error is not None and name == "stderr":
+                private_stderr.extend(chunk)
             if capture and name == "stdout":
                 captured.extend(chunk)
                 if len(captured) > capture_limit:
@@ -132,11 +137,14 @@ def run(args: list[str], *, wall: int, idle: int, env: dict[str, str], cwd: Path
         code = child.wait(timeout=5)
         if code:
             failed = True
+            if private_error is not None:
+                private_error(code, private_stderr)
             raise RuntimeError(f"Owned command failed with exit code {code}")
     except BaseException:
         failed = True
         raise
     finally:
+        private_stderr.clear()
         if child.poll() is None or failed:
             if os.name == "nt":
                 subprocess.run(["taskkill", "/PID", str(child.pid), "/T", "/F"], stdin=subprocess.DEVNULL,

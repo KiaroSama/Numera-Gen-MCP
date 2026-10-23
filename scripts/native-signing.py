@@ -84,13 +84,30 @@ def tool(name: str) -> str:
     return str(path.resolve())
 
 
+def codesign_failure(code: int, output: bytes) -> None:
+    diagnostic = output.lower()
+    for messages, reason in (
+        ((b"no identity found", b"specified item could not be found in the keychain"), "identity_not_found"),
+        ((b"unable to build chain to self-signed root",), "chain_unavailable"),
+        ((b"user interaction is not allowed", b"interaction with the security server is not allowed"), "interaction_required"),
+        ((b"errsecinternalcomponent",), "internal_component"),
+        ((b"resource fork, finder information, or similar detritus not allowed",), "extended_attributes"),
+    ):
+        if any(message in diagnostic for message in messages):
+            raise SigningError("macos_signing_" + reason)
+    raise SigningError("macos_signing_rejected")
+
+
 def command(args: list[str], *, secret: bytes | None = None, capture: bool = False) -> bytes:
     # Only installed, explicitly selected cryptographic tools are executed. Capture is never logged.
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("NUMERA_SIGNING_") and key not in {"GH_TOKEN", "GITHUB_TOKEN"}}
     try:
+        options = {"private_error": codesign_failure} if args[0] == "/usr/bin/codesign" else {}
         return RUNNER.run(args, input_data=secret, private=True, capture=capture,
-                          capture_limit=1024 * 1024, wall=30, idle=15, cwd=ROOT, env=env)
+                          capture_limit=1024 * 1024, wall=30, idle=15, cwd=ROOT, env=env, **options)
+    except SigningError:
+        raise
     except (OSError, RuntimeError, TimeoutError):
         raise SigningError("signing_tool_failed_or_rejected") from None
 
@@ -272,6 +289,15 @@ def keychain_state() -> tuple[bytes, bytes]:
                  for action in ("list-keychains", "default-keychain"))
 
 
+def macos_identity_status(keychain: Path, identity: dict) -> dict[str, bool]:
+    output = command(["/usr/bin/security", "find-identity", "-p", "codesigning", str(keychain)], capture=True)
+    matching, separator, valid = output.partition(b"Valid identities only")
+    pin = re.escape(identity["certificate_thumbprint"].encode("ascii"))
+    pattern = rb"(?m)^\s*[0-9]+\)\s+" + pin + rb"\s"
+    return {"matching_identity_present": bool(re.search(pattern, matching)),
+            "policy_valid_identity_present": bool(separator and re.search(pattern, valid))}
+
+
 @contextmanager
 def macos_identity(pfx: Path, password: bytes, identity: dict):
     if sys.platform != "darwin":
@@ -302,6 +328,8 @@ def macos_identity(pfx: Path, password: bytes, identity: dict):
                 raise SigningError("imported_native_identity_mismatch")
             if keychain_state() != before:
                 raise SigningError("keychain_preferences_changed")
+            RUNNER.emit("INFO", "Pinned native identity availability inspected without changing trust.",
+                        **macos_identity_status(keychain, identity))
             yield keychain
         finally:
             try:

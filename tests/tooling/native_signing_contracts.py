@@ -84,6 +84,24 @@ class NativeSigning(unittest.TestCase):
                 with self.assertRaises(signing.SigningError):
                     signing.check_pfx_certificate(self.root / "fixture.pfx", b"fixturepassword\n", identity)
 
+    def test_native_identity_diagnostic_distinguishes_presence_from_policy_trust(self):
+        self.assertTrue(hasattr(signing, "macos_identity_status"), "Pinned native identity diagnostic is missing")
+        identity = signing.public_identity()
+        pin = identity["certificate_thumbprint"].encode("ascii")
+        listing = b"Matching identities\n  1) " + pin + b' "KiaroSama" (CSSMERR_TP_NOT_TRUSTED)\n'
+        output = listing + b"1 identities found\nValid identities only\n0 valid identities found\n"
+        with patch.object(signing, "command", return_value=output) as command:
+            self.assertEqual(signing.macos_identity_status(self.root / "owned.keychain-db", identity),
+                             {"matching_identity_present": True, "policy_valid_identity_present": False})
+        self.assertEqual(command.call_args.args[0],
+                         ["/usr/bin/security", "find-identity", "-p", "codesigning", str(self.root / "owned.keychain-db")])
+        self.assertEqual(command.call_args.kwargs, {"capture": True})
+        for other in (b"", b"0 identities found\nValid identities only\n0 valid identities found\n",
+                      b"Matching identities\n  1) " + b"0" * 40 + b' "unrelated"\n'):
+            with patch.object(signing, "command", return_value=other):
+                self.assertEqual(signing.macos_identity_status(self.root / "owned.keychain-db", identity),
+                                 {"matching_identity_present": False, "policy_valid_identity_present": False})
+
     def test_public_native_verifier_uses_pinned_leaf_and_never_changes_os_trust(self):
         identity = signing.public_identity()
         public = self.root / "publisher.pem"
@@ -130,6 +148,47 @@ class NativeSigning(unittest.TestCase):
         self.assertNotIn(payload.decode("ascii"), errors.getvalue())
         self.assertEqual(set(threading.enumerate()), before)
         self.assertIn("Owned command stopped", errors.getvalue())
+
+    def test_codesign_failure_reports_fixed_codes_without_private_output(self):
+        import traceback
+        self.assertTrue(hasattr(signing, "codesign_failure"), "Private codesign failure classifier is missing")
+        cases = {
+            b"no identity found": "macos_signing_identity_not_found",
+            b"The specified item could not be found in the keychain": "macos_signing_identity_not_found",
+            b"errSecInternalComponent": "macos_signing_internal_component",
+            b"User interaction is not allowed": "macos_signing_interaction_required",
+            b"unable to build chain to self-signed root": "macos_signing_chain_unavailable",
+            b"resource fork, Finder information, or similar detritus not allowed": "macos_signing_extended_attributes",
+            b"unrecognized diagnostic": "macos_signing_rejected",
+        }
+        private = b"/private/fixture/value synthetic-passphrase"
+        for message, code in cases.items():
+            with self.subTest(code=code), self.assertRaises(signing.SigningError) as error:
+                signing.codesign_failure(1, private + b": " + message)
+            self.assertEqual(str(error.exception), code)
+        errors = io.StringIO()
+        before = set(threading.enumerate())
+        env = {**os.environ, "TEMP": str(self.root), "TMP": str(self.root), "TMPDIR": str(self.root)}
+        with contextlib.redirect_stderr(errors):
+            try:
+                signing.RUNNER.run([sys.executable, "-I", "-B", "-c",
+                    "import sys; sys.stderr.buffer.write(sys.stdin.buffer.read()); sys.exit(7)"],
+                    input_data=private + b": no identity found", private=True,
+                    private_error=signing.codesign_failure, capture_limit=1024,
+                    wall=5, idle=2, env=env, cwd=self.root)
+            except signing.SigningError as error:
+                self.assertEqual(str(error), "macos_signing_identity_not_found")
+                rendered = traceback.format_exc()
+            else:
+                self.fail("A failed private signing command was accepted")
+        self.assertNotIn(private.decode("ascii"), rendered + errors.getvalue())
+        self.assertNotIn("synthetic-passphrase", rendered + errors.getvalue())
+        self.assertEqual(set(threading.enumerate()), before)
+        self.assertIn('"exit_code": 7', errors.getvalue())
+        with patch.object(signing.RUNNER, "run", side_effect=lambda *_, **kw:
+                kw["private_error"](1, b"no identity found")):
+            with self.assertRaisesRegex(signing.SigningError, "macos_signing_identity_not_found"):
+                signing.command(["/usr/bin/codesign", "--sign", "public-pin", "fixture"])
 
     def test_private_keychain_command_is_one_bounded_stdin_line(self):
         import shlex
@@ -181,6 +240,8 @@ class NativeSigning(unittest.TestCase):
                 return b""
             if args[1:4] == ["find-certificate", "-a", "-p"]:
                 return signing.pem("CERTIFICATE", b"wrong signer" if failure["certificate"] else certificate)
+            if args[1:4] == ["find-identity", "-p", "codesigning"]:
+                return b'1) ' + identity["certificate_thumbprint"].encode("ascii") + b' "KiaroSama"\nValid identities only\n'
             if args[1] == "delete-keychain":
                 Path(args[2]).unlink()
                 return b""
