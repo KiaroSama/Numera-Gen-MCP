@@ -1,8 +1,9 @@
 # Linux and macOS setup
 
-The native target is a ready executable, not a source-build prerequisite. Retirement-tree parity
-and internal archive execution passed on all six targets at `b513884` / run `39519759155`. Publisher
-signatures and a verified Release remain pending; do not switch a live client until that archive exists.
+The native target is a ready executable, not a source-build prerequisite. At `80e8a61` /
+run `40037496390`, all sixteen jobs passed, including six native targets, genuine signatures and
+signed extracted SDK checks. [Signed delivery](releases/0.2.0.md) records artifacts and trust limits;
+install the verified archive before switching a live client.
 
 1. Download the matching Linux/macOS x86_64 or ARM64 archive and `.sha256` from this repository's
    Release. Verify the checksum, then extract into a writable installation folder.
@@ -47,7 +48,7 @@ remove only inspected obsolete project-local dependencies/build/temp/cache, neve
 Optional native `menu` provides direct HTTP start, port changes and connection guidance on both
 Linux and macOS. `http` defaults to `127.0.0.1:1969/mcp`, requires a private local Bearer token, and
 runs in foreground; Ctrl+C stops it. It is separate from automatic stdio `bridge` startup.
-[HTTP/menu details](HTTP.md) describe the verified internal target and safe client authentication;
-final signed Release and actual owner reconnection remain separate gates.
+[HTTP/menu details](HTTP.md) describe verified native transports and safe client authentication;
+actual owner reconnection remains separate from signed artifact verification.
 
 [Installation](../README.md#installation-and-setup) · [Claude clients](CLAUDE.md) · [Codex](CODEX.md).

@@ -123,7 +123,7 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
         ));
     }
     let current = if update {
-        Some(artifact::verify(&root)?)
+        Some(artifact::verify_activation(&root)?)
     } else {
         if root.join("manifest.json").exists() {
             return Err(invalid("Installation already exists; use Update."));
@@ -141,12 +141,12 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
         file: Some(lock_file),
     };
     // Verify again after taking the lock, including source bytes and current installation ownership.
-    let verified = artifact::verify(&prepared.root)?;
+    let verified = artifact::verify_activation(&prepared.root)?;
     if verified.manifest_bytes != prepared.manifest_bytes {
         return Err(invalid("Prepared artifact changed before installation."));
     }
     if let Some(current) = &current
-        && artifact::verify(&root)?.manifest_bytes != current.manifest_bytes
+        && artifact::verify_activation(&root)?.manifest_bytes != current.manifest_bytes
     {
         return Err(invalid("Installed artifact changed before update."));
     }
@@ -218,7 +218,7 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
             })?;
             published += 1;
         }
-        artifact::verify(&root)?;
+        artifact::verify_activation(&root)?;
         Ok(())
     })();
     if let Err(error) = attempt {

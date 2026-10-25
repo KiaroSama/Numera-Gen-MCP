@@ -141,7 +141,7 @@ pub fn execute(
         match options.action.as_str() {
             "Register" | "Remove" => {
                 if options.action == "Register" {
-                    let installed = super::artifact::verify(&options.root)?;
+                    let installed = super::artifact::verify_activation(&options.root)?;
                     let expected = options.root.join("bin").join(if cfg!(windows) {
                         "numera-image-gen-mcp.exe"
                     } else {
@@ -193,7 +193,8 @@ pub fn execute(
                 })
             }
             "Install" | "Update" => {
-                let artifact = super::artifact::verify(Path::new(&options.values["artifact"]))?;
+                let artifact =
+                    super::artifact::verify_activation(Path::new(&options.values["artifact"]))?;
                 super::installation::install(&artifact, &options.root, options.action == "Update")?;
                 Ok(Report {
                     dry_run: false,

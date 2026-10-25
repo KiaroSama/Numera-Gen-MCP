@@ -1,10 +1,10 @@
 # Codex setup
 
 The native target runs directly over stdio. No launcher, Node runtime or manually started service is
-needed: Codex runs the absolute native executable with `args = ["bridge"]`. Retirement-tree native
-parity and internal packaged SDK checks passed on all six targets at `b513884` / run `39519759155`.
-Publisher signatures and a verified Release remain pending; do not switch a live host before
-installing the verified binary. Later signing changes require their own hosted evidence.
+needed: Codex runs the absolute native executable with `args = ["bridge"]`. At `80e8a61` /
+run `40037496390`, all sixteen jobs passed, including all six real signature and signed extracted
+SDK checks. [Signed delivery](releases/0.2.0.md) records the verified artifacts and trust limits.
+Install the verified binary first; actual owner-host reconnection remains a separate check.
 
 Merge only Numera's table into the actual user configuration, preserving other entries:
 

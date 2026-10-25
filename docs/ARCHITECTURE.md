@@ -3,8 +3,8 @@
 Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated ten tools -> application
 services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
 transactional receipts. The tracked production runtime is Rust. All 470 frozen cases and 50 suites have reviewed mappings
-and retirement-tree hosted execution at `b513884` / run `39519759155`; signed distribution remains
-separate, and later signing-preparation changes require their own hosted verification.
+and exact hosted execution at `80e8a61` / run `40037496390`. All sixteen jobs, six real publisher
+signing/negative checks and signed extracted SDK checks passed; owner-host cutover remains separate.
 
 ## Boundaries
 
@@ -20,7 +20,8 @@ separate, and later signing-preparation changes require their own hosted verific
 - `native/adapters/`: Images, Gemini, Interactions, Responses, dedicated OpenRouter, opt-in chat images
   and explicit ComfyUI workflow contracts. Tools construct no provider payloads. Gateway forwarding,
   native model capability and account entitlement are separate evidence layers.
-- `native/services/`: discovery, readiness, generation, admission, finalization and existing-handle
+- `native/services/`: Comfy network/upload/history orchestration, discovery, readiness, generation,
+  admission, finalization and existing-handle
   recovery. `generation.rs` coordinates validated inputs; `submission.rs` owns admission, submission,
   existing-job polling and continuation retention. Intent is persisted before paid submission;
   unknown outcomes are never resubmitted.
@@ -82,7 +83,7 @@ validity and exact approved logo/member hashes, then hands authenticated bytes t
 and rollback. This is distinct from native Authenticode/Mach-O verification. Hosted signing helpers
 must verify those native formats and the detached manifest before final archive/extracted execution.
 Missing private custody or verifier capability blocks a finished distribution, not source checking.
-[Signing](SIGNING.md) records self-signed trust limits and pending protected-hosted prerequisites.
+[Signing](SIGNING.md) records verified protected-hosted signatures and deliberate self-signed trust limits.
 No signing secret belongs to a normal build/test job or a downloadable artifact.
 
 ## JSON compatibility boundary

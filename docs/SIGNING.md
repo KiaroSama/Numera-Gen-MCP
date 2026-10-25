@@ -7,14 +7,17 @@ The project has an approved RSA-3072 self-signed code-signing identity. Its publ
 
 ## Current delivery status
 
-Public signed test manifests have been authenticated independently. They do **not** establish that
-a native executable or release archive has been signed. Owner-authorized protected custody is now
-configured for the migration branch. The owner removed the separate deployment-review requirement;
-signing proceeds automatically after the manually initiated workflow's validation. The isolated six-target signing
-stage, real native positive/negative checks and final package/extraction verification must pass on
-their own exact source SHA before signed delivery can be claimed. Release acceptance is pending. Existing
-unsigned CI archives are internal migration test artifacts, not completed signed distributions.
-Do not install them over a working runtime or describe them as a verified Release.
+All six targets passed real publisher signing, unsigned/tamper/wrong-signer rejection and signed
+package/extracted SDK verification at `80e8a6137a423d8940dcfd7c654e643ab1ba9114`,
+[run40037496390](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/40037496390).
+All sixteen jobs succeeded. Both macOS architectures qualified the memory-only signing route below.
+The Windows x64 archive also passed independent pinned Authenticode and manifest verification plus
+isolated ten-tool SDK readiness on the current host, without provider access or a trust-store change.
+Final review then found that the prepared installer authenticated only the detached manifest.
+The correction adds native Windows/macOS activation checks and actual signed maintenance acceptance;
+its new hosted result is required before publication. The earlier draft remains unpublished.
+Actual owner-host cutover is separate; the working runtime is retained.
+Unsigned intermediate CI archives remain internal test artifacts, never completed distributions.
 
 ## What the signature must prove
 
@@ -118,8 +121,9 @@ version/binary bytes, unrelated signer, tampering and a genuinely signed but una
 synthetic executable bytes are never run. DER certificates/public keys and raw signatures are binary;
 JSON manifests are exact UTF-8 bytes excluded from formatting because whitespace is signed.
 These native manifest fixtures passed all seven execution contexts at `b513884` / run `39519759155`.
-That proves pinned manifest acceptance/rejection, not real Authenticode or Mach-O signing. Later
-signing-preparation changes require their own hosted checks; real platform-signature tests remain pending.
+That earlier run proves pinned manifest acceptance/rejection only. The later exact `80e8a61` run
+above independently passed real Authenticode/Mach-O positive and negative verification on both
+architectures, authenticated Linux executable bytes and repeated verification after archive extraction.
 
 References: [Microsoft SignTool](https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool),
 [Apple Code Signing In Depth](https://developer.apple.com/library/archive/technotes/tn2206/_index.html),

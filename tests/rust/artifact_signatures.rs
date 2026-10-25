@@ -24,6 +24,37 @@ fn unsigned_or_tampered_prepared_artifact_is_never_installable() {
     assert!(!workspace.0.join(".numera-install.lock").exists());
 }
 
+#[cfg(any(windows, target_os = "macos"))]
+#[test]
+fn approved_manifest_does_not_authorize_unsigned_text_for_activation() {
+    use numera_image_gen_mcp::devtools::setup;
+    let workspace = common::Workspace::new();
+    let source = workspace.0.join("prepared");
+    let destination = workspace.0.join("installed");
+    std::fs::create_dir(&source).unwrap();
+    std::fs::create_dir(&destination).unwrap();
+    signed_fixture::prepared(&source);
+    assert!(verify(&source).is_ok());
+    let args = vec![
+        "Install".into(),
+        "--root".into(),
+        destination.to_string_lossy().into_owned(),
+        "--artifact".into(),
+        source.to_string_lossy().into_owned(),
+    ];
+    let error = setup::execute(
+        &args,
+        &destination.join("bin/app"),
+        &std::collections::HashMap::new(),
+    )
+    .err()
+    .expect("Native activation must reject a detached-signed text executable.");
+    assert_eq!(error.code, "invalid_artifact");
+    assert!(!destination.join("manifest.json").exists());
+    assert!(!destination.join("bin").exists());
+    assert!(!destination.join(".numera-install.lock").exists());
+}
+
 #[cfg(unix)]
 #[test]
 fn special_manifest_input_rejects_without_waiting_for_a_fifo_writer() {

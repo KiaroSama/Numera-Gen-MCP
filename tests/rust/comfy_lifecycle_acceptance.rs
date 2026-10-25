@@ -7,12 +7,12 @@ mod source;
 mod wire;
 use common::Workspace;
 use numera_image_gen_mcp::{
-    adapters::{comfy, workflow},
+    adapters::workflow,
     capabilities,
     compat::value::{JsString, Value, json},
     config::Config,
     files::images::{Image, decode_base64, inspect},
-    services::request,
+    services::{comfy, request},
 };
 use source::{input, workflow as configured_workflow};
 use std::{collections::HashMap, time::Duration};

@@ -1,4 +1,4 @@
-use super::{
+use crate::adapters::{
     types::{Input, Job, Normalized, ResultItem},
     workflow,
 };
@@ -219,7 +219,7 @@ pub async fn status(
     mut retain: impl FnMut(u32, &[u8]) -> Result<()>,
     mut completed: impl FnMut() -> Result<()>,
 ) -> Result<Status> {
-    let encoded = super::gemini::encode_component(id.checked_str()?);
+    let encoded = crate::adapters::encode_component(id.checked_str()?);
     let history = api::json(
         c,
         headers,

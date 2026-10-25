@@ -6,6 +6,10 @@ mod process_unix;
 #[cfg(windows)]
 mod process_windows;
 pub mod setup;
+#[cfg(target_os = "macos")]
+mod signature_macos;
+#[cfg(windows)]
+mod signature_windows;
 pub mod supervisor;
 #[cfg(windows)]
 mod windows_snapshot;

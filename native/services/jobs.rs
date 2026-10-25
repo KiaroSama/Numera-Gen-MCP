@@ -151,12 +151,12 @@ pub async fn get(
         )?;
         let result = if job.kind == "comfyui" {
             let current = Mutex::new(receipt.clone());
-            let status = adapters::comfy::status(
+            let status = super::comfy::status(
                 c,
                 &headers,
                 &job.id,
                 &cancel,
-                adapters::comfy::OutputLimits {
+                super::comfy::OutputLimits {
                     item: config["files"]["maxOutputBytes"]
                         .as_u64()
                         .unwrap_or(50 * 1024 * 1024) as usize,

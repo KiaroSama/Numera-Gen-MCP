@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/assets/logo.png" alt="Numera Image-Gen MCP logo" width="320" />
+<img src="docs/assets/logo.png" alt="Numera Image-Gen MCP logo" width="240" />
 
 [![CI](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/workflows/ci.yml)
 [![License GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
@@ -26,16 +26,19 @@ image work is an explicitly selected tool operation. Named connections, separate
 profiles, native image protocols and configured GPU ComfyUI workflows. No paid POST retries, hidden
 uploads, prompt enhancement or automatic provider/model fallback.
 
-**Migration status:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
-mappings and applicable hosted execution. The retirement tree `b513884` passed
-[run `39519759155`](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/39519759155):
-all six native targets, strict quality checks and internal packaged SDK execution; coverage was
-85.81% regions / 83.41% branches, above the unchanged 85% / 80% floors.
-The tracked production implementation is Rust; Node is used only for the frozen CI oracle and SDK tests.
-No native Release is published yet. Owner-authorized signing custody is restricted to the migration
-branch; signing proceeds without a separate deployment review after validation. The six-target native signing and final signed-package checks must pass their own
-exact-SHA CI before delivery; current internal artifacts are not final signed builds. The owner's working Node installation stays intact
-until they change the host entry and verify the native connection.
+**Native verification:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
+mappings and applicable execution at `80e8a6137a423d8940dcfd7c654e643ab1ba9114`.
+[Run40037496390](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/40037496390)
+passed all sixteen jobs: six native targets, strict quality checks, real publisher signatures,
+tamper/wrong-signer rejection and signed extracted stdio/HTTP SDK execution. Coverage was
+85.7783% regions / 83.3520% branches, above unchanged 85% / 80% floors. Windows x64 additionally
+passed isolated current-host ten-tool readiness. [Signing and trust](docs/SIGNING.md) explains why
+self-signed identity is not public OS trust, Apple Developer ID or notarization.
+The production implementation is Rust; Node is only the frozen CI oracle/SDK test runtime.
+**Release hold:** final review reproduced two developer-maintenance defects after that green run.
+Corrections are being verified; no native Release is published and the staged draft must not be activated.
+The previous working installation remains until the owner changes only Numera's host entry and
+verifies the actual native connection. CI and isolated readiness do not establish that cutover.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
 
 The native target also adds an optional direct HTTP MCP endpoint at `http://127.0.0.1:1969/mcp`,

@@ -6,10 +6,9 @@ mod wire;
 
 use common::Workspace;
 use numera_image_gen_mcp::{
-    adapters::comfy,
     compat::value::{Value, json},
     files::images::{decode_base64, inspect},
-    services::{polling, request},
+    services::{comfy, polling, request},
 };
 use std::{collections::HashMap, io, path::Path};
 use tokio_util::sync::CancellationToken;

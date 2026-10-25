@@ -128,7 +128,22 @@ fn execute() -> io::Result<i32> {
 
 fn main() -> ExitCode {
     match execute() {
-        Ok(code) => ExitCode::from(u8::try_from(code).unwrap_or(1)),
+        Ok(code) => {
+            #[cfg(windows)]
+            {
+                // ExitCodeExt::from_raw is unstable on supported Rust; execute has dropped owners.
+                if io::stdout()
+                    .flush()
+                    .and_then(|_| io::stderr().flush())
+                    .is_err()
+                {
+                    return ExitCode::FAILURE;
+                }
+                std::process::exit(code);
+            }
+            #[cfg(not(windows))]
+            ExitCode::from(u8::try_from(code).unwrap_or(1))
+        }
         Err(error) => {
             eprintln!(
                 "Native developer operation failed: kind={:?}, os_code={:?}. No private arguments are logged.",

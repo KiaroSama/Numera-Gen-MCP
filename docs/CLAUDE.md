@@ -5,11 +5,11 @@ itself with `args: ["bridge"]`; no launcher, daemon or manual server startup is 
 stdio MCP in `bridge` mode. The optional separate [direct HTTP mode](HTTP.md) listens locally on
 configurable port1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
 
-All 470 frozen baseline cases, 50 suites and internal packaged SDK checks passed applicable native
-execution on all six targets at `b513884` / run `39519759155`. Publisher signatures, final signed
-packages and a verified Release remain pending; later signing-preparation changes are not certified
-by that earlier run. The examples below describe the native target; do not point a live host at an
-executable that has not been installed.
+All 470 frozen cases/50 suites and all six real signature/package/extracted SDK checks passed at
+`80e8a61` / run `40037496390`, all sixteen jobs successful. [Signed delivery](releases/0.2.0.md)
+records exact archives and deliberate self-signed trust limits. CI and isolated native readiness are
+not actual Desktop reconnection. Install the verified binary before using the examples below;
+retain the previous runtime until the actual host connection is verified.
 
 ## Claude Desktop
 

@@ -669,8 +669,9 @@ synthetic executable bytes are never executed and are not native app-signature p
 [Developer tooling](../DEVELOPER-TOOLS.md) and [signing](../SIGNING.md) describe the boundaries.
 Retirement tree `b513884` / run `39519759155` passed all ten jobs, all seven 103-harness contexts,
 full470/50 parity and all six internal extracted archives; coverage85.81% regions/83.41% branches.
-Platform-native signatures, protected custody and final signed-package verification remain blockers.
-That run does not certify later signing changes; source review or fixture signatures are not native proof.
+That earlier run did not certify native signatures. Exact `80e8a61` / run `40037496390` subsequently
+passed all sixteen jobs, all470/50 execution bindings, six real signing/negative and signed extracted
+SDK checks; coverage85.7783/83.3520 passed. [Signed delivery](../releases/0.2.0.md) records promotion.
 
 ## Release blockers
 

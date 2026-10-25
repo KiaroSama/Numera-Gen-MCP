@@ -289,7 +289,7 @@ impl Generation {
             Some(
                 tokio::time::timeout_at(
                     deadline,
-                    adapters::comfy::prepare(&input, &headers, &cancel),
+                    super::comfy::prepare(&input, &headers, &cancel),
                 )
                 .await
                 .map_err(|_| deadline_error())??,

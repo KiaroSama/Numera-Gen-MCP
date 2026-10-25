@@ -7,7 +7,7 @@ use common::Workspace;
 use multipart_fixture::multipart;
 use numera_image_gen_mcp::{
     adapters::{
-        build_request, comfy,
+        build_request,
         types::{Input, mime_data},
         workflow,
     },
@@ -16,7 +16,7 @@ use numera_image_gen_mcp::{
     config::Config,
     files::images::{Image, decode_base64, inspect},
     http::api::{self, Body},
-    services::request,
+    services::{comfy, request},
 };
 use reqwest::Method;
 use std::{collections::HashMap, path::Path, time::Duration};

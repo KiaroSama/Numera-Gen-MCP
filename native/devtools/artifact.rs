@@ -143,6 +143,27 @@ fn valid_version(version: &str) -> bool {
                 && part.parse::<u32>().is_ok()
         })
 }
+pub fn verify_activation(directory: &Path) -> Result<Prepared> {
+    let prepared = verify(directory)?;
+    for member in &prepared.manifest.files {
+        if member.path.starts_with("bin/") {
+            let path = prepared.root.join(&member.path);
+            #[cfg(windows)]
+            super::signature_windows::verify(&path)?;
+            #[cfg(target_os = "macos")]
+            super::signature_macos::verify(&path)?;
+            #[cfg(not(any(windows, target_os = "macos")))]
+            let _ = path;
+        }
+    }
+    // Pin the same bytes again after native verification, before any installation mutation.
+    let after = verify(directory)?;
+    if after.manifest_bytes != prepared.manifest_bytes {
+        return Err(invalid());
+    }
+    Ok(after)
+}
+
 pub fn verify(directory: &Path) -> Result<Prepared> {
     if !directory.is_absolute() {
         return Err(invalid());

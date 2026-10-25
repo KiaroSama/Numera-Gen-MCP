@@ -137,6 +137,22 @@ fn signed_prepared_install_and_update_preserve_private_files_without_compilation
     fs::create_dir(&source).unwrap();
     fs::create_dir(&target).unwrap();
     signed_fixture::prepared(&source);
+    if cfg!(any(windows, target_os = "macos")) {
+        let args = vec![
+            "Install".into(),
+            "--root".into(),
+            target.to_string_lossy().into_owned(),
+            "--artifact".into(),
+            source.to_string_lossy().into_owned(),
+        ];
+        let error = setup::execute(&args, &target.join("bin/app"), &HashMap::new())
+            .err()
+            .unwrap();
+        assert_eq!(error.code, "invalid_artifact");
+        assert!(!target.join("manifest.json").exists());
+        assert!(!target.join("bin").exists());
+        return;
+    }
     fs::write(
         target.join("config.local.json"),
         b"private fixture unchanged",
@@ -266,7 +282,14 @@ fn installation_lock_and_unowned_collision_preserve_destination_bytes() {
     let error = setup::execute(&args, &executable, &HashMap::new())
         .err()
         .unwrap();
-    assert_eq!(error.code, "installation_blocked");
+    assert_eq!(
+        error.code,
+        if cfg!(any(windows, target_os = "macos")) {
+            "invalid_artifact"
+        } else {
+            "installation_blocked"
+        }
+    );
     assert_eq!(
         fs::read(&lock).unwrap(),
         b"another installer owns this lock"
@@ -294,7 +317,7 @@ fn installation_lock_and_unowned_collision_preserve_destination_bytes() {
 
 #[cfg(windows)]
 #[test]
-fn locked_second_update_member_rolls_back_and_releases_owned_staging() {
+fn unsigned_update_is_rejected_before_replacing_a_locked_installation() {
     use std::os::windows::fs::OpenOptionsExt;
     let workspace = Workspace::new();
     let source = workspace.0.join("prepared");
@@ -326,8 +349,8 @@ fn locked_second_update_member_rolls_back_and_releases_owned_staging() {
     let error = setup::execute(&args, &target.join(names[0]), &HashMap::new())
         .err()
         .unwrap();
-    assert_eq!(error.code, "installation_blocked");
-    assert!(error.message.contains("rollback required"));
+    assert_eq!(error.code, "invalid_artifact");
+    assert!(!error.message.contains("rollback required"));
     for (name, bytes) in names.iter().zip(before) {
         assert_eq!(fs::read(target.join(name)).unwrap(), bytes);
     }
@@ -381,8 +404,13 @@ fn actual_setup_cli_registers_selected_installation_not_unpacked_sibling() {
         &logger,
     )
     .unwrap();
-    assert_eq!(result.code, 0);
     assert!(result.cleanup_verified);
+    if cfg!(any(windows, target_os = "macos")) {
+        assert_eq!(result.code, 1);
+        assert_eq!(fs::read(&host).unwrap(), b"{\"retained\":true}");
+        return;
+    }
+    assert_eq!(result.code, 0);
     let value: serde_json::Value = serde_json::from_slice(&fs::read(&host).unwrap()).unwrap();
     let expected = fs::canonicalize(&root)
         .unwrap()
@@ -436,6 +464,17 @@ fn native_register_and_remove_change_only_selected_fixture_entry() {
     } else {
         "numera-image-gen-mcp"
     });
+    if cfg!(any(windows, target_os = "macos")) {
+        let before = fs::read(&host).unwrap();
+        let error = setup::execute(&args("Register"), &executable, &HashMap::new())
+            .err()
+            .unwrap();
+        assert_eq!(error.code, "invalid_artifact");
+        assert_eq!(fs::read(&host).unwrap(), before);
+        setup::execute(&args("Remove"), &executable, &HashMap::new()).unwrap();
+        assert_eq!(fs::read(&host).unwrap(), before);
+        return;
+    }
     setup::execute(&args("Register"), &executable, &HashMap::new()).unwrap();
     let registered: serde_json::Value = serde_json::from_slice(&fs::read(&host).unwrap()).unwrap();
     assert_eq!(registered["retained"], true);

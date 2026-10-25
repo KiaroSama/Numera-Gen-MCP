@@ -1,17 +1,19 @@
 # Changelog
 
-## Unreleased native migration - 2026-10-11
+## Native 0.2.0 - 2026-10-25
 
-A complete Rust replacement is in progress, preserving tools, provider protocols, configuration and
-existing durable image receipts/originals. The target distribution is downloadable native archives
-for Windows/Linux/macOS without user compilation or Node/Rust installation. Direct `bridge` startup
-lets the MCP host run the executable without a manual launcher. Installation/client examples now
-explain that native target. Selected Rust runtime fixtures have passed hosted CI; complete migration
-acceptance, coverage floors, verified packages and a native Release remain pending.
-Old local runtime/dependencies remain until owner host cutover and verified native reconnection.
-Optional direct local HTTP MCP, default configurable port1969, and a native Windows/Linux/macOS menu
-are being added. They reuse Numera's existing tools and state, preserve stdio `bridge`, and require
-separate private local authentication. These new paths have not yet passed hosted CI.
+Rust replaces the production runtime while preserving ten tools, provider wire contracts, private
+configuration and durable SQLite receipts/original image bytes. Six Windows/Linux/macOS x64/ARM64
+archives need no Node, Python, Rust compiler or launcher. Publication is held for final maintenance
+activation/exit-code corrections and their replacement hosted evidence. Direct `bridge`, optional authenticated
+loopback HTTP on configurable port1969, a native menu and separate optional `numera-dev` are included.
+
+Exact `80e8a61` / run `40037496390` passed all sixteen jobs, all470 frozen cases/50 suites and
+85.7783% region/83.3520% branch coverage. All six genuine publisher-signature positive/negative and
+signed extracted SDK checks passed. Original CI archives are promoted without rebuilding/repacking.
+[Verification and trust limits](docs/releases/0.2.0.md) distinguish self-signed identity from public OS
+trust/notarization, and actual owner-host cutover from CI/isolated readiness. Old runtime/data remain
+until the owner switches the entry and verifies the real native connection.
 
 ## Unreleased - 2026-10-05
 

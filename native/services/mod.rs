@@ -1,3 +1,4 @@
+pub mod comfy;
 pub mod discovery;
 pub mod finalization;
 pub mod generation;

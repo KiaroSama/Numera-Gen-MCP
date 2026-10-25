@@ -123,6 +123,8 @@ fn fixture_worker() {
             }
         }
         "exit" => std::process::exit(37),
+        "wide-exit" => std::process::exit(3010),
+        "high-exit" => std::process::exit(0xc000013au32 as i32),
         "orphan" => {
             let child = command(&root, "leaf")
                 .stdout(Stdio::null())
@@ -334,6 +336,32 @@ fn exited_leader_retains_status_and_cleans_its_live_descendant() {
     assert!(outcome.reason.is_none());
     assert!(outcome.cleanup_verified);
     assert_descendant_stopped(&workspace.0);
+}
+
+#[cfg(windows)]
+#[test]
+fn actual_developer_cli_preserves_full_windows_child_exit_status() {
+    let workspace = Workspace::new();
+    let logger = Logger::new(&workspace.0.join("logs"), "INFO");
+    for (mode, expected) in [("wide-exit", 3010), ("high-exit", 0xc000013au32 as i32)] {
+        let mut cli = Command::new(env!("CARGO_BIN_EXE_numera-dev"));
+        cli.args(["bounded", "5000", "2000", "--exec"])
+            .arg(std::env::current_exe().unwrap())
+            .args(["--exact", "fixture_worker", "--nocapture"])
+            .env("NUMERA_DEV_FIXTURE", mode)
+            .env("NUMERA_DEV_FIXTURE_ROOT", &workspace.0);
+        let outcome = run(
+            &mut cli,
+            &workspace.0,
+            Bounds::new(8000, 4000).unwrap(),
+            &AtomicBool::new(false),
+            &logger,
+        )
+        .unwrap();
+        assert_eq!(outcome.code, expected);
+        assert!(outcome.reason.is_none());
+        assert!(outcome.cleanup_verified);
+    }
 }
 
 #[test]

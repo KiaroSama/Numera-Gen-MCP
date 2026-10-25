@@ -14,9 +14,10 @@ Clippy, release and SDK checks passed; complete coverage passed at 86.07% region
 At `443afc9`, all ten hosted jobs passed, including all-six formatting, native tests, release/SDK,
 notices, internal archives and extracted stdio/HTTP execution. These are unsigned internal intermediates;
 full baseline acceptance subsequently passed at `b513884` / run `39519759155`, including all 470 cases,
-50 suites and 103 harnesses per native context. Final publisher signatures remain pending; later
-signing-preparation changes need their own hosted verification. Do not replace a working
-installation or host entry with an internal intermediate.
+50 suites and 103 harnesses per native context. Exact `80e8a61` / run `40037496390` subsequently
+passed all sixteen jobs and six native signature/package checks. Final review then reproduced two
+maintenance defects: detached-only activation and truncated Windows exit codes. Their corrections
+require replacement hosted evidence before release; do not activate the earlier draft over a working runtime.
 
 ## Bounded commands
 
@@ -83,7 +84,10 @@ logs are the only allowed write. An empty prepared directory can be inspected in
 not accepted as an authenticated installation.
 
 Actual Install/Update require the pinned approved signer, current identity validity, exact target,
-version/source metadata, regular bounded members, hashes and approved logo. User configuration and
+version/source metadata, regular bounded members, hashes and approved logo. Windows/macOS activation
+also independently verifies native executable signatures, not just the detached manifest. Synthetic text
+fixtures now reject on those systems; actual signed Install/Update/Register/Remove/rollback checks run
+after protected signing and extraction. Their new hosted result is still required. User configuration and
 non-distribution files are not overwritten. A locked replacement fails and rolls back previous
 replacements; incomplete rollback retains its owned staging for recovery instead of deleting backups.
 Never delete another installer's lock or retained recovery data to force an update.

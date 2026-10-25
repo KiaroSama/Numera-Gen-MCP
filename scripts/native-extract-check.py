@@ -85,6 +85,11 @@ def check(archive: Path, runner, *, intermediate: bool = False) -> None:
         signature_report = signing.verify(installed, manifest["target"])
         if signature_report["source_sha"] != os.environ["GITHUB_SHA"]:
             raise RuntimeError("Extracted signature source identity differs")
+    if not intermediate:
+        activation_spec = importlib.util.spec_from_file_location("signed_activation", ROOT / "scripts/native-activation-acceptance.py")
+        activation = importlib.util.module_from_spec(activation_spec)
+        activation_spec.loader.exec_module(activation)
+        activation.check(installed, runner)
     env = runner.environment()
     temp = workspace / "temp"
     temp.mkdir()

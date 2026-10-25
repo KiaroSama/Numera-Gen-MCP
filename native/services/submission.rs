@@ -102,7 +102,7 @@ impl Generation {
         );
         let mut claimed = false;
         let result = if let Some(workflow) = workflow {
-            let (job, warnings) = adapters::comfy::submit(input, workflow, headers, cancel).await?;
+            let (job, warnings) = super::comfy::submit(input, workflow, headers, cancel).await?;
             receipt.value["upstream_job"] = json!({"id":job.id,"kind":job.kind});
             receipt.value["warnings"]
                 .as_array_mut()
@@ -118,12 +118,12 @@ impl Generation {
             let status = super::polling::wait(
                 cancel,
                 || async {
-                    let status = adapters::comfy::status(
+                    let status = super::comfy::status(
                         c,
                         headers,
                         &job.id,
                         cancel,
-                        adapters::comfy::OutputLimits {
+                        super::comfy::OutputLimits {
                             item: config["files"]["maxOutputBytes"]
                                 .as_u64()
                                 .unwrap_or(50 * 1024 * 1024)

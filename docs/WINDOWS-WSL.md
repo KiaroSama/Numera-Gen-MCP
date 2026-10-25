@@ -1,8 +1,8 @@
 # Native Windows, Linux and macOS
 
-Ready native archives are the installation target. All six native targets passed retirement-tree
-parity and internal extracted-archive checks at `b513884` / run `39519759155`. Publisher signatures
-and a verified Release remain pending; that earlier run does not certify later signing changes.
+Ready native archives are the installation target. At `80e8a61` / run `40037496390`, all sixteen
+jobs passed, including all six native targets, genuine signatures and signed extracted SDK checks.
+[Signed delivery](releases/0.2.0.md) separates verified artifacts from actual owner-host activation.
 
 Windows uses a native MSVC `.exe`; Linux and macOS use their native executables. Choose the matching
 x86_64 or ARM64 archive from the verified Release. Normal users do not install Node/npm/Rust/Python or

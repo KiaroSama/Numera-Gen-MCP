@@ -27,6 +27,14 @@ class NativeSigning(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
+    def test_comfy_transport_is_owned_by_services_not_adapter_mapping(self):
+        adapter = ROOT / "native/adapters/comfy.rs"
+        self.assertFalse(adapter.exists(), "Comfy transport still lives in the pure adapter layer")
+        service = (ROOT / "native/services/comfy.rs").read_text(encoding="utf-8")
+        self.assertIn("pub async fn prepare(", service)
+        self.assertIn("pub async fn submit(", service)
+        self.assertIn("pub async fn status(", service)
+
     def test_only_approved_public_material_is_used(self):
         identity = signing.public_identity()
         self.assertEqual(identity["publisher"], "KiaroSama")

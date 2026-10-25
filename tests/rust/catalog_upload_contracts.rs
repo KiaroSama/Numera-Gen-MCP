@@ -5,13 +5,13 @@ mod config_fixture;
 mod image_fixture;
 use common::Workspace;
 use numera_image_gen_mcp::{
-    adapters::{comfy, types::Input, workflow},
+    adapters::{types::Input, workflow},
     capabilities,
     compat::value::{Value, json},
     config::Config,
     files::images,
     runtime_paths::RuntimePaths,
-    services::discovery::Discovery,
+    services::{comfy, discovery::Discovery},
 };
 use std::{
     collections::HashMap,
