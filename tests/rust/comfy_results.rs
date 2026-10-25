@@ -3,8 +3,8 @@ mod http_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::services::comfy::{self, OutputLimits};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::services::comfy::{self, OutputLimits};
 use std::{collections::HashMap, time::Duration};
 use tokio_util::sync::CancellationToken;
 

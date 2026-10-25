@@ -2,13 +2,7 @@ use crate::{
     compat::hash::sha256,
     error::{NumeraError, Result},
 };
-use std::{
-    ffi::c_void,
-    mem::size_of,
-    os::windows::ffi::OsStrExt,
-    path::Path,
-    ptr::null_mut,
-};
+use std::{ffi::c_void, mem::size_of, os::windows::ffi::OsStrExt, path::Path, ptr::null_mut};
 
 #[repr(C)]
 struct Guid {
@@ -233,7 +227,11 @@ pub(super) fn verify(path: &Path) -> Result<()> {
     {
         return Err(reject());
     }
-    let wide = path.as_os_str().encode_wide().chain([0]).collect::<Vec<_>>();
+    let wide = path
+        .as_os_str()
+        .encode_wide()
+        .chain([0])
+        .collect::<Vec<_>>();
     let mut file = FileInfo {
         size: size_of::<FileInfo>() as u32,
         path: wide.as_ptr(),

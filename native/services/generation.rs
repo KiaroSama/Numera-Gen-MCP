@@ -287,12 +287,9 @@ impl Generation {
         };
         let workflow = if c["adapter"] == "comfyui" {
             Some(
-                tokio::time::timeout_at(
-                    deadline,
-                    super::comfy::prepare(&input, &headers, &cancel),
-                )
-                .await
-                .map_err(|_| deadline_error())??,
+                tokio::time::timeout_at(deadline, super::comfy::prepare(&input, &headers, &cancel))
+                    .await
+                    .map_err(|_| deadline_error())??,
             )
         } else {
             None

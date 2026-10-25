@@ -17,6 +17,12 @@ ROOT = Path(__file__).resolve().parent.parent
 BASELINE = "fc7da25c3b470199949b1b4c67127d77afa0c34a"
 ZOD = {"version": "4.6.7", "resolved": "https://registry.npmjs.org/zod/-/zod-4.6.7.tgz",
        "integrity": "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=="}
+UNDICI = {"version": "8.12.3", "resolved": "https://registry.npmjs.org/undici/-/undici-8.12.3.tgz",
+          "integrity": "sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw=="}
+SYNC_FIXTURE = ("import { spawnSync } from 'node:child_process';\\n"
+                "const r=spawnSync('pwsh',['-NoProfile','-NonInteractive','-Command',process.argv[2]],{windowsHide:true,encoding:'utf8',timeout:10000,stdio:['ignore','pipe','pipe']});process.stdout.write(r.stdout??'');process.stderr.write(r.stderr??'');process.exitCode=r.status??1;")
+STREAM_FIXTURE = ("import { spawn } from 'node:child_process';\\n"
+                  "process.stderr.write('PowerShell fixture: launch\\\\n');const child=spawn('pwsh',['-NoProfile','-NonInteractive','-Command',process.argv[2]],{windowsHide:true,stdio:['ignore','pipe','pipe']});const timer=setTimeout(()=>child.kill('SIGKILL'),10000);child.stdout.pipe(process.stdout);child.stderr.pipe(process.stderr);child.once('error',()=>{clearTimeout(timer);process.stderr.write('PowerShell fixture: launch failed\\\\n');process.exitCode=1});child.once('close',(code)=>{clearTimeout(timer);process.exitCode=code??1});")
 LIMIT = 128 * 1024 * 1024
 
 
@@ -57,23 +63,32 @@ def prepare(root: Path, archive: bytes) -> dict:
                 or lock["packages"][""]["dependencies"]["zod"] != "4.6.5"
                 or lock["packages"]["node_modules/zod"]["version"] != "4.6.5"):
             raise RuntimeError("Unexpected frozen dependency contract")
+        if (package["dependencies"]["undici"] != "8.11.2"
+                or lock["packages"][""]["dependencies"]["undici"] != "8.11.2"
+                or lock["packages"]["node_modules/undici"]["version"] != "8.11.2"):
+            raise RuntimeError("Unexpected frozen Undici contract")
         original = {name: digest(data) for name, data in files.items()}
-        package["dependencies"]["zod"] = ZOD["version"]
-        lock["packages"][""]["dependencies"]["zod"] = ZOD["version"]
-        lock["packages"]["node_modules/zod"].update(ZOD)
+        for name, release in (("zod", ZOD), ("undici", UNDICI)):
+            package["dependencies"][name] = release["version"]
+            lock["packages"][""]["dependencies"][name] = release["version"]
+            lock["packages"][f"node_modules/{name}"].update(release)
         for name, value in (("package.json", package), ("package-lock.json", lock)):
             files[name] = (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         supervisor = root / "scripts/bounded.mjs"
         if supervisor.is_symlink() or not supervisor.resolve().is_relative_to(root.resolve()):
             raise RuntimeError("Maintained supervisor escapes project")
         files["scripts/bounded.mjs"] = supervisor.read_bytes()
+        setup = files["tests/integration/setup.test.ts"].decode("utf-8")
+        if setup.count(SYNC_FIXTURE) != 1:
+            raise RuntimeError("Unexpected frozen PowerShell fixture contract")
+        files["tests/integration/setup.test.ts"] = setup.replace(SYNC_FIXTURE, STREAM_FIXTURE).encode("utf-8")
     except (KeyError, TypeError, ValueError) as error:
         raise RuntimeError("Invalid frozen validation source") from error
     expected = {name: digest(data) for name, data in files.items()}
     changes = {name: {"baseline": original[name], "validation": expected[name]}
                for name in files if original[name] != expected[name]}
-    tests = {name: value for name, value in original.items() if name.startswith("tests/")}
-    if set(changes) != {"package.json", "package-lock.json", "scripts/bounded.mjs"} or not tests:
+    tests = {name: value for name, value in original.items() if name.startswith("tests/") and name not in changes}
+    if set(changes) != {"package.json", "package-lock.json", "scripts/bounded.mjs", "tests/integration/setup.test.ts"} or not tests:
         raise RuntimeError("Validation delta differs from reviewed allowlist")
     destination.mkdir(parents=True, mode=0o700)
     for name, data in files.items():
@@ -85,6 +100,7 @@ def prepare(root: Path, archive: bytes) -> dict:
             raise RuntimeError("Validation source write verification failed")
     return {"schema_version": 1, "baseline": BASELINE, "source_archive_sha256": digest(archive),
             "changes": changes, "unchanged_tests": tests, "validation_files": expected,
+            "assertion_preserving_test_updates": {"tests/integration/setup.test.ts": "Only buffered child fixture replaced; original assertions and time bounds unchanged."},
             "immutable_oracle_modified": False}
 
 
@@ -114,7 +130,7 @@ def main() -> None:
                 stream.write("\n")
             runner.emit("INFO", "Separate validation source prepared; immutable oracle unchanged.",
                         changed_files=len(receipt["changes"]), unchanged_tests=len(receipt["unchanged_tests"]),
-                        zod=ZOD["version"])
+                        zod=ZOD["version"], undici=UNDICI["version"])
         else:
             receipt = json.loads((work / "validation-source.json").read_text(encoding="utf-8"))
             if receipt["baseline"] != BASELINE or receipt["source_sha"] != os.environ["GITHUB_SHA"]:
@@ -123,6 +139,7 @@ def main() -> None:
                 if digest((ROOT / ".ci-work/validation" / name).read_bytes()) != expected:
                     raise RuntimeError("Validation source changed after preparation")
             control = ("const a=require('node:assert/strict'),z=require('zod');"
+                       "a.equal(require('undici/package.json').version,'8.12.3');"
                        "a.equal(require('zod/package.json').version,'4.6.7');let parsed=0;"
                        "const r=z.array(z.string().refine(()=>{parsed++;return true})).max(2).safeParse(['a','b','c']);"
                        "a.equal(r.success,false);a.equal(parsed,0);a.equal(r.error.issues.length,1);"

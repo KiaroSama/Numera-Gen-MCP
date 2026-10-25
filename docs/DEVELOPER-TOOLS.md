@@ -50,8 +50,9 @@ remains unresolved. At `26d4224`, the child was alive after 8009ms with zero mea
 captured bytes, despite one recorded thread resume. A timeout-only thread snapshot now reports numeric
 suspension counts or an explicit query error; it captures no memory, addresses or context. This new
 observation passed its real current-process and layout tests on both Windows targets at `49dde41`;
-the DPAPI case also passed. Historical startup failures remain unexplained. Diagnostics never retry,
-increase deadlines or weaken ACLs.
+the DPAPI case also passed. Historical startup failures remain unexplained. The Windows x64 case recurred at `6c0b980` with
+8.19s/exit124, no worker output and no suspended threads in the timeout snapshot; its cause remains
+unknown. Diagnostics never retry, increase deadlines or weaken ACLs.
 Managed scratch and ledger stay under the owning root. Existing UTF-8 UTC structured logging uses
 `logs/numera-image-gen-mcp_<date>_<time>_UTC-<pid>-<uuid>.log`, stderr, redaction and 14-day retention.
 Credentials, private arguments, prompts and environment values are not logged. Failure to create a

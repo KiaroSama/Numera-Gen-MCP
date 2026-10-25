@@ -5,8 +5,8 @@ mod http_fixture;
 mod image_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::{adapters::types::Input, services::comfy};
 use numera_image_gen_mcp::compat::value::json;
+use numera_image_gen_mcp::{adapters::types::Input, services::comfy};
 use std::{
     collections::HashMap,
     sync::{
