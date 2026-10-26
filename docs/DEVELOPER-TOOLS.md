@@ -16,8 +16,9 @@ notices, internal archives and extracted stdio/HTTP execution. These are unsigne
 full baseline acceptance subsequently passed at `b513884` / run `39519759155`, including all 470 cases,
 50 suites and 103 harnesses per native context. Exact `80e8a61` / run `40037496390` subsequently
 passed all sixteen jobs and six native signature/package checks. Final review then reproduced two
-maintenance defects: detached-only activation and truncated Windows exit codes. Their corrections
-require replacement hosted evidence before release; do not activate the earlier draft over a working runtime.
+maintenance defects: detached-only activation and truncated Windows exit codes. Both corrections passed
+at `f253557` / run `40244894089`, attempt2, with all sixteen jobs successful. Signed maintenance passed
+all six targets; the original CI archives are published as0.2.0. Owner-host reconnection remains separate.
 
 ## Bounded commands
 
@@ -87,8 +88,8 @@ not accepted as an authenticated installation.
 Actual Install/Update require the pinned approved signer, current identity validity, exact target,
 version/source metadata, regular bounded members, hashes and approved logo. Windows/macOS activation
 also independently verifies native executable signatures, not just the detached manifest. Synthetic text
-fixtures now reject on those systems; actual signed Install/Update/Register/Remove/rollback checks run
-after protected signing and extraction. Their new hosted result is still required. User configuration and
+fixtures reject on those systems; actual signed Install/Update/Register/Remove checks passed all six
+targets after protected signing and extraction, including both Windows rollback controls. User configuration and
 non-distribution files are not overwritten. A locked replacement fails and rolls back previous
 replacements; incomplete rollback retains its owned staging for recovery instead of deleting backups.
 Never delete another installer's lock or retained recovery data to force an update.

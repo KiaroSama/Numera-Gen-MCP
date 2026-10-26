@@ -1,8 +1,8 @@
 # Codex setup
 
 The native target runs directly over stdio. No launcher, Node runtime or manually started service is
-needed: Codex runs the absolute native executable with `args = ["bridge"]`. At `80e8a61` /
-run `40037496390`, all sixteen jobs passed, including all six real signature and signed extracted
+needed: Codex runs the absolute native executable with `args = ["bridge"]`. At `f253557` /
+run `40244894089`, attempt2, all sixteen jobs passed, including all six real signature and signed extracted
 SDK checks. [Signed delivery](releases/0.2.0.md) records the verified artifacts and trust limits.
 Install the verified binary first; actual owner-host reconnection remains a separate check.
 

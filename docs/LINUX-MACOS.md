@@ -1,7 +1,7 @@
 # Linux and macOS setup
 
-The native target is a ready executable, not a source-build prerequisite. At `80e8a61` /
-run `40037496390`, all sixteen jobs passed, including six native targets, genuine signatures and
+The native target is a ready executable, not a source-build prerequisite. At `f253557` /
+run `40244894089`, attempt2, all sixteen jobs passed, including six native targets, genuine signatures and
 signed extracted SDK checks. [Signed delivery](releases/0.2.0.md) records artifacts and trust limits;
 install the verified archive before switching a live client.
 

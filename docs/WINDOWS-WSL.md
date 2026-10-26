@@ -1,6 +1,6 @@
 # Native Windows, Linux and macOS
 
-Ready native archives are the installation target. At `80e8a61` / run `40037496390`, all sixteen
+Ready native archives are the installation target. At `f253557` / run `40244894089`, attempt2, all sixteen
 jobs passed, including all six native targets, genuine signatures and signed extracted SDK checks.
 [Signed delivery](releases/0.2.0.md) separates verified artifacts from actual owner-host activation.
 

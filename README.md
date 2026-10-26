@@ -26,17 +26,17 @@ image work is an explicitly selected tool operation. Named connections, separate
 profiles, native image protocols and configured GPU ComfyUI workflows. No paid POST retries, hidden
 uploads, prompt enhancement or automatic provider/model fallback.
 
-**Native verification:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
-mappings and applicable execution at `80e8a6137a423d8940dcfd7c654e643ab1ba9114`.
-[Run40037496390](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/40037496390)
+**Native 0.2.0 is available:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
+mappings and applicable execution at `f2535577c2e3145da03e2d5c123d7de061656860`.
+[Run40244894089](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/40244894089), attempt 2,
 passed all sixteen jobs: six native targets, strict quality checks, real publisher signatures,
 tamper/wrong-signer rejection and signed extracted stdio/HTTP SDK execution. Coverage was
-85.7783% regions / 83.3520% branches, above unchanged 85% / 80% floors. Windows x64 additionally
-passed isolated current-host ten-tool readiness. [Signing and trust](docs/SIGNING.md) explains why
-self-signed identity is not public OS trust, Apple Developer ID or notarization.
-The production implementation is Rust; Node is only the frozen CI oracle/SDK test runtime.
-**Release hold:** final review reproduced two developer-maintenance defects after that green run.
-Corrections are being verified; no native Release is published and the staged draft must not be activated.
+85.7791% regions / 83.3426% branches, above unchanged 85% / 80% floors. Signed maintenance passed
+all six targets, including native activation checks and full-width Windows child exit codes.
+The published Windows x64 archive additionally passed current-host pinned signature verification and
+ten-tool SDK readiness. [Signing and trust](docs/SIGNING.md) explains why self-signed identity is not
+public OS trust, Apple Developer ID or notarization. The production implementation is Rust;
+Node is only the frozen CI oracle/SDK test runtime.
 The previous working installation remains until the owner changes only Numera's host entry and
 verifies the actual native connection. CI and isolated readiness do not establish that cutover.
 See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
@@ -51,8 +51,8 @@ registration and interactive GUI use remain unverified.
 
 ### 1. Download the ready native build
 
-Once the native Release passes all gates, use this repository's
-[Releases page](https://github.com/KiaroSama/Numera-Image-Gen-MCP/releases).
+Download [native 0.2.0](https://github.com/KiaroSama/Numera-Image-Gen-MCP/releases/tag/v0.2.0)
+from this repository's Releases page.
 Normal usage needs **no Node.js, npm, Rust toolchain, Python, compiler or local build**.
 Your MCP client runs the executable directly. ComfyUI remains an optional separately installed backend,
 not a bundled runtime.

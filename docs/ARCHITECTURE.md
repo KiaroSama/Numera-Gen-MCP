@@ -3,7 +3,7 @@
 Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated ten tools -> application
 services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
 transactional receipts. The tracked production runtime is Rust. All 470 frozen cases and 50 suites have reviewed mappings
-and exact hosted execution at `80e8a61` / run `40037496390`. All sixteen jobs, six real publisher
+and exact hosted execution at `f253557` / run `40244894089`, attempt2. All sixteen jobs, six real publisher
 signing/negative checks and signed extracted SDK checks passed; owner-host cutover remains separate.
 
 ## Boundaries

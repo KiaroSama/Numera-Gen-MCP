@@ -671,7 +671,10 @@ Retirement tree `b513884` / run `39519759155` passed all ten jobs, all seven 103
 full470/50 parity and all six internal extracted archives; coverage85.81% regions/83.41% branches.
 That earlier run did not certify native signatures. Exact `80e8a61` / run `40037496390` subsequently
 passed all sixteen jobs, all470/50 execution bindings, six real signing/negative and signed extracted
-SDK checks; coverage85.7783/83.3520 passed. [Signed delivery](../releases/0.2.0.md) records promotion.
+SDK checks; coverage85.7783/83.3520 passed. Final corrections at `f253557` / run `40244894089`, attempt2,
+passed all sixteen checks, all470/50 execution bindings and signed maintenance on all six targets,
+including native activation signatures and full-width Windows exit codes. Coverage85.7791/83.3426 passed.
+[Signed delivery](../releases/0.2.0.md) records the published original archives and downloaded Windows proof.
 
 ## Release blockers
 
@@ -680,6 +683,7 @@ Every applicable baseline case now has reviewed native assertions and qualified 
 case ledger preserves frozen identities and explicit mechanism adaptations; the suite index derives
 from those cases. CI fails on missing, pending, stale or unexecuted mappings; no blanket retirement.
 
-Ordinary users will need no Node, Rust or Python runtime. Node is retained only in hosted pinned-source
-oracle checks; Python helpers are CI tooling, never dependencies of the shipped binary. Release and
-local old-runtime cleanup wait for their separately specified verification and owner cutover gates.
+Ordinary users need no Node, Rust or Python runtime. Node is retained only in hosted pinned-source
+oracle checks; Python helpers are CI tooling, never dependencies of the shipped binary. Release0.2.0
+is published and its Windows download verified. Actual owner-host cutover and old-runtime cleanup
+remain gated separately; missing historical test-first provenance is not reconstructed by passing CI.

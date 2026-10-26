@@ -8,15 +8,15 @@ The project has an approved RSA-3072 self-signed code-signing identity. Its publ
 ## Current delivery status
 
 All six targets passed real publisher signing, unsigned/tamper/wrong-signer rejection and signed
-package/extracted SDK verification at `80e8a6137a423d8940dcfd7c654e643ab1ba9114`,
-[run40037496390](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/40037496390).
+package/extracted SDK verification at `f2535577c2e3145da03e2d5c123d7de061656860`,
+[run40244894089](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/40244894089), attempt2.
 All sixteen jobs succeeded. Both macOS architectures qualified the memory-only signing route below.
-The Windows x64 archive also passed independent pinned Authenticode and manifest verification plus
-isolated ten-tool SDK readiness on the current host, without provider access or a trust-store change.
-Final review then found that the prepared installer authenticated only the detached manifest.
-The correction adds native Windows/macOS activation checks and actual signed maintenance acceptance;
-its new hosted result is required before publication. The earlier draft remains unpublished.
-Actual owner-host cutover is separate; the working runtime is retained.
+Signed Install/Update/Register/Remove passed all six targets; activation independently requires native
+Windows/macOS signatures as well as the pinned manifest. Both Windows locked-member rollback controls passed.
+The published Windows x64 archive also passed independent pinned Authenticode and manifest verification
+plus isolated ten-tool SDK readiness on the current host, without provider access or a trust-store change.
+[Release0.2.0](https://github.com/KiaroSama/Numera-Image-Gen-MCP/releases/tag/v0.2.0) contains only original
+verified CI archives. Actual owner-host cutover is separate; the working runtime is retained.
 Unsigned intermediate CI archives remain internal test artifacts, never completed distributions.
 
 ## What the signature must prove
@@ -121,7 +121,7 @@ version/binary bytes, unrelated signer, tampering and a genuinely signed but una
 synthetic executable bytes are never run. DER certificates/public keys and raw signatures are binary;
 JSON manifests are exact UTF-8 bytes excluded from formatting because whitespace is signed.
 These native manifest fixtures passed all seven execution contexts at `b513884` / run `39519759155`.
-That earlier run proves pinned manifest acceptance/rejection only. The later exact `80e8a61` run
+That earlier run proves pinned manifest acceptance/rejection only. The later exact `f253557` run
 above independently passed real Authenticode/Mach-O positive and negative verification on both
 architectures, authenticated Linux executable bytes and repeated verification after archive extraction.
 

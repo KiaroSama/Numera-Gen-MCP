@@ -1,16 +1,18 @@
 # Changelog
 
-## Native 0.2.0 - 2026-10-25
+## Native 0.2.0 - 2026-10-26
 
 Rust replaces the production runtime while preserving ten tools, provider wire contracts, private
-configuration and durable SQLite receipts/original image bytes. Six Windows/Linux/macOS x64/ARM64
-archives need no Node, Python, Rust compiler or launcher. Publication is held for final maintenance
-activation/exit-code corrections and their replacement hosted evidence. Direct `bridge`, optional authenticated
+configuration and durable SQLite receipts/original image bytes. Six published Windows/Linux/macOS
+x64/ARM64 archives need no Node, Python, Rust compiler or launcher. Direct `bridge`, optional authenticated
 loopback HTTP on configurable port1969, a native menu and separate optional `numera-dev` are included.
+Native Windows/macOS signatures are independently required during activation; Windows child exit codes
+retain all32 bits. Comfy orchestration stays in the service layer, separate from pure wire mapping.
 
-Exact `80e8a61` / run `40037496390` passed all sixteen jobs, all470 frozen cases/50 suites and
-85.7783% region/83.3520% branch coverage. All six genuine publisher-signature positive/negative and
-signed extracted SDK checks passed. Original CI archives are promoted without rebuilding/repacking.
+Exact `f253557` / run `40244894089`, attempt2, passed all sixteen jobs, all470 frozen cases/50 suites
+and85.7791% region/83.3426% branch coverage. All six genuine publisher-signature positive/negative,
+signed maintenance and extracted SDK checks passed. Original CI archives were published without
+rebuilding/repacking; the downloaded Windows x64 Release passed pinned signatures and ten-tool readiness.
 [Verification and trust limits](docs/releases/0.2.0.md) distinguish self-signed identity from public OS
 trust/notarization, and actual owner-host cutover from CI/isolated readiness. Old runtime/data remain
 until the owner switches the entry and verifies the real native connection.

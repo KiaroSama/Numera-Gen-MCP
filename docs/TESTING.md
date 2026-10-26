@@ -2,10 +2,10 @@
 
 ## Native Rust migration — baseline acceptance
 
-At `80e8a61` / run `40037496390`, all sixteen jobs and 103 harnesses per native/coverage context passed,
-including six real signature/negative checks and signed extracted SDK execution. Unchanged 85/80 gates
-passed at 85.7783% regions / 83.3520% branches. All470 cases/50 suites have reviewed mappings and
-applicable execution. [Signed delivery](releases/0.2.0.md) separates release evidence from owner cutover.
+At `f253557` / run `40244894089`, attempt2, all sixteen jobs and103 harnesses per native/coverage context
+passed, including six real signature/negative checks, signed maintenance and extracted SDK execution.
+Unchanged85/80 gates passed at85.7791% regions /83.3426% branches. All470 cases/50 suites have reviewed
+mappings and applicable execution. [Signed delivery](releases/0.2.0.md) separates release evidence from owner cutover.
 Seven fifteen-input bundles bind exact artifact digests, bytes, source/helper hashes and named runs. Twelve SDK transport cases,
 Comfy error conversion, tier-message and strict POSIX PID-absence assertions passed. See
 [the migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below

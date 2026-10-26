@@ -6,7 +6,7 @@ stdio MCP in `bridge` mode. The optional separate [direct HTTP mode](HTTP.md) li
 configurable port1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
 
 All 470 frozen cases/50 suites and all six real signature/package/extracted SDK checks passed at
-`80e8a61` / run `40037496390`, all sixteen jobs successful. [Signed delivery](releases/0.2.0.md)
+`f253557` / run `40244894089`, attempt2, all sixteen jobs successful. [Signed delivery](releases/0.2.0.md)
 records exact archives and deliberate self-signed trust limits. CI and isolated native readiness are
 not actual Desktop reconnection. Install the verified binary before using the examples below;
 retain the previous runtime until the actual host connection is verified.

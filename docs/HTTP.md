@@ -1,8 +1,9 @@
 # Direct local HTTP MCP
 
-Provider-free hosted native SDK/CLI and internal packaged HTTP checks passed on all six targets at
-`b513884` / run `39519759155`, together with all 470 baseline cases and 50 suites. Final publisher
-signatures, a verified Release and actual owner GUI registration remain pending. Do not replace a working client entry until a verified binary Release is installed.
+Provider-free hosted native SDK/CLI and signed extracted HTTP checks passed on all six targets at
+`f253557` / run `40244894089`, attempt2, together with all470 baseline cases and50 suites. The verified
+[Release0.2.0](https://github.com/KiaroSama/Numera-Image-Gen-MCP/releases/tag/v0.2.0) is published.
+Actual owner GUI registration remains unverified; retain the previous runtime until reconnection succeeds.
 
 ## Start
 
