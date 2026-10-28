@@ -20,7 +20,7 @@ name = "numera-dev"
 path = "native/devtools/main.rs"
 
 [target.'cfg(unix)'.dependencies]
-libc = "=0.2.190"
+libc = "=0.2.191"
 
 [dependencies]
 rmcp = { version = "=3.5.1", default-features = false, features = ["client", "server", "transport-streamable-http-server"] }
