@@ -1,8 +1,8 @@
-use numera_image_gen_mcp::compat::value::Value;
-use numera_image_gen_mcp::config::{
+use numera_gen_mcp::compat::value::Value;
+use numera_gen_mcp::config::{
     Config, ConfigReload, ReloadEvent, credentials, parse_env_config, snapshot_credentials,
 };
-use numera_image_gen_mcp::runtime_paths::RuntimePaths;
+use numera_gen_mcp::runtime_paths::RuntimePaths;
 use std::{collections::HashMap, path::Path};
 
 fn oracle() -> Value {
@@ -30,7 +30,7 @@ fn oracle() -> Value {
     cases
 }
 
-fn parse(case: &Value) -> numera_image_gen_mcp::error::Result<Config> {
+fn parse(case: &Value) -> numera_gen_mcp::error::Result<Config> {
     let args: Vec<String> =
         serde_json::from_value(case["args"].to_serde().expect("Unicode fixture args"))
             .expect("fixture args");
@@ -45,10 +45,10 @@ fn parse(case: &Value) -> numera_image_gen_mcp::error::Result<Config> {
     )
 }
 
-fn outcome(result: numera_image_gen_mcp::error::Result<Value>) -> Value {
+fn outcome(result: numera_gen_mcp::error::Result<Value>) -> Value {
     match result {
-        Ok(value) => numera_image_gen_mcp::compat::value::json!({"value": value}),
-        Err(error) => numera_image_gen_mcp::compat::value::json!({"error": error.code}),
+        Ok(value) => numera_gen_mcp::compat::value::json!({"value": value}),
+        Err(error) => numera_gen_mcp::compat::value::json!({"error": error.code}),
     }
 }
 
@@ -83,7 +83,7 @@ fn generated_deep_unknown_records_survive_parse_selection_clone_and_release() {
         connection["extensions"],
         case["expected"]["value"]["connections"]["default"]["extensions"]
     );
-    numera_image_gen_mcp::config::drop_json(connection);
+    numera_gen_mcp::config::drop_json(connection);
     drop(copy);
     assert_eq!(config.value, case["expected"]["value"]);
     let path = Path::new(case["file"].as_str().unwrap());
@@ -120,9 +120,9 @@ fn source_generated_connection_selection_matches() {
         let result = parse(input).and_then(|config| config.select(case["connection"].as_str()));
         let actual = match result {
             Ok((id, value)) => {
-                numera_image_gen_mcp::compat::value::json!({"id": id, "value": value})
+                numera_gen_mcp::compat::value::json!({"id": id, "value": value})
             }
-            Err(error) => numera_image_gen_mcp::compat::value::json!({"error": error.code}),
+            Err(error) => numera_gen_mcp::compat::value::json!({"error": error.code}),
         };
         assert_eq!(actual, case["expected"], "{}", case["name"]);
     }
@@ -179,7 +179,7 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
         ReloadEvent::Unchanged
     );
     let mut refusal = original.value.clone();
-    refusal["returnMode"] = numera_image_gen_mcp::compat::value::json!("files_and_preview");
+    refusal["returnMode"] = numera_gen_mcp::compat::value::json!("files_and_preview");
     assert_eq!(
         reload
             .refresh_text(Some(&refusal.to_string()), |_| false)
@@ -189,7 +189,7 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
     );
     assert_eq!(reload.snapshots().len(), 1);
     let mut fixed = original.value.clone();
-    fixed["stateDir"] = numera_image_gen_mcp::compat::value::json!(
+    fixed["stateDir"] = numera_gen_mcp::compat::value::json!(
         workspace.0.join("changed").to_str().expect("fixture path")
     );
     assert_eq!(
@@ -207,7 +207,7 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
             .values_mut()
             .next()
             .unwrap()["gatewayVersion"] =
-            numera_image_gen_mcp::compat::value::json!(index.to_string());
+            numera_gen_mcp::compat::value::json!(index.to_string());
         assert_eq!(
             reload
                 .refresh_text(Some(&candidate.to_string()), |_| true)
@@ -217,7 +217,7 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
         );
     }
     let mut overflow = original.value.clone();
-    overflow["returnMode"] = numera_image_gen_mcp::compat::value::json!("files_and_preview");
+    overflow["returnMode"] = numera_gen_mcp::compat::value::json!("files_and_preview");
     assert_eq!(
         reload
             .refresh_text(Some(&overflow.to_string()), |_| true)
@@ -233,7 +233,7 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
 async fn operation_credentials_are_private_pinned_and_do_not_fall_back() {
     let workspace = Workspace::new();
     let runtime = RuntimePaths::new(&workspace.0).unwrap();
-    let connection = numera_image_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretEnv":"SELECTED"}});
+    let connection = numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretEnv":"SELECTED"}});
     let mut env = HashMap::from([
         ("SELECTED".into(), "synthetic-one".into()),
         ("OPENAI_API_KEY".into(), "unrelated".into()),
@@ -282,7 +282,7 @@ async fn declared_secret_files_are_bounded_private_and_pinned_across_changes() {
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).unwrap();
     }
-    let connection = numera_image_gen_mcp::compat::value::json!({"auth":{"type":"header", "header":"x-api-key", "secretFile":path.to_str().expect("fixture path")}});
+    let connection = numera_gen_mcp::compat::value::json!({"auth":{"type":"header", "header":"x-api-key", "secretFile":path.to_str().expect("fixture path")}});
     let pinned = snapshot_credentials(&connection, &HashMap::new(), &runtime)
         .await
         .unwrap();
@@ -302,7 +302,7 @@ async fn declared_secret_files_are_bounded_private_and_pinned_across_changes() {
             .code,
         "missing_credentials"
     );
-    let relative = numera_image_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretFile":"relative"}});
+    let relative = numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretFile":"relative"}});
     assert_eq!(
         credentials(&relative, &HashMap::new(), &runtime)
             .await
@@ -339,17 +339,17 @@ async fn source_generated_current_user_dpapi_format_round_trips_without_a_shell(
         source.starts_with(root.join(".ci-work")),
         "DPAPI fixture must stay inside CI workspace"
     );
-    let connection = numera_image_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretDpapiFile":source.to_str().expect("fixture path")}});
+    let connection = numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretDpapiFile":source.to_str().expect("fixture path")}});
     let actual = credentials(&connection, &HashMap::new(), &runtime)
         .await
         .unwrap();
     assert_eq!(
-        numera_image_gen_mcp::compat::value::json!(actual),
+        numera_gen_mcp::compat::value::json!(actual),
         case["expected"]
     );
     let corrupt = workspace.0.join("corrupt-dpapi.txt");
     std::fs::write(&corrupt, "not-dpapi").unwrap();
-    let connection = numera_image_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretDpapiFile":corrupt.to_str().expect("fixture path")}});
+    let connection = numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretDpapiFile":corrupt.to_str().expect("fixture path")}});
     assert_eq!(
         credentials(&connection, &HashMap::new(), &runtime)
             .await

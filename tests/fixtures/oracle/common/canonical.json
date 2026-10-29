@@ -1,0 +1,88 @@
+[
+  {
+    "name": "null",
+    "input": null,
+    "canonical": "null",
+    "fingerprint": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+  },
+  {
+    "name": "numeric-boundaries",
+    "input": [
+      0,
+      0,
+      1e-7,
+      0.000001,
+      100000000000000000000,
+      1e+21,
+      9007199254740991
+    ],
+    "canonical": "[0,0,1e-7,0.000001,100000000000000000000,1e+21,9007199254740991]",
+    "fingerprint": "4819b44af151075e963d12d09620c808585ca1e3421adb3d14aeb4c0a968be31"
+  },
+  {
+    "name": "english-key-order",
+    "input": {
+      "A": 1,
+      "a": 2,
+      "Z": 3,
+      "z": 4,
+      "_": 5,
+      "-": 6,
+      "é": 7,
+      "e": 8
+    },
+    "canonical": "{\"_\":5,\"-\":6,\"a\":2,\"A\":1,\"e\":8,\"é\":7,\"z\":4,\"Z\":3}",
+    "fingerprint": "731843c8fd877bf5d534e80cac9a8f9e825e3b9e84be3d6732eb44097f13a2e0"
+  },
+  {
+    "name": "integer-property-order",
+    "input": {
+      "2": 2,
+      "10": 1,
+      "4294967294": 5,
+      "01": 3,
+      "4294967295": 4
+    },
+    "canonical": "{\"2\":2,\"10\":1,\"4294967294\":5,\"01\":3,\"4294967295\":4}",
+    "fingerprint": "ab5aca6c267b4fbd021cc22f7038b24c1c31bd515035322b3e01f80df3416e55"
+  },
+  {
+    "name": "nested-unicode",
+    "input": {
+      "سلام": "🌍",
+      "nested": {
+        "z": [
+          null,
+          false
+        ],
+        "A": {
+          "e": "é",
+          "é": "é"
+        }
+      }
+    },
+    "canonical": "{\"nested\":{\"A\":{\"e\":\"é\",\"é\":\"é\"},\"z\":[null,false]},\"سلام\":\"🌍\"}",
+    "fingerprint": "5e426344a183355cd4a2fa94f0888df6ac2a21c1adcf2e289808f4026c5c8c32"
+  },
+  {
+    "name": "escaping",
+    "input": {
+      "text": "quote\" slash/ back\\ newline\n\t\u0000 "
+    },
+    "canonical": "{\"text\":\"quote\\\" slash/ back\\\\ newline\\n\\t\\u0000 \"}",
+    "fingerprint": "4a164b29692e6e698468a8b984ab40b8188d7572c494068f5d6afa5e12489e5a"
+  },
+  {
+    "name": "ordered-references",
+    "input": [
+      {
+        "hash": "a"
+      },
+      {
+        "hash": "b"
+      }
+    ],
+    "canonical": "[{\"hash\":\"a\"},{\"hash\":\"b\"}]",
+    "fingerprint": "8e9914d577e87a4103dd53b3fe2c79aa1c03b8e27e12f43750c0016bd0da9838"
+  }
+]

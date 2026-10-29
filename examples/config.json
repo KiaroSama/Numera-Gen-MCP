@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "defaultConnection": "omniroute-local",
-  "outputDir": "C:/projects/numera-image-gen-mcp/outputs",
-  "stateDir": "C:/projects/numera-image-gen-mcp/state",
+  "outputDir": "C:/projects/numera-gen-mcp/outputs",
+  "stateDir": "C:/projects/numera-gen-mcp/state",
   "logging": {
-    "directory": "C:/projects/numera-image-gen-mcp/logs",
+    "directory": "C:/projects/numera-gen-mcp/logs",
     "level": "INFO",
     "logPrompts": false
   },
   "files": {
-    "allowedInputRoots": ["C:/projects/numera-image-gen-mcp/inputs"]
+    "allowedInputRoots": ["C:/projects/numera-gen-mcp/inputs"]
   },
   "connections": {
     "omniroute-local": {

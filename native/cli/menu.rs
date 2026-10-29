@@ -21,7 +21,7 @@ pub fn step<R: BufRead, W: Write>(
     input: &mut R,
     output: &mut W,
 ) -> Result<MenuAction> {
-    write!(output,"\nNumera Image-Gen MCP\n1. Start HTTP server\n2. Change port\n3. Show connection guidance\n4. Exit\nSelect [1]: ")
+    write!(output,"\nNumera Gen MCP\n1. Start HTTP server\n2. Change port\n3. Show connection guidance\n4. Exit\nSelect [1]: ")
         .and_then(|_| output.flush()).map_err(|_| io_error())?;
     let Some(choice) = line(input)? else {
         return Ok(MenuAction::Exit);

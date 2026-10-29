@@ -1,0 +1,62 @@
+[
+  {
+    "name": "png-opaque",
+    "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+    "metadata": {
+      "mime": "image/png",
+      "width": 7,
+      "height": 5,
+      "alpha": false,
+      "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+      "extension": "png"
+    }
+  },
+  {
+    "name": "png-alpha",
+    "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAYAAACJmvbYAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWPokbvUgAszDIAkAKMwRXWvaUxJAAAAAElFTkSuQmCC",
+    "metadata": {
+      "mime": "image/png",
+      "width": 7,
+      "height": 5,
+      "alpha": true,
+      "sha256": "a47d9c6a9f3459ea0857b431e78b1bc8f35bafdc3f9fda3abca2e3a5bdafd103",
+      "extension": "png"
+    }
+  },
+  {
+    "name": "jpeg-opaque",
+    "base64": "/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAFAAcDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABgf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCDAVEuf//Z",
+    "metadata": {
+      "mime": "image/jpeg",
+      "width": 7,
+      "height": 5,
+      "alpha": false,
+      "sha256": "456c878aaeab3811aeaa757d621cee4556d3f70a46fdd82e563c48c3810a4a48",
+      "extension": "jpg"
+    }
+  },
+  {
+    "name": "webp-opaque",
+    "base64": "UklGRjoAAABXRUJQVlA4IC4AAADQAQCdASoHAAUAAUAmJaACdLoB+AADsAD+8Por/2ln60P60P+bP/5Z8/hs6MAA",
+    "metadata": {
+      "mime": "image/webp",
+      "width": 7,
+      "height": 5,
+      "alpha": false,
+      "sha256": "7748231a220c25e0d24397a1c6d193969aa743908b26af849940a07fd25ebde5",
+      "extension": "webp"
+    }
+  },
+  {
+    "name": "webp-alpha",
+    "base64": "UklGRl4AAABXRUJQVlA4WAoAAAAQAAAABgAABAAAQUxQSAoAAAABB1DAiAhERP8DVlA4IC4AAADQAQCdASoHAAUAAUAmJaACdLoB+AADsAD+8Por/2ln60P60P+bP/5Z8/hs6MAA",
+    "metadata": {
+      "mime": "image/webp",
+      "width": 7,
+      "height": 5,
+      "alpha": true,
+      "sha256": "56a5fee70b8ea954e2d0812a03f5f62aa8bc769b63aa7f11c7ddf53a55d391cf",
+      "extension": "webp"
+    }
+  }
+]

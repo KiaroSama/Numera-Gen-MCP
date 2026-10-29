@@ -4,3 +4,6 @@
 *.webp binary
 *.sig binary
 *.der binary
+# Authenticated historical fixture hashes cover original bytes, including line endings.
+tests/fixtures/oracle/** -text
+tests/fixtures/oracle/*/source-cases.json whitespace=cr-at-eol

@@ -144,12 +144,20 @@ async fn inspect(
         .map_err(|_| unavailable())?
         .map_err(|_| unavailable())?;
     report["tool_count"] = json!(tools.tools.len());
-    if tools.tools.len() != 10
+    if tools.tools.len() != 12
         || [
             "health_check",
             "list_connections",
             "list_models",
             "get_model_capabilities",
+            "generate_image",
+            "edit_image",
+            "get_job",
+            "cancel_job",
+            "list_outputs",
+            "get_output_info",
+            "generate_media",
+            "get_media_output_info",
         ]
         .iter()
         .any(|name| !tools.tools.iter().any(|tool| tool.name == *name))

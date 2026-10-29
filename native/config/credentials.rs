@@ -98,6 +98,8 @@ pub async fn credentials(
         .ok_or_else(|| missing("The selected connection secret is missing or invalid. Set its declared secret source."))?;
     let (header, value) = if auth["type"] == "bearer" {
         ("Authorization", format!("Bearer {key}"))
+    } else if auth["type"] == "key" {
+        ("Authorization", format!("Key {key}"))
     } else {
         (
             auth["header"]

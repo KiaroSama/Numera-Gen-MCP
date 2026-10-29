@@ -102,13 +102,11 @@ impl Owned {
             if (!self.exited()? || live_group(group)?)
                 && unsafe { libc::kill(-group, libc::SIGKILL) } == -1
             {
-                let error = io::Error::last_os_error();
-                match error.raw_os_error() {
-                    Some(libc::ESRCH) => {}
-                    // macOS refuses zombie-only groups; recheck without ignoring live EPERM.
-                    Some(libc::EPERM) if self.exited()? && !live_group(group)? => {}
-                    _ => return Err(error),
-                }
+                resolve_group_kill(
+                    io::Error::last_os_error(),
+                    || self.exited(),
+                    || live_group(group),
+                )?;
             }
         } else if !self.exited()? {
             self.child.kill()?;
@@ -139,6 +137,68 @@ impl Drop for Owned {
         if !self.stopped && self.stop(Instant::now() + Duration::from_secs(2)).is_err() {
             eprintln!("ERROR: Owned process group cleanup remains unverified.");
         }
+    }
+}
+
+fn resolve_group_kill(
+    error: io::Error,
+    closed: impl FnOnce() -> io::Result<bool>,
+    live: impl FnOnce() -> io::Result<bool>,
+) -> io::Result<()> {
+    if error.raw_os_error() == Some(libc::ESRCH) { return Ok(()); }
+    // macOS can refuse a zombie-only group; neither permission failure nor liveness is absence.
+    if error.raw_os_error() == Some(libc::EPERM) && closed()? && !live()? { return Ok(()); }
+    Err(error)
+}
+
+#[cfg(test)]
+mod cleanup_contracts {
+    use super::resolve_group_kill;
+    use std::{cell::Cell, io};
+
+    #[test]
+    fn denied_group_kill_requires_closed_leader_and_definitive_live_group_absence() {
+        // Two original schedules (group still present / live survivor) share the same OS liveness
+        // observation. Cover it once at the actual stop decision rather than duplicating a model.
+        for (closed, live, inspection_error, kill_error, accepted) in [
+            (true, false, None, libc::EPERM, true),
+            (false, false, None, libc::EPERM, false),
+            (true, true, None, libc::EPERM, false),
+            (true, false, Some(libc::EPERM), libc::EPERM, false),
+            (true, false, Some(libc::ETIMEDOUT), libc::EPERM, false),
+            (true, false, None, libc::EACCES, false),
+        ] {
+            let result = resolve_group_kill(
+                io::Error::from_raw_os_error(kill_error),
+                || Ok(closed),
+                || match inspection_error {
+                    Some(code) => Err(io::Error::from_raw_os_error(code)),
+                    None => Ok(live),
+                },
+            );
+            assert_eq!(result.is_ok(), accepted);
+            if let Err(error) = result {
+                assert_eq!(error.raw_os_error(), Some(inspection_error.unwrap_or(kill_error)));
+            }
+        }
+    }
+
+    #[test]
+    fn missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence() {
+        let probes = Cell::new(0);
+        resolve_group_kill(
+            io::Error::from_raw_os_error(libc::ESRCH),
+            || { probes.set(probes.get() + 1); Ok(true) },
+            || { probes.set(probes.get() + 1); Ok(false) },
+        ).unwrap();
+        assert_eq!(probes.get(), 0);
+        let error = resolve_group_kill(
+            io::Error::from_raw_os_error(libc::EPERM),
+            || Err(io::Error::from_raw_os_error(libc::EIO)),
+            || { probes.set(probes.get() + 1); Ok(false) },
+        ).unwrap_err();
+        assert_eq!(error.raw_os_error(), Some(libc::EIO));
+        assert_eq!(probes.get(), 0);
     }
 }
 

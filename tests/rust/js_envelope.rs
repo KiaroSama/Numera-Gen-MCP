@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::js_json::{JsValue, parse, stringify},
     mcp::js_envelope::{decode, decode_id, encode_id, restore_id},
 };

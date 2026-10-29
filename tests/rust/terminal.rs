@@ -1,7 +1,7 @@
 #[path = "common/image.rs"]
 mod image_fixture;
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::{
     error::Result,
     jobs::{Receipt, Store},
 };

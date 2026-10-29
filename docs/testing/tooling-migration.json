@@ -1,0 +1,287 @@
+{
+  "schema_version": 2,
+  "feature": "003-rust-tooling",
+  "original_revision": "a24dccd5f53cb4ccad57297b1cf8f749f42858eb",
+  "scope": "46 first-party Python/JavaScript executables; five PowerShell files retained unchanged",
+  "status": "source_authored_uncompiled_unexecuted",
+  "current_execution_claimed": false,
+  "original_file_count": 51,
+  "rust_migration_count": 46,
+  "powershell_retained_count": 5,
+  "sdk_scenario_manifest": "docs/testing/sdk-tooling-migration.json",
+  "entries": [
+    {
+      "source": "scripts/bounded.mjs", "source_sha256": "0ed1d48d2f0c548bc7fbe36d4cafe14f77df8c4cb9d9951696180b55cc677deb",
+      "rust": ["native/devtools/supervisor.rs", "native/devtools/process_unix.rs", "native/devtools/process_windows.rs"],
+      "tests": ["tests/rust/devtool_supervisor.rs", "native/devtools/process_unix.rs"],
+      "scenarios": ["Wall/idle/cancel/output ceilings, full exit codes, private capture, descendant cleanup and unrelated-process preservation", "Post-close EPERM resolves only after definitive group absence; observation failures never mean absence"]
+    },
+    {
+      "source": "scripts/check.mjs", "source_sha256": "4a6b0f1dee87d3756e16183b6c424ef24bd5e29e30aaa4c07175ca9ca98f507f",
+      "rust": ["tooling/src/inventory.rs"], "tests": ["tooling/tests/ci_contracts.rs"],
+      "scenarios": ["Strict tracked UTF-8 and source800-line ceiling", "Root/workspace suite discovery must match actual files"]
+    },
+    {
+      "source": "scripts/logging.mjs", "source_sha256": "e33145c2a621867d56134bbd706dc23a152bd5ae185971442cc6042cdb7cf28f",
+      "rust": ["native/logging.rs", "tooling/src/context.rs", "tooling/src/main.rs"], "tests": ["tooling/tests/ci_contracts.rs", "tests/rust/sdk_acceptance/configuration.rs"],
+      "scenarios": ["Unique UTF-8 UTC file, safe init fallback, correlation and closed handles", "Safe diagnostics without private child output, credentials, prompts or paths"]
+    },
+    {
+      "source": "scripts/native-activation-acceptance.py", "source_sha256": "0b599fa279db7778d51a17ac1a3de545aa8fb53c6569f03990283338e791dd03",
+      "rust": ["tooling/src/acceptance.rs"], "tests": ["tests/rust/devtool_setup.rs", "tests/rust/artifact_signatures.rs"],
+      "scenarios": ["Actual signed install/update/register/remove, Windows rollback and private-file/other-host-entry preservation", "Owned scratch/lock/staging cleanup; no actual owner-host edit"],
+      "required_execution": "Six signed extracted activation passes; source tests alone are insufficient"
+    },
+    {
+      "source": "scripts/native-case-inventory.mjs", "source_sha256": "b50c772041af2f371fec229e0b7c8035df885d07c3b268cca1b45710d80046c7",
+      "rust": ["tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/ledger_contracts.rs"],
+      "scenarios": ["Authenticate three original expanded470-case/50-suite collections", "Preserve name/location/platform applicability; collection is not test-body execution"],
+      "strategy": "Authenticate retained Node-generated collections, never generate expected identities with the Rust target"
+    },
+    {
+      "source": "scripts/native-case-ledger.py", "source_sha256": "abbb977daac25d1f59e963f1300009342eb02b50f84527ef2fb1e3fdbe291239",
+      "rust": ["tooling/src/ledger.rs", "tooling/src/ledger_inputs.rs", "tooling/src/execution_evidence.rs", "tooling/src/qualification.rs", "tooling/src/matrix.rs"], "tests": ["tooling/tests/ledger_contracts.rs", "tooling/tests/execution_evidence_contracts.rs", "tooling/tests/qualification_contracts.rs", "tooling/tests/matrix_contracts.rs"],
+      "scenarios": ["470 unique identities, exact frozen suites/hashes and invocation-local caches", "Actual attributed tests, assertion ranges/claims/review/hashes and exact named six-target plus coverage execution", "Historical authentication never proves current execution"],
+      "remaining": ["Current assertion-range semantic review and actual hosted qualification of authored per-context/seven-context execution binding are pending"]
+    },
+    {
+      "source": "scripts/native-ci.py", "source_sha256": "4754884415f3258980ccec3648c5f7bc30a28c7972ef982f0a5c09e43c736338",
+      "rust": ["tooling/src/ci.rs", "tooling/src/context.rs", "tooling/src/coverage_environment.rs", "tooling/src/inventory.rs", "tooling/src/test_execution.rs", "tooling/src/execution_evidence.rs"],
+      "tests": ["tooling/tests/ci_contracts.rs", "tooling/tests/coverage_environment_contracts.rs", "tooling/tests/test_execution_contracts.rs", "tooling/tests/execution_evidence_contracts.rs", "tests/rust/devtool_supervisor.rs"],
+      "scenarios": ["Hosted-only contained workers2 and complete workspace discovery", "Format/Clippy/test/release/SDK failure aggregation", "Root-runtime85/80 floors; coverage cannot override failed tests", "Compiler executable inventory and private bounded cleanup"]
+    },
+    {
+      "source": "scripts/native-compact-acceptance.mjs", "source_sha256": "733f0249f6554a66242a5d582552fd443a8abb8c372082f8e8468b0d27bf0c9a",
+      "rust": ["tests/rust/sdk_acceptance/configuration.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Adjacent executable/spaces/foreign CWD, compact defaults/overrides, Responses body, replay/conflict and private logs"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-config-reload-acceptance.mjs", "source_sha256": "bc89a0afa7db6c2fa386fc79907cbe887e4a85b978a8eb1ec37252175efc6c88",
+      "rust": ["tests/rust/sdk_acceptance/reload.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Valid/invalid env reload, deduplicated warnings, original retained account/endpoint and captured in-flight config"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-env-acceptance.mjs", "source_sha256": "3de78bc2f5b5f8059eee657eed227025d6ae4a1fef824e8b47c7b36800372020",
+      "rust": ["tests/rust/sdk_acceptance/configuration.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Actual adjacent dotenv, Unicode reload, invalid-save last-good behavior and private logs"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-extract-check.py", "source_sha256": "b5c38df117aa7869a8e849317b178c71869d3574ddecc7efdf7972d836f06527",
+      "rust": ["tooling/src/acceptance.rs", "tooling/src/distribution.rs"], "tests": ["tooling/tests/distribution_contracts.rs", "tests/rust/sdk_acceptance.rs", "tests/rust/media_acceptance.rs"],
+      "scenarios": ["Exact checksum/target/source/version/publisher and complete regular archive", "Extracted real version/stdio/HTTP/media SDK, signed activation and owned cleanup"]
+    },
+    {
+      "source": "scripts/native-host-fixture.mjs", "source_sha256": "34c7d256faf389efcc2544c67465a01672c3b8c0e5d0ea84a58376a31f4eb27f",
+      "rust": ["tests/rust/sdk_acceptance/host.rs", "tests/rust/sdk_acceptance/provider.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Actual SDK over owned process pipes, allowlisted env/contained scratch", "Call/host/scenario bounds and late-handler error/cleanup propagation"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-http-interop.mjs", "source_sha256": "17eb11e22efc3382a1f17a32d8c645471d5ec52744f7119600dc47d77364b759",
+      "rust": ["tests/rust/sdk_acceptance/http.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Two HTTP SDK sessions, legacy tools/resources plus additive media", "Bearer401/origin403/token privacy/zero stdout/session-close/graceful owned exit"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-interop.mjs", "source_sha256": "18e272079e8fbbe8a6020a2f3da3920ff88db387fee71cbf0ef6bfb5f3feac99",
+      "rust": ["tests/rust/sdk_acceptance/recovery.rs", "tests/rust/sdk_acceptance/host.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Legacy/auto/modern negotiation, pre-cancelled handshake", "Two hosts/two restarts, resources/previews/exact originals and no recovery POST"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-licenses.py", "source_sha256": "dd47a487f398f17e9b368a327754955ba25cc6e3f38c2824fd430aa04d572269",
+      "rust": ["tooling/src/licenses.rs"], "tests": ["tooling/tests/licenses_contracts.rs"],
+      "scenarios": ["Actual resolved runtime notices with exact bytes/hashes", "Escaping/missing refusal; supplements bind crate/revision/license/notice"]
+    },
+    {
+      "source": "scripts/native-lifecycle-acceptance.mjs", "source_sha256": "557d3ed7ef407f39c0d26ae5f2d163add8632506d55c44581f28e4f81bef45c2",
+      "rust": ["tests/rust/sdk_acceptance/lifecycle.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Four authoritative terminals/three reopens, eight uncertainty controls, six cancellation schedules", "GET-only/no-auth/no-new-generation and capacity retention"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-macos-signing.py", "source_sha256": "53da8efb49f4cc8f755e609b2c781658d25ec29d817bd28e9b437c65570d262f",
+      "rust": ["tooling/src/signing_macos.rs", "tooling/src/apple_signer.rs"], "tests": ["tooling/tests/signing_platform_contracts.rs"],
+      "scenarios": ["Required memory-only import and certificate pin before signing; no TSA", "Bounded original files and release on all partial failures; no keychain/trust fallback"],
+      "required_execution": "Matching macOS hosts; fake ABI is not native signing proof"
+    },
+    {
+      "source": "scripts/native-negotiation-acceptance.mjs", "source_sha256": "d052098f1ffc0a1e592f64773eeff37ac528bc5f0abd8c49180b56c693d363b7",
+      "rust": ["tests/rust/sdk_acceptance/configuration.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Legacy initialize, auto-discover/legacy fallback and modern discover-only rejection"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-oracle-evidence.py", "source_sha256": "24bb4c1375e8fa8a3fe04a201487398b564171492cca7405acf1ebbe26ada69f",
+      "rust": ["tooling/src/evidence.rs", "tooling/src/fixtures.rs"], "tests": ["tooling/tests/evidence_contracts.rs"],
+      "scenarios": ["Exactly15 original public inputs plus provenance; private DPAPI/config/registry excluded", "Current source/dependencies and historical identity; tamper/extra/missing/truncated/overwrite refusal"],
+      "strategy": "Authenticate retained independent inputs instead of regenerating expected values"
+    },
+    {
+      "source": "scripts/native-package.py", "source_sha256": "21302d75e69bb2c7e1ab17187d23d8495d6d3b98fb9a40604a32d48ed3e684e3",
+      "rust": ["tooling/src/distribution.rs", "tooling/src/archives.rs"], "tests": ["tooling/tests/archive_contracts.rs", "tooling/tests/distribution_contracts.rs"],
+      "scenarios": ["Deterministic sorted ZIP/tar.gz regular4096members/256MiB and executable modes", "Private/escape/device/link/casefold/unlisted refusal; separate unsigned intermediate and signed final"]
+    },
+    {
+      "source": "scripts/native-races-acceptance.mjs", "source_sha256": "18d3c21c8d7c8e239b942c2496885cfde1d2013e8af6391708c046f586f8ff27",
+      "rust": ["tests/rust/sdk_acceptance/races.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Four held Responses/three Comfy two-host cancellation races", "Two restarts preserve outcomes/output UUIDs without duplicate polling/submission"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-setup.py", "source_sha256": "eb07d742e858c3a550c11b952ea00fadeba3eece3e2e0ee7a11ff026b3d82507",
+      "rust": ["tooling/src/fetch.rs", "tooling/src/signing_tools.rs"], "tests": ["tooling/tests/download_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
+      "scenarios": ["Official bounded GET, timeout-only retry discards partial bytes, unsafe redirects refuse", "Known signing-tool hash/members and hosted-only toolchain setup"],
+      "remaining": ["Published native-owner bootstrap and structural contracts are authored in .github/actions/native-bootstrap/action.yml and tooling/tests/bootstrap_contracts.rs; six-target hosted execution and current locked resolution remain pending"]
+    },
+    {
+      "source": "scripts/native-signing-acceptance.py", "source_sha256": "781cbeb84891e2dc3584273e3bd378fa344f2cae6708040487955d56a2371946",
+      "rust": ["tooling/src/signature_acceptance.rs"], "tests": ["tooling/tests/signature_acceptance_contracts.rs"],
+      "scenarios": ["Both real native executables: approved positive/unsigned/tampered/wrong-signer negatives", "Timeout/spawn/cleanup failure is not verified rejection; manifest/extracted activation"],
+      "required_execution": "Six signed native targets with approved protected authority"
+    },
+    {
+      "source": "scripts/native-signing-stage.py", "source_sha256": "6892bc128d687150e0b84016b12dafb079ef8046ddd0901f96c6f333332f65a1",
+      "rust": ["tooling/src/distribution.rs", "tooling/src/signing_tools.rs"], "tests": ["tooling/tests/distribution_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
+      "scenarios": ["Authenticate complete intermediate before writes; existing destination refused", "Qualified tool path/version/hash/member inventory"]
+    },
+    {
+      "source": "scripts/native-signing.py", "source_sha256": "060e1ac6993d7363125f67914dae4ba9c77e5110487c7a8b9cb24445b74a00fc",
+      "rust": ["tooling/src/signing.rs", "tooling/src/private_files.rs"], "tests": ["tooling/tests/signing_contracts.rs", "tooling/tests/signing_platform_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
+      "scenarios": ["Public pins and exact hosted authority before secret reads", "Exclusive bounded inputs and PFX pin before import; no secret argv/env/output", "Native signatures, exact rehashed inventory, cryptographic manifest and cleanup"],
+      "remaining": ["Fixed-code diagnostics and real private-child capture/cleanup contracts are authored; hosted qualification remains pending"]
+    },
+    {
+      "source": "scripts/native-terminal-acceptance.mjs", "source_sha256": "ca96ee98a577e208acf93a49141eacf3b08a8b930857682eef10b2c90bd6db16",
+      "rust": ["tests/rust/sdk_acceptance/terminal.rs", "tests/rust/sdk_acceptance/contracts.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Terminal rounds/capacity/Comfy cancellation modes and exact counts", "Fixed numeric-only bounded complete diagnostic rows"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-tools-acceptance.mjs", "source_sha256": "e3ee29af66506143d658ca794a8bd9891000667a3459e3d19c5f13d6c9b0a452",
+      "rust": ["tests/rust/sdk_acceptance/catalog.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Ten original tools within additive twelve-tool catalog, exact edit description", "Original resource/preview bytes, paging/cancel/refusal and exact two POSTs"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-transport-acceptance.mjs", "source_sha256": "27231ce49e0cd563a29e3156d0cd08cae6b090e220a001de7d64f4b162b6db79",
+      "rust": ["tests/rust/sdk_acceptance/transport.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Split SSE finals, ambiguous error IDs, sync/detached identity and Comfy rejection", "No preview promotion, credentialed assets or repeat generation"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-two-host-acceptance.mjs", "source_sha256": "49871a5dfd0964cd3535204c2db9dd3f458744bd8dea2ff4dbfe83576103c680",
+      "rust": ["tests/rust/sdk_acceptance/catalog.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
+      "scenarios": ["Two literal bridge clients share one Unicode submission", "Exact model/prompt/count/8x6 originals and changed fingerprint conflict"], "detail": "sdk_scenario_manifest"
+    },
+    {
+      "source": "scripts/native-validation.py", "source_sha256": "398eab32a5c00deffc55edf2a58fd6e3d862294a85f66fa4330a6ab8554dfb57",
+      "rust": ["tooling/src/validation.rs", "tooling/src/fixtures.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/validation_contracts.rs", "tooling/tests/fixture_contracts.rs", "tooling/tests/ledger_contracts.rs"],
+      "scenarios": ["Separate validation preserves frozen oracle/assertions; exact four-file reviewed delta", "Identity/traversal/duplicates/unexpected dependency/fixture/existing destination refusal"],
+      "remaining": ["Native archival four-file preparation/verification is wired into historical ledger checking; new validation_contracts tests still require hosted execution"]
+    },
+    {
+      "source": "scripts/parity.py", "source_sha256": "b49c46bbd4225298ca2a0be76ccff441b587242891ebc885355f4749801c08fc",
+      "rust": ["tooling/src/ledger.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/ledger_contracts.rs"],
+      "scenarios": ["Exactly50 frozen suites/470 cases and registered test mappings", "Suite grouping cannot bypass case-level pending/current execution gates"]
+    },
+    {
+      "source": "scripts/rust-image-acceptance-oracle.mjs", "source_sha256": "1c409bb95e66ff4171507d30bddfd7a5c9d63ff3fd16b7706df412b37dc1995c",
+      "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/images.rs", "tests/rust/image_editing_acceptance.rs", "tests/rust/output_recovery.rs"],
+      "fixtures": ["image-acceptance.json"], "scenarios": ["Independent8x6 originals, bytes/hash/alpha/masks/regions/preview/partial recovery"],
+      "strategy": "Authenticate immutable independent original bytes; never regenerate expectations with target"
+    },
+    {
+      "source": "scripts/rust-image-edge-oracle.mjs", "source_sha256": "0abc5824d8dfa8bc25c958b0ea14ed216bb565275dae6445832f5fa3ae3bf68d",
+      "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/images.rs"],
+      "fixtures": ["images.json", "animated-webp.json"], "scenarios": ["Independent original metadata/hash, animated/malformed/pixel/byte bounds"],
+      "strategy": "Original golden bytes retained instead of a maintained JS generator"
+    },
+    {
+      "source": "scripts/rust-json-oracle.mjs", "source_sha256": "ed30b2dcdee2b97ecfee33c9844bf016300b432945e730b17fb2a701f79f1cd0",
+      "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/js_json.rs", "tests/rust/js_schema.rs", "tests/rust/canonical_parity.rs"],
+      "fixtures": ["raw-json.json", "raw-js-schema.json", "sqlite-utf16-text.json"], "scenarios": ["Original JSON/schema/UTF16/number/string behavior and canonical identities"],
+      "strategy": "Independent immutable expectations, not target-generated snapshots"
+    },
+    {
+      "source": "scripts/rust-normalization-oracle.mjs", "source_sha256": "8470ad2a920e54233e8f28735e0ccf31c02fb814825eece2430e97295e776ec0",
+      "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/normalization_acceptance.rs"],
+      "fixtures": ["normalization-acceptance.json"], "scenarios": ["Exact normalization status/error/metadata/originals without preview promotion"],
+      "strategy": "Retained source outputs, no interpreted generator execution"
+    },
+    {
+      "source": "scripts/rust-oracle.mjs", "source_sha256": "d5b33fa7eefa385035e7d483dc777e5d24c733d14a800a3db8793dbe2982bc55",
+      "rust": ["tooling/src/fixtures.rs", "tooling/src/evidence.rs"], "tests": ["tooling/tests/fixture_contracts.rs", "tests/rust/config_parity.rs", "tests/rust/adapters.rs", "tests/rust/canonical_parity.rs"],
+      "fixtures": ["config.json", "policy.json", "canonical.json", "adapters.json", "base64.json", "images.json"],
+      "scenarios": ["Three platform config goldens/deep512nesting/dotenv/fingerprints", "Exact wires/results/base64; isolated same-user DPAPI excluded from public evidence"],
+      "strategy": "Authenticate independent source-generated goldens; never target-derived expectations"
+    },
+    {
+      "source": "scripts/rust-requirements-oracle.mjs", "source_sha256": "a4c4d9d454249e501a4076fa262c8bb1c5b1dc4a290f75585782f72754d204fd",
+      "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/output_requirements.rs"],
+      "fixtures": ["output-requirements.json"], "scenarios": ["Original ratio/tier/dimension/deviation warnings and same-byte local recovery without new POST"],
+      "strategy": "Independent historical expected requirements retained byte-exact"
+    },
+    {
+      "source": "scripts/rust-stream-acceptance-oracle.mjs", "source_sha256": "14afe7e901839641b46f18eebd368a29b6ae18249f1efa8fcd847e70bed2b9c8",
+      "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/streams_acceptance.rs"],
+      "fixtures": ["stream-acceptance.json"], "scenarios": ["Original completed JSON/binary/SSE, exact error/refusal/unsupported explicit fields"],
+      "strategy": "Independent source results retained instead of regenerated"
+    },
+    {
+      "source": "scripts/rust-stream-oracle.mjs", "source_sha256": "ace974bc2cf0a9fcd82dfc56b1e484b79b79eea1ad045d2f166a0130d355c139",
+      "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/streams.rs"],
+      "fixtures": ["streams.json"], "scenarios": ["Original CRLF/multiline/Unicode/frame/preview/final/error/oversize/truncation"],
+      "strategy": "Retain independent original stream expectations"
+    },
+    {
+      "source": "tests/tooling/native_case_ledger_contracts.py", "source_sha256": "e8c6a615c16cb939ad32803596723d24bc76f82f32eaeeb94fabed443bc62c3b",
+      "rust": ["tooling/src/ledger.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/ledger_contracts.rs"],
+      "scenarios": ["Structural/accepted distinction, fresh file cache and identity mutations", "Only registered tests/historical whitelist; complete flag cannot bypass pending/absent exact execution"]
+    },
+    {
+      "source": "tests/tooling/native_ci_contracts.py", "source_sha256": "43befb7aad0fd86379ad37ef7b5db62f1ca41043556a0769d1c4c4b0c9f1ec78",
+      "rust": ["tooling/src/ci.rs", "tooling/src/licenses.rs", "tooling/src/fetch.rs", "tooling/src/evidence.rs"],
+      "tests": ["tooling/tests/ci_contracts.rs", "tooling/tests/licenses_contracts.rs", "tooling/tests/download_contracts.rs", "tooling/tests/evidence_contracts.rs"],
+      "scenarios": ["Notice/supplement hashes and escaping/missing refusal", "Timeout-only retries/oversize/incomplete/permanent/exhausted cases", "Desktop/project JSON and Codex TOML", "Input/source/dependency/archive mutation and private exclusion"]
+    },
+    {
+      "source": "tests/tooling/native_host_fixture_contracts.mjs", "source_sha256": "c523069dc65dc02b36f625e8cf6610895ed7f1e8e94ed9bd25a8d4827a32162d",
+      "rust": ["native/devtools/process_unix.rs", "tests/rust/sdk_acceptance/contracts.rs"], "tests": ["tests/rust/devtool_supervisor.rs", "tests/rust/sdk_acceptance.rs", "native/devtools/process_unix.rs"],
+      "scenarios": ["Post-close EPERM/open leader/live group/live survivor/probe error/deadline/wrong error", "Numeric-only bounded complete diagnostics", "Late handler failure after successful/failed body still fails and closes sockets"]
+    },
+    {
+      "source": "tests/tooling/native_macos_signing_contracts.py", "source_sha256": "095d2e47278c151ab51fbeed6a031e01a8a74c9b29b5cb436caac487c87b6255",
+      "rust": ["tooling/src/apple_signer.rs", "tooling/src/signing_macos.rs"], "tests": ["tooling/tests/signing_platform_contracts.rs"],
+      "scenarios": ["Memory-only pinned identity and native releases on all partial failures", "Missing required symbol refuses before import without fallback"]
+    },
+    {
+      "source": "tests/tooling/native_signing_contracts.py", "source_sha256": "7eb54da5dea91afed48b799e3eaf815e43d385eb2d6a34ed6debe6b944417dce",
+      "rust": ["tooling/src/signing.rs", "tooling/src/private_files.rs", "tooling/src/signature_acceptance.rs"],
+      "tests": ["tooling/tests/signing_contracts.rs", "tooling/tests/signing_platform_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs", "tooling/tests/archive_contracts.rs"],
+      "scenarios": ["Public pins/duplicate/unsafe/private members and authorized input reads", "Password newline bound, selected PFX pin and native verifier", "Private child capture/bounds/cleanup/fixed-code diagnostics/no secret argv/env", "Memory-only signing and unsigned-final refusal"],
+      "remaining": ["Private diagnostic and real-child capture/cleanup assertions are authored but unexecuted; genuine native signing proof remains separate"]
+    },
+    {
+      "source": "tests/tooling/native_signing_stage_contracts.py", "source_sha256": "0fc0bc8fba2263d5e2d47e233a6b7357104e05b6dc670b51e67eeb982517b12f",
+      "rust": ["tooling/src/distribution.rs", "tooling/src/signing_tools.rs"], "tests": ["tooling/tests/distribution_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
+      "scenarios": ["Checksum/source/target/complete inventory before writes", "Fresh destination/path/link/private/casefold/extra-member refusal"]
+    },
+    {
+      "source": "tests/tooling/native_validation_contracts.py", "source_sha256": "e1c57bf6acfd4a7caea9007957736cd94aff2a8963ee8ea34a20e7e4cc2b53a4",
+      "rust": ["tooling/src/validation.rs", "tooling/src/fixtures.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/validation_contracts.rs", "tooling/tests/fixture_contracts.rs", "tooling/tests/ledger_contracts.rs"],
+      "scenarios": ["Frozen source unchanged, exact four-file validation delta and all other assertions unchanged", "Traversal/duplicate/unexpected dependency/fixture/existing destination refusal"],
+      "remaining": ["Historical four-file delta and mutation contracts are authored in tooling/tests/validation_contracts.rs but unexecuted"]
+    }
+  ],
+  "retained_powershell": [
+    { "source": "scripts/common.ps1", "source_sha256": "46b0032ac8a8be99a4883c8594eabd01b03f3af93a022cb879d8c4e9aad2914c" },
+    { "source": "scripts/native-signing-check.ps1", "source_sha256": "f45169a5fc8771ef57c97e60b6a6d060a5dc9bd5f161e4bcbf0fd1f61c149140" },
+    { "source": "scripts/native-signing-identity.ps1", "source_sha256": "606dd10af5c03d64b3937d95947afd57b73ab545b13bd93528f43ff1826116e3" },
+    { "source": "scripts/native-signing-inputs.ps1", "source_sha256": "e6b73fbd3215c062d171e9fc13fd8f8a771408916c536122b84fc7e41cc1d8c7" },
+    { "source": "scripts/protect-secret.ps1", "source_sha256": "644da736a8d7ee01eb84f442515febdd0ad71af18f1471dd8b434911fd32316d" }
+  ],
+  "required_runtime_inputs": [
+    "Exact retained per-platform source-cases collections and common historical execution reference",
+    "Bounded immutable Git source archives checked against independent hashes",
+    "Current assertion review/rebinding and authenticated exact named six-target plus coverage execution"
+  ],
+  "remaining": [
+    "All authored Rust needs hosted compile/format/Clippy/tests; no local Rust execution authorized",
+    "Current470-case rebinding/review/execution pending; historical proof and source proposals are not release acceptance",
+    "Do not retire Python/JavaScript merely to make inventory green",
+    "Historical validation, private signing and published-owner bootstrap contracts are authored but unexecuted; initial hosted bootstrap qualification remains pending",
+    "Real hosted Cargo.lock resolution and protected signing-ref authority remain blockers"
+  ]
+}

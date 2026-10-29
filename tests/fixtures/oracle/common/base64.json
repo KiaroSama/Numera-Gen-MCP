@@ -1,0 +1,62 @@
+[
+  {
+    "input": "Zg==",
+    "expected": {
+      "value": "66"
+    }
+  },
+  {
+    "input": "Zh==",
+    "expected": {
+      "value": "66"
+    }
+  },
+  {
+    "input": "Zm8=",
+    "expected": {
+      "value": "666f"
+    }
+  },
+  {
+    "input": "Zm9=",
+    "expected": {
+      "value": "666f"
+    }
+  },
+  {
+    "input": "AAAA",
+    "expected": {
+      "value": "000000"
+    }
+  },
+  {
+    "input": "AAAA\n",
+    "expected": {
+      "error": "invalid_response"
+    }
+  },
+  {
+    "input": "",
+    "expected": {
+      "error": "invalid_response"
+    }
+  },
+  {
+    "input": "=AAA",
+    "expected": {
+      "error": "invalid_response"
+    }
+  },
+  {
+    "input": "AA==",
+    "expected": {
+      "value": "00"
+    }
+  },
+  {
+    "input": "A===",
+    "expected": {
+      "error": "invalid_response"
+    }
+  }
+]

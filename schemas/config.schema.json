@@ -173,7 +173,8 @@
               "openai-responses",
               "openrouter-images",
               "chat-images",
-              "comfyui"
+              "comfyui",
+              "fal-queue"
             ]
           },
           "gateway": {
@@ -194,7 +195,7 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["none", "bearer", "header"]
+                "enum": ["none", "bearer", "header", "key"]
               },
               "apiKey": {
                 "type": "string",
@@ -342,6 +343,25 @@
                     "type": "string"
                   },
                   "additionalProperties": {}
+                },
+                "outputTypes": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 4,
+                  "items": { "type": "string", "enum": ["image", "video", "audio", "3d"] }
+                },
+                "modes": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 11,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "text-to-image", "image-to-image", "text-to-video", "image-to-video",
+                      "video-to-video", "text-to-audio", "audio-to-audio", "video-to-audio",
+                      "text-to-3d", "image-to-3d", "3d-to-3d"
+                    ]
+                  }
                 },
                 "capabilities": {
                   "default": {},

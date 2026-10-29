@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "defaultConnection": "fal",
+  "connections": {
+    "fal": {
+      "adapter": "fal-queue",
+      "baseUrl": "https://queue.fal.run",
+      "baseUrlMode": "origin",
+      "auth": {
+        "type": "key",
+        "secretEnv": "FAL_KEY",
+        "origin": "https://queue.fal.run"
+      },
+      "defaultModel": "fal-ai/flux/dev",
+      "configuredModels": [
+        { "id": "fal-ai/flux/dev", "name": "FLUX Dev: text to image" },
+        { "id": "fal-ai/flux/dev/image-to-image", "name": "FLUX Dev: image to image" },
+        { "id": "fal-ai/kling-video/v2.5-turbo/pro/text-to-video", "name": "Kling 2.5 Turbo Pro: text to video" },
+        { "id": "fal-ai/kling-video/v2.1/standard/image-to-video", "name": "Kling 2.1 Standard: image to video" },
+        { "id": "fal-ai/cogvideox-5b/video-to-video", "name": "CogVideoX: video to video" },
+        { "id": "fal-ai/stable-audio", "name": "Stable Audio: text to audio" },
+        { "id": "fal-ai/stable-audio-25/audio-to-audio", "name": "Stable Audio 2.5: audio to audio" },
+        { "id": "fal-ai/hunyuan3d-v3/text-to-3d", "name": "Hunyuan3D v3: text to 3D" },
+        { "id": "fal-ai/trellis", "name": "TRELLIS: image to 3D" },
+        { "id": "fal-ai/hyper3d/rodin", "name": "Rodin: text or image to 3D" },
+        { "id": "fal-ai/trellis-2/retexture", "name": "TRELLIS 2: retexture a 3D mesh" }
+      ],
+      "modelOverrides": {
+        "fal-ai/flux/dev": {
+          "outputTypes": ["image"],
+          "modes": ["text-to-image"]
+        },
+        "fal-ai/flux/dev/image-to-image": {
+          "outputTypes": ["image"],
+          "modes": ["image-to-image"]
+        },
+        "fal-ai/kling-video/v2.5-turbo/pro/text-to-video": {
+          "outputTypes": ["video"],
+          "modes": ["text-to-video"]
+        },
+        "fal-ai/kling-video/v2.1/standard/image-to-video": {
+          "outputTypes": ["video"],
+          "modes": ["image-to-video"]
+        },
+        "fal-ai/cogvideox-5b/video-to-video": {
+          "outputTypes": ["video"],
+          "modes": ["video-to-video"]
+        },
+        "fal-ai/stable-audio": {
+          "outputTypes": ["audio"],
+          "modes": ["text-to-audio"]
+        },
+        "fal-ai/stable-audio-25/audio-to-audio": {
+          "outputTypes": ["audio"],
+          "modes": ["audio-to-audio"]
+        },
+        "fal-ai/hunyuan3d-v3/text-to-3d": {
+          "outputTypes": ["3d", "image"],
+          "modes": ["text-to-3d"]
+        },
+        "fal-ai/trellis": {
+          "outputTypes": ["3d"],
+          "modes": ["image-to-3d"]
+        },
+        "fal-ai/hyper3d/rodin": {
+          "outputTypes": ["3d", "image"],
+          "modes": ["text-to-3d", "image-to-3d"],
+          "defaults": { "geometry_file_format": "glb" }
+        },
+        "fal-ai/trellis-2/retexture": {
+          "outputTypes": ["3d"],
+          "modes": ["3d-to-3d"]
+        }
+      }
+    }
+  }
+}

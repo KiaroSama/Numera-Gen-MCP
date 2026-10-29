@@ -3,12 +3,12 @@ mod common;
 mod image_fixture;
 use common::Workspace;
 use image::GenericImageView;
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::files::{editing, images, paths};
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::files::{editing, images, paths};
 
 #[test]
 fn request_seed_matches_source_safe_integer_domain_before_submission() {
-    use numera_image_gen_mcp::services::request;
+    use numera_gen_mcp::services::request;
     for seed in [-9007199254740991.0, -0.0, 9007199254740991.0] {
         assert!(request::parse(json!({"prompt":"draw","seed":seed})).is_ok());
     }
@@ -82,7 +82,7 @@ fn exact_source_absolute_unicode_file_urls_limits_and_invalid_inputs_are_enforce
     let workspace = Workspace::new();
     let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join(".ci-work/parity/image-acceptance.json");
-    let oracle = numera_image_gen_mcp::compat::value::Value::parse_with_limit(
+    let oracle = numera_gen_mcp::compat::value::Value::parse_with_limit(
         &std::fs::read_to_string(file).expect("exact source image oracle"),
         1048576,
     )
@@ -160,7 +160,7 @@ async fn exact_source_input_links_output_junctions_non_directories_and_nested_un
         }
         let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join(".ci-work/parity/image-acceptance.json");
-        let cases = numera_image_gen_mcp::compat::value::Value::parse_with_limit(
+        let cases = numera_gen_mcp::compat::value::Value::parse_with_limit(
             &std::fs::read_to_string(file).unwrap(),
             1048576,
         )

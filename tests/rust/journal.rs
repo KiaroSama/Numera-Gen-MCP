@@ -2,8 +2,8 @@ mod common;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::jobs::{Receipt, Store};
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::jobs::{Receipt, Store};
 
 fn receipt(id: &str) -> Receipt {
     Receipt::new(
@@ -36,7 +36,7 @@ fn sqlite_text_url_binding_matches_hosted_utf16_replacement_oracle() {
         assert!(store.admit(&id, "test", 4, 4).unwrap());
         store.reserve(&id, case.utf8_bytes as i64, 1048576).unwrap();
         let value =
-            numera_image_gen_mcp::compat::value::Value::parse(&case.text).expect("raw UTF16 text");
+            numera_gen_mcp::compat::value::Value::parse(&case.text).expect("raw UTF16 text");
         store
             .retain_url(&id, 0, value.as_js_string().expect("string"), Some(&owner))
             .unwrap();

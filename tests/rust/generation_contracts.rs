@@ -9,8 +9,8 @@ mod image_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     config::Config,
     jobs::{Receipt, Store},
     logging::Logger,
@@ -69,7 +69,7 @@ fn saved(receipt: &Receipt, original: &[u8]) {
     );
     assert_eq!(receipt.value["outputs"][0]["mime_type"], "image/png");
 }
-fn error<T>(result: numera_image_gen_mcp::error::Result<T>) -> String {
+fn error<T>(result: numera_gen_mcp::error::Result<T>) -> String {
     result.err().expect("fixture must reject").code
 }
 fn initial(id: &str) -> Receipt {

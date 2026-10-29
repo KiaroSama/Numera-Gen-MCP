@@ -20,6 +20,7 @@ use std::{
 pub struct Bounds {
     wall: Duration,
     idle: Duration,
+    output_limit: usize,
 }
 impl Bounds {
     pub fn new(wall: u64, idle: u64) -> io::Result<Self> {
@@ -32,7 +33,15 @@ impl Bounds {
         Ok(Self {
             wall: Duration::from_millis(wall),
             idle: Duration::from_millis(idle),
+            output_limit: super::capture::LIMIT,
         })
+    }
+    pub fn with_output_limit(mut self, bytes: usize) -> io::Result<Self> {
+        if !(1..=16 * 1024 * 1024).contains(&bytes) {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Capture ceiling must be between one byte and sixteen MiB."));
+        }
+        self.output_limit = bytes;
+        Ok(self)
     }
 }
 pub struct Outcome {
@@ -70,6 +79,15 @@ pub fn run(
 ) -> io::Result<Outcome> {
     let paths = RuntimePaths::new(root)
         .map_err(|_| io::Error::other("Cannot resolve contained command scratch."))?;
+    let cwd = command.get_current_dir().unwrap_or(&paths.root);
+    if !cwd.is_absolute() || cwd.components().any(|part| matches!(part, std::path::Component::ParentDir)) {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Child working directory must be absolute and contained."));
+    }
+    let cwd = cwd.canonicalize()?;
+    paths.verify(&cwd).map_err(|_| io::Error::new(io::ErrorKind::PermissionDenied, "Child working directory escapes owning root."))?;
+    if !cwd.is_dir() {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Child working directory must exist."));
+    }
     let work = paths.root.join(".ci-work");
     paths
         .verify(&work)
@@ -131,7 +149,7 @@ pub fn run(
         run_id: uuid::Uuid::new_v4().to_string(),
     };
     command
-        .current_dir(&paths.root)
+        .current_dir(cwd)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -142,6 +160,7 @@ pub fn run(
     let mut child = Owned::spawn(command)?;
     let pid = child.id();
     let mut captures = child.capture()?;
+    captures.set_limit(bounds.output_limit);
     let operation = (|| -> io::Result<Option<String>> {
         ledger.record(
             json!({"event":"start","pid":pid,"owner_pid":std::process::id(),

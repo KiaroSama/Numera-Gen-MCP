@@ -1,6 +1,6 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{Value, json},
     files::{images, paths},
     http::{api, assets},
@@ -125,7 +125,7 @@ fn log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed() {
 fn concurrent_output_directory_creation_and_file_collision_fail_closed() {
     let workspace = Workspace::new();
     let root = workspace.0.join("outputs");
-    numera_image_gen_mcp::runtime_paths::private_directory(&root).unwrap();
+    numera_gen_mcp::runtime_paths::private_directory(&root).unwrap();
     let barrier = Arc::new(Barrier::new(3));
     std::thread::scope(|scope| {
         let a = barrier.clone();

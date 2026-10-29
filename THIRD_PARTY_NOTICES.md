@@ -2,13 +2,16 @@
 
 First-party Numera code is GPL-3.0-only. No reference implementation source copied.
 
-## Native distribution (migration in progress)
+## Native distribution
 
-Cargo.toml records direct pinned native dependencies. A ready archive must include the actual
-resolved dependency licenses/notices and bundled SQLite/codec notices; this document alone is not a
-substitute for those files. No native Release is ready until the lockfile and complete transitive
-license inventory are verified in hosted CI. RMCP, Tokio, reqwest, rusqlite, serde/serde_json,
-ICU4X, image, Base64, SHA2, chrono, regex, UUID and URL retain their upstream licenses.
+The published 0.2.0 archives include their verified resolved license inventory; see
+[the exact release evidence](docs/releases/0.2.0.md). Current 0.3.0 source is a separate, unqualified
+candidate: Cargo.toml records its direct pins, but Cargo.lock still describes 0.2.0 and does not yet
+resolve the new tooling/archive dependencies. Hosted lockfile resolution and a complete transitive
+license inventory are required before distributing that candidate. Every ready archive must include
+the actual resolved dependency licenses/notices and bundled SQLite/codec notices; this document is
+not a substitute. RMCP, Tokio, reqwest, rusqlite, serde/serde_json, ICU4X, image, Base64, SHA2, chrono,
+regex, UUID and URL retain their upstream licenses.
 The authoritative JSON implementation uses no embedded JavaScript runtime. Removed validation/parser
 helpers are not native runtime dependencies; the actual archive license inventory follows the resolved
 lockfile, not a historical list.

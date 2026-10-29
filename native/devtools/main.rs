@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     devtools::supervisor::{Bounds, run},
     logging::Logger,
 };
@@ -22,7 +22,7 @@ fn execute() -> io::Result<i32> {
     if args.first().is_some_and(|arg| arg == "--version") {
         println!(
             "{}",
-            numera_image_gen_mcp::build_identity::version("numera-dev")
+            numera_gen_mcp::build_identity::version("numera-dev")
         );
         return Ok(0);
     }
@@ -49,12 +49,19 @@ fn execute() -> io::Result<i32> {
                 )
             })?;
         let root = root.canonicalize()?;
-        let executable = root.join("bin").join(if cfg!(windows) {
+        let current = root.join("bin").join(if cfg!(windows) {
+            "numera-gen-mcp.exe"
+        } else {
+            "numera-gen-mcp"
+        });
+        let legacy = root.join("bin").join(if cfg!(windows) {
             "numera-image-gen-mcp.exe"
         } else {
             "numera-image-gen-mcp"
         });
-        let report = numera_image_gen_mcp::devtools::setup::execute(
+        // Signed historical installations retain their original distribution-owned filename.
+        let executable = if current.is_file() || !legacy.is_file() { current } else { legacy };
+        let report = numera_gen_mcp::devtools::setup::execute(
             &values,
             &executable,
             &std::env::vars().collect(),

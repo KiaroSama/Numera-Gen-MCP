@@ -1,6 +1,7 @@
 # Publisher signatures and trust
 
-Approved publisher: **KiaroSama**. Product: **Numera Image-Gen MCP**.
+Approved publisher: **KiaroSama**. Current product: **Numera Gen MCP**. Historical signed 0.2.0
+artifacts retain their original product metadata and filenames; rebranding does not rewrite them.
 The project has an approved RSA-3072 self-signed code-signing identity. Its public material is in
 [signing/publisher.json](signing/publisher.json), [publisher-cert.der](signing/publisher-cert.der) and
 [publisher-key.der](signing/publisher-key.der). These are public files, not signing credentials.
@@ -9,15 +10,19 @@ The project has an approved RSA-3072 self-signed code-signing identity. Its publ
 
 All six targets passed real publisher signing, unsigned/tamper/wrong-signer rejection and signed
 package/extracted SDK verification at `f2535577c2e3145da03e2d5c123d7de061656860`,
-[run40244894089](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/40244894089), attempt2.
+[run40244894089](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40244894089), attempt2.
 All sixteen jobs succeeded. Both macOS architectures qualified the memory-only signing route below.
 Signed Install/Update/Register/Remove passed all six targets; activation independently requires native
 Windows/macOS signatures as well as the pinned manifest. Both Windows locked-member rollback controls passed.
 The published Windows x64 archive also passed independent pinned Authenticode and manifest verification
 plus isolated ten-tool SDK readiness on the current host, without provider access or a trust-store change.
-[Release0.2.0](https://github.com/KiaroSama/Numera-Image-Gen-MCP/releases/tag/v0.2.0) contains only original
+[Release0.2.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.2.0) contains only original
 verified CI archives. Actual owner-host cutover is separate; the working runtime is retained.
 Unsigned intermediate CI archives remain internal test artifacts, never completed distributions.
+The current candidate's existing-key signing route is restricted to a manual qualification on `main`,
+after native, coverage and execution-matrix jobs pass. Source preparation cannot enter the protected
+signing environment or receive its inputs. This authorization and its guards are not evidence that
+0.3.0 has been compiled, qualified, signed or published.
 
 ## What the signature must prove
 

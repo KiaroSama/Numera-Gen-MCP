@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::compat::value::Value;
+use numera_gen_mcp::compat::value::Value;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,

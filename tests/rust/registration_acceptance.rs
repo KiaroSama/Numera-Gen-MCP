@@ -115,11 +115,11 @@ impl Fixture {
             fs::create_dir(workspace.0.join(directory)).unwrap();
         }
         let executable = workspace.0.join("bin").join(if cfg!(windows) {
-            "numera-image-gen-mcp.exe"
+            "numera-gen-mcp.exe"
         } else {
-            "numera-image-gen-mcp"
+            "numera-gen-mcp"
         });
-        fs::copy(env!("CARGO_BIN_EXE_numera-image-gen-mcp"), &executable).unwrap();
+        fs::copy(env!("CARGO_BIN_EXE_numera-gen-mcp"), &executable).unwrap();
         Self {
             workspace,
             executable,
@@ -243,11 +243,11 @@ fn exact_source_native_registration_dry_run_backup_rollback_remove_and_private_l
     assert_eq!(value["model"], "unchanged 日本語");
     assert_eq!(value["mcpServers"]["other"]["command"], "stay");
     assert_eq!(
-        value["mcpServers"]["numera-image-gen"]["command"],
+        value["mcpServers"]["numera-gen"]["command"],
         json!(fixture.executable)
     );
     assert_eq!(
-        value["mcpServers"]["numera-image-gen"]["args"],
+        value["mcpServers"]["numera-gen"]["args"],
         json!(["bridge"])
     );
     assert!(
@@ -330,11 +330,11 @@ fn exact_source_native_toml_registration_preserves_crlf_and_refuses_five_ambigui
     assert!(fixture.run("Codex", &file, true, false).status.success());
     assert!(fs::read_to_string(&file).unwrap().starts_with(before));
     for ambiguous in [
-        "[mcp_servers.\"numera-image-gen\"]\ncommand=\"other\"\n",
-        "[mcp_servers.numera-image-gen]\ncommand=\"a\"\n[mcp_servers.numera-image-gen]\ncommand=\"b\"\n",
-        "description = \"\"\"\n[mcp_servers.numera-image-gen]\n\"\"\"\n",
-        "mcp_servers = { \"numera-image-gen\" = { command = \"other\" } }\n",
-        "[mcp_servers]\nnumera-image-gen.command = \"other\"\n",
+        "[mcp_servers.\"numera-gen\"]\ncommand=\"other\"\n",
+        "[mcp_servers.numera-gen]\ncommand=\"a\"\n[mcp_servers.numera-gen]\ncommand=\"b\"\n",
+        "description = \"\"\"\n[mcp_servers.numera-gen]\n\"\"\"\n",
+        "mcp_servers = { \"numera-gen\" = { command = \"other\" } }\n",
+        "[mcp_servers]\nnumera-gen.command = \"other\"\n",
     ] {
         fs::write(&file, ambiguous.as_bytes()).unwrap();
         let result = fixture.run("Codex", &file, false, false);

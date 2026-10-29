@@ -1,7 +1,7 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     compat::canonical_json::fingerprint,
     jobs::{Receipt, Store},
 };

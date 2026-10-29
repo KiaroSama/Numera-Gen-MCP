@@ -4,7 +4,7 @@ mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::json,
     config::Config,
     files::{images, output, paths},
@@ -279,7 +279,7 @@ async fn actual_killed_children_preserve_all_eight_source_checkpoints_without_re
                         env: HashMap::new().into(),
                         active: Arc::new(Mutex::new(HashMap::new())),
                     };
-                    let receipt = numera_image_gen_mcp::services::jobs::recover_local(
+                    let receipt = numera_gen_mcp::services::jobs::recover_local(
                         &generation,
                         "child-crash",
                         &CancellationToken::new(),

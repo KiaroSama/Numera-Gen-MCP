@@ -4,9 +4,11 @@ Owner assignment dated 2026-10-02; this is a faithful public requirements summar
 
 ## Product
 
-Personal provider-independent native Rust image generation/editing MCP server, executable/package
-`numera-image-gen-mcp`, registration `numera-image-gen`, GPL-3.0-only. Keep host chat model unchanged.
-Target repository https://github.com/KiaroSama/Numera-Image-Gen-MCP. Example checkout location: `C:/projects/numera-image-gen-mcp`; use your own absolute paths.
+Personal provider-independent native Rust generation/transformation MCP server, **Numera Gen MCP**,
+executable/package `numera-gen-mcp`, registration `numera-gen`, GPL-3.0-only. Preserve legacy image
+generation/editing while adding explicitly declared image/video/audio/3D modes. Keep the host chat
+model unchanged; configured modalities never establish forwarding or account entitlement.
+Target repository https://github.com/KiaroSama/Numera-Gen-MCP. Example checkout location: `C:/projects/numera-gen-mcp`; use your own absolute paths.
 
 ## Native distribution requirements (2026-10-11)
 
@@ -24,14 +26,22 @@ See the acceptance matrix.
 
 ## Required release contracts
 
+The October 28 scope adds paired per-model output types and modes, strict compact/env equivalents,
+exact evidenced fal queue routes and typed image/MP4/WAV/GLB originals. `generate_media` and
+`get_media_output_info` are additive; existing jobs/cancellation/output listing remain shared.
+A transformation is available only for its implemented exact endpoint and required input roles;
+unsupported modes, missing references and unknown outcomes never fall back or resubmit. Hosted
+qualification of this source remains distinct from the historical 0.2.0 results below.
+
 Generic Images-compatible generation/multipart/configured JSON edits; independent OmniRoute and
 9router gateway profiles; Gemini generateContent; separate Gemini Interactions; OpenAI Responses
 with separate orchestration/image tool models; dedicated OpenRouter Image API; explicit opt-in
 chat-style image output; directly configured ComfyUI API-format workflow execution.
 
-Ten tools: health_check, list_connections, list_models, get_model_capabilities, generate_image,
-edit_image, get_job, cancel_job, list_outputs, get_output_info. Stdio production transport; no
-unfinished HTTP mode. stdout only protocol. Prompt/source fidelity, all valid finals saved, original
+Ten retained image tools: health_check, list_connections, list_models, get_model_capabilities,
+generate_image, edit_image, get_job, cancel_job, list_outputs, get_output_info. Typed media adds the
+two tools above. Stdio production transport and optional authenticated loopback HTTP share the same
+application services. stdout contains protocol only in stdio mode. Prompt/source fidelity, all valid finals saved, original
 bytes/hash/metadata checked, bounded optional derivative previews and owned resources.
 
 ## Safety and operational scope
@@ -57,6 +67,12 @@ paid generation, actual owner-host edits, GPU/model installs and npm publication
 Unavailable live checks remain not_run.
 
 ## Request updates
+
+2026-10-28: owner requested image/video/audio/3D input/output transformations with explicit per-model
+output types and modes while retaining image behavior/config, plus complete active branding as
+Numera Gen MCP and repository `Numera-Gen-MCP`. The additive source targets 0.3.0; final hosted
+qualification remains separate from historical 0.2.0. Private data and immutable signed assets stay
+unchanged. Maintained Rust tooling migration retains the five PowerShell scripts.
 
 2026-10-02: owner corrected local root (spaced name), required moving all work/preserving assets and
 removing empty wrong root. Completed relocation.

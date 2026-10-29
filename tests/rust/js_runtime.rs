@@ -4,7 +4,7 @@ mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{JsString, Value},
     config::{Config, ConfigReload, ReloadEvent},
     jobs::Store,

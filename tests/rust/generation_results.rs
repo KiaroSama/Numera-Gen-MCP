@@ -8,8 +8,8 @@ mod image_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     compat::canonical_json::fingerprint,
     config::{Config, snapshot_credentials},
     jobs::Store,
@@ -111,7 +111,7 @@ async fn cancelled_publication_retains_completed_originals_and_recovery_preserve
     let bytes = image_fixture::original();
     let raw = workspace.config("https://invalid.example/v1", "openai-images");
     let g = generation(&workspace, &raw);
-    let mut receipt = numera_image_gen_mcp::jobs::Receipt::new(
+    let mut receipt = numera_gen_mcp::jobs::Receipt::new(
         json!({"request_id":"received","connection":"test","status":"prepared","outputs":[],"errors":[],"warnings":[],"deviations":[],"generation_outcome":"not_submitted","created_at":"2026-10-12T00:00:00.000Z"}),
     );
     {
@@ -123,8 +123,8 @@ async fn cancelled_publication_retains_completed_originals_and_recovery_preserve
     }
     let signal = CancellationToken::new();
     signal.cancel();
-    let result = numera_image_gen_mcp::adapters::types::Normalized {
-        images: vec![numera_image_gen_mcp::adapters::types::ResultItem {
+    let result = numera_gen_mcp::adapters::types::Normalized {
+        images: vec![numera_gen_mcp::adapters::types::ResultItem {
             bytes: Some(bytes.clone()),
             ..Default::default()
         }],

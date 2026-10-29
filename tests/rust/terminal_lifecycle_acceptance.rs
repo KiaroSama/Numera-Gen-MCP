@@ -2,7 +2,7 @@ mod common;
 #[path = "common/wire.rs"]
 mod wire;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{Value, json},
     config::{Config, snapshot_credentials},
     error::Result,

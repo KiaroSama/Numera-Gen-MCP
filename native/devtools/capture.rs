@@ -10,6 +10,7 @@ pub(super) struct Capture {
     pub stdout_bytes: Vec<u8>,
     pub stderr_bytes: Vec<u8>,
     pub exceeded: bool,
+    limit: usize,
 }
 impl Capture {
     pub fn new(stdout: ChildStdout, stderr: ChildStderr) -> io::Result<Self> {
@@ -21,7 +22,11 @@ impl Capture {
             stdout_bytes: Vec::new(),
             stderr_bytes: Vec::new(),
             exceeded: false,
+            limit: LIMIT,
         })
+    }
+    pub(super) fn set_limit(&mut self, limit: usize) {
+        self.limit = limit;
     }
     pub fn poll(&mut self) -> io::Result<bool> {
         let mut progress = false;
@@ -30,14 +35,14 @@ impl Capture {
             for stderr in [false, true] {
                 let total = self.stdout_bytes.len() + self.stderr_bytes.len();
                 let mut buffer = [0u8; 8192];
-                let capacity = buffer.len().min(LIMIT.saturating_sub(total) + 1);
+                let capacity = buffer.len().min(self.limit.saturating_sub(total) + 1);
                 let read = if stderr {
                     read_ready(&mut self.stderr, &mut buffer[..capacity])
                 } else {
                     read_ready(&mut self.stdout, &mut buffer[..capacity])
                 }?;
                 round_progress |= read != 0;
-                let retained = read.min(LIMIT.saturating_sub(total));
+                let retained = read.min(self.limit.saturating_sub(total));
                 if stderr {
                     self.stderr_bytes.extend_from_slice(&buffer[..retained]);
                 } else {

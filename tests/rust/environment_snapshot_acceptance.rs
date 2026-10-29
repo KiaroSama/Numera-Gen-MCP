@@ -4,7 +4,7 @@ mod wire;
 
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{Value, json},
     config::{Config, credentials, snapshot_credentials},
     files::images::{decode_base64, inspect},

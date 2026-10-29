@@ -88,7 +88,7 @@ impl Logger {
         let file = (|| {
             private_directory(directory).ok()?;
             let name = format!(
-                "numera-image-gen-mcp_{}_UTC-{}-{}.log",
+                "numera-gen-mcp_{}_UTC-{}-{}.log",
                 Utc::now().format("%Y-%m-%d_%H-%M-%S"),
                 std::process::id(),
                 run_id
@@ -109,7 +109,7 @@ impl Logger {
             for entry in entries.flatten() {
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if name.starts_with("numera-image-gen-mcp_")
+                if ["numera-gen-mcp_", "numera-image-gen-mcp_"].iter().any(|prefix| name.starts_with(*prefix))
                     && name.ends_with(".log")
                     && let Ok(info) = std::fs::symlink_metadata(entry.path())
                     && info.is_file()

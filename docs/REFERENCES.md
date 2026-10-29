@@ -24,6 +24,25 @@ verified merely because these sources were read.
 - https://modelcontextprotocol.io/docs/develop/build-server: host command/args launch local stdio;
   stdout must contain only protocol, and local/cloud file access is not interchangeable.
 
+## Multimedia source contracts, checked 2026-10-29
+
+- [fal queue API](https://docs.fal.ai/model-apis/model-endpoints/queue): native full-endpoint submission,
+  owner/app/request tracking,200/202 status and exact cancellation status/body. Completed is not successful.
+- [fal common headers](https://docs.fal.ai/model-apis/model-endpoints/headers): explicit no-retry and
+  request-history controls do not promise private CDN retention, account entitlement or refunds.
+- [Rodin API/schema](https://fal.ai/models/fal-ai/hyper3d/rodin/api): text/image roles, data-URI inputs,
+  geometry format default GLB, mesh plus texture outputs. Numera accepts explicit GLB only; a provider
+  supporting another format does not establish local validation support.
+- [MCP2025-11-25 resources](https://modelcontextprotocol.io/specification/2025-11-25/server/resources):
+  binary originals are base64 blobs with MIME, not image content for every media kind. The old image URI
+  remains compatible; the new media URI is additive.
+
+Exact endpoint bindings were compared with first-party model schemas and upstream fal-js queue source
+at8086bfc4a1957e43ead8646439935b6cc25e627e. No SDK implementation copied; Rust REST deliberately avoids
+SDK POST retries/automatic uploads. On2026-10-29 autonomous endpoint_id OpenAPI fetching was robots-blocked;
+the allowed Rodin model API page was read instead. New source/fixtures are not current live-provider,
+compiled six-platform, semantic quality, playback or rendering proof.
+
 ## Native macOS signing references, checked 2026-10-24
 
 - [Apple memory-only PKCS12 import](https://developer.apple.com/documentation/security/ksecimporttomemoryonly),

@@ -1,0 +1,44 @@
+[
+  {
+    "name": "overflow-values",
+    "text": "{\"a\":1e400,\"b\":-1e400,\"c\":1e-400}",
+    "serialized": "{\"a\":null,\"b\":null,\"c\":0}",
+    "canonical": "{\"a\":null,\"b\":null,\"c\":0}",
+    "sha256": "4700de764f4ae2608f34f6a8128be8a55975102847f2762616f0bc2160ad8a49"
+  },
+  {
+    "name": "lone-surrogate-value",
+    "text": "{\"text\":\"\\ud800\"}",
+    "serialized": "{\"text\":\"\\ud800\"}",
+    "canonical": "{\"text\":\"\\ud800\"}",
+    "sha256": "7d38e2388498cec03881027e7753b07826c5af2d61dd589b4c1caaab14ec2cc4"
+  },
+  {
+    "name": "lone-surrogate-key",
+    "text": "{\"\\udfff\":\"key\",\"ordinary\":1}",
+    "serialized": "{\"\\udfff\":\"key\",\"ordinary\":1}",
+    "canonical": "{\"ordinary\":1,\"\\udfff\":\"key\"}",
+    "sha256": "cd98809357845333904d19ae42d3c9c6df4f636a7ca94093c0b97d06168df14f"
+  },
+  {
+    "name": "paired-surrogate",
+    "text": "{\"text\":\"\\ud83c\\udf0d\"}",
+    "serialized": "{\"text\":\"🌍\"}",
+    "canonical": "{\"text\":\"🌍\"}",
+    "sha256": "b8d8eae33279822ef186948a866c104c368c412a79580bfa76154fc9b4f2ea2c"
+  },
+  {
+    "name": "duplicate-keys",
+    "text": "{\"a\":1,\"b\":2,\"a\":3}",
+    "serialized": "{\"a\":3,\"b\":2}",
+    "canonical": "{\"a\":3,\"b\":2}",
+    "sha256": "493df656a590967c84d643bdd55ee956fb53262c51b154115083c9bcc4c992e3"
+  },
+  {
+    "name": "binary64-rounded-integer",
+    "text": "{\"number\":9007199254740993}",
+    "serialized": "{\"number\":9007199254740992}",
+    "canonical": "{\"number\":9007199254740992}",
+    "sha256": "c8236e626da0401582d6d6337182aa3cbab9cce5247c63b8e805d882a1e500a8"
+  }
+]

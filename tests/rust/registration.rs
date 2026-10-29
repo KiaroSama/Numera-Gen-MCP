@@ -1,6 +1,6 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     cli::registration::{merge, register},
     logging::Logger,
 };
@@ -9,16 +9,17 @@ use serde_json::json;
 #[test]
 fn owned_native_entry_preserves_unrelated_host_settings_and_toml_bytes() {
     let workspace = Workspace::new();
-    let executable = workspace.0.join("numera-image-gen-mcp");
+    let executable = workspace.0.join("numera-gen-mcp");
     let config = workspace.0.join("config.json");
     let before =
-        "{\"model\":\"unchanged 日本語\",\"mcpServers\":{\"other\":{\"command\":\"stay\"}}}\n";
+        "{\"model\":\"unchanged 日本語\",\"mcpServers\":{\"other\":{\"command\":\"stay\"},\"numera-image-gen\":{\"command\":\"legacy-unchanged\"}}}\n";
     let after = merge(before, "ClaudeDesktop", false, &executable, &config).unwrap();
     let value: serde_json::Value = serde_json::from_str(&after).unwrap();
     assert_eq!(value["model"], "unchanged 日本語");
     assert_eq!(value["mcpServers"]["other"]["command"], "stay");
+    assert_eq!(value["mcpServers"]["numera-image-gen"]["command"], "legacy-unchanged");
     assert_eq!(
-        value["mcpServers"]["numera-image-gen"]["args"],
+        value["mcpServers"]["numera-gen"]["args"],
         json!(["bridge"])
     );
     assert_eq!(
@@ -44,10 +45,10 @@ fn owned_native_entry_preserves_unrelated_host_settings_and_toml_bytes() {
             .starts_with(toml)
     );
     for ambiguous in [
-        "[mcp_servers.\"numera-image-gen\"]\ncommand=\"other\"\n",
-        "[mcp_servers.numera-image-gen]\ncommand=\"a\"\n[mcp_servers.numera-image-gen]\ncommand=\"b\"\n",
-        "description = \"\"\"\n[mcp_servers.numera-image-gen]\n\"\"\"\n",
-        "mcp_servers = { \"numera-image-gen\" = { command = \"other\" } }\n",
+        "[mcp_servers.\"numera-gen\"]\ncommand=\"other\"\n",
+        "[mcp_servers.numera-gen]\ncommand=\"a\"\n[mcp_servers.numera-gen]\ncommand=\"b\"\n",
+        "description = \"\"\"\n[mcp_servers.numera-gen]\n\"\"\"\n",
+        "mcp_servers = { \"numera-gen\" = { command = \"other\" } }\n",
     ] {
         assert_eq!(
             merge(ambiguous, "Codex", false, &executable, &config)
@@ -61,7 +62,7 @@ fn owned_native_entry_preserves_unrelated_host_settings_and_toml_bytes() {
 #[test]
 fn registration_dry_run_backups_idempotence_and_active_lock_are_safe() {
     let workspace = Workspace::new();
-    let executable = workspace.0.join("numera-image-gen-mcp");
+    let executable = workspace.0.join("numera-gen-mcp");
     let config = workspace.0.join("config.json");
     let file = workspace.0.join("host.json");
     let before = b"{\"mcpServers\":{\"other\":{\"command\":\"stay\"}}}\n";

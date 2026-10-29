@@ -105,7 +105,10 @@ pub fn open(directory: &Path) -> Result<Connection> {
         if !columns.is_empty() && !generation {
             connection.execute_batch("ALTER TABLE requests ADD COLUMN generation INTEGER NOT NULL DEFAULT 1;ALTER TABLE requests ADD COLUMN reservation INTEGER NOT NULL DEFAULT 0;")?;
         }
-        connection.execute_batch("PRAGMA user_version=2;COMMIT")
+        // Add media overflow without rewriting the legacy schema2 table or its image limit.
+        connection.execute_batch("CREATE TABLE IF NOT EXISTS media_result_overflow(request_id TEXT NOT NULL,item INTEGER NOT NULL CHECK(item>=10 AND item<64),output_id TEXT NOT NULL UNIQUE,target TEXT,bytes BLOB,url TEXT,sha256 TEXT,phase TEXT NOT NULL,PRIMARY KEY(request_id,item));
+            CREATE VIEW IF NOT EXISTS all_result_journal AS SELECT request_id,item,output_id,target,bytes,url,sha256,phase FROM result_journal UNION ALL SELECT request_id,item,output_id,target,bytes,url,sha256,phase FROM media_result_overflow;
+            PRAGMA user_version=2;COMMIT")
     })();
     if result.is_err() {
         let _ = connection.execute_batch("ROLLBACK");

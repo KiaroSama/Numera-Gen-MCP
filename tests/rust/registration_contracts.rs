@@ -1,6 +1,6 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     cli::registration::{merge, register},
     logging::Logger,
 };
@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 #[test]
 fn json_host_merge_rejects_invalid_shapes_and_preserves_unrelated_unicode_fields() {
     let workspace = Workspace::new();
-    let binary = workspace.0.join("bin/numera-image-gen-mcp");
+    let binary = workspace.0.join("bin/numera-gen-mcp");
     let config = workspace.0.join("config.json");
     for text in [
         "{broken",
@@ -39,13 +39,13 @@ fn json_host_merge_rejects_invalid_shapes_and_preserves_unrelated_unicode_fields
         );
         let added = merge(text, "ClaudeProject", false, &binary, &config).unwrap();
         let value: Value = serde_json::from_str(&added).unwrap();
-        assert_eq!(value["mcpServers"]["numera-image-gen"]["type"], "stdio");
+        assert_eq!(value["mcpServers"]["numera-gen"]["type"], "stdio");
         assert_eq!(
-            value["mcpServers"]["numera-image-gen"]["args"],
+            value["mcpServers"]["numera-gen"]["args"],
             json!(["bridge"])
         );
         assert_eq!(
-            value["mcpServers"]["numera-image-gen"]["env"]["NUMERA_CONFIG"],
+            value["mcpServers"]["numera-gen"]["env"]["NUMERA_CONFIG"],
             json!(config)
         );
         assert_eq!(
@@ -71,9 +71,9 @@ fn conservative_toml_merge_handles_nested_owned_sections_and_rejects_ambiguous_s
         "[]\n",
         "['quoted']\n",
         "broken\n",
-        "[mcp_servers.numera-image-gen]\nx=1\nx=2\n",
-        "[mcp_servers.numera-image-gen.env]\nx=1\n",
-        "[mcp_servers]\nnumera-image-gen = {}\n",
+        "[mcp_servers.numera-gen]\nx=1\nx=2\n",
+        "[mcp_servers.numera-gen.env]\nx=1\n",
+        "[mcp_servers]\nnumera-gen = {}\n",
         "x = [1\n",
         "x = }\n",
         "x = \"unterminated\n",
@@ -88,7 +88,7 @@ fn conservative_toml_merge_handles_nested_owned_sections_and_rejects_ambiguous_s
     }
     let original = "# retain\nmodel = \"日本語\"\n[mcp_servers.other]\ncommand = 'keep' # retain\n";
     let with_owned = format!(
-        "{original}[mcp_servers.numera-image-gen]\ncommand = \"obsolete\"\n[mcp_servers.numera-image-gen.env]\nX = 'old'\n[another]\na = [1, 2]\nb = {{ key = \"escaped\\\"value\" }}\n"
+        "{original}[mcp_servers.numera-gen]\ncommand = \"obsolete\"\n[mcp_servers.numera-gen.env]\nX = 'old'\n[another]\na = [1, 2]\nb = {{ key = \"escaped\\\"value\" }}\n"
     );
     let removed = merge(&with_owned, "Codex", true, &binary, &config).unwrap();
     assert!(removed.starts_with(original));
@@ -96,7 +96,7 @@ fn conservative_toml_merge_handles_nested_owned_sections_and_rejects_ambiguous_s
     assert!(!removed.contains("obsolete"));
     assert!(!removed.contains("X = 'old'"));
     let added = merge("model='keep'", "Codex", false, &binary, &config).unwrap();
-    assert!(added.starts_with("model='keep'\n[mcp_servers.numera-image-gen]\n"));
+    assert!(added.starts_with("model='keep'\n[mcp_servers.numera-gen]\n"));
     assert_eq!(
         merge(&added, "Codex", false, &binary, &config).unwrap(),
         added
@@ -158,7 +158,7 @@ fn registration_rejects_unsafe_files_and_creates_only_requested_entry_with_recov
     .unwrap();
     let added: Value = serde_json::from_slice(&std::fs::read(&absent).unwrap()).unwrap();
     assert_eq!(
-        added["mcpServers"]["numera-image-gen"]["command"],
+        added["mcpServers"]["numera-gen"]["command"],
         json!(binary)
     );
     register(

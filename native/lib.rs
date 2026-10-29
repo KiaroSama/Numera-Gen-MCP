@@ -11,6 +11,7 @@ pub mod files;
 pub mod http;
 pub mod jobs;
 pub mod logging;
+pub mod media;
 pub mod mcp;
 pub mod runtime_paths;
 pub mod services;

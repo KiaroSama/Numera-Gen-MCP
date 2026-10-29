@@ -1,13 +1,13 @@
-# Numera Image Orchestration
+# Numera Gen MCP
 
-A personal bridge between a tool host and explicitly selected image backends.
+A personal bridge between a tool host and explicitly selected image, video, audio and 3D backends.
 
 ## Language
 
-**Connection**: A named image destination with its own credential source and request policy.
+**Connection**: A named media destination with its own credential source and request policy.
 _Avoid_: Provider account, globally shared API.
 
-**Adapter**: A wire protocol for submitting and interpreting image work.
+**Adapter**: A wire protocol for submitting and interpreting media work.
 _Avoid_: Model family, gateway brand.
 
 **Gateway profile**: A gateway's discovery and forwarding behavior layered on an adapter.
@@ -19,21 +19,30 @@ _Avoid_: Vision support, advertised image input.
 **Capability evidence**: The source, scope and verification state of a support claim.
 _Avoid_: Universal compatibility.
 
-**Logical request**: One authorized image operation identified across host retries.
+**Logical request**: One authorized media operation identified across host retries.
 _Avoid_: Prompt cache entry.
 
 **Receipt**: The durable outcome of a logical request, including uncertainty and saved outputs.
 _Avoid_: Guaranteed successful generation.
 
-**Retained result**: A received image item preserved for local recovery before becoming an owned output.
+**Retained result**: A received original media item preserved for local recovery before becoming an owned output.
 _Avoid_: Permission to generate again.
 
 **Documented dimension limit**: A sourced image model's native size boundary, distinct from route safety
 limits, account entitlement and dimensions observed in one output.
 _Avoid_: A gateway's universal maximum.
 
-**Owned output**: An image Numera saved and can verify by its own identifier and bytes.
+**Owned output**: An original media artifact Numera saved and can verify by its own identifier and bytes.
 _Avoid_: Arbitrary local file.
+
+**Media kind**: The artifact's explicit image, video, audio or 3D type, verified against original bytes.
+_Avoid_: File extension, provider MIME hint, text prompt.
+
+**Transformation mode**: An explicitly declared input-to-output operation implemented by one exact endpoint.
+_Avoid_: Universal conversion support, model-family inference.
+
+**Artifact role**: An endpoint-specific original's purpose, such as audio, model, texture or thumbnail.
+_Avoid_: File format, assumed single output.
 
 **Configured model**: An exact model identifier selected by the owner; listing it does not prove account access.
 _Avoid_: Automatically discovered entitlement.

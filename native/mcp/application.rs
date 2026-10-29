@@ -227,6 +227,20 @@ impl Application {
                 )
                 .await
             }
+            "generate_media" => {
+                let receipt = crate::services::media::run(&generation, args, cancel).await?;
+                if !receipt.value["upstream_job"].is_null() {
+                    self.snapshots.lock().map_err(|_| NumeraError::runtime())?.owners.insert(receipt.id()?.into(), generation);
+                }
+                Ok(receipt.value)
+            }
+            "get_media_output_info" => {
+                let id = required_string(&args, "output_id")?;
+                if uuid::Uuid::parse_str(id).is_err() { return Err(invalid()); }
+                let (mut metadata, _) = output::owned_media(&config.value, &*locked(&self.store)?, id)?;
+                metadata["verified"] = json!(true);
+                Ok(metadata)
+            }
             "generate_image" | "edit_image" => {
                 let receipt = generation
                     .run(
@@ -252,6 +266,13 @@ impl Application {
                 let id = required_string(&args, "request_id")?;
                 let refresh = boolean(&args, "refresh", false)?;
                 let mut receipt = locked(&self.store)?.get(id)?;
+                if receipt.value["operation"] == "media" {
+                    let local = locked(&self.store)?.needs_local_recovery(id)?;
+                    let upstream = refresh && !local && !receipt.value["upstream_job"].is_null()
+                        && !matches!(receipt.status(), "completed" | "partial" | "failed" | "cancelled");
+                    let owner = self.owner(id, upstream).await?;
+                    return Ok(crate::services::media_jobs::get(&owner, id, refresh, cancel).await?.value);
+                }
                 let local = refresh && { locked(&self.store)?.needs_local_recovery(id)? };
                 if local {
                     let owner = self.owner(id, false).await?;
@@ -270,6 +291,12 @@ impl Application {
             "cancel_job" => {
                 let id = required_string(&args, "request_id")?;
                 let receipt = locked(&self.store)?.get(id)?;
+                if receipt.value["operation"] == "media" {
+                    crate::services::media_jobs::cancel_local(&generation, id)?;
+                    let upstream = !receipt.value["upstream_job"].is_null() && !matches!(receipt.status(), "completed" | "partial" | "failed" | "cancelled");
+                    let owner = self.owner(id, upstream).await?;
+                    return crate::services::media_jobs::cancel(&owner, id, cancel).await;
+                }
                 locked(&self.store)?.cancel(id)?;
                 let owner = self
                     .owner(id, receipt.value["upstream_job"]["kind"] == "comfyui")
@@ -296,6 +323,10 @@ impl Application {
         }
     }
 
+    pub fn original_media(&self, id: &str) -> Result<(Value, Vec<u8>)> {
+        let generation = self.current()?;
+        output::owned_media(&generation.config.value, &*locked(&self.store)?, id)
+    }
     pub fn original(&self, id: &str) -> Result<images::Image> {
         let generation = self.current()?;
         Ok(output::owned(&generation.config.value, &*locked(&self.store)?, id)?.1)

@@ -29,19 +29,25 @@ fn decode(row: &rusqlite::Row<'_>) -> rusqlite::Result<ResultItem> {
 }
 
 impl Store {
-    fn item(&self, id: &str, index: u32) -> Result<Option<ResultItem>> {
-        if index >= 10 {
-            return Err(NumeraError::new(
-                "invalid_response",
-                "Provider returned too many final image items.",
-            )
-            .stage("response"));
+    fn journal_table(&self, id: &str, index: u32) -> Result<&'static str> {
+        if index < 10 {
+            return Ok("result_journal");
         }
-        self.db.query_row("SELECT item,output_id,target,bytes,url,sha256,phase FROM result_journal WHERE request_id=? AND item=?",params![id,index],decode)
+        if self.get(id)?.value["operation"] == "media" {
+            if index < 64 {
+                return Ok("media_result_overflow");
+            }
+            return Err(NumeraError::new("invalid_response", "Provider returned too many final media items.").stage("response"));
+        }
+        Err(NumeraError::new("invalid_response", "Provider returned too many final image items.").stage("response"))
+    }
+    fn item(&self, id: &str, index: u32) -> Result<Option<ResultItem>> {
+        self.journal_table(id, index)?;
+        self.db.query_row("SELECT item,output_id,target,bytes,url,sha256,phase FROM all_result_journal WHERE request_id=? AND item=?",params![id,index],decode)
             .optional().map_err(|_|NumeraError::storage())
     }
     pub fn has_pending(&self, id: &str) -> Result<bool> {
-        self.db.query_row("SELECT EXISTS(SELECT 1 FROM result_journal WHERE request_id=? AND phase!='committed')",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())
+        self.db.query_row("SELECT EXISTS(SELECT 1 FROM all_result_journal WHERE request_id=? AND phase!='committed')",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())
     }
     pub fn needs_local_recovery(&self, id: &str) -> Result<bool> {
         let receipt = self.get(id)?;
@@ -53,7 +59,7 @@ impl Store {
                 && !terminal(receipt.status())))
     }
     pub fn pending(&self, id: &str) -> Result<Vec<ResultItem>> {
-        let mut stmt=self.db.prepare("SELECT item,output_id,target,bytes,url,sha256,phase FROM result_journal WHERE request_id=? AND phase!='committed' ORDER BY item").map_err(|_|NumeraError::storage())?;
+        let mut stmt=self.db.prepare("SELECT item,output_id,target,bytes,url,sha256,phase FROM all_result_journal WHERE request_id=? AND phase!='committed' ORDER BY item").map_err(|_|NumeraError::storage())?;
         stmt.query_map([id], decode)
             .and_then(Iterator::collect)
             .map_err(|_| NumeraError::storage())
@@ -67,8 +73,8 @@ impl Store {
         }
         self.transaction(|store| {
             store.fence(id,None)?;
-            let used:i64=store.db.query_row("SELECT COALESCE(SUM(MAX(reservation,COALESCE((SELECT SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)) FROM result_journal WHERE request_id=requests.id),0))),0) FROM requests WHERE id!=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
-            let retained:i64=store.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM result_journal WHERE request_id=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
+            let used:i64=store.db.query_row("SELECT COALESCE(SUM(MAX(reservation,COALESCE((SELECT SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)) FROM all_result_journal WHERE request_id=requests.id),0))),0) FROM requests WHERE id!=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
+            let retained:i64=store.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM all_result_journal WHERE request_id=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
             let reserve=bytes.max(retained);
             if used.checked_add(reserve).is_none_or(|v|v>budget) {
                 return Err(NumeraError::new("rate_limited","Private result journal capacity is full; recover retained outputs before authorizing more image work.").stage("storage"));
@@ -78,7 +84,7 @@ impl Store {
         })
     }
     fn other_bytes(&self, id: &str, index: u32) -> Result<i64> {
-        self.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),(SELECT json_extract(metadata,'$.bytes') FROM outputs WHERE id=output_id),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM result_journal WHERE request_id=? AND item!=?",params![id,index],|r|r.get(0)).map_err(|_|NumeraError::storage())
+        self.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),(SELECT json_extract(metadata,'$.bytes') FROM outputs WHERE id=output_id),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM all_result_journal WHERE request_id=? AND item!=?",params![id,index],|r|r.get(0)).map_err(|_|NumeraError::storage())
     }
     pub fn retain(
         &mut self,
@@ -100,7 +106,8 @@ impl Store {
                 return Err(NumeraError::new("invalid_response","Aggregate output bytes exceeded.").stage("response"));
             }
             let output_id=old.map_or_else(||Uuid::new_v4().to_string(),|v|v.output_id);
-            store.db.execute("INSERT INTO result_journal(request_id,item,output_id,bytes,sha256,phase) VALUES(?,?,?,?,?,'retained') ON CONFLICT(request_id,item) DO UPDATE SET bytes=excluded.bytes,url=NULL,sha256=excluded.sha256,phase=CASE WHEN result_journal.target IS NULL THEN 'retained' ELSE 'publishing' END",params![id,index,output_id,bytes,hash]).map_err(|_|NumeraError::storage())?;
+            let table=store.journal_table(id,index)?;
+            store.db.execute(&format!("INSERT INTO {table}(request_id,item,output_id,bytes,sha256,phase) VALUES(?,?,?,?,?,'retained') ON CONFLICT(request_id,item) DO UPDATE SET bytes=excluded.bytes,url=NULL,sha256=excluded.sha256,phase=CASE WHEN {table}.target IS NULL THEN 'retained' ELSE 'publishing' END"),params![id,index,output_id,bytes,hash]).map_err(|_|NumeraError::storage())?;
             let mut receipt=store.get(id)?;
             receipt.value["generation_outcome"]=if receipt.value["upstream_terminal"].is_null(){json!("completed")}else{receipt.value["upstream_terminal"].clone()};
             receipt.touch();
@@ -129,7 +136,8 @@ impl Store {
                 return Err(NumeraError::new("invalid_response","Aggregate output bytes exceeded.").stage("response"));
             }
             let output_id=old.map_or_else(||Uuid::new_v4().to_string(),|v|v.output_id);
-            store.db.execute("INSERT INTO result_journal(request_id,item,output_id,url,phase) VALUES(?,?,?,?,'waiting') ON CONFLICT(request_id,item) DO UPDATE SET url=excluded.url",params![id,index,output_id,url]).map_err(|_|NumeraError::storage())?;
+            let table=store.journal_table(id,index)?;
+            store.db.execute(&format!("INSERT INTO {table}(request_id,item,output_id,url,phase) VALUES(?,?,?,?,'waiting') ON CONFLICT(request_id,item) DO UPDATE SET url=excluded.url"),params![id,index,output_id,url]).map_err(|_|NumeraError::storage())?;
             Ok(())
         })
     }
@@ -145,7 +153,8 @@ impl Store {
             let mut item=store.item(id,index)?.ok_or_else(||NumeraError::new("output_file_error","Stable publication requires retained, validated image bytes.").stage("storage"))?;
             if item.sha256.is_none() {return Err(NumeraError::new("output_file_error","Stable publication requires retained, validated image bytes.").stage("storage"));}
             let path=match &item.target {Some(path)=>path.clone(),None=>target(&item.output_id)?};
-            store.db.execute("UPDATE result_journal SET target=?,phase=CASE WHEN phase='committed' THEN phase ELSE 'publishing' END WHERE request_id=? AND item=?",params![path,id,index]).map_err(|_|NumeraError::storage())?;
+            let table=store.journal_table(id,index)?;
+            store.db.execute(&format!("UPDATE {table} SET target=?,phase=CASE WHEN phase='committed' THEN phase ELSE 'publishing' END WHERE request_id=? AND item=?"),params![path,id,index]).map_err(|_|NumeraError::storage())?;
             item.target=Some(path);item.url=None;
             Ok(item)
         })
@@ -170,7 +179,8 @@ impl Store {
             receipt.value["outputs"].as_array_mut().ok_or_else(NumeraError::storage)?.push(output.clone());
             receipt.value["deviations"].as_array_mut().ok_or_else(NumeraError::storage)?.extend(deviations.iter().map(|s|json!(s)));
             store.update(&mut receipt)?;
-            store.db.execute("UPDATE result_journal SET bytes=NULL,url=NULL,phase='committed' WHERE request_id=? AND item=?",params![id,index]).map_err(|_|NumeraError::storage())?;
+            let table=store.journal_table(id,index)?;
+            store.db.execute(&format!("UPDATE {table} SET bytes=NULL,url=NULL,phase='committed' WHERE request_id=? AND item=?"),params![id,index]).map_err(|_|NumeraError::storage())?;
             Ok(())
         })
     }

@@ -1,53 +1,75 @@
-# Immutable parity oracle and maintained validation
+# Immutable oracle, historical validation and current Rust qualification
 
-The native migration has two different evidence sources. They must never be conflated.
+The native migration has separate evidence sources. Historical success never qualifies a changed
+working tree, and a source mapping is not execution or assertion-equivalence evidence.
 
 ## Immutable oracle
 
-Native build, coverage and extracted SDK jobs keep the exact checkout
-`fc7da25c3b470199949b1b4c67127d77afa0c34a`, its original lockfile and installed dependencies.
-Oracle generators, the 470-case inventory, assertion mappings and retained input provenance continue
-using that checkout without patches. It is a historical comparison fixture, not a supported Node
-production distribution. Native end-user packages contain no Node or Zod dependency.
+The historical TypeScript baseline is exactly `fc7da25c3b470199949b1b4c67127d77afa0c34a`.
+Its original source, lockfile, independently collected 470 cases/50 suites and source-generated
+expected inputs remain immutable. It is an authenticated comparison fixture, not a supported Node
+production distribution. Native end-user packages contain no Node, Zod or Undici runtime.
 
-## Maintained source validation
+The current Rust tooling reads the retained public collections and independently hash-bound Git
+archives. It does not run an interpreter or generate expected values from the target implementation.
+Original same-user DPAPI ciphertext is not portable public evidence; its isolated Windows fixture
+must be produced through the real native protection contract in hosted CI.
 
-The three offline jobs materialize a separate tree from the same Git archive with
-`scripts/native-validation.py prepare`. Only three paths differ:
+## Historical maintained-source validation
 
-- `package.json` and `package-lock.json`: Zod is pinned to official stable `4.6.7`, including its exact
-  npm integrity. All other dependency entries remain unchanged.
-- `scripts/bounded.mjs`: reuse the maintained repository supervisor. It joins the owned child close
-  event rather than probing a potentially reused numeric child PID. A denied post-close group kill
-  is resolved only when independent inspection proves that group absent; other errors fail closed.
+The released native runtime at `f2535577c2e3145da03e2d5c123d7de061656860` used a separate maintained
+validation tree. The retained `scripts/native-validation.py` documents that historical procedure;
+it is not a new supported Rust maintenance command. Exactly **four paths** changed from the baseline:
 
-Every original test and application source file remains byte-identical. The source-delta receipt
-records original/current hashes and unchanged test hashes; CI retains it per platform. The original
-coverage, stdio and clean packed-install assertions run without skips or weaker time/worker limits.
-Type/lint/build/format checks remain required. Before a strict `npm audit --omit=dev`, the helper
-rechecks source hashes, the installed Zod version and bound-before-element-validation behavior using
-three elements against a maximum of two. No oversized resource-exhaustion input is needed.
+- `package.json` and `package-lock.json`: Zod `4.6.5` to `4.6.7` and Undici `8.11.2` to `8.12.3`,
+  with exact registry resolutions/integrities. Other dependency metadata remained unchanged.
+- `scripts/bounded.mjs`: the reviewed maintained supervisor joined owned child close rather than
+  treating a recycled numeric PID as identity. Permission failures required independent cleanup proof.
+- `tests/integration/setup.test.ts`: one buffered PowerShell child fixture became a streamed child.
+  Its original assertions and 10000ms child ceiling remained; unrelated test/application bytes did not change.
 
-The historical lockfile's Zod `4.6.5` is affected by
-[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), reviewed October 23, 2026.
-It is not described as audit-clean. The maintained validation dependency is patched; the immutable
-oracle remains historical. Neither `npm audit fix --force`, advisory suppression nor ignored audit
-exit codes are used. A failure in maintained validation still blocks all signing jobs.
+The receipt records before/after hashes and unchanged tests. Historical validation retained the
+coverage, stdio, clean packed-install, type, lint, build, format and audit gates without skips,
+weaker limits or ignored exit codes. Its bounded Zod control used three elements against a maximum
+of two, not a resource-exhaustion input. Zod `4.6.5` is affected by
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5); the frozen baseline is not
+advertised as audit-clean. Those historical dependency pins are not claims about today's latest release.
 
-The original macOS frozen supervisor reported `cleanup_verified=false` after a killed descendant was
-already absent. Its exact failed syscall was not recorded. Reusing the existing reviewed supervisor
-addresses known stale-PID/sticky-error proof defects; actual macOS success must come from hosted CI,
-not this source description. Synthetic preparation tests do not prove platform process cleanup.
+The original macOS frozen supervisor reported unverified cleanup after a descendant was absent;
+its exact failed syscall was not captured. Later hosted success does not establish that original cause.
+[Signed delivery](../releases/0.2.0.md) records the final historical qualification, separate from
+owner-host reconnection and the current candidate.
 
-## Limits
+## Current Rust tooling
 
-A passing maintained Node suite is not proof that its dependency bytes equal the immutable oracle.
-Native parity continues to require its separate original-source inputs and exact-SHA native runs.
-Neither check establishes publisher signatures, public OS trust, a verified Release or owner-host
-cutover. Those remain independent release gates.
+`tooling/src/validation.rs` prepares and verifies the same four-file transformation **as data**.
+It rejects unexpected dependency versions, paths, duplicate names, fixture literals, changed bytes
+and receipt drift. `tooling/src/ledger_inputs.rs` authenticates the frozen inputs and historical
+maintained supervisor before using this transformation. This neither installs those packages nor
+executes the archived JavaScript. The receipt explicitly reports `interpreted_execution=false`.
 
-References: [npm ci](https://docs.npmjs.com/cli/v11/commands/npm-ci),
-[npm audit](https://docs.npmjs.com/cli/v11/commands/npm-audit),
-[Node 24 child lifetime](https://nodejs.org/download/release/v24.21.0/docs/api/child_process.html),
-[Zod 4.6.7](https://github.com/colinhacks/zod/releases/tag/v4.6.7),
-[upstream bounded-collection repair](https://github.com/colinhacks/zod/pull/6652).
+The hosted-only `numera-task --root ABSOLUTE_ROOT ledger` command checks historical identities and
+emits current Rust mapping proposals. Its source report deliberately keeps `acceptance_verified=false`:
+current assertion ranges/reviews and exact named executions remain separate required work.
+The 46-file Python/JavaScript disposition manifest and five unchanged PowerShell files are tracked
+in [the tooling migration inventory](tooling-migration.json). Counts and existing test files do not
+qualify retirement; `retirement-gate` refuses until genuine current qualification is bound.
+
+## Current qualification limits
+
+The 0.3.0 tooling/media candidate is source-authored, not compiled, formatted or executed locally.
+Its workspace lockfile requires hosted resolution and reviewed formatting before a final locked run.
+All discovered workspace suites, six native targets, instrumented runtime 85/80 floors, current
+470-case assertion bindings, extracted SDK behavior and signatures must qualify on the final SHA.
+The owner separately authorized the existing signing identity on `main`; workflow and native guards
+require a manual qualification and the signing job. The isolated source-preparation route receives no
+signing inputs and returns reviewed lock/format candidates only; it proves no runtime acceptance.
+The installed signed 0.2.0 runtime and private configuration/receipts/originals remain intact.
+
+Official references: [Cargo locked builds](https://doc.rust-lang.org/cargo/commands/cargo-build.html),
+[Cargo workspaces](https://doc.rust-lang.org/cargo/reference/workspaces.html),
+[historical npm ci](https://docs.npmjs.com/cli/v11/commands/npm-ci),
+[historical npm audit](https://docs.npmjs.com/cli/v11/commands/npm-audit),
+[Node24 child lifetime](https://nodejs.org/download/release/v24.21.0/docs/api/child_process.html),
+[Zod4.6.7](https://github.com/colinhacks/zod/releases/tag/v4.6.7) and
+[bounded-collection repair](https://github.com/colinhacks/zod/pull/6652).

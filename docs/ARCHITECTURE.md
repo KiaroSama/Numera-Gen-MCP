@@ -1,9 +1,11 @@
 # Architecture
 
-Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated ten tools -> application
+Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated tools -> application
 services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
-transactional receipts. The tracked production runtime is Rust. All 470 frozen cases and 50 suites have reviewed mappings
-and exact hosted execution at `f253557` / run `40244894089`, attempt2. All sixteen jobs, six real publisher
+transactional receipts. The 0.3.0 source adds `generate_media` and `get_media_output_info` to the ten
+legacy image tools; the new tooling/media/rebrand tree is not yet compiled or qualified.
+The tracked production runtime is Rust. Historical 0.2.0 has reviewed mappings for all 470 frozen
+cases and 50 suites, with exact hosted execution at `f253557` / run `40244894089`, attempt2. All sixteen jobs, six real publisher
 signing/negative checks and signed extracted SDK checks passed; owner-host cutover remains separate.
 
 ## Boundaries
@@ -57,9 +59,33 @@ UTF-8 UTC structured files and stderr, never protocol stdout; credentials/prompt
 redacted at every level. The executable needs no Node/Python/Rust installation. ComfyUI, if selected,
 owns inference and GPU/model/node installation; Numera does not bundle or silently install them.
 
+## Typed media orchestration
+
+`native/media/` owns pure, exact fal endpoint contracts and original-byte validators. It performs no
+network, credential, filesystem or receipt operations. `native/config/media.rs` validates paired
+model output kinds/modes without inserting defaults into old image configurations.
+
+`native/services/media_request.rs` validates typed roles and effective native parameters before
+reference reads or anonymous asset GETs. `media.rs` snapshots the selected account, fingerprints the
+actual effective body, persists intent and makes one bounded POST. `media_wire.rs` pins queue URLs
+to the original origin/app/request. `media_jobs.rs` refreshes or cancels only that original handle;
+local cancellation stops waiting even when its provider account is unavailable. All status/result
+operations in one waiting call share its original deadline.
+
+`media_finalization.rs` reuses schema2 journals, writer fences and stable output publication in
+`native/files/output.rs`; there is no separate media database. Legacy indices0–9 retain the image
+limit; additive media overflow10–63 shares the same database, read view and capacity/expiry accounting.
+Existing tables/receipt identities remain unchanged; old runtimes do not understand new media state.
+PNG/JPEG/WebP, PCM/float WAV, bounded
+visual-track MP4 and self-contained GLB mesh structure are checked without rewriting original bytes.
+These are deliberately limited format validators, not proof of full video decode or 3D rendering.
+MCP media resource links use `numera-gen://outputs/`; legacy `numera-image://outputs/` remains readable
+and is still emitted by the old image tools. Both return the verified original MIME/blob, not fake
+image content for audio, video or a mesh.
+
 ## Direct local HTTP and native menu
 
-The optional `http` command serves the same `Application` and ten-tool `Handler` through official
+The optional `http` command serves the same `Application` and tool `Handler` through official
 RMCP Streamable HTTP. Hyper owns bounded connections; a tracked task set and explicit shutdown close
 owned work. SDK session handlers have a separate clone-lifetime barrier so connection drain alone
 cannot be mistaken for release of application files and database handles. The default endpoint is `127.0.0.1:1969/mcp`, with validated port overrides and no public
@@ -114,8 +140,11 @@ storage/security/global policy or the 64-snapshot bound require restart.
 
 Hosted CI resolves the real Cargo lockfile, verifies stable native binaries per OS/CPU and packages
 allowlisted archives. A separate nightly job measures executable regions >=85% and branches >=80%;
-nightly is not the production compiler. The pinned Node source is used only in hosted migration oracle
-checks, not as a runtime dependency of the shipped application.
+nightly is not the production compiler. The candidate's `tooling/` workspace supplies the native
+`numera-task` runner; task-only archiving dependencies are not added to the server package. Independent
+historical golden inputs and authenticated original source collections replace interpreted oracle
+execution. Frozen TypeScript and earlier native execution remain historical evidence, not current
+acceptance. Current assertion rebinding and hosted qualification are still required.
 
 Keep old local runtime/dependencies until the owner switches host config and the native connection is
 verified. Migration snapshots, original images, receipts, private configuration and Git history survive

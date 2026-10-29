@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::compat::{
+use numera_gen_mcp::compat::{
     js_json::{JsValue, canonical_json, parse, stringify},
     js_schema::Schema,
 };

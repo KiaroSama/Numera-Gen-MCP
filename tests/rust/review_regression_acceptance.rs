@@ -3,7 +3,7 @@ mod common;
 mod wire;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     adapters::{
         build_request, normalize,
         types::{Input, Normalized, ResultItem},

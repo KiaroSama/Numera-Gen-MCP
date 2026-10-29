@@ -133,6 +133,7 @@ pub(crate) fn cross_validate(config: &mut Value, timeout: Option<&str>) -> Resul
                 ));
             }
         }
+        super::media::validate_connection(connection)?;
         if let Some(timeout) = timeout {
             let n = js_number(timeout).ok_or_else(|| invalid("Invalid request timeout."))?;
             if n.fract() != 0.0 || !(1.0..=3600000.0).contains(&n) {

@@ -5,8 +5,8 @@ mod config_fixture;
 mod http_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::{
     config::{Config, snapshot_credentials},
     jobs::{Receipt, Store},
     logging::Logger,

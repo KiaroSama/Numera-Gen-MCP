@@ -1,10 +1,10 @@
-use numera_image_gen_mcp::compat::canonical_json::{canonical_json, fingerprint};
-use numera_image_gen_mcp::compat::value::Value;
+use numera_gen_mcp::compat::canonical_json::{canonical_json, fingerprint};
+use numera_gen_mcp::compat::value::Value;
 
 #[test]
 fn sha256_matches_published_known_answer() {
     assert_eq!(
-        numera_image_gen_mcp::compat::hash::sha256(b"hello world"),
+        numera_gen_mcp::compat::hash::sha256(b"hello world"),
         "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
     );
 }

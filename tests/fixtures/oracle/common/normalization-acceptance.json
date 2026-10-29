@@ -1,0 +1,2159 @@
+{
+  "original": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC",
+  "wires": [
+    {
+      "name": "openai-images",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "orchestrationModel": "chat-model",
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true
+      },
+      "request": {
+        "prompt": "تصویر 123",
+        "model": "family/image",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "family/image",
+      "operation": "generate",
+      "required_operation": "images/generations",
+      "field": "model",
+      "expected": {
+        "value": {
+          "operation": "images/generations",
+          "prefix": "/v1",
+          "body": {
+            "model": "family/image",
+            "prompt": "تصویر 123",
+            "n": 1
+          },
+          "serialized": "{\"model\":\"family/image\",\"prompt\":\"تصویر 123\",\"n\":1}"
+        }
+      }
+    },
+    {
+      "name": "gemini",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "orchestrationModel": "chat-model",
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true
+      },
+      "request": {
+        "prompt": "تصویر 123",
+        "model": "family/image",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "family/image",
+      "operation": "generate",
+      "required_operation": "models/family%2Fimage:generateContent",
+      "field": "contents",
+      "expected": {
+        "value": {
+          "operation": "models/family%2Fimage:generateContent",
+          "prefix": "/v1beta",
+          "body": {
+            "contents": [
+              {
+                "role": "user",
+                "parts": [
+                  {
+                    "text": "تصویر 123"
+                  }
+                ]
+              }
+            ],
+            "generationConfig": {
+              "responseModalities": [
+                "TEXT",
+                "IMAGE"
+              ]
+            }
+          },
+          "serialized": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"تصویر 123\"}]}],\"generationConfig\":{\"responseModalities\":[\"TEXT\",\"IMAGE\"]}}"
+        }
+      }
+    },
+    {
+      "name": "gemini-interactions",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "orchestrationModel": "chat-model",
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true
+      },
+      "request": {
+        "prompt": "تصویر 123",
+        "model": "family/image",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "family/image",
+      "operation": "generate",
+      "required_operation": "interactions",
+      "field": "input",
+      "expected": {
+        "value": {
+          "operation": "interactions",
+          "prefix": "/v1beta",
+          "body": {
+            "model": "family/image",
+            "store": false,
+            "input": [
+              {
+                "type": "text",
+                "text": "تصویر 123"
+              }
+            ],
+            "response_format": {
+              "type": "image"
+            }
+          },
+          "serialized": "{\"model\":\"family/image\",\"store\":false,\"input\":[{\"type\":\"text\",\"text\":\"تصویر 123\"}],\"response_format\":{\"type\":\"image\"}}"
+        }
+      }
+    },
+    {
+      "name": "openai-responses",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "orchestrationModel": "chat-model",
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true
+      },
+      "request": {
+        "prompt": "تصویر 123",
+        "model": "family/image",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "family/image",
+      "operation": "generate",
+      "required_operation": "responses",
+      "field": "tools",
+      "expected": {
+        "value": {
+          "operation": "responses",
+          "prefix": "/v1",
+          "body": {
+            "model": "chat-model",
+            "store": false,
+            "input": [
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "type": "input_text",
+                    "text": "تصویر 123"
+                  }
+                ]
+              }
+            ],
+            "tools": [
+              {
+                "type": "image_generation",
+                "model": "family/image",
+                "action": "generate"
+              }
+            ],
+            "tool_choice": {
+              "type": "image_generation"
+            }
+          },
+          "serialized": "{\"model\":\"chat-model\",\"store\":false,\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"تصویر 123\"}]}],\"tools\":[{\"type\":\"image_generation\",\"model\":\"family/image\",\"action\":\"generate\"}],\"tool_choice\":{\"type\":\"image_generation\"}}"
+        }
+      }
+    },
+    {
+      "name": "openrouter-images",
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "orchestrationModel": "chat-model",
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true
+      },
+      "request": {
+        "prompt": "تصویر 123",
+        "model": "family/image",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "family/image",
+      "operation": "generate",
+      "required_operation": "images",
+      "field": "input_references",
+      "expected": {
+        "value": {
+          "operation": "images",
+          "prefix": "/api/v1",
+          "body": {
+            "model": "family/image",
+            "prompt": "تصویر 123",
+            "n": 1,
+            "input_references": [],
+            "provider": {
+              "allow_fallbacks": false
+            }
+          },
+          "serialized": "{\"model\":\"family/image\",\"prompt\":\"تصویر 123\",\"n\":1,\"input_references\":[],\"provider\":{\"allow_fallbacks\":false}}"
+        }
+      }
+    },
+    {
+      "name": "chat-images",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "orchestrationModel": "chat-model",
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true
+      },
+      "request": {
+        "prompt": "تصویر 123",
+        "model": "family/image",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "family/image",
+      "operation": "generate",
+      "required_operation": "chat/completions",
+      "field": "messages",
+      "expected": {
+        "value": {
+          "operation": "chat/completions",
+          "prefix": "/v1",
+          "body": {
+            "model": "family/image",
+            "messages": [
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "تصویر 123"
+                  }
+                ]
+              }
+            ],
+            "modalities": [
+              "image",
+              "text"
+            ],
+            "image_config": {}
+          },
+          "serialized": "{\"model\":\"family/image\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"تصویر 123\"}]}],\"modalities\":[\"image\",\"text\"],\"image_config\":{}}"
+        }
+      }
+    }
+  ],
+  "gateways": [
+    {
+      "name": "omniroute",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "gateway": "omniroute",
+        "baseUrl": "http://localhost/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "request": {
+        "prompt": "edit",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [
+          {
+            "type": "url",
+            "url": "https://public.example/x.png"
+          }
+        ],
+        "wait": true
+      },
+      "model": "antigravity/gemini-image",
+      "expected": {
+        "error": {
+          "code": "unsupported_operation",
+          "message": "Reference input forwarding is not verified for this route."
+        }
+      }
+    },
+    {
+      "name": "9router",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "gateway": "9router",
+        "baseUrl": "http://localhost/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "request": {
+        "prompt": "edit",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [
+          {
+            "type": "url",
+            "url": "https://public.example/x.png"
+          }
+        ],
+        "wait": true
+      },
+      "model": "antigravity/gemini-image",
+      "expected": {
+        "error": {
+          "code": "unsupported_operation",
+          "message": "Reference input forwarding is not verified for this route."
+        }
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "name": "openai-images-null",
+      "kind": "null",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          null
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openai-images-number",
+      "kind": "number",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          42,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          42
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openai-images-string",
+      "kind": "string",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          "malformed",
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          "malformed"
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openai-images-array",
+      "kind": "array",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          [],
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          []
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openrouter-images-null",
+      "kind": "null",
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          null
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openrouter-images-number",
+      "kind": "number",
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          42,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          42
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openrouter-images-string",
+      "kind": "string",
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          "malformed",
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          "malformed"
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openrouter-images-array",
+      "kind": "array",
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          [],
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          []
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openai-responses-null",
+      "kind": "null",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "output": [
+          null,
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          null
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openai-responses-number",
+      "kind": "number",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "output": [
+          42,
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          42
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openai-responses-string",
+      "kind": "string",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "output": [
+          "malformed",
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          "malformed"
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "openai-responses-array",
+      "kind": "array",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "output": [
+          [],
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+          },
+          []
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-null",
+      "kind": "null",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                null,
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                null
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-number",
+      "kind": "number",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                42,
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                42
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-string",
+      "kind": "string",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                "malformed",
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                "malformed"
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-array",
+      "kind": "array",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                [],
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                []
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-interactions-null",
+      "kind": "null",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "steps": [
+          {
+            "type": "model_output",
+            "content": [
+              null,
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+              },
+              null
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-interactions-number",
+      "kind": "number",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "steps": [
+          {
+            "type": "model_output",
+            "content": [
+              42,
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+              },
+              42
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-interactions-string",
+      "kind": "string",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "steps": [
+          {
+            "type": "model_output",
+            "content": [
+              "malformed",
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+              },
+              "malformed"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "gemini-interactions-array",
+      "kind": "array",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "steps": [
+          {
+            "type": "model_output",
+            "content": [
+              [],
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+              },
+              []
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "chat-images-null",
+      "kind": "null",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                null,
+                {
+                  "image_url": {
+                    "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                null
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "chat-images-number",
+      "kind": "number",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                42,
+                {
+                  "image_url": {
+                    "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                42
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "chat-images-string",
+      "kind": "string",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                "malformed",
+                {
+                  "image_url": {
+                    "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                "malformed"
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "chat-images-array",
+      "kind": "array",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                [],
+                {
+                  "image_url": {
+                    "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+                  }
+                },
+                []
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+            },
+            {
+              "error": "Malformed image result item."
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    }
+  ],
+  "fatal": [
+    {
+      "name": "null-envelope",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": null,
+      "expected": {
+        "error": {
+          "code": "invalid_response",
+          "message": "Expected an object."
+        }
+      }
+    },
+    {
+      "name": "all-invalid-images",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          42
+        ]
+      },
+      "expected": {
+        "error": {
+          "code": "no_image_returned",
+          "message": "No final image was returned; text, empty bodies and partial previews are not final images."
+        }
+      }
+    },
+    {
+      "name": "gemini-safety",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "promptFeedback": {
+          "blockReason": "SAFETY"
+        }
+      },
+      "expected": {
+        "error": {
+          "code": "provider_rejection",
+          "message": "Provider rejected image generation."
+        }
+      }
+    },
+    {
+      "name": "chat-refusal",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "refusal": "fixture"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": {
+          "code": "provider_rejection",
+          "message": "Provider refused image output."
+        }
+      }
+    },
+    {
+      "name": "gemini-text-only",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1beta",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                {
+                  "text": "hello"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": {
+          "code": "no_image_returned",
+          "message": "No final image was returned; text, empty bodies and partial previews are not final images."
+        }
+      }
+    }
+  ],
+  "continuation": [
+    {
+      "name": "gemini-signatures",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "content": {
+              "parts": [
+                {
+                  "thought": true,
+                  "thoughtSignature": "opaque-private",
+                  "text": "hidden"
+                },
+                {
+                  "inlineData": {
+                    "mimeType": "image/png",
+                    "data": "aW1hZ2U="
+                  },
+                  "thoughtSignature": "final-private"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "base64": "aW1hZ2U="
+            }
+          ],
+          "upstreamModel": null,
+          "continuation": {
+            "signatures": [
+              {
+                "part_index": 0,
+                "signature": "opaque-private"
+              },
+              {
+                "part_index": 1,
+                "signature": "final-private"
+              }
+            ]
+          },
+          "warnings": []
+        }
+      }
+    },
+    {
+      "name": "interactions-signatures",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://api.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "id": "interaction",
+        "status": "completed",
+        "steps": [
+          {
+            "type": "thought",
+            "signature": "encrypted",
+            "summary": [
+              {
+                "type": "image",
+                "data": "not-final"
+              }
+            ]
+          },
+          {
+            "type": "model_output",
+            "content": [
+              {
+                "type": "image",
+                "data": "ZmluYWw="
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "base64": "ZmluYWw="
+            }
+          ],
+          "upstreamModel": null,
+          "upstreamId": "interaction",
+          "continuation": {
+            "signatures": [
+              {
+                "step_type": "thought",
+                "signature": "encrypted"
+              }
+            ]
+          },
+          "warnings": []
+        }
+      }
+    }
+  ],
+  "mixed": {
+    "connection": {
+      "enabled": true,
+      "adapter": "openai-images",
+      "baseUrl": "https://api.example/v1",
+      "baseUrlMode": "api-prefix",
+      "auth": {
+        "type": "none"
+      },
+      "defaultModel": "fixture",
+      "configuredModels": [],
+      "deniedModels": [],
+      "paths": {},
+      "query": {},
+      "defaults": {},
+      "extensions": {},
+      "providerOptionKeys": [],
+      "requestTimeoutMs": 300000,
+      "discoveryTimeoutMs": 15000,
+      "maxConcurrentRequests": 2,
+      "modelOverrides": {
+        "fixture": {
+          "defaults": {},
+          "capabilities": {},
+          "maxCount": 2
+        }
+      },
+      "chatImageOutput": false
+    },
+    "request": {
+      "prompt": "fixture",
+      "count": 2,
+      "request_id": "mixed"
+    },
+    "raw": {
+      "data": [
+        {
+          "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+        },
+        null
+      ]
+    },
+    "expected": {
+      "images": [
+        {
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWOQSNnSgA8zDAUFADDXUQGIqxILAAAAAElFTkSuQmCC"
+        },
+        {
+          "error": "Malformed image result item."
+        }
+      ],
+      "upstreamModel": null,
+      "warnings": []
+    }
+  }
+}

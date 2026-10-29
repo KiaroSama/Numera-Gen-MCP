@@ -92,6 +92,9 @@ pub fn safe_options(value: &Value, allowed: Option<&Value>, depth: usize) -> Res
 }
 
 pub fn capabilities(connection: &Value, model: &JsString) -> Value {
+    if connection["adapter"] == "fal-queue" {
+        return media_capabilities(connection, model);
+    }
     let adapter = connection["adapter"].as_str().unwrap_or("");
     let gateway = connection["gateway"].as_str();
     let native = [
@@ -168,13 +171,54 @@ pub fn capabilities(connection: &Value, model: &JsString) -> Value {
                 connection["edit"]["maxReferences"].as_u64().unwrap_or(1)
             }
         });
-    json!({"model":{"text_to_image":"unknown","image_to_image":"unknown"}, "gateway_forwarding":forwarding,
+    let mut cap = json!({"model":{"text_to_image":"unknown","image_to_image":"unknown"}, "gateway_forwarding":forwarding,
         "account_availability":"unknown", "max_references":max_refs,
         "max_count":overrides.and_then(|v| v["maxCount"].as_u64()).unwrap_or(1),
         "parameters":overrides.and_then(|v| v.get("supportedParameters")).cloned().unwrap_or(Value::Null),
         "evidence":[{"kind":if overrides.is_some(){"configured"}else{"documented"}, "gateway_version":connection.get("gatewayVersion"),
             "source":match gateway {Some("9router")=>Some("https://github.com/decolua/9router"),Some("omniroute")=>Some("https://github.com/diegosouzapw/OmniRoute"),_=>None}}],
-        "limitations":limitations})
+        "limitations":limitations});
+    if let Some(declaration) = crate::config::media::declaration(connection, model) {
+        cap["output_types"] = declaration["outputTypes"].clone();
+        cap["modes"] = declaration["modes"].clone();
+        cap["declaration"] = json!({"source":"configured","verified":false});
+        let mut forwarding = json!({});
+        if let Some(modes) = declaration["modes"].as_array() {
+            for mode in modes.iter().filter_map(Value::as_str) {
+                let legacy = mode.replace('-', "_");
+                forwarding[mode] = cap["gateway_forwarding"][legacy.as_str()].clone();
+            }
+        }
+        cap["mode_forwarding"] = forwarding;
+    }
+    cap
+}
+
+fn media_capabilities(connection: &Value, model: &JsString) -> Value {
+    let declaration = crate::config::media::declaration(connection, model);
+    let mut cap = json!({
+        "model":{},"gateway_forwarding":{"text_to_image":"unsupported","image_to_image":"unsupported","masks":"unsupported"},
+        "mode_forwarding":{},"output_types":[],"modes":[],"account_availability":"unknown",
+        "declaration":{"source":if declaration.is_some(){"configured"}else{"unknown"},"verified":false},
+        "evidence":[],"limitations":["Declared media modes and implemented wire mappings do not establish account access or successful generation."]
+    });
+    if let Some(declaration) = declaration {
+        cap["output_types"] = declaration["outputTypes"].clone();
+        cap["modes"] = declaration["modes"].clone();
+        if let Some(modes) = declaration["modes"].as_array() {
+            for mode in modes.iter().filter_map(Value::as_str) {
+                let contract = model.checked_str().ok().and_then(|id| crate::media::fal::contract(id, mode).ok());
+                cap["model"][mode] = json!(if contract.is_some(){"documented"}else{"unknown"});
+                cap["mode_forwarding"][mode] = json!(if contract.is_some(){"supported"}else{"unknown"});
+                if let Some(contract) = contract {
+                    if let Some(evidence) = cap["evidence"].as_array_mut() {
+                        evidence.push(json!({"kind":"documented","mode":mode,"source":contract.evidence,"execution_verified":false}));
+                    }
+                }
+            }
+        }
+    }
+    cap
 }
 
 pub fn edit_contract(edit: Option<&Value>, count: usize) -> Result<()> {

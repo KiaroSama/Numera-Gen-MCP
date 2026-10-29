@@ -1,5 +1,5 @@
 use super::common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     adapters::types::Input,
     compat::value::{JsString, Value, json},
     config::Config,

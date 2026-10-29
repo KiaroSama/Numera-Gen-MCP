@@ -2,7 +2,7 @@ mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     config::Config,
     logging::Logger,
     mcp::{
@@ -164,7 +164,7 @@ async fn real_http_endpoint_rejects_unsafe_clients_and_serves_the_existing_ten_t
             .unwrap()
             .to_owned();
         let text = response.text().await.unwrap();
-        assert!(text.contains("numera-image-gen-mcp"));
+        assert!(text.contains("numera-gen-mcp"));
         let response = client
             .post(&url)
             .bearer_auth(token)
@@ -197,7 +197,7 @@ async fn real_http_endpoint_rejects_unsafe_clients_and_serves_the_existing_ten_t
         } else {
             serde_json::from_str(&text).unwrap()
         };
-        assert_eq!(value["result"]["tools"].as_array().unwrap().len(), 10);
+        assert_eq!(value["result"]["tools"].as_array().unwrap().len(), 12);
         let response = client.post(&url).bearer_auth(token)
             .header("accept", "application/json, text/event-stream")
             .header("content-type", "application/json")
@@ -209,22 +209,22 @@ async fn real_http_endpoint_rejects_unsafe_clients_and_serves_the_existing_ten_t
         let text = response.text().await.unwrap();
         assert!(!text.contains("Cannot encode the protocol response."));
         let raw = if text.trim_start().starts_with('{') {
-            numera_image_gen_mcp::compat::js_json::parse(&text).expect("exact HTTP JSON")
+            numera_gen_mcp::compat::js_json::parse(&text).expect("exact HTTP JSON")
         } else {
             text.lines()
                 .filter_map(|line| line.strip_prefix("data:"))
-                .filter_map(|data| numera_image_gen_mcp::compat::js_json::parse(data.trim()).ok())
+                .filter_map(|data| numera_gen_mcp::compat::js_json::parse(data.trim()).ok())
                 .find(|message| {
                     message
                         .get("id")
-                        .and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_utf16)
+                        .and_then(numera_gen_mcp::compat::js_json::JsValue::as_utf16)
                         == Some([0xd800].as_slice())
                 })
                 .expect("exact response after optional SSE priming event")
         };
         assert_eq!(
             raw.get("id")
-                .and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_utf16),
+                .and_then(numera_gen_mcp::compat::js_json::JsValue::as_utf16),
             Some([0xd800].as_slice())
         );
         assert!(

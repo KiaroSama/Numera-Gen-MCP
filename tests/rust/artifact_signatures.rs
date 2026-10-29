@@ -1,7 +1,7 @@
 mod common;
 #[path = "common/devtool_signed.rs"]
 mod signed_fixture;
-use numera_image_gen_mcp::devtools::artifact::verify;
+use numera_gen_mcp::devtools::artifact::verify;
 
 #[test]
 fn unsigned_or_tampered_prepared_artifact_is_never_installable() {
@@ -27,7 +27,7 @@ fn unsigned_or_tampered_prepared_artifact_is_never_installable() {
 #[cfg(any(windows, target_os = "macos"))]
 #[test]
 fn approved_manifest_does_not_authorize_unsigned_text_for_activation() {
-    use numera_image_gen_mcp::devtools::setup;
+    use numera_gen_mcp::devtools::setup;
     let workspace = common::Workspace::new();
     let source = workspace.0.join("prepared");
     let destination = workspace.0.join("installed");
@@ -58,7 +58,7 @@ fn approved_manifest_does_not_authorize_unsigned_text_for_activation() {
 #[cfg(unix)]
 #[test]
 fn special_manifest_input_rejects_without_waiting_for_a_fifo_writer() {
-    use numera_image_gen_mcp::{
+    use numera_gen_mcp::{
         devtools::supervisor::{Bounds, run},
         logging::Logger,
     };
@@ -102,7 +102,7 @@ fn genuine_historical_manifest_cannot_substitute_an_unapproved_logo() {
     signed_fixture::prepared(&workspace.0);
     let fixtures =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/native-signing");
-    let target = numera_image_gen_mcp::devtools::artifact::target();
+    let target = numera_gen_mcp::devtools::artifact::target();
     std::fs::copy(
         fixtures.join(format!("{target}.json")),
         workspace.0.join("manifest.json"),
@@ -137,7 +137,7 @@ fn approved_manifest_accepts_exact_bytes_and_rejects_changed_signature_or_member
         .join("tests/fixtures/native-signing/approved");
     let unrelated = std::fs::read(fixtures.join(format!(
         "{}.wrong.sig",
-        numera_image_gen_mcp::devtools::artifact::target()
+        numera_gen_mcp::devtools::artifact::target()
     )))
     .unwrap();
     std::fs::write(workspace.0.join("manifest.sig"), unrelated).unwrap();
@@ -148,7 +148,7 @@ fn approved_manifest_accepts_exact_bytes_and_rejects_changed_signature_or_member
     std::fs::write(workspace.0.join("manifest.sig"), signature).unwrap();
     assert_eq!(
         std::fs::read(workspace.0.join("docs/assets/logo.png")).unwrap(),
-        numera_image_gen_mcp::build_identity::LOGO
+        numera_gen_mcp::build_identity::LOGO
     );
     std::fs::write(workspace.0.join("docs/assets/logo.png"), b"modified").unwrap();
     assert!(verify(&workspace.0).is_err());

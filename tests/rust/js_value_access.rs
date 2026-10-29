@@ -1,5 +1,5 @@
-use numera_image_gen_mcp::compat::js_json::{JsValue, parse, stringify};
-use numera_image_gen_mcp::compat::js_value_access::checked_utf16;
+use numera_gen_mcp::compat::js_json::{JsValue, parse, stringify};
+use numera_gen_mcp::compat::js_value_access::checked_utf16;
 
 #[test]
 fn exact_keys_support_surrogates_without_unicode_normalization() {

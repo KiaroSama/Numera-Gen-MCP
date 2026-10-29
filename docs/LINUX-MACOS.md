@@ -5,6 +5,11 @@ run `40244894089`, attempt2, all sixteen jobs passed, including six native targe
 signed extracted SDK checks. [Signed delivery](releases/0.2.0.md) records artifacts and trust limits;
 install the verified archive before switching a live client.
 
+Current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen` host entry.
+The immutable historical 0.2.0 archives still contain `numera-image-gen-mcp`; substitute that actual
+filename when using those signed assets. Migrate an old Numera host entry explicitly with a backup;
+do not automatically remove it or run both entries against the same state.
+
 1. Download the matching Linux/macOS x86_64 or ARM64 archive and `.sha256` from this repository's
    Release. Verify the checksum, then extract into a writable installation folder.
 2. Copy `.env.example` to `.env` in the extracted root (parent of `bin/`) only if no private config exists.
@@ -22,13 +27,13 @@ chmod 600 .env
 Claude Code registration from the extracted root:
 
 ```bash
-claude mcp add --transport stdio --scope user numera-image-gen -- "$PWD/bin/numera-image-gen-mcp" bridge
+claude mcp add --transport stdio --scope user numera-gen -- "$PWD/bin/numera-gen-mcp" bridge
 ```
 
 Codex registration:
 
 ```bash
-codex mcp add numera-image-gen -- "$PWD/bin/numera-image-gen-mcp" bridge
+codex mcp add numera-gen -- "$PWD/bin/numera-gen-mcp" bridge
 ```
 
 Claude Desktop uses the absolute native POSIX command and `args: ["bridge"]` in only Numera's entry.

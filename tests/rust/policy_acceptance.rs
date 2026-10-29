@@ -2,8 +2,8 @@ mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     capabilities::{capabilities, effective_request, safe_options},
     config::Config,
     services::request,

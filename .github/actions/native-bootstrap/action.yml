@@ -1,0 +1,98 @@
+name: Owned native bootstrap
+description: Authenticate the existing native command owner before contained hosted Rust setup
+inputs:
+  target:
+    description: Exact native runner target
+    required: true
+  coverage:
+    description: Install the pinned instrumented toolchain too
+    default: 'false'
+  build-task:
+    description: Build the locked task runner; only source-preparation may disable this
+    default: 'true'
+runs:
+  using: composite
+  steps:
+    - name: Authenticate the published native command owner
+      shell: bash
+      env:
+        BOOTSTRAP_TARGET: ${{ inputs.target }}
+      run: |
+        set -euo pipefail
+        test "$GITHUB_ACTIONS" = true
+        test "$GITHUB_REPOSITORY" = KiaroSama/Numera-Gen-MCP
+        test "$GITHUB_EVENT_NAME" = workflow_dispatch
+        case "$BOOTSTRAP_TARGET" in
+          x86_64-pc-windows-msvc) digest=0128674d9c1a0aad8eb111dc4e45e7def89119f22369089d73729905a315e658 ;;
+          aarch64-pc-windows-msvc) digest=e132f203a88251f3fa4e22a2bdfd7a25261453bc95af55a39f056c364ac0f8e0 ;;
+          x86_64-unknown-linux-gnu) digest=51a089b26e3bf9cdbf0631a56ee4644d96babc3ff3f1e0c1dab8948c53bbd56d ;;
+          aarch64-unknown-linux-gnu) digest=62a07c39d57a18afe9dd144c722300b966b14655141655c60d300b89f5e7ad66 ;;
+          x86_64-apple-darwin) digest=e2143157034ae30d2dbe6954e30fd76c8036c412a3b7407db83441e53b484d00 ;;
+          aarch64-apple-darwin) digest=cb26ee662e19fbc12f33209e988a55817fb7dcbe0d94a1836c3475b8dc55cdc7 ;;
+          *) printf '%s\n' 'Unsupported native bootstrap target.' >&2; exit 1 ;;
+        esac
+        case "$RUNNER_OS:$RUNNER_ARCH" in
+          Windows:X64) actual=x86_64-pc-windows-msvc ;;
+          Windows:ARM64) actual=aarch64-pc-windows-msvc ;;
+          Linux:X64) actual=x86_64-unknown-linux-gnu ;;
+          Linux:ARM64) actual=aarch64-unknown-linux-gnu ;;
+          macOS:X64) actual=x86_64-apple-darwin ;;
+          macOS:ARM64) actual=aarch64-apple-darwin ;;
+          *) printf '%s\n' 'Unsupported native runner identity.' >&2; exit 1 ;;
+        esac
+        test "$actual" = "$BOOTSTRAP_TARGET"
+        prefix="numera-image-gen-mcp-0.2.0-$BOOTSTRAP_TARGET"
+        suffix=tar.gz
+        executable=numera-dev
+        if [[ "$RUNNER_OS" == Windows ]]; then suffix=zip; executable=numera-dev.exe; fi
+        directory=.ci-work/bootstrap
+        mkdir -p .ci-work/temp .ci-cache/cargo .ci-cache/rustup
+        mkdir "$directory"
+        archive="$directory/$prefix.$suffix"
+        curl --disable --fail --location --max-redirs 3 --proto '=https' --proto-redir '=https' \
+          --connect-timeout 10 --max-time 90 --speed-time 30 --speed-limit 1024 \
+          --max-filesize 16777216 --noproxy '*' --proxy '' --output "$archive" \
+          "https://github.com/KiaroSama/Numera-Gen-MCP/releases/download/v0.2.0/$prefix.$suffix"
+        if [[ "$RUNNER_OS" == macOS ]]; then
+          printf '%s  %s\n' "$digest" "$archive" | shasum -a 256 -c -
+        else
+          printf '%s  %s\n' "$digest" "$archive" | sha256sum -c -
+        fi
+        # Only the authenticated immutable developer binary is selected from the archive.
+        tar -xf "$archive" -C "$directory" "$prefix/bin/$executable"
+        chmod 700 "$directory/$prefix/bin/$executable"
+        printf 'NUMERA_BOOTSTRAP_OWNER=%s/%s/%s/bin/%s\n' "$GITHUB_WORKSPACE" "$directory" "$prefix" "$executable" >> "$GITHUB_ENV"
+    - name: Install contained toolchains and build the locked task runner under the native owner
+      shell: bash
+      env:
+        BOOTSTRAP_COVERAGE: ${{ inputs.coverage }}
+        BOOTSTRAP_BUILD_TASK: ${{ inputs.build-task }}
+      run: |
+        set -euo pipefail
+        test "$BOOTSTRAP_COVERAGE" = true || test "$BOOTSTRAP_COVERAGE" = false
+        test "$BOOTSTRAP_BUILD_TASK" = true || test "$BOOTSTRAP_BUILD_TASK" = false
+        if [[ "$BOOTSTRAP_BUILD_TASK" == false ]]; then
+          test "$GITHUB_JOB" = source-preparation
+          test "$NUMERA_CI_OPERATION" = source-preparation
+          test "$BOOTSTRAP_COVERAGE" = false
+        fi
+        rustup=$(type -P rustup)
+        cargo=$(type -P cargo)
+        test -n "$rustup" && test -n "$cargo"
+        export RUSTUP_DIST_SERVER=https://static.rust-lang.org
+        export RUSTUP_UPDATE_ROOT=https://static.rust-lang.org/rustup
+        export RUSTUP_TERM_COLOR=never
+        unset RUSTUP_TOOLCHAIN
+        "$NUMERA_BOOTSTRAP_OWNER" bounded 600000 180000 --exec "$rustup" toolchain install 1.99.1 \
+          --profile minimal --component rustfmt --component clippy --no-self-update
+        "$NUMERA_BOOTSTRAP_OWNER" bounded 30000 20000 --exec "$rustup" default 1.99.1
+        if [[ "$BOOTSTRAP_COVERAGE" == true ]]; then
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 600000 180000 --exec "$rustup" toolchain install nightly-2026-10-10 \
+            --profile minimal --component llvm-tools-preview --no-self-update
+        fi
+        "$NUMERA_BOOTSTRAP_OWNER" bounded 30000 20000 --exec "$cargo" +1.99.1 --version
+        idle=180000
+        if [[ "$RUNNER_OS" == macOS ]]; then idle=360000; fi
+        if [[ "$BOOTSTRAP_BUILD_TASK" == true ]]; then
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 900000 "$idle" --exec "$cargo" +1.99.1 build --locked -p numera-task
+        fi

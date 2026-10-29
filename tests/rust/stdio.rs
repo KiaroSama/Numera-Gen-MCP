@@ -21,12 +21,12 @@ impl Host {
         std::fs::create_dir_all(root.join("bin")).unwrap();
         std::fs::create_dir_all(root.join("caller")).unwrap();
         let name = if cfg!(windows) {
-            "numera-image-gen-mcp.exe"
+            "numera-gen-mcp.exe"
         } else {
-            "numera-image-gen-mcp"
+            "numera-gen-mcp"
         };
         let executable = root.join("bin").join(name);
-        std::fs::copy(env!("CARGO_BIN_EXE_numera-image-gen-mcp"), &executable).unwrap();
+        std::fs::copy(env!("CARGO_BIN_EXE_numera-gen-mcp"), &executable).unwrap();
         std::fs::write(root.join("config.local.json"),json!({"schemaVersion":1,"defaultConnection":"offline","outputDir":root.join("outputs"),"stateDir":root.join("state"),"logging":{"directory":root.join("logs")},"connections":{"offline":{"adapter":"openai-images","baseUrl":"https://invalid.example/v1","auth":{"type":"none"},"configuredModels":[{"id":"opaque/image","name":"Offline"}]}}}).to_string()).unwrap();
         let mut command = Command::new(executable);
         command
@@ -91,7 +91,7 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
     let response=host.rpc(json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"native-ci","version":"1"}}}));
     assert_eq!(
         response["result"]["serverInfo"]["name"],
-        "numera-image-gen-mcp"
+        "numera-gen-mcp"
     );
     writeln!(
         host.child.stdin.as_mut().unwrap(),
@@ -100,8 +100,8 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
     )
     .unwrap();
     let response = host.rpc(json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}));
-    let tools = response["result"]["tools"].as_array().expect("ten tools");
-    assert_eq!(tools.len(), 10);
+    let tools = response["result"]["tools"].as_array().expect("twelve tools");
+    assert_eq!(tools.len(), 12);
     for name in [
         "health_check",
         "list_connections",
@@ -113,6 +113,8 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
         "cancel_job",
         "list_outputs",
         "get_output_info",
+        "generate_media",
+        "get_media_output_info",
     ] {
         assert!(tools.iter().any(|t| t["name"] == name));
     }
@@ -127,11 +129,11 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
         .lines
         .recv_timeout(Duration::from_secs(8))
         .expect("raw tool response");
-    let raw = numera_image_gen_mcp::compat::js_json::parse_bounded(&text, 128 * 1024 * 1024)
+    let raw = numera_gen_mcp::compat::js_json::parse_bounded(&text, 128 * 1024 * 1024)
         .expect("authoritative response");
     assert_eq!(
         raw.get("id")
-            .and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_utf16),
+            .and_then(numera_gen_mcp::compat::js_json::JsValue::as_utf16),
         Some([0xd800].as_slice())
     );
     let result = raw.get("result").expect("tool result");
@@ -151,7 +153,7 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
     assert_eq!(
         result
             .get("isError")
-            .and_then(numera_image_gen_mcp::compat::js_json::JsValue::as_bool),
+            .and_then(numera_gen_mcp::compat::js_json::JsValue::as_bool),
         Some(true)
     );
     assert!(host.root.join(".runtime/temp").is_dir());

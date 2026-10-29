@@ -3,8 +3,8 @@ mod common;
 mod normalized_fixture;
 use common::Workspace;
 use normalized_fixture::normalized;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     adapters::{build_request, normalize::normalize, types::Input},
     capabilities::effective_request,
     error::NumeraError,

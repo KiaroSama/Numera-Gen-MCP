@@ -3,7 +3,7 @@ mod common;
 mod config_fixture;
 
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::json,
     config::{Config, ConfigReload, load_config},
     error::Result,

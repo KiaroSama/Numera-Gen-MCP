@@ -4,6 +4,7 @@ mod dpapi;
 mod env;
 mod json;
 mod load;
+pub mod media;
 mod reload;
 mod runtime_environment;
 mod validate;
@@ -186,6 +187,9 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
             "orchestration_model is required only for the openai-responses profile.",
         ));
     }
+    for model in models {
+        media::validate_declaration(model, "output_types")?;
+    }
     let enabled: Vec<&Value> = models.iter().filter(|m| m["enabled"] == true).collect();
     if enabled.is_empty() {
         return Err(invalid("Enable at least one configured model."));
@@ -196,7 +200,7 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
             .as_utf16()
             .ok_or_else(|| invalid("Invalid API endpoint."))?,
     ))?;
-    let mut auth = json!({"type": if profile.starts_with("gemini") { "header" } else { "bearer" }, "apiKey":raw["api_key"], "origin":origin});
+    let mut auth = json!({"type": if profile == "fal" { "key" } else if profile.starts_with("gemini") { "header" } else { "bearer" }, "apiKey":raw["api_key"], "origin":origin});
     if profile.starts_with("gemini") {
         auth["header"] = json!("x-goog-api-key");
     }
@@ -208,16 +212,21 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
                 defaults.insert(field.into(), value.clone());
             }
         }
+        let mut settings = json!({"defaults":defaults});
+        if let Some(outputs) = model.get("output_types") {
+            settings["outputTypes"] = outputs.clone();
+            settings["modes"] = model["modes"].clone();
+        }
         overrides.insert(
             model["id"]
                 .as_utf16()
                 .map(|v| crate::compat::value::JsString::from_utf16(v.to_vec()))
                 .ok_or_else(|| invalid("Invalid model ID."))?,
-            json!({"defaults":defaults}),
+            settings,
         );
     }
     let mut connection = json!({
-        "adapter": if ["omniroute", "9router"].contains(&profile) { "openai-images" } else { profile },
+        "adapter": if profile == "fal" { "fal-queue" } else if ["omniroute", "9router"].contains(&profile) { "openai-images" } else { profile },
         "baseUrl":raw["api_endpoint"], "auth":auth, "defaultModel":enabled[0]["id"],
         "deniedModels":models.iter().filter(|m| m["enabled"] == false).map(|m| m["id"].clone()).collect::<Vec<_>>(),
         "configuredModels":enabled.iter().map(|m| json!({"id":m["id"],"name":m["name"]})).collect::<Vec<_>>(),

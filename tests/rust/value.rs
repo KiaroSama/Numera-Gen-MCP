@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::compat::value::{JsString, Number, Object, Value};
+use numera_gen_mcp::compat::value::{JsString, Number, Object, Value};
 
 #[test]
 fn authoritative_values_keep_infinity_and_utf16_across_clone_wire_and_conversion() {
@@ -114,7 +114,7 @@ fn cached_strings_never_replace_lone_units_and_numbers_follow_js_equality() {
 
 #[test]
 fn direct_macro_preserves_nested_js_values_without_a_serde_projection() {
-    use numera_image_gen_mcp::compat::value::json;
+    use numera_gen_mcp::compat::value::json;
     let lone = JsString::from_utf16(vec![0xd800]);
     let infinity = f64::INFINITY;
     let original = Value::parse(r#"{"\udfff":"\ud800","n":-1e400}"#).expect("original");

@@ -467,7 +467,7 @@ impl Generation {
         result
     }
 
-    fn record_error(
+    pub(super) fn record_error(
         &self,
         id: &str,
         mut receipt: Receipt,

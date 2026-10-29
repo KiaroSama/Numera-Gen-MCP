@@ -5,7 +5,7 @@ mod multipart_fixture;
 mod wire;
 use common::Workspace;
 use multipart_fixture::multipart;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     adapters::{
         build_request,
         types::{Input, mime_data},

@@ -8,7 +8,7 @@ mod image_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     config::Config,
     logging::Logger,
     mcp::{
@@ -66,7 +66,7 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
     let encoded = STANDARD.encode(&original);
     let upstream = Server::new(move |_| Reply {
         status: 200,
-        value: numera_image_gen_mcp::compat::value::json!({"id":"remote-owned","data":[{"b64_json":encoded}]}),
+        value: numera_gen_mcp::compat::value::json!({"id":"remote-owned","data":[{"b64_json":encoded}]}),
         bytes: None,
     })
     .await;
@@ -238,7 +238,7 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
         std::fs::rename(format!("{path}.held"), path).unwrap();
         let generation = app.current().unwrap();
         let (_, connection) = generation.config.select(Some("test")).unwrap();
-        let pinned = numera_image_gen_mcp::config::snapshot_credentials(
+        let pinned = numera_gen_mcp::config::snapshot_credentials(
             &connection,
             &generation.env,
             &generation.runtime,
@@ -246,11 +246,11 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
         .await
         .unwrap();
         let identity =
-            numera_image_gen_mcp::services::identity::connection_identity("test", &pinned).unwrap();
+            numera_gen_mcp::services::identity::connection_identity("test", &pinned).unwrap();
         {
             let mut store = app.store.lock().unwrap();
-            let seeded = numera_image_gen_mcp::jobs::Receipt::new(
-                numera_image_gen_mcp::compat::value::json!({
+            let seeded = numera_gen_mcp::jobs::Receipt::new(
+                numera_gen_mcp::compat::value::json!({
                     "request_id":"public-http-owned-job","connection":"test","adapter":"openai-images",
                     "operation":"generate","status":"prepared","requested_model":"opaque/image",
                     "outputs":[],"warnings":[],"errors":[],"deviations":[],
@@ -261,9 +261,9 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
             );
             let (_, mut receipt) = store.prepare(seeded, "seed", &identity).unwrap();
             assert!(store.admit("public-http-owned-job", "test", 8, 8).unwrap());
-            receipt.value["status"] = numera_image_gen_mcp::compat::value::json!("running");
+            receipt.value["status"] = numera_gen_mcp::compat::value::json!("running");
             receipt.value["generation_outcome"] =
-                numera_image_gen_mcp::compat::value::json!("running");
+                numera_gen_mcp::compat::value::json!("running");
             store.update(&mut receipt).unwrap();
             store
                 .release("public-http-owned-job", Some(&receipt))

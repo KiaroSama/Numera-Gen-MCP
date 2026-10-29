@@ -2,7 +2,7 @@ mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::compat::value::{Value, json};
 use std::{collections::HashMap, time::Duration};
 use tokio::{io::AsyncWriteExt, process::Command};
 
@@ -12,7 +12,7 @@ async fn run(
     input: &[u8],
     env: &HashMap<String, String>,
 ) -> std::process::Output {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_numera-image-gen-mcp"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_numera-gen-mcp"));
     command
         .args(args)
         .current_dir(root)
@@ -64,7 +64,7 @@ async fn actual_native_menu_maintenance_and_invalid_http_flags_preserve_host_con
             assert!(
                 String::from_utf8(output.stdout)
                     .unwrap()
-                    .contains("numera-image-gen-mcp")
+                    .contains("numera-gen-mcp")
             );
         }
         let output = run(&workspace.0, &["menu".into()], b"4\n", &HashMap::new()).await;
@@ -90,7 +90,7 @@ async fn actual_native_menu_maintenance_and_invalid_http_flags_preserve_host_con
         assert!(output.status.success());
         let report: Value = serde_json::from_slice(&output.stdout).unwrap();
         assert_eq!(report["generation_verified"], false);
-        assert_eq!(report["tool_count"], 10);
+        assert_eq!(report["tool_count"], 12);
         for args in [
             vec!["http".into(), "--port=0".into()],
             vec!["readiness".into(), "--unknown".into()],

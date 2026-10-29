@@ -142,11 +142,14 @@ pub fn execute(
             "Register" | "Remove" => {
                 if options.action == "Register" {
                     let installed = super::artifact::verify_activation(&options.root)?;
-                    let expected = options.root.join("bin").join(if cfg!(windows) {
-                        "numera-image-gen-mcp.exe"
-                    } else {
-                        "numera-image-gen-mcp"
-                    });
+                    let current = if cfg!(windows) { "bin/numera-gen-mcp.exe" } else { "bin/numera-gen-mcp" };
+                    let legacy = if cfg!(windows) { "bin/numera-image-gen-mcp.exe" } else { "bin/numera-image-gen-mcp" };
+                    let expected = options.root.join(
+                        installed.manifest.files.iter()
+                            .find(|member| member.path == current || member.path == legacy)
+                            .map(|member| member.path.as_str())
+                            .ok_or_else(invalid)?,
+                    );
                     if fs::canonicalize(executable).ok() != fs::canonicalize(&expected).ok()
                         || !expected.is_file()
                         || installed.manifest.publisher != "KiaroSama"

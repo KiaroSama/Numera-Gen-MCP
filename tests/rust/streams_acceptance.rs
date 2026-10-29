@@ -1,8 +1,8 @@
 #[path = "common/normalized.rs"]
 mod normalized_fixture;
 use normalized_fixture::normalized;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     adapters::{
         build_request,
         normalize::{normalize, response},
@@ -175,7 +175,7 @@ fn exact_source_json_binary_and_sse_results_require_finals_and_never_promote_par
             let kind = name.strip_prefix("responses-after-").unwrap();
             assert!(suffixes.insert(kind));
             assert_eq!(actual["error"], "outcome_unknown");
-            let frames = numera_image_gen_mcp::http::sse::events(
+            let frames = numera_gen_mcp::http::sse::events(
                 case["text"].as_str().unwrap().as_bytes(),
                 1048576,
             )

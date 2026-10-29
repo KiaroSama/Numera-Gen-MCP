@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "feature": "003-rust-tooling",
+  "task": "T011",
+  "status": "authored_not_compiled_or_executed",
+  "test_target": "tests/rust/sdk_acceptance.rs",
+  "transport": "rmcp 3.5.1 independent client over Owned child pipes or actual streamable HTTP",
+  "source_state": "Original scripts retained unchanged until qualification. Feature004 adapts the current catalog to twelve tools and adds a resource URI alias; all ten legacy tools and old image URI assertions remain.",
+  "dependencies": {
+    "rmcp": ["client", "transport-async-rw", "transport-streamable-http-client-reqwest"],
+    "existing": ["tokio", "tokio-util", "serde_json", "base64", "uuid", "reqwest", "rusqlite", "chrono", "libc on Unix"]
+  },
+  "entries": [
+    {
+      "source": "scripts/native-interop.mjs",
+      "source_sha256": "18e272079e8fbbe8a6020a2f3da3920ff88db387fee71cbf0ef6bfb5f3feac99",
+      "export": "top-level native interoperability",
+      "scenarios": ["legacy/auto and pinned modern rejection", "pre-cancelled actual-child handshake cleanup", "responses/interactions terminal and uncertainty controls", "two concurrent hosts and two restarts", "resources/previews/exact original bytes/no recovery POST"],
+      "rust_tests": ["native_sdk_recovery_controls_two_hosts_and_two_actual_restarts", "native_sdk_three_protocol_eras_and_failed_handshake_ownership"],
+      "modules": ["tests/rust/sdk_acceptance/recovery.rs", "tests/rust/sdk_acceptance/host.rs"]
+    },
+    {
+      "source": "scripts/native-http-interop.mjs",
+      "source_sha256": "17eb11e22efc3382a1f17a32d8c645471d5ec52744f7119600dc47d77364b759",
+      "export": "top-level HTTP interoperability",
+      "scenarios": ["two real HTTP SDK sessions", "original ten tools retained in the twelve-tool catalog; legacy resource template plus current media alias; health/model validation", "missing bearer401/wrong bearer401/foreign origin403", "config/stderr token privacy and zero stdout", "SDK session close then graceful POSIX HTTP exit"],
+      "rust_tests": ["native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit"],
+      "modules": ["tests/rust/sdk_acceptance/http.rs"]
+    },
+    {
+      "source": "scripts/native-tools-acceptance.mjs",
+      "source_sha256": "e3ee29af66506143d658ca794a8bd9891000667a3459e3d19c5f13d6c9b0a452",
+      "export": "toolsAcceptance",
+      "scenarios": ["all ten public tools and exact edit description", "PNG resource/preview bytes", "edit/output paging/cancellation/invalid input", "exactly two POSTs"],
+      "rust_tests": ["native_sdk_all_ten_tools_and_exact_shared_two_host_request"],
+      "modules": ["tests/rust/sdk_acceptance/catalog.rs"]
+    },
+    {
+      "source": "scripts/native-two-host-acceptance.mjs",
+      "source_sha256": "49871a5dfd0964cd3535204c2db9dd3f458744bd8dea2ff4dbfe83576103c680",
+      "export": "twoHostAcceptance",
+      "scenarios": ["two literal bridge-only launch records", "same Unicode request submitted once", "exact model/prompt/count/8x6 source bytes", "different fingerprint conflicts without second POST"],
+      "rust_tests": ["native_sdk_all_ten_tools_and_exact_shared_two_host_request"],
+      "modules": ["tests/rust/sdk_acceptance/catalog.rs"]
+    },
+    {
+      "source": "scripts/native-compact-acceptance.mjs",
+      "source_sha256": "733f0249f6554a66242a5d582552fd443a8abb8c372082f8e8468b0d27bf0c9a",
+      "export": "compactAcceptance",
+      "scenarios": ["adjacent copied executable with spaces/foreign cwd/no config argument", "exact per-model defaults and overrides", "responses orchestration body and image tool choice", "request replay/conflict and private structured session/file logs"],
+      "rust_tests": ["native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"],
+      "modules": ["tests/rust/sdk_acceptance/configuration.rs"]
+    },
+    {
+      "source": "scripts/native-env-acceptance.mjs",
+      "source_sha256": "3de78bc2f5b5f8059eee657eed227025d6ae4a1fef824e8b47c7b36800372020",
+      "export": "envAcceptance",
+      "scenarios": ["adjacent dotenv loaded through actual copied binary", "Unicode model reload", "invalid later file retains last good model", "full stderr/file log secret exclusion"],
+      "rust_tests": ["native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"],
+      "modules": ["tests/rust/sdk_acceptance/configuration.rs"]
+    },
+    {
+      "source": "scripts/native-negotiation-acceptance.mjs",
+      "source_sha256": "d052098f1ffc0a1e592f64773eeff37ac528bc5f0abd8c49180b56c693d363b7",
+      "export": "negotiationAcceptance",
+      "scenarios": ["legacy initialize", "auto discover then legacy fallback", "2026-07-28 discover-only rejection"],
+      "rust_tests": ["native_sdk_three_protocol_eras_and_failed_handshake_ownership"],
+      "modules": ["tests/rust/sdk_acceptance/configuration.rs"]
+    },
+    {
+      "source": "scripts/native-config-reload-acceptance.mjs",
+      "source_sha256": "bc89a0afa7db6c2fa386fc79907cbe887e4a85b978a8eb1ec37252175efc6c88",
+      "export": "configReloadAcceptance",
+      "scenarios": ["envModels valid/invalid/deduplicated rejection log", "retainedHandles exact old endpoint cancellation and unknown-account/path refusal", "capturedGeneration held submission retains old config while discovery sees new config"],
+      "rust_tests": ["native_sdk_three_saved_configuration_reload_schedules"],
+      "modules": ["tests/rust/sdk_acceptance/reload.rs"]
+    },
+    {
+      "source": "scripts/native-terminal-acceptance.mjs",
+      "source_sha256": "ca96ee98a577e208acf93a49141eacf3b08a8b930857682eef10b2c90bd6db16",
+      "export": ["terminalAcceptance", "probeStages"],
+      "scenarios": ["responses and interactions all terminal/control modes across3 rounds/6 actual instances", "capacity probes only after authoritative terminal", "request conflict cannot resubmit", "Comfy8 cancellation modes and exact9 generations/17 cancellations", "fixed diagnostic stages/nonnegative numeric fields only"],
+      "rust_tests": ["native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity", "contracts::probe_diagnostics_expose_only_fixed_stages_and_nonnegative_numeric_durations"],
+      "modules": ["tests/rust/sdk_acceptance/terminal.rs", "tests/rust/sdk_acceptance/contracts.rs"]
+    },
+    {
+      "source": "scripts/native-races-acceptance.mjs",
+      "source_sha256": "18d3c21c8d7c8e239b942c2496885cfde1d2013e8af6391708c046f586f8ff27",
+      "export": "racesAcceptance",
+      "scenarios": ["responses4 held terminal races", "Comfy3 held history/download cancellation races", "two host ownership/no duplicate poll or submission", "two restarts preserve terminal outcomes and output IDs"],
+      "rust_tests": ["native_sdk_seven_actual_two_host_races_and_restarts"],
+      "modules": ["tests/rust/sdk_acceptance/races.rs"]
+    },
+    {
+      "source": "scripts/native-lifecycle-acceptance.mjs",
+      "source_sha256": "557d3ed7ef407f39c0d26ae5f2d163add8632506d55c44581f28e4f81bef45c2",
+      "export": "lifecycleAcceptance",
+      "scenarios": ["4 authoritative terminal schedules/3 reopens", "8 uncertainty controls preserve reservation", "6 cancellation acknowledgement schedules/2 polls/2 Store reopens", "exact GET-only/no authorization/no generation semantics"],
+      "rust_tests": ["native_sdk_eighteen_literal_terminal_lifecycle_scenarios"],
+      "modules": ["tests/rust/sdk_acceptance/lifecycle.rs"]
+    },
+    {
+      "source": "scripts/native-transport-acceptance.mjs",
+      "source_sha256": "27231ce49e0cd563a29e3156d0cd08cae6b090e220a001de7d64f4b162b6db79",
+      "export": "transportAcceptance",
+      "scenarios": ["2 split SSE terminal frames", "4 ambiguous SSE/error identifiers", "6 synchronous and detached response identity paths", "Comfy provider_rejection with no view/no POST"],
+      "rust_tests": ["native_sdk_thirteen_transport_boundary_scenarios"],
+      "modules": ["tests/rust/sdk_acceptance/transport.rs"]
+    },
+    {
+      "source": "scripts/native-host-fixture.mjs",
+      "source_sha256": "34c7d256faf389efcc2544c67465a01672c3b8c0e5d0ea84a58376a31f4eb27f",
+      "export": ["provider", "json", "call", "job", "pair", "close", "ownedScenario"],
+      "scenarios": ["bounded provider requests/drained late errors", "actual owned process and independent SDK", "allowlisted env/contained temp", "two sequential handshakes/readiness unique runIDs", "per-call/per-host/per-scenario bounds and cleanup"],
+      "rust_tests": ["all sdk_acceptance tests", "contracts::late_provider_handler_error_fails_even_when_scenario_body_already_passed", "contracts::cancelling_provider_finish_aborts_its_owner_and_drops_pending_handlers"],
+      "modules": ["tests/rust/sdk_acceptance/host.rs", "tests/rust/sdk_acceptance/provider.rs"]
+    },
+    {
+      "source": "tests/tooling/native_host_fixture_contracts.mjs",
+      "source_sha256": "c523069dc65dc02b36f625e8cf6610895ed7f1e8e94ed9bd25a8d4827a32162d",
+      "export": "node:test contracts",
+      "scenarios": ["probeStages numeric/privacy/bounded/unfinished rows", "late provider failure after successful or failed body"],
+      "rust_tests": ["contracts::probe_diagnostics_expose_only_fixed_stages_and_nonnegative_numeric_durations", "contracts::late_provider_handler_error_fails_even_when_scenario_body_already_passed"],
+      "primary_cleanup_mapping": {"file":"native/devtools/process_unix.rs","test":"cleanup_contracts::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence","status":"authored_not_executed","note":"Original live-group/live-survivor schedules share one actual OS liveness observation. Windows uses real Job/retained-handle descendant acceptance in devtool_supervisor.rs."},
+      "modules": ["tests/rust/sdk_acceptance/contracts.rs"]
+    }
+  ],
+  "assertion_traceability": {
+    "schema_version": 1,
+    "status": "source_traceability_only",
+    "semantic_parity_claimed": false,
+    "current_execution_claimed": false,
+    "limitations": ["Exact source ranges are navigation evidence, not assertion equivalence or executed tests", "Hosted formatting requires reviewed range rebinding", "Scenario cancellation, provider draining and native child cleanup require actual hosted proof"],
+    "bindings": [
+      {"historical_assertion_sha256":"dba55c6a90ffb79c4938b114e1097704b9795c49866b21017c53223e6c9f6282","historical_file":"scripts/native-transport-acceptance.mjs","historical_lines":[299,425],"source_lines":[409,457],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/transport.rs","lines":[27,42],"excerpt_sha256":"48c63ee21f71f0cc6c26bfb7d7a57198a08ce5d2f7dbe8f5e8e06d8eddac800c"}]},
+      {"historical_assertion_sha256":"9b9d294ce63038511441339ca6402b9dc39b3ba5919852cc032b48f001608dd4","historical_file":"scripts/native-config-reload-acceptance.mjs","historical_lines":[10,499],"source_lines":[21,93],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_three_saved_configuration_reload_schedules","ranges":[{"file":"tests/rust/sdk_acceptance/reload.rs","lines":[7,17],"excerpt_sha256":"70edf393700df55f8fc6e806b766bca9e3c08dfde1c7dda1c94042bd634aa3b8"}]},
+      {"historical_assertion_sha256":"44db5fcb819e7b6e0d37697f7019b6ace9d1e8b23883ac236a2d71ca256ecf10","historical_file":"scripts/native-config-reload-acceptance.mjs","historical_lines":[10,499],"source_lines":[95,232],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_three_saved_configuration_reload_schedules","ranges":[{"file":"tests/rust/sdk_acceptance/reload.rs","lines":[18,33],"excerpt_sha256":"06c7c230ca40cec0fa62c535db68a4950fbd33f21f512e5e64a01005c01cf9e2"}]},
+      {"historical_assertion_sha256":"11ab725e39595e158eeac3d08ed34f67f4eacd4080e2ab7f5afab4e1b6a32ae4","historical_file":"scripts/native-config-reload-acceptance.mjs","historical_lines":[10,499],"source_lines":[234,335],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_three_saved_configuration_reload_schedules","ranges":[{"file":"tests/rust/sdk_acceptance/reload.rs","lines":[34,48],"excerpt_sha256":"c672b584ae657cc68fe411d0c0eeea78efec7b6de161540f352e64a4be605f29"}]},
+      {"historical_assertion_sha256":"07d305a70ee12f16fb40413304b3e0b41d3dbefbe124fc4a69f05499b5d5d0df","historical_file":"scripts/native-env-acceptance.mjs","historical_lines":[14,120],"source_lines":[8,64],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload","ranges":[{"file":"tests/rust/sdk_acceptance/configuration.rs","lines":[75,84],"excerpt_sha256":"ced7aecfedf81f60702e4ccefcfc292e371e04d9d31bac8cd57945fa25850eb3"}]},
+      {"historical_assertion_sha256":"eb11862e2d048400a3f7ff61c77c4293fd7852b94a8e8b3030cd3d2da322e56e","historical_file":"scripts/native-two-host-acceptance.mjs","historical_lines":[7,170],"source_lines":[10,127],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request","ranges":[{"file":"tests/rust/sdk_acceptance/catalog.rs","lines":[62,91],"excerpt_sha256":"2197794c878f7181cce4af632af6447d11afa1839a989b2079474276ee578125"}]},
+      {"historical_assertion_sha256":"ea713f88449a1539f030a8ec7b2d173415be2526a06368accee78c8c1f79739f","historical_file":"scripts/native-negotiation-acceptance.mjs","historical_lines":[6,58],"source_lines":[6,36],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership","ranges":[{"file":"tests/rust/sdk_acceptance/configuration.rs","lines":[85,90],"excerpt_sha256":"a0df9598c922d9e96743e0128cead33d68a1ae617691aa12e7923657fb89d9fb"}]},
+      {"historical_assertion_sha256":"bc3c9f24af829d4278a815f19ae70bcb11e87d95aae0bf76d2277bcfb12f680e","historical_file":"scripts/native-negotiation-acceptance.mjs","historical_lines":[6,58],"source_lines":[6,36],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership","ranges":[{"file":"tests/rust/sdk_acceptance/configuration.rs","lines":[85,90],"excerpt_sha256":"a0df9598c922d9e96743e0128cead33d68a1ae617691aa12e7923657fb89d9fb"}]},
+      {"historical_assertion_sha256":"c8ad2bb461f844dd50808221113401b6c10a546eb7a247eb3f35b094c7bd01f5","historical_file":"scripts/native-negotiation-acceptance.mjs","historical_lines":[6,58],"source_lines":[6,36],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership","ranges":[{"file":"tests/rust/sdk_acceptance/configuration.rs","lines":[85,90],"excerpt_sha256":"a0df9598c922d9e96743e0128cead33d68a1ae617691aa12e7923657fb89d9fb"}]},
+      {"historical_assertion_sha256":"51141495e00f37f77dc56e6a5dac6b51e676f8aec5582dfb4882d8c5d7665ef2","historical_file":"scripts/native-compact-acceptance.mjs","historical_lines":[16,452],"source_lines":[14,190],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload","ranges":[{"file":"tests/rust/sdk_acceptance/configuration.rs","lines":[5,60],"excerpt_sha256":"caaa007c8eafe7f1f17fd21b6a1a4133693bbdaf82d049b16e99aa23c72d528c"}]},
+      {"historical_assertion_sha256":"206609df9f356b22a1017e5298303de34d90688c0528455a093f40742b268b64","historical_file":"scripts/native-compact-acceptance.mjs","historical_lines":[16,452],"source_lines":[192,296],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload","ranges":[{"file":"tests/rust/sdk_acceptance/configuration.rs","lines":[61,74],"excerpt_sha256":"d8073626a10ce2ad83423d62aac0b76cd7fafc4bcd4cd56d6dbac0d262f8d2fa"}]},
+      {"historical_assertion_sha256":"c3be6b2a95d2690343fdc26e708aacfe65097e5658ee9177b169b41d7b2bc02d","historical_file":"scripts/native-terminal-acceptance.mjs","historical_lines":[1,545],"source_lines":[25,198],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity","ranges":[{"file":"tests/rust/sdk_acceptance/terminal.rs","lines":[5,36],"excerpt_sha256":"858bfd30aafaabfb9630ef4ddcbf32d1bacf43ae1310dc7885deda3c078d0e65"}]},
+      {"historical_assertion_sha256":"395f0e0d61024da5011ef7ec258360dd6a8ff06fd921a61778a4d02ec40586e9","historical_file":"scripts/native-terminal-acceptance.mjs","historical_lines":[1,545],"source_lines":[200,376],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity","ranges":[{"file":"tests/rust/sdk_acceptance/terminal.rs","lines":[37,61],"excerpt_sha256":"ab3b516a19b4ff17a1dc5127fc1723068ecf25bb558a95f59ed32e615966f047"}]},
+      {"historical_assertion_sha256":"423f33b001ca6fee1d09dd4dcae6ef3052b597a1f1dcc1fb72a662fbca3b291d","historical_file":"scripts/native-races-acceptance.mjs","historical_lines":[1,320],"source_lines":[19,112],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_seven_actual_two_host_races_and_restarts","ranges":[{"file":"tests/rust/sdk_acceptance/races.rs","lines":[5,28],"excerpt_sha256":"2a51db79c17980e1a319d6264cc8658f2a3927443c430e75cb33d0b5ded1e21d"}]},
+      {"historical_assertion_sha256":"451afa6430c1d06dc176f2bfdbc9b234913b5693fd8ce33f4bd0a5d6055e4f06","historical_file":"scripts/native-races-acceptance.mjs","historical_lines":[1,320],"source_lines":[114,249],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_seven_actual_two_host_races_and_restarts","ranges":[{"file":"tests/rust/sdk_acceptance/races.rs","lines":[29,45],"excerpt_sha256":"3a63a012b69738c3160b269cf6a460c3d06f149836a1a25b5d5123f0655f376c"}]},
+      {"historical_assertion_sha256":"1afd0e314354956fe70ea9dedfabc5f0188eaa421b49bfd69a6722d26c0bb5fa","historical_file":"scripts/native-lifecycle-acceptance.mjs","historical_lines":[1,95],"source_lines":[20,307],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_eighteen_literal_terminal_lifecycle_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/lifecycle.rs","lines":[10,26],"excerpt_sha256":"1dd0d116ce31f801ccc61d75f8ceafe7fd42b22e731edb2044c35269ba587c58"}]},
+      {"historical_assertion_sha256":"949ad6ac18171b1854e78fdd9c6fcd89787baca2d4abbaac49f45b840e5b527e","historical_file":"scripts/native-lifecycle-acceptance.mjs","historical_lines":[97,161],"source_lines":[20,101],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_eighteen_literal_terminal_lifecycle_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/lifecycle.rs","lines":[27,42],"excerpt_sha256":"463df99dffd06ced3b84d02c2222b01e668fe954fc3f0424e88ccd2746f0d6d7"}]},
+      {"historical_assertion_sha256":"b9a26327b0755c6046d818825fdcd9d2323ae59b28ca899e5ef5522dc0813fea","historical_file":"scripts/native-lifecycle-acceptance.mjs","historical_lines":[163,218],"source_lines":[103,193],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_eighteen_literal_terminal_lifecycle_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/lifecycle.rs","lines":[43,53],"excerpt_sha256":"4ae100aa9032ac9aa08931d4b0921d1e37c5b1e4fb0d9ba1bc2738c08d81d945"}]},
+      {"historical_assertion_sha256":"86b7f1fbe5003434058b9e04caa3a1f553153b79c11d624df8fa0a17b5d06a2d","historical_file":"scripts/native-lifecycle-acceptance.mjs","historical_lines":[220,320],"source_lines":[195,307],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_eighteen_literal_terminal_lifecycle_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/lifecycle.rs","lines":[54,64],"excerpt_sha256":"5e4ef37d2d4db98067ec9fe98a69ef6a9fd74afd00cb42c85e792c25caa38155"}]},
+      {"historical_assertion_sha256":"6d69ad64b1064da7ed1da0f50078c4ede76e6406cbd3a78b9fb8c8d7b58b3699","historical_file":"scripts/native-tools-acceptance.mjs","historical_lines":[7,180],"source_lines":[14,152],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request","ranges":[{"file":"tests/rust/sdk_acceptance/catalog.rs","lines":[6,60],"excerpt_sha256":"bec822246919f4a44cbd43ccff6529bf184239e391d6332a75a313cdd2968c8a"}]},
+      {"historical_assertion_sha256":"7bbba4bf3a6d93dd18d12c5f2afdc17ef3ea81baf4086ec8e393df7aa173e201","historical_file":"scripts/native-transport-acceptance.mjs","historical_lines":[1,99],"source_lines":[39,100],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/transport.rs","lines":[7,8],"excerpt_sha256":"2244c450875a7ddcc06b60fb936fb14d8543f623b913389c73a975486e348361"}]},
+      {"historical_assertion_sha256":"b15f77c04fa752d070963a1a61bfabb6ed8a398805a995adea74ff8e0c2c5742","historical_file":"scripts/native-transport-acceptance.mjs","historical_lines":[101,158],"source_lines":[39,100],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/transport.rs","lines":[9,14],"excerpt_sha256":"c70cae7f211f7adecb41f44e9e0a9ee2847d8b29716c216449b1065c0c286a94"}]},
+      {"historical_assertion_sha256":"0a665c6241daa7cb032b76cc06878b0bd5e1613115c2db962d4005da80d95151","historical_file":"scripts/native-transport-acceptance.mjs","historical_lines":[1,99],"source_lines":[102,148],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/transport.rs","lines":[7,8],"excerpt_sha256":"2244c450875a7ddcc06b60fb936fb14d8543f623b913389c73a975486e348361"}]},
+      {"historical_assertion_sha256":"9bfffb55dc0ce1bf0b69797577f4f3d7e475dd261551af6bc262a9145d0f7a48","historical_file":"scripts/native-transport-acceptance.mjs","historical_lines":[160,204],"source_lines":[102,148],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/transport.rs","lines":[15,19],"excerpt_sha256":"eb1aeb49710a2b5dbdf2a8bc9f0c2d354de4580ce7c53ed47e7c0e1fab13b894"}]},
+      {"historical_assertion_sha256":"b55e5002e7018e5ae7ebc3c5719a76dcae79f75a430958c4b9e0f49d8fbd825f","historical_file":"scripts/native-transport-acceptance.mjs","historical_lines":[1,99],"source_lines":[150,253],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/transport.rs","lines":[7,8],"excerpt_sha256":"2244c450875a7ddcc06b60fb936fb14d8543f623b913389c73a975486e348361"}]},
+      {"historical_assertion_sha256":"2a4181571c20c48996c7010f54c0ad2e7f17c2804bfae0d4ee46da01235dc15a","historical_file":"scripts/native-transport-acceptance.mjs","historical_lines":[206,297],"source_lines":[150,253],"current_mapping":"tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios","ranges":[{"file":"tests/rust/sdk_acceptance/transport.rs","lines":[20,26],"excerpt_sha256":"c2ca85f8ab5ef2d6d22d77a5ddeca9b3c61e1079c8d5bc1b58da2a2661c51ef7"}]}
+    ]
+  },
+  "verification": {
+    "local_rust_executed": false,
+    "compiled": false,
+    "tests_passed_claimed": false,
+    "fake_red_claimed": false,
+    "hosted_verification_owner": "primary",
+    "known_limits": ["SDK/async ownership and platform cleanup require hosted compilation and six-platform execution", "seed Store is intentionally a distinct cross-process owner, not same-Application proof", "JavaScript symbol keys cannot exist in serde_json; equivalent structured JSON roundtrip is asserted", "upstream async-rw client handles trusted fixture binary output; stderr is explicitly bounded to1MiB"]
+  }
+}

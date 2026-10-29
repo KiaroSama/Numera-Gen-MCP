@@ -203,12 +203,20 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
         let number: u16 = slot.parse().map_err(|_| env_error())?;
         if number == 0
             || number > 100
-            || !["ID", "NAME", "ENABLED", "OUTPUT_FORMAT", "SIZE", "QUALITY"].contains(&field)
+            || ![
+                "ID", "NAME", "ENABLED", "OUTPUT_FORMAT", "SIZE", "QUALITY", "OUTPUT_TYPES", "MODES",
+            ]
+            .contains(&field)
         {
             return Err(env_error());
         }
         let model = slots.entry(number).or_default();
-        if !value.is_empty() {
+        if ["OUTPUT_TYPES", "MODES"].contains(&field) && !value.is_empty() {
+            model.insert(
+                field.to_ascii_lowercase().into(),
+                super::media::csv(value, field == "MODES")?,
+            );
+        } else if !value.is_empty() {
             model.insert(
                 field.to_ascii_lowercase().into(),
                 if field == "ENABLED" {
@@ -218,6 +226,9 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
                 },
             );
         }
+    }
+    for model in slots.values() {
+        super::media::validate_declaration(&Value::Object(model.clone()), "output_types")?;
     }
     let mut raw = Object::new();
     for (key, field) in [("API_ENDPOINT", "api_endpoint"), ("API_KEY", "api_key")] {

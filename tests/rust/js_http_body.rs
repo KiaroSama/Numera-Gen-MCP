@@ -1,6 +1,6 @@
 use http_body_util::{BodyExt, Full};
 use hyper::body::Bytes;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::{
         js_json::{self, JsValue},
         value::Value,

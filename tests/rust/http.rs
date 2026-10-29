@@ -1,7 +1,7 @@
 #[path = "common/wire.rs"]
 mod wire;
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::http::{api, assets::private_address, sse::events, url::operation_url};
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::http::{api, assets::private_address, sse::events, url::operation_url};
 use reqwest::Method;
 use std::{collections::HashMap, sync::Mutex};
 use tokio_util::sync::CancellationToken;
@@ -72,6 +72,21 @@ fn transport_observer_runs_once_before_send_and_not_for_invalid_configuration() 
                 assert_eq!(requests.lock().unwrap().len(), 1);
             },
         ));
+}
+
+#[test]
+fn explicit_fal_cancel_status_is_available_without_accepting_it_for_legacy_calls() {
+    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(wire::serve(
+        |_| wire::Reply { status: 400, mime: "application/json", body: br#"{"status":"ALREADY_COMPLETED"}"#.to_vec() },
+        |origin, _| async move {
+            let c=json!({"baseUrl":origin,"baseUrlMode":"origin","discoveryTimeoutMs":2000});
+            let cancel=CancellationToken::new();
+            let result=api::request_statuses(&c,&HashMap::new(),api::Operation{operation:"cancel",prefix:"",method:Method::PUT,body:api::Body::Empty,query:None},&cancel,4096,&[400,404]).await.unwrap();
+            assert_eq!(result.status,400);assert_eq!(result.bytes,br#"{"status":"ALREADY_COMPLETED"}"#);
+            let legacy=api::request(&c,&HashMap::new(),api::Operation{operation:"cancel",prefix:"",method:Method::PUT,body:api::Body::Empty,query:None},&cancel,4096).await.err().unwrap();
+            assert_eq!(legacy.http_status,Some(400));
+        },
+    ));
 }
 
 #[test]
@@ -223,14 +238,14 @@ fn terminal_sse_is_not_discarded_as_generic_error() {
     let value=events(b"event: response.failed\ndata: {\"response\":{\"id\":\"same-job\",\"status\":\"failed\"}}\n\n",1024).expect("terminal frame");
     assert_eq!(value[0].kind, "response.failed");
     assert!(events(b"data: {}", 1024).is_err());
-    let mut reader = numera_image_gen_mcp::http::sse::Reader::new(1024);
+    let mut reader = numera_gen_mcp::http::sse::Reader::new(1024);
     assert!(reader.push(b"event: error\ndata: {}\n\n").is_err());
     assert_eq!(
         events(b"event: error\ndata: {}\n\n", 1024).unwrap()[0].kind,
         "error"
     );
     for chunks in [1, 2, 7, 64] {
-        let mut reader = numera_image_gen_mcp::http::sse::Reader::new(4096);
+        let mut reader = numera_gen_mcp::http::sse::Reader::new(4096);
         let frames = "event: progress\r\ndata: {\"text\":\"日本語 🌍\"}\r\n\r\nevent: response.completed\ndata: {\"response\":{\"id\":\"same\",\"status\":\"completed\"}}\n\n";
         for chunk in frames.as_bytes().chunks(chunks) {
             reader.push(chunk).unwrap();

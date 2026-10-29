@@ -2,8 +2,8 @@
 mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     adapters::{types::Input, workflow},
     files::images::{self, Image},
 };
@@ -45,14 +45,14 @@ fn input<'a>(
         references,
         mask,
         model: {
-            static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> =
+            static MODEL: std::sync::OnceLock<numera_gen_mcp::compat::value::JsString> =
                 std::sync::OnceLock::new();
             MODEL.get_or_init(|| "workflow".into())
         },
         operation: "generate",
     }
 }
-fn code<T>(result: numera_image_gen_mcp::error::Result<T>) -> String {
+fn code<T>(result: numera_gen_mcp::error::Result<T>) -> String {
     result.err().expect("invalid fixture must reject").code
 }
 
@@ -356,7 +356,7 @@ fn exact_source_installed_graph_preserves_enum_and_cycle_error_messages() {
             }
         }}
     });
-    let connection = numera_image_gen_mcp::config::Config::parse(
+    let connection = numera_gen_mcp::config::Config::parse(
         &raw.to_string(),
         &workspace.0.join("config.json"),
         &[],

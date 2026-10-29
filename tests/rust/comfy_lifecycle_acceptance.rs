@@ -6,7 +6,7 @@ mod source;
 #[path = "common/wire.rs"]
 mod wire;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     adapters::workflow,
     capabilities,
     compat::value::{JsString, Value, json},

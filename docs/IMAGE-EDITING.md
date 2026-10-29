@@ -17,7 +17,7 @@ No automatic upload, conversion, provider fallback or extra paid request is perf
   "reference_images": [
     {
       "type": "path",
-      "path": "C:/projects/numera-image-gen-mcp/inputs/comic.png"
+      "path": "C:/projects/numera-gen-mcp/inputs/comic.png"
     }
   ],
   "target_language": "Persian"
@@ -61,7 +61,7 @@ is needed. Example for a source at least1000x650 pixels:
   "reference_images": [
     {
       "type": "path",
-      "path": "C:/projects/numera-image-gen-mcp/inputs/owned-image.png"
+      "path": "C:/projects/numera-gen-mcp/inputs/owned-image.png"
     }
   ],
   "edit_region": { "x": 800, "y": 550, "width": 200, "height": 100 }

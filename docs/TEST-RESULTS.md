@@ -1,9 +1,33 @@
 # Test results
 
+## Current 0.3.0 candidate — source status, 2026-10-29
+
+The rebranded Numera Gen MCP workspace, Rust tooling and additive image/video/audio/3D contracts
+are authored but **not compiled, formatted or executed** on this tree. Local Rust execution remains
+prohibited; no new hosted qualification run has occurred. New regression source, JSON examples,
+source-inventory counts and whitespace checks are not passing runtime tests.
+
+Pending gates include Cargo-generated workspace lock/format preparation, execution of the authored
+owned bootstrap, current 470-case assertion review/execution binding, every discovered workspace suite on six native
+targets, instrumented runtime 85/80 coverage, signatures and extracted/isolated activation. Existing
+protected signing authority covers the deleted migration ref only, not `main`. No new signed release,
+provider call, upload, GPU-quality test or real host configuration change is claimed.
+
+## Historical native 0.2.0 qualification
+
+Runtime source `f2535577c2e3145da03e2d5c123d7de061656860` qualified in
+[run40244894089, attempt2](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40244894089/attempts/2):
+all sixteen jobs/checks, six real native signature/package/extracted SDK contexts, and the frozen
+470-case/50-suite binding passed. Coverage was 85.7791% regions / 83.3426% branches. These are the
+released runtime's recorded results, **not** evidence for current 0.3.0 source. Historical test-first
+ordering gaps remain honestly unproven rather than reconstructed as retrospective RED results.
+See [signed delivery](releases/0.2.0.md) and
+[immutable versus maintained validation](testing/SOURCE-VALIDATION.md).
+
 ## Recovery and dimension safeguards — 2026-10-05
 
 Exact runtime SHA: `320f903d479ed240b5b274e7fcaa2082ec92ba87`.
-[Hosted CI37307308453](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37307308453)
+[Hosted CI37307308453](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37307308453)
 passed all three Node24.21.0 jobs. Each discovered40 test files:39 passed and1 platform-specific skip.
 
 | Platform | Tests passed | Platform skips | Statements | Branches |
@@ -34,7 +58,7 @@ runtime does not itself replace an already-running local MCP process.
 
 Verified2026-10-02: hosted CI passed on exact code SHA
 `f34afdc3d2832d26a8dd2de864b04f17aa7f2b49`.
-[CI run36949992617](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/36949992617).
+[CI run36949992617](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/36949992617).
 
 | Check                                     | Observed result                            | Environment                                          |
 | ----------------------------------------- | ------------------------------------------ | ---------------------------------------------------- |
@@ -69,7 +93,7 @@ Local seam checks passed for descriptors/private continuation/stream/workflow/de
 protocol negotiation. Setup executor's narrow fixture checks passed. Latest integrated typecheck/lint/
 build/UTF8/format checks passed. Updated full CI passed on code SHA
 `f640606e664ef1c397e7e5758fd70bf5c045d58c`:
-[run37068503319](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37068503319).
+[run37068503319](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37068503319).
 Both OSes:260 tests across21 files;89.55 percent runtime statements,87.89 percent Windows branches /
 87.97 percent Linux branches. Clean packed installation, formatting, build and audit passed;
 0 runtime advisories. Every bounded supervisor reported cleanup_verified=true.
@@ -84,7 +108,7 @@ No all-model/quality/production-ready claim.
 ## Practical preparation 2026-10-03
 
 Final practical code SHA `62d955611845c0b1d1a67cff609430c5b5a5130d` passed
-[CI37074134568](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37074134568).
+[CI37074134568](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37074134568).
 Windows:265 tests/23 files;90.06 percent statements,88.28 percent branches. Linux:264 passed,
 1 Windows-only DPAPI test visibly skipped;22 files passed/1 skipped,89.55 statements,87.97 branches.
 Build/typecheck/lint/UTF-8/format, clean packed production install and audit0 passed on both OSes.
@@ -111,7 +135,7 @@ Compact endpoint/key/models configuration added with local file defaults and dis
 Local narrow load/catalog/actual stdio seams passed; original native IDs and bytes survive, key stays
 out of receipts/logs and duplicate request does not POST again. Final code SHA
 `5fba8adbbf3b3f0c9c9d6391ddf42b5ed3ec7489` passed
-[CI37078653969](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37078653969).
+[CI37078653969](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37078653969).
 Windows286 passed/3 POSIX-only skipped; Linux/macOS288 passed/1 Windows DPAPI skipped.26 files
 are discovered;25 passed/1 platform-only file skipped per OS. Linux/macOS3 new native platform
 assertions passed (0600/0644 private credentials, symlink containment, owned process-group cleanup).
@@ -123,7 +147,7 @@ Merged logo/task branches removed; only incompatible failing DependabotTS7 branc
 ## Strong logging delta2026-10-03
 
 Final runtime `69816338da5bde6b6d0dda194b754322c344b32a` passed
-[CI37079856441](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37079856441) on all3OS.
+[CI37079856441](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37079856441) on all3OS.
 Windows287 passed/3 POSIX skipped,90.21 statements/88.58 branches; Linux/macOS289 passed/1DPAPI skipped,
 89.71 statements/88.28 branches.26filesdiscovered25pass1platformskip. Build/lint/types/UTF8/format,
 packed native production install/audit0 passed. Logging cases assert immutable run/event metadata,
@@ -141,7 +165,7 @@ is not evidence for this new code. Incompatible TypeScript7 bot update was close
 its remote branch deleted; compiler6.0.3 retained under the verified eslint peer constraint.
 
 Final code `6c4cef2869e17398684787a828ec4720de6886b9` passed
-[CI37082578573](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37082578573).
+[CI37082578573](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37082578573).
 Windows297 passed/3 POSIX skipped,90.24 statements/88.61 branches; Linux/macOS299 passed/1 DPAPI
 skipped,89.74/88.31.26filesdiscovered25passed1platformskip. Types/lint/build/UTF8/format, clean
 production packed installation with valid public templates/private exclusions, native modules/stdio
@@ -160,7 +184,7 @@ is published. This proves only one selected model/generation; editing/other rout
 ## Portable client and model-slot verification2026-10-03
 
 Final code SHA `1dbd9797696c4b30757d014dc9111113e6da7180` passed
-[CI37088483026](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37088483026).
+[CI37088483026](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37088483026).
 Windows299 passed/3 POSIX skipped,90.28 statements/88.63 branches; Linux/macOS301 passed/1 DPAPI
 skipped,89.79/88.33. Types/lint/build/UTF8/format, native packed installation and audit0 passed.
 Active/disabled model slots and null-as-provider-default assertions passed. Actual read-only SDK
@@ -172,7 +196,7 @@ the separate model-slot change. Earlier run links remain historical evidence on 
 ## Env reload and targeted editing verification2026-10-03
 
 Code SHA `b4be4753175e03d9cea08afc8fc319117637e083` passed
-[CI37125203065](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37125203065).
+[CI37125203065](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37125203065).
 Windows323 passed/3 POSIX skipped,90.48 statements/88.42 branches; Linux/macOS325 passed/1 DPAPI
 skipped,90.06/88.15. All30 files were discovered (29 passed/1 platform-specific skipped).
 Types/lint/build/UTF8/format, production-only packed installation, public env templates/private-file
@@ -190,7 +214,7 @@ shape; obsolete private JSON was removed only after comparison and the owner's e
 ## Native upscale and additional live checks2026-10-03
 
 Runtime SHA `ba22dd92ebc3814f3712fffc29a2580c97da104c` passed
-[CI37139147888](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37139147888).
+[CI37139147888](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37139147888).
 Windows324 passed/3 POSIX skips,90.56 statements/88.65 branches; Linux/macOS326 passed/1 DPAPI skip,
 90.14/88.38. All31 suites discovered; type/lint/build/UTF8/format, production package/templates/stdio
 and runtime audit0 passed. Native upscale fixture validates original reference bytes, larger requested
@@ -231,7 +255,7 @@ Images path drops references; image2image/upscale is still blocked pending verif
 ## Final dimension-discovery correction verification2026-10-03
 
 Final runtime SHA `c105640bf374b23c7ee0ebcbd5d2fe8eb9406d77` passed
-[CI37143898313](https://github.com/KiaroSama/Numera-Image-Gen-MCP/actions/runs/37143898313).
+[CI37143898313](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/37143898313).
 Windows332 passed/3 POSIX skips,90.63 statements/88.93 branches; Linux/macOS334 passed/1 DPAPI skip,
 90.22/88.68.32 suites discovered,31 passed/1 platform skip. Types/lint/build/UTF8/format,
 production-only packed templates/native dependencies/stdio and runtime audit0 passed all3OS.

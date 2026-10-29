@@ -4,8 +4,8 @@ mod http_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     adapters::types::{Normalized, ResultItem},
     config::Config,
     files::images::{decode_base64, inspect},
@@ -218,7 +218,7 @@ async fn exact_source_owned_responses_job_refresh_and_active_cancel_are_separate
     let g = generation_with_connection(&workspace, connection, None);
     let result = tokio::time::timeout(Duration::from_secs(6), async {
         let (_, connection) = g.config.select(None).unwrap();
-        let pinned = numera_image_gen_mcp::config::snapshot_credentials(
+        let pinned = numera_gen_mcp::config::snapshot_credentials(
             &connection,
             &HashMap::new(),
             &g.runtime,
@@ -226,7 +226,7 @@ async fn exact_source_owned_responses_job_refresh_and_active_cancel_are_separate
         .await
         .unwrap();
         let identity =
-            numera_image_gen_mcp::services::identity::connection_identity("local", &pinned)
+            numera_gen_mcp::services::identity::connection_identity("local", &pinned)
                 .unwrap();
         let mut initial = Receipt::new(json!({
             "request_id":"request-1","connection":"local","adapter":"openai-images",

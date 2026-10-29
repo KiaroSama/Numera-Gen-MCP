@@ -4,8 +4,8 @@ mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     files::{
         images::inspect,
         output::{self, Publication},
@@ -13,7 +13,7 @@ use numera_image_gen_mcp::{
     jobs::{Receipt, Store},
 };
 
-fn exact_source_image(name: &str, config: &Value) -> numera_image_gen_mcp::files::images::Image {
+fn exact_source_image(name: &str, config: &Value) -> numera_gen_mcp::files::images::Image {
     let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join(".ci-work/parity/image-acceptance.json");
     let cases = Value::parse_with_limit(
@@ -28,7 +28,7 @@ fn exact_source_image(name: &str, config: &Value) -> numera_image_gen_mcp::files
         .find(|case| case["name"] == name)
         .unwrap();
     inspect(
-        numera_image_gen_mcp::files::images::decode_base64(
+        numera_gen_mcp::files::images::decode_base64(
             case["base64"].as_str().unwrap(),
             1048576,
         )

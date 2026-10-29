@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Numera Gen MCP media request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode"],
+  "properties": {
+    "request_id": {"type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[A-Za-z0-9_-]+$"},
+    "connection": {"type": "string", "minLength": 1, "maxLength": 100},
+    "model": {"type": "string", "minLength": 1, "maxLength": 300},
+    "mode": {"type": "string", "enum": ["text-to-image", "image-to-image", "text-to-video", "image-to-video", "video-to-video", "text-to-audio", "audio-to-audio", "video-to-audio", "text-to-3d", "image-to-3d", "3d-to-3d"]},
+    "prompt": {"type": "string", "maxLength": 32768},
+    "parameters": {"type": "object", "default": {}},
+    "references": {
+      "type": "array", "maxItems": 16, "default": [],
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["kind", "role"],
+        "properties": {
+          "kind": {"type": "string", "enum": ["image", "video", "audio", "3d"]},
+          "role": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_-]*$"},
+          "output_id": {"type": "string", "format": "uuid"},
+          "path": {"type": "string", "minLength": 1, "maxLength": 32768},
+          "url": {"type": "string", "minLength": 1, "maxLength": 16384},
+          "data_url": {"type": "string", "minLength": 1, "maxLength": 30000000}
+        },
+        "oneOf": [{"required": ["output_id"]}, {"required": ["path"]}, {"required": ["url"]}, {"required": ["data_url"]}]
+      }
+    },
+    "wait": {"type": "boolean", "default": true},
+    "output_subdirectory": {"type": "string", "minLength": 1, "maxLength": 1000},
+    "filename_prefix": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

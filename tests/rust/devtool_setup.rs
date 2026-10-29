@@ -4,13 +4,13 @@ mod config_fixture;
 #[path = "common/devtool_signed.rs"]
 mod signed_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::{compat::value::json, devtools::setup};
+use numera_gen_mcp::{compat::value::json, devtools::setup};
 use std::{collections::HashMap, fs};
 
 #[test]
 fn every_setup_dry_run_preserves_host_and_skips_build_smoke_and_state() {
     let workspace = Workspace::new();
-    use numera_image_gen_mcp::{
+    use numera_gen_mcp::{
         devtools::supervisor::{Bounds, run},
         logging::Logger,
     };
@@ -180,7 +180,7 @@ fn signed_prepared_install_and_update_preserve_private_files_without_compilation
             fs::read(target.join("manifest.json")).unwrap(),
             fs::read(source.join("manifest.json")).unwrap()
         );
-        let installed = numera_image_gen_mcp::devtools::artifact::verify(&target).unwrap();
+        let installed = numera_gen_mcp::devtools::artifact::verify(&target).unwrap();
         assert_eq!(
             installed.manifest.version,
             if action == "Update" { "0.2.0" } else { "0.1.0" }
@@ -208,7 +208,7 @@ fn signed_prepared_install_and_update_preserve_private_files_without_compilation
 
 #[test]
 fn actual_diagnose_cli_reports_only_local_readiness_and_never_generation() {
-    use numera_image_gen_mcp::{
+    use numera_gen_mcp::{
         devtools::supervisor::{Bounds, run},
         logging::Logger,
     };
@@ -225,11 +225,11 @@ fn actual_diagnose_cli_reports_only_local_readiness_and_never_generation() {
     let bin = workspace.0.join("bin");
     fs::create_dir(&bin).unwrap();
     fs::copy(
-        env!("CARGO_BIN_EXE_numera-image-gen-mcp"),
+        env!("CARGO_BIN_EXE_numera-gen-mcp"),
         bin.join(if cfg!(windows) {
-            "numera-image-gen-mcp.exe"
+            "numera-gen-mcp.exe"
         } else {
-            "numera-image-gen-mcp"
+            "numera-gen-mcp"
         }),
     )
     .unwrap();
@@ -255,7 +255,7 @@ fn actual_diagnose_cli_reports_only_local_readiness_and_never_generation() {
     assert_eq!(report["credentials_ready"], true);
     assert_eq!(report["generation_verified"], false);
     assert!(report["connection_ready"].is_null());
-    assert_eq!(report["tool_count"], 10);
+    assert_eq!(report["tool_count"], 12);
     assert_eq!(report["blockers"], serde_json::json!([]));
     assert!(!workspace.0.join("node_modules").exists());
     assert!(!workspace.0.join("manifest.json").exists());
@@ -363,12 +363,12 @@ fn unsigned_update_is_rejected_before_replacing_a_locked_installation() {
             .to_string_lossy()
             .starts_with(".numera-staging-")
     }));
-    assert!(numera_image_gen_mcp::devtools::artifact::verify(&target).is_ok());
+    assert!(numera_gen_mcp::devtools::artifact::verify(&target).is_ok());
 }
 
 #[test]
 fn actual_setup_cli_registers_selected_installation_not_unpacked_sibling() {
-    use numera_image_gen_mcp::{
+    use numera_gen_mcp::{
         devtools::supervisor::{Bounds, run},
         logging::Logger,
     };
@@ -421,7 +421,7 @@ fn actual_setup_cli_registers_selected_installation_not_unpacked_sibling() {
             "numera-image-gen-mcp"
         });
     assert_eq!(
-        value["mcpServers"]["numera-image-gen"]["command"],
+        value["mcpServers"]["numera-gen"]["command"],
         serde_json::json!(expected)
     );
     assert_eq!(value["retained"], true);
@@ -480,7 +480,7 @@ fn native_register_and_remove_change_only_selected_fixture_entry() {
     assert_eq!(registered["retained"], true);
     assert_eq!(registered["mcpServers"]["other"]["command"], "unchanged");
     assert_eq!(
-        registered["mcpServers"]["numera-image-gen"]["args"],
+        registered["mcpServers"]["numera-gen"]["args"],
         serde_json::json!(["bridge"])
     );
     setup::execute(&args("Remove"), &executable, &HashMap::new()).unwrap();

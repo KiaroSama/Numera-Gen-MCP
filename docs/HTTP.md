@@ -2,32 +2,36 @@
 
 Provider-free hosted native SDK/CLI and signed extracted HTTP checks passed on all six targets at
 `f253557` / run `40244894089`, attempt2, together with all470 baseline cases and50 suites. The verified
-[Release0.2.0](https://github.com/KiaroSama/Numera-Image-Gen-MCP/releases/tag/v0.2.0) is published.
+[Release0.2.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.2.0) is published.
 Actual owner GUI registration remains unverified; retain the previous runtime until reconnection succeeds.
+
+Current commands below use Numera Gen MCP's `numera-gen-mcp` binary. The immutable historical
+0.2.0 release retains `numera-image-gen-mcp[.exe]`; use its actual filename when running that release.
+The historical CI result above is not qualification of the current rebranded source.
 
 ## Start
 
 From the extracted installation root on Linux/macOS:
 
 ```bash
-./bin/numera-image-gen-mcp http
+./bin/numera-gen-mcp http
 ```
 
 Windows PowerShell:
 
 ```powershell
-& './bin/numera-image-gen-mcp.exe' http
+& './bin/numera-gen-mcp.exe' http
 ```
 
-The endpoint is `http://127.0.0.1:1969/mcp`. It serves the same ten tools/resources and durable
-receipts as `bridge`. It is not a proxy to another MCP service. The listener is foreground;
+The endpoint is `http://127.0.0.1:1969/mcp`. It serves the same legacy image and additive typed-media
+tools/resources and durable receipts as `bridge`. It is not a proxy to another MCP service. The listener is foreground;
 Ctrl+C stops it. No background service, firewall change or public-network listener is installed.
 The stdio `bridge` remains independent and requires no running HTTP server or launcher.
 
 ## Native menu and configurable port
 
 ```bash
-./bin/numera-image-gen-mcp menu
+./bin/numera-gen-mcp menu
 ```
 
 Windows uses the same `menu` argument with its `.exe`. The menu can start HTTP, change its port,
@@ -35,7 +39,7 @@ show connection guidance or exit. Enter selects HTTP start; EOF exits. Running w
 from an interactive terminal selects the menu; non-interactive no-argument launch remains stdio.
 
 ```bash
-./bin/numera-image-gen-mcp http --port 1970
+./bin/numera-gen-mcp http --port 1970
 ```
 
 Precedence: `--port`, then `NUMERA_HTTP_PORT`, then the menu-saved `config/http.json`, then1969.

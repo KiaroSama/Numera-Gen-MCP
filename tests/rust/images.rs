@@ -1,7 +1,7 @@
 use base64::{Engine, engine::general_purpose::STANDARD};
-use numera_image_gen_mcp::compat::hash::sha256;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::files::images::{
+use numera_gen_mcp::compat::hash::sha256;
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::files::images::{
     data_url, decode_base64, inspect, preview, validate_mask,
 };
 
@@ -198,7 +198,7 @@ fn generated_original_image_fixtures_are_preserved_and_validated() {
     let path =
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".ci-work/parity/images.json");
     let bytes = std::fs::read(path).expect("source image fixture generation required");
-    let cases: Vec<numera_image_gen_mcp::compat::value::Value> =
+    let cases: Vec<numera_gen_mcp::compat::value::Value> =
         serde_json::from_slice(&bytes).expect("source fixtures");
     assert!(!cases.is_empty());
     for case in cases {

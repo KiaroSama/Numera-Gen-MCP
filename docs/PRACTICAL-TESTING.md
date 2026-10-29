@@ -2,11 +2,14 @@
 
 ## Native readiness
 
+Current Numera Gen MCP commands use `numera-gen-mcp`. Historical signed 0.2.0 assets retain their
+original `numera-image-gen-mcp[.exe]` filename; old results below do not qualify a new source build.
+
 The native readiness command launches the selected executable's `bridge` through an official SDK
 stdio client, verifies read-only tools and reaps its child. It submits no image or host configuration:
 
 ```bash
-./bin/numera-image-gen-mcp readiness --config /absolute/numera/.env --connection default --probe
+./bin/numera-gen-mcp readiness --config /absolute/numera/.env --connection default --probe
 ```
 
 Omit `--probe` for provider-free checks. The result distinguishes configuration/storage/credentials
@@ -23,7 +26,7 @@ errors, catalog/model strings, credentials and config paths are excluded from it
 This historical command applies only to the frozen Node baseline checkout, not the native distribution (90-second wall / 20-second idle ceiling):
 
 ```bash
-node scripts/bounded.mjs 90000 20000 scripts/readiness.mjs --config "C:/projects/numera-image-gen-mcp/.env" --connection default --probe
+node scripts/bounded.mjs 90000 20000 scripts/readiness.mjs --config "C:/projects/numera-gen-mcp/.env" --connection default --probe
 ```
 
 The shown configuration path is a neutral Windows example, not a portable default. On other

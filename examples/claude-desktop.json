@@ -1,10 +1,10 @@
 {
   "mcpServers": {
-    "numera-image-gen": {
-      "command": "C:/tools/numera-image-gen-mcp/bin/numera-image-gen-mcp.exe",
+    "numera-gen": {
+      "command": "C:/tools/numera-gen-mcp/bin/numera-gen-mcp.exe",
       "args": ["bridge"],
       "env": {
-        "NUMERA_CONFIG": "C:/tools/numera-image-gen-mcp/.env"
+        "NUMERA_CONFIG": "C:/tools/numera-gen-mcp/.env"
       }
     }
   }

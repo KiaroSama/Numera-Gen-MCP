@@ -59,7 +59,7 @@ impl ServerHandler for Handler {
                 .build(),
         )
         .with_server_info(Implementation::new(
-            "numera-image-gen-mcp",
+            "numera-gen-mcp",
             env!("CARGO_PKG_VERSION"),
         ))
         .with_instructions(tools::INSTRUCTIONS)
@@ -153,20 +153,20 @@ impl ServerHandler for Handler {
             }
         };
         let mut content = vec![ContentBlock::text(value.to_string())];
-        if matches!(name, "generate_image" | "edit_image") && !failed {
+        if matches!(name, "generate_image" | "edit_image" | "generate_media") && !failed {
             let outputs = crate::error::array(&value["outputs"]).to_vec();
             let previews =
                 args["return_mode"].as_str().unwrap_or(&return_mode) == "files_and_preview";
             for output in outputs {
                 let id = output["output_id"].as_str().ok_or_else(protocol)?;
                 content.push(ContentBlock::resource_link(
-                    Resource::new(format!("numera-image://outputs/{id}"), id).with_mime_type(
+                    Resource::new(format!("{}://outputs/{id}", if name == "generate_media" { "numera-gen" } else { "numera-image" }), id).with_mime_type(
                         output["mime_type"]
                             .as_str()
                             .unwrap_or("application/octet-stream"),
                     ),
                 ));
-                if previews {
+                if previews && output["kind"].as_str().unwrap_or("image") == "image" {
                     match self.application.preview(id) {
                         Ok(preview) => {
                             if value.get("previews").is_none() {
@@ -207,7 +207,7 @@ impl ServerHandler for Handler {
             }
         }
         let failed = failed
-            || (matches!(name, "generate_image" | "edit_image")
+            || (matches!(name, "generate_image" | "edit_image" | "generate_media")
                 && matches!(value["status"].as_str(), Some("failed" | "outcome_unknown")));
         let mut result = if failed {
             CallToolResult::error(content)
@@ -232,6 +232,9 @@ impl ServerHandler for Handler {
             ResourceTemplate::new("numera-image://outputs/{id}", "output")
                 .with_description("Validated original bytes of an owned output.")
                 .with_mime_type("application/octet-stream"),
+            ResourceTemplate::new("numera-gen://outputs/{id}", "media-output")
+                .with_description("Validated original bytes of an owned media output.")
+                .with_mime_type("application/octet-stream"),
         ]))
     }
     async fn read_resource(
@@ -239,18 +242,15 @@ impl ServerHandler for Handler {
         request: ReadResourceRequestParams,
         _context: RequestContext<RoleServer>,
     ) -> std::result::Result<ReadResourceResponse, ErrorData> {
-        let id = request
-            .uri
-            .strip_prefix("numera-image://outputs/")
+        let id = request.uri.strip_prefix("numera-gen://outputs/")
+            .or_else(|| request.uri.strip_prefix("numera-image://outputs/"))
             .filter(|s| uuid::Uuid::parse_str(s).is_ok())
             .ok_or_else(|| ErrorData::invalid_params("Unknown owned output resource.", None))?;
-        let image = self
-            .application
-            .original(id)
+        let (metadata, bytes) = self.application.original_media(id)
             .map_err(|_| ErrorData::invalid_params("Cannot read verified owned output.", None))?;
         Ok(ReadResourceResult::new(vec![
-            ResourceContents::blob(STANDARD.encode(&image.bytes), request.uri)
-                .with_mime_type(image.mime),
+            ResourceContents::blob(STANDARD.encode(&bytes), request.uri)
+                .with_mime_type(metadata["mime_type"].as_str().unwrap_or("application/octet-stream")),
         ])
         .into())
     }

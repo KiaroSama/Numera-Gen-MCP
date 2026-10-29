@@ -1,7 +1,7 @@
 #[path = "common/image.rs"]
 mod image_fixture;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     adapters::{build_request, types::Input},
     capabilities,
     files::images::inspect,
@@ -12,8 +12,8 @@ use numera_image_gen_mcp::{
 fn input<'a>(
     connection: &'a Value,
     request: &'a Value,
-    references: &'a [numera_image_gen_mcp::files::images::Image],
-    mask: Option<&'a numera_image_gen_mcp::files::images::Image>,
+    references: &'a [numera_gen_mcp::files::images::Image],
+    mask: Option<&'a numera_gen_mcp::files::images::Image>,
 ) -> Input<'a> {
     Input {
         connection,
@@ -21,7 +21,7 @@ fn input<'a>(
         references,
         mask,
         model: {
-            static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> =
+            static MODEL: std::sync::OnceLock<numera_gen_mcp::compat::value::JsString> =
                 std::sync::OnceLock::new();
             MODEL.get_or_init(|| "opaque/image".into())
         },
@@ -116,7 +116,7 @@ fn all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway
         .find(|fixture| fixture["metadata"]["mime"] == "image/jpeg")
         .unwrap();
     let second = inspect(
-        numera_image_gen_mcp::files::images::decode_base64(
+        numera_gen_mcp::files::images::decode_base64(
             jpeg["base64"].as_str().unwrap(),
             1048576,
         )
@@ -129,7 +129,7 @@ fn all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway
     let references = [first.clone(), second.clone()];
     let encoded = references
         .iter()
-        .map(numera_image_gen_mcp::adapters::types::mime_data)
+        .map(numera_gen_mcp::adapters::types::mime_data)
         .collect::<Vec<_>>();
     let request = json!({"prompt":"Preserve 日本語","count":1,"provider_options":{}});
     for mode in ["json", "generation"] {
@@ -251,7 +251,7 @@ fn gemini_inline_references_and_interaction_format_preserve_exact_native_fields(
             &body["input"][1]["data"]
         };
         assert_eq!(
-            numera_image_gen_mcp::files::images::decode_base64(bytes.as_str().unwrap(), 1048576)
+            numera_gen_mcp::files::images::decode_base64(bytes.as_str().unwrap(), 1048576)
                 .unwrap(),
             image.bytes
         );

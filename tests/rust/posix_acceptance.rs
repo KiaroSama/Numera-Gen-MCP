@@ -4,7 +4,7 @@ mod common;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 mod posix {
     use super::common::Workspace;
-    use numera_image_gen_mcp::{
+    use numera_gen_mcp::{
         compat::value::{Value, json},
         config::{Config, credentials, load_config},
         files::{images::decode_base64, paths},

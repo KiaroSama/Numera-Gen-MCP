@@ -1,6 +1,6 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::cli::{
+use numera_gen_mcp::cli::{
     http_settings,
     menu::{MenuAction, step},
 };

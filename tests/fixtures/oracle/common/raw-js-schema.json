@@ -1,0 +1,58 @@
+[
+  {
+    "name": "request-opaque-utf16-and-overflow",
+    "schema": "image-request",
+    "text": "{\"prompt\":\"\\ud800\",\"provider_options\":{\"\\udfff\":1e400,\"nested\":[-1e400]}}",
+    "valid": true,
+    "serialized": "{\"prompt\":\"\\ud800\",\"count\":1,\"provider_options\":{\"\\udfff\":null,\"nested\":[null]},\"reference_images\":[],\"wait\":true}"
+  },
+  {
+    "name": "request-url-surrogate-validation",
+    "schema": "image-request",
+    "text": "{\"prompt\":\"draw\",\"reference_images\":[{\"type\":\"url\",\"url\":\"https://example.com/\\ud800\"}]}",
+    "valid": true,
+    "serialized": "{\"prompt\":\"draw\",\"count\":1,\"provider_options\":{},\"reference_images\":[{\"type\":\"url\",\"url\":\"https://example.com/\\ud800\"}],\"wait\":true}"
+  },
+  {
+    "name": "request-uuid-00000000-0000-0000-0000-000000000000",
+    "schema": "image-request",
+    "text": "{\"prompt\":\"draw\",\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"00000000-0000-0000-0000-000000000000\"}]}",
+    "valid": true,
+    "serialized": "{\"prompt\":\"draw\",\"count\":1,\"provider_options\":{},\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"00000000-0000-0000-0000-000000000000\"}],\"wait\":true}"
+  },
+  {
+    "name": "request-uuid-ffffffff-ffff-ffff-ffff-ffffffffffff",
+    "schema": "image-request",
+    "text": "{\"prompt\":\"draw\",\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"ffffffff-ffff-ffff-ffff-ffffffffffff\"}]}",
+    "valid": true,
+    "serialized": "{\"prompt\":\"draw\",\"count\":1,\"provider_options\":{},\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"ffffffff-ffff-ffff-ffff-ffffffffffff\"}],\"wait\":true}"
+  },
+  {
+    "name": "request-uuid-12345678-1234-4234-8234-123456789abc",
+    "schema": "image-request",
+    "text": "{\"prompt\":\"draw\",\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"12345678-1234-4234-8234-123456789abc\"}]}",
+    "valid": true,
+    "serialized": "{\"prompt\":\"draw\",\"count\":1,\"provider_options\":{},\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"12345678-1234-4234-8234-123456789abc\"}],\"wait\":true}"
+  },
+  {
+    "name": "request-uuid-12345678-1234-4234-1234-123456789abc",
+    "schema": "image-request",
+    "text": "{\"prompt\":\"draw\",\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"12345678-1234-4234-1234-123456789abc\"}]}",
+    "valid": false,
+    "serialized": null
+  },
+  {
+    "name": "request-uuid-12345678-1234-9234-8234-123456789abc",
+    "schema": "image-request",
+    "text": "{\"prompt\":\"draw\",\"reference_images\":[{\"type\":\"output_id\",\"output_id\":\"12345678-1234-9234-8234-123456789abc\"}]}",
+    "valid": false,
+    "serialized": null
+  },
+  {
+    "name": "config-opaque-utf16-and-overflow",
+    "schema": "config",
+    "text": "{\"schemaVersion\":1,\"outputDir\":\"/tmp/numera-outputs\",\"stateDir\":\"/tmp/numera-state\",\"connections\":{\"default\":{\"adapter\":\"openai-images\",\"baseUrl\":\"https://example.com/v1\",\"auth\":{\"type\":\"none\"},\"defaults\":{\"\\udfff\":1e400,\"text\":\"\\ud800\"}}}}",
+    "valid": false,
+    "serialized": null
+  }
+]

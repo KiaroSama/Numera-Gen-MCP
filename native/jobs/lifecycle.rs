@@ -5,7 +5,7 @@ use rusqlite::params;
 
 impl Store {
     pub(super) fn expire(&mut self, id: Option<&str>) -> Result<()> {
-        self.db.execute_batch("UPDATE requests SET reservation=0 WHERE owner IS NULL AND json_extract(receipt,'$.status')='outcome_unknown' AND json_extract(receipt,'$.upstream_job') IS NULL AND NOT EXISTS(SELECT 1 FROM result_journal WHERE request_id=requests.id AND phase!='committed')")
+        self.db.execute_batch("UPDATE requests SET reservation=0 WHERE owner IS NULL AND json_extract(receipt,'$.status')='outcome_unknown' AND json_extract(receipt,'$.upstream_job') IS NULL AND NOT EXISTS(SELECT 1 FROM all_result_journal WHERE request_id=requests.id AND phase!='committed')")
             .map_err(|_|NumeraError::storage())?;
         let ids: Vec<String> = {
             let mut query=self.db.prepare("SELECT id FROM requests WHERE lease<=? AND owner IS NOT NULL AND (? IS NULL OR id=?)").map_err(|_|NumeraError::storage())?;

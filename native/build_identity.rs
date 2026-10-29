@@ -1,5 +1,5 @@
 pub const PUBLISHER: &str = "KiaroSama";
-pub const PRODUCT: &str = "Numera Image-Gen MCP";
+pub const PRODUCT: &str = "Numera Gen MCP";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const SOURCE: &str = match option_env!("NUMERA_BUILD_SHA") {
     Some(value) => value,

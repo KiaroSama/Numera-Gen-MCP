@@ -11,9 +11,14 @@ records exact archives and deliberate self-signed trust limits. CI and isolated 
 not actual Desktop reconnection. Install the verified binary before using the examples below;
 retain the previous runtime until the actual host connection is verified.
 
+The current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen` host entry.
+The immutable published 0.2.0 archives retain their legacy executable name; use that actual name for
+those archives. A saved `numera-image-gen` entry is not automatically renamed or removed: back it up
+and explicitly migrate the selected Numera entry rather than running two copies against shared state.
+
 ## Claude Desktop
 
-Merge only `mcpServers.numera-image-gen`, preserving every other server and setting. Back up the
+Merge only `mcpServers.numera-gen`, preserving every other server and setting. Back up the
 actual `claude_desktop_config.json` before editing. Windows packaged/MSIX installations can keep
 that file under the package's LocalCache/Roaming/Claude; use the app's Edit Config or an explicitly
 selected existing file, never guess or overwrite the whole settings file.
@@ -21,8 +26,8 @@ selected existing file, never guess or overwrite the whole settings file.
 ```json
 {
   "mcpServers": {
-    "numera-image-gen": {
-      "command": "C:/tools/numera-image-gen-mcp/bin/numera-image-gen-mcp.exe",
+    "numera-gen": {
+      "command": "C:/tools/numera-gen-mcp/bin/numera-gen-mcp.exe",
       "args": ["bridge"]
     }
   }
@@ -30,7 +35,7 @@ selected existing file, never guess or overwrite the whole settings file.
 ```
 
 Replace the example command with the absolute installed binary path. On macOS the command is an
-absolute POSIX path ending in `bin/numera-image-gen-mcp`; the arguments remain `["bridge"]`.
+absolute POSIX path ending in `bin/numera-gen-mcp`; the arguments remain `["bridge"]`.
 Server support on Linux does not establish Claude Desktop application availability on Linux.
 
 Adjacent `.env` or `config.local.json` discovery is relative to the executable's installation root
@@ -48,19 +53,19 @@ does not affect an already-running Desktop process. SDK/CI stdio tests are not a
 From the extracted installation root on Linux/macOS:
 
 ```bash
-claude mcp add --transport stdio --scope user numera-image-gen -- "$PWD/bin/numera-image-gen-mcp" bridge
+claude mcp add --transport stdio --scope user numera-gen -- "$PWD/bin/numera-gen-mcp" bridge
 ```
 
 Windows PowerShell, replacing the example path:
 
 ```powershell
-claude mcp add --transport stdio --scope user numera-image-gen -- 'C:/tools/numera-image-gen-mcp/bin/numera-image-gen-mcp.exe' bridge
+claude mcp add --transport stdio --scope user numera-gen -- 'C:/tools/numera-gen-mcp/bin/numera-gen-mcp.exe' bridge
 ```
 
 Project registration can instead merge [the project `.mcp.json` entry](../examples/claude-project.json).
 These are instructions, not host registration performed by this project task.
 Current official documentation: https://code.claude.com/docs/en/mcp .
 
-After registration only endpoint/key/models in the private application configuration need changing;
-call `list_models` after saving. Invalid saves retain the last valid snapshot. Hosted/cloud clients
+After registration only endpoint/key/models and explicit media declarations in the private application
+configuration need changing; call `list_models` after saving. Invalid saves retain the last valid snapshot. Hosted/cloud clients
 cannot inherently run your local binary or see local output paths; preview rendering is host-dependent.

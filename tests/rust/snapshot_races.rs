@@ -4,7 +4,7 @@ mod config_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{Value, json},
     config::{Config, ConfigReload},
     jobs::{Receipt, Store},
@@ -405,7 +405,7 @@ async fn actual_region_edit_wire_preserves_original_and_mask_polarity_before_sub
         assert!(prompt.contains("Preserve the comic panels 日本語"));
         assert!(prompt.contains("Translate the text inside the selected region into Persian"));
         let bytes =
-            numera_image_gen_mcp::files::images::data_url(body["mask"].as_str().unwrap(), 1048576)
+            numera_gen_mcp::files::images::data_url(body["mask"].as_str().unwrap(), 1048576)
                 .unwrap();
         let mask = image::load_from_memory(&bytes).unwrap().to_rgba8();
         assert_eq!((mask.width(), mask.height()), (width, height));

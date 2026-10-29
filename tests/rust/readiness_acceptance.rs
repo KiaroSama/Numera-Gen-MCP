@@ -3,7 +3,7 @@ mod common;
 mod config_fixture;
 
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{Value, json},
     devtools::Owned,
 };
@@ -39,12 +39,12 @@ impl Fixture {
             std::fs::create_dir(workspace.0.join(directory)).unwrap();
         }
         let name = if cfg!(windows) {
-            "numera-image-gen-mcp.exe"
+            "numera-gen-mcp.exe"
         } else {
-            "numera-image-gen-mcp"
+            "numera-gen-mcp"
         };
         let executable = workspace.0.join("bin").join(name);
-        std::fs::copy(env!("CARGO_BIN_EXE_numera-image-gen-mcp"), &executable).unwrap();
+        std::fs::copy(env!("CARGO_BIN_EXE_numera-gen-mcp"), &executable).unwrap();
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let origin = format!("http://{}", listener.local_addr().unwrap());
         Self {
@@ -326,7 +326,7 @@ async fn executable_readiness_probes_get_only_and_never_discloses_the_exact_cata
     assert_eq!(result["connection_ready"], true);
     assert_eq!(result["catalog_count"], 1);
     assert_eq!(result["generation_verified"], false);
-    assert_eq!(result["tool_count"], 10);
+    assert_eq!(result["tool_count"], 12);
     assert!(
         !methods.is_empty(),
         "Read-only probe must contact its local fixture."
@@ -344,7 +344,7 @@ async fn executable_readiness_probes_get_only_and_never_discloses_the_exact_cata
         .find(|event| event["component"] == "readiness" && event["cleanup_verified"] == true)
         .expect("actual stdio readiness must report verified child cleanup");
     assert_eq!(cleanup["stdio_verified"], true);
-    assert_eq!(cleanup["tool_count"], 10);
+    assert_eq!(cleanup["tool_count"], 12);
     let pid = cleanup["pid"].as_u64().expect("owned readiness child PID");
     assert!(pid > 0 && pid != u64::from(std::process::id()));
     assert_eq!(cleanup["exit_success"], true);
@@ -393,14 +393,14 @@ async fn cancelling_readiness_during_real_bridge_initialization_reaps_its_child(
     std::fs::create_dir(root.join("state")).unwrap();
     let lock = rusqlite::Connection::open(root.join("state/receipts.sqlite")).unwrap();
     lock.execute_batch("PRAGMA locking_mode=EXCLUSIVE; PRAGMA journal_mode=WAL; BEGIN EXCLUSIVE; CREATE TABLE held(value);").unwrap();
-    let paths = numera_image_gen_mcp::runtime_paths::RuntimePaths::new(root).unwrap();
+    let paths = numera_gen_mcp::runtime_paths::RuntimePaths::new(root).unwrap();
     let mut env = std::collections::HashMap::new();
     for key in ["SystemRoot", "WINDIR", "LLVM_PROFILE_FILE"] {
         if let Ok(value) = std::env::var(key) {
             env.insert(key.to_owned(), value);
         }
     }
-    let mut operation = Box::pin(numera_image_gen_mcp::cli::readiness::run(
+    let mut operation = Box::pin(numera_gen_mcp::cli::readiness::run(
         &args,
         root,
         &env,

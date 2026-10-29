@@ -7,7 +7,7 @@ mod dpapi_worker;
 #[cfg(windows)]
 mod windows {
     use super::common::Workspace;
-    use numera_image_gen_mcp::{
+    use numera_gen_mcp::{
         compat::value::{Value, json},
         config::{Config, credentials},
         runtime_paths::RuntimePaths,

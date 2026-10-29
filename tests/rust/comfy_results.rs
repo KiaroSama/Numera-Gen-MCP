@@ -3,8 +3,8 @@ mod http_fixture;
 #[path = "common/image.rs"]
 mod image_fixture;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::services::comfy::{self, OutputLimits};
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::services::comfy::{self, OutputLimits};
 use std::{collections::HashMap, time::Duration};
 use tokio_util::sync::CancellationToken;
 
@@ -45,7 +45,7 @@ async fn comfy_history_rejects_malformed_or_excessive_outputs_and_retains_only_c
                 },
                 |_, bytes| {
                     if mode == "retain-error" {
-                        return Err(numera_image_gen_mcp::error::NumeraError::new(
+                        return Err(numera_gen_mcp::error::NumeraError::new(
                             "output_file_error",
                             "Controlled retention failure.",
                         ));
@@ -56,7 +56,7 @@ async fn comfy_history_rejects_malformed_or_excessive_outputs_and_retains_only_c
                 || {
                     completed = true;
                     if mode == "complete-error" {
-                        return Err(numera_image_gen_mcp::error::NumeraError::storage());
+                        return Err(numera_gen_mcp::error::NumeraError::storage());
                     }
                     Ok(())
                 },

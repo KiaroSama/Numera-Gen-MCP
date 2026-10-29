@@ -9,8 +9,8 @@ mod image_fixture;
 mod reload_wire;
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::{
     config::{Config, ConfigReload, snapshot_credentials},
     jobs::Receipt,
     logging::Logger,
@@ -201,7 +201,7 @@ async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_w
     let action = async {
         let first = app.current().unwrap();
         let (_, connection) = first.config.select(Some("test")).unwrap();
-        let pinned = numera_image_gen_mcp::config::snapshot_credentials(
+        let pinned = numera_gen_mcp::config::snapshot_credentials(
             &connection,
             &first.env,
             &first.runtime,
@@ -209,14 +209,14 @@ async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_w
         .await
         .unwrap();
         let identity =
-            numera_image_gen_mcp::services::identity::connection_identity("test", &pinned).unwrap();
+            numera_gen_mcp::services::identity::connection_identity("test", &pinned).unwrap();
         {
             let mut store = app.store.lock().unwrap();
             for (id, identity) in [
                 ("retained-route", identity.as_str()),
                 ("unknown-route", "unavailable-identity"),
             ] {
-                let receipt = numera_image_gen_mcp::jobs::Receipt::new(json!({
+                let receipt = numera_gen_mcp::jobs::Receipt::new(json!({
                     "request_id":id,"connection":"test","adapter":"openai-responses","operation":"generate",
                     "status":"prepared","requested_model":"opaque/image","outputs":[],"errors":[],"deviations":[],"warnings":[],
                     "generation_outcome":"not_submitted","storage_outcome":"not_started",
@@ -291,7 +291,7 @@ async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_w
         let original = image_fixture::original();
         {
             let mut store = app.store.lock().unwrap();
-            let seeded = numera_image_gen_mcp::jobs::Receipt::new(json!({
+            let seeded = numera_gen_mcp::jobs::Receipt::new(json!({
                 "request_id":"local-retained","connection":"removed","adapter":"openai-images",
                 "operation":"generate","status":"prepared","requested_model":"opaque/image",
                 "outputs":[],"errors":[],"deviations":[],"warnings":[],

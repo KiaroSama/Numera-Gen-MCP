@@ -2,7 +2,7 @@ mod common;
 #[path = "common/comfy_source.rs"]
 mod source;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     adapters::workflow,
     compat::value::{Value, json},
     services::request,

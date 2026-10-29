@@ -1,5 +1,5 @@
 use crate::common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::compat::value::{Value, json};
 
 impl Workspace {
     pub fn config(&self, base: &str, adapter: &str) -> Value {

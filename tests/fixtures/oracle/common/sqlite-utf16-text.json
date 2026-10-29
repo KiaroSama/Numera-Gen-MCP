@@ -1,0 +1,14 @@
+[
+  {
+    "text": "\"https://example.com/\\ud800\"",
+    "stored": "https://example.com/�",
+    "bytes": "68747470733A2F2F6578616D706C652E636F6D2FEFBFBD",
+    "utf8_bytes": 23
+  },
+  {
+    "text": "\"🌍\"",
+    "stored": "🌍",
+    "bytes": "F09F8C8D",
+    "utf8_bytes": 4
+  }
+]

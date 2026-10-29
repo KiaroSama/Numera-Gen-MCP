@@ -32,6 +32,25 @@
             "default": true,
             "type": "boolean"
           },
+          "output_types": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": { "type": "string", "enum": ["image", "video", "audio", "3d"] }
+          },
+          "modes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 11,
+            "items": {
+              "type": "string",
+              "enum": [
+                "text-to-image", "image-to-image", "text-to-video", "image-to-video",
+                "video-to-video", "text-to-audio", "audio-to-audio", "video-to-audio",
+                "text-to-3d", "image-to-3d", "3d-to-3d"
+              ]
+            }
+          },
           "output_format": {
             "anyOf": [
               {
@@ -90,7 +109,8 @@
         "openai-responses",
         "gemini",
         "gemini-interactions",
-        "openrouter-images"
+        "openrouter-images",
+        "fal"
       ]
     },
     "edit": {

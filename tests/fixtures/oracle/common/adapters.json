@@ -1,0 +1,2862 @@
+{
+  "wires": [
+    {
+      "name": "openai-images-generate",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "size": "1024x1024",
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "generate",
+      "references": [],
+      "expected": {
+        "value": {
+          "operation": "images/generations",
+          "prefix": "/v1",
+          "body": {
+            "model": "opaque/image",
+            "prompt": "Draw a café 🌍",
+            "n": 1,
+            "size": "1024x1024"
+          }
+        }
+      }
+    },
+    {
+      "name": "openai-images-edit",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "edit",
+      "references": [
+        {
+          "name": "png-opaque",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+          "metadata": {
+            "mime": "image/png",
+            "width": 7,
+            "height": 5,
+            "alpha": false,
+            "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+            "extension": "png"
+          }
+        }
+      ],
+      "expected": {
+        "value": {
+          "operation": "images/edits",
+          "prefix": "/v1",
+          "multipart": [
+            {
+              "name": "model",
+              "text": "opaque/image"
+            },
+            {
+              "name": "prompt",
+              "text": "Draw a café 🌍"
+            },
+            {
+              "name": "n",
+              "text": "1"
+            },
+            {
+              "name": "image",
+              "filename": "reference-0.png",
+              "mime": "image/png",
+              "hex": "89504e470d0a1a0a0000000d494844520000000700000005080200000006f8618f0000000970485973000003e8000003e801b57b526b0000001149444154089963e891bb84891868240a0020ed33f538d5340a0000000049454e44ae426082"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "gemini-generate",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "size": "1024x1024",
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "generate",
+      "references": [],
+      "expected": {
+        "error": "unsupported_parameter"
+      }
+    },
+    {
+      "name": "gemini-edit",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "edit",
+      "references": [
+        {
+          "name": "png-opaque",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+          "metadata": {
+            "mime": "image/png",
+            "width": 7,
+            "height": 5,
+            "alpha": false,
+            "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+            "extension": "png"
+          }
+        }
+      ],
+      "expected": {
+        "value": {
+          "operation": "models/opaque%2Fimage:generateContent",
+          "prefix": "/v1beta",
+          "body": {
+            "contents": [
+              {
+                "role": "user",
+                "parts": [
+                  {
+                    "text": "Draw a café 🌍"
+                  },
+                  {
+                    "inlineData": {
+                      "mimeType": "image/png",
+                      "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                    }
+                  }
+                ]
+              }
+            ],
+            "generationConfig": {
+              "responseModalities": [
+                "TEXT",
+                "IMAGE"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "gemini-interactions-generate",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "size": "1024x1024",
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "generate",
+      "references": [],
+      "expected": {
+        "error": "unsupported_parameter"
+      }
+    },
+    {
+      "name": "gemini-interactions-edit",
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "edit",
+      "references": [
+        {
+          "name": "png-opaque",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+          "metadata": {
+            "mime": "image/png",
+            "width": 7,
+            "height": 5,
+            "alpha": false,
+            "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+            "extension": "png"
+          }
+        }
+      ],
+      "expected": {
+        "value": {
+          "operation": "interactions",
+          "prefix": "/v1beta",
+          "body": {
+            "model": "opaque/image",
+            "store": false,
+            "input": [
+              {
+                "type": "text",
+                "text": "Draw a café 🌍"
+              },
+              {
+                "type": "image",
+                "mime_type": "image/png",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+              }
+            ],
+            "response_format": {
+              "type": "image"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "openai-responses-generate",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "size": "1024x1024",
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "generate",
+      "references": [],
+      "expected": {
+        "value": {
+          "operation": "responses",
+          "prefix": "/v1",
+          "body": {
+            "model": "opaque/orchestrator",
+            "store": false,
+            "input": [
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "type": "input_text",
+                    "text": "Draw a café 🌍"
+                  }
+                ]
+              }
+            ],
+            "tools": [
+              {
+                "type": "image_generation",
+                "model": "opaque/image",
+                "action": "generate",
+                "size": "1024x1024"
+              }
+            ],
+            "tool_choice": {
+              "type": "image_generation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "openai-responses-edit",
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "edit",
+      "references": [
+        {
+          "name": "png-opaque",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+          "metadata": {
+            "mime": "image/png",
+            "width": 7,
+            "height": 5,
+            "alpha": false,
+            "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+            "extension": "png"
+          }
+        }
+      ],
+      "expected": {
+        "value": {
+          "operation": "responses",
+          "prefix": "/v1",
+          "body": {
+            "model": "opaque/orchestrator",
+            "store": false,
+            "input": [
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "type": "input_text",
+                    "text": "Draw a café 🌍"
+                  },
+                  {
+                    "type": "input_image",
+                    "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                  }
+                ]
+              }
+            ],
+            "tools": [
+              {
+                "type": "image_generation",
+                "model": "opaque/image",
+                "action": "edit"
+              }
+            ],
+            "tool_choice": {
+              "type": "image_generation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "openrouter-images-generate",
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "size": "1024x1024",
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "generate",
+      "references": [],
+      "expected": {
+        "value": {
+          "operation": "images",
+          "prefix": "/api/v1",
+          "body": {
+            "model": "opaque/image",
+            "prompt": "Draw a café 🌍",
+            "n": 1,
+            "input_references": [],
+            "provider": {
+              "allow_fallbacks": false
+            },
+            "size": "1024x1024"
+          }
+        }
+      }
+    },
+    {
+      "name": "openrouter-images-edit",
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "edit",
+      "references": [
+        {
+          "name": "png-opaque",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+          "metadata": {
+            "mime": "image/png",
+            "width": 7,
+            "height": 5,
+            "alpha": false,
+            "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+            "extension": "png"
+          }
+        }
+      ],
+      "expected": {
+        "value": {
+          "operation": "images",
+          "prefix": "/api/v1",
+          "body": {
+            "model": "opaque/image",
+            "prompt": "Draw a café 🌍",
+            "n": 1,
+            "input_references": [
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                }
+              }
+            ],
+            "provider": {
+              "allow_fallbacks": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "chat-images-generate",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "size": "1024x1024",
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "generate",
+      "references": [],
+      "expected": {
+        "error": "unsupported_parameter"
+      }
+    },
+    {
+      "name": "chat-images-edit",
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "edit",
+      "references": [
+        {
+          "name": "png-opaque",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+          "metadata": {
+            "mime": "image/png",
+            "width": 7,
+            "height": 5,
+            "alpha": false,
+            "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+            "extension": "png"
+          }
+        }
+      ],
+      "expected": {
+        "value": {
+          "operation": "chat/completions",
+          "prefix": "/v1",
+          "body": {
+            "model": "opaque/image",
+            "messages": [
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Draw a café 🌍"
+                  },
+                  {
+                    "type": "image_url",
+                    "image_url": {
+                      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                    }
+                  }
+                ]
+              }
+            ],
+            "modalities": [
+              "image",
+              "text"
+            ],
+            "image_config": {}
+          }
+        }
+      }
+    },
+    {
+      "name": "comfyui-generate",
+      "connection": {
+        "enabled": true,
+        "adapter": "comfyui",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "size": "1024x1024",
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "generate",
+      "references": [],
+      "expected": {
+        "error": "invalid_configuration"
+      }
+    },
+    {
+      "name": "comfyui-edit",
+      "connection": {
+        "enabled": true,
+        "adapter": "comfyui",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": true,
+        "orchestrationModel": "opaque/orchestrator"
+      },
+      "request": {
+        "prompt": "Draw a café 🌍",
+        "count": 1,
+        "provider_options": {},
+        "reference_images": [],
+        "wait": true
+      },
+      "model": "opaque/image",
+      "operation": "edit",
+      "references": [
+        {
+          "name": "png-opaque",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII=",
+          "metadata": {
+            "mime": "image/png",
+            "width": 7,
+            "height": 5,
+            "alpha": false,
+            "sha256": "09051b8cac2604589ec55c73d1c35407ba8101f6ba38fca76eeb29dc7d894e6d",
+            "extension": "png"
+          }
+        }
+      ],
+      "expected": {
+        "error": "invalid_configuration"
+      }
+    }
+  ],
+  "normalization": [
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": null,
+      "expected": {
+        "error": "invalid_response"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {},
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          },
+          {
+            "url": "https://assets.example/image.png"
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+            },
+            {
+              "url": "https://assets.example/image.png"
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "queued",
+        "id": "same-job",
+        "model": "opaque/image"
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "failed",
+        "id": "same-job",
+        "data": []
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "id": "same-job",
+        "output": [
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "finishReason": "STOP",
+            "content": {
+              "parts": [
+                {
+                  "thought": true,
+                  "thoughtSignature": "synthetic-private"
+                },
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "steps": [
+          {
+            "type": "thought",
+            "signature": "synthetic-private"
+          },
+          {
+            "type": "model_output",
+            "content": [
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                {
+                  "image_url": {
+                    "url": "https://assets.example/image.png"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": null,
+      "expected": {
+        "error": "invalid_response"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {},
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          },
+          {
+            "url": "https://assets.example/image.png"
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "queued",
+        "id": "same-job",
+        "model": "opaque/image"
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "failed",
+        "id": "same-job",
+        "data": []
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "id": "same-job",
+        "output": [
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "finishReason": "STOP",
+            "content": {
+              "parts": [
+                {
+                  "thought": true,
+                  "thoughtSignature": "synthetic-private"
+                },
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+            }
+          ],
+          "upstreamModel": null,
+          "continuation": {
+            "signatures": [
+              {
+                "part_index": 0,
+                "signature": "synthetic-private"
+              }
+            ]
+          },
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "steps": [
+          {
+            "type": "thought",
+            "signature": "synthetic-private"
+          },
+          {
+            "type": "model_output",
+            "content": [
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                {
+                  "image_url": {
+                    "url": "https://assets.example/image.png"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": null,
+      "expected": {
+        "error": "invalid_response"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {},
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          },
+          {
+            "url": "https://assets.example/image.png"
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "queued",
+        "id": "same-job",
+        "model": "opaque/image"
+      },
+      "expected": {
+        "value": {
+          "images": [],
+          "upstreamModel": "opaque/image",
+          "job": {
+            "id": "same-job",
+            "kind": "interactions"
+          },
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "failed",
+        "id": "same-job",
+        "data": []
+      },
+      "expected": {
+        "value": {
+          "images": [],
+          "terminal": "failed",
+          "upstreamModel": null,
+          "upstreamId": "same-job",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "id": "same-job",
+        "output": [
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "finishReason": "STOP",
+            "content": {
+              "parts": [
+                {
+                  "thought": true,
+                  "thoughtSignature": "synthetic-private"
+                },
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "steps": [
+          {
+            "type": "thought",
+            "signature": "synthetic-private"
+          },
+          {
+            "type": "model_output",
+            "content": [
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+            }
+          ],
+          "upstreamModel": null,
+          "continuation": {
+            "signatures": [
+              {
+                "step_type": "thought",
+                "signature": "synthetic-private"
+              }
+            ]
+          },
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "gemini-interactions",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                {
+                  "image_url": {
+                    "url": "https://assets.example/image.png"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": null,
+      "expected": {
+        "error": "invalid_response"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {},
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          },
+          {
+            "url": "https://assets.example/image.png"
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "queued",
+        "id": "same-job",
+        "model": "opaque/image"
+      },
+      "expected": {
+        "value": {
+          "images": [],
+          "upstreamModel": null,
+          "job": {
+            "id": "same-job",
+            "kind": "responses"
+          },
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "failed",
+        "id": "same-job",
+        "data": []
+      },
+      "expected": {
+        "value": {
+          "images": [],
+          "terminal": "failed",
+          "upstreamModel": null,
+          "upstreamId": "same-job",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "id": "same-job",
+        "output": [
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+            }
+          ],
+          "upstreamModel": null,
+          "upstreamId": "same-job",
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "finishReason": "STOP",
+            "content": {
+              "parts": [
+                {
+                  "thought": true,
+                  "thoughtSignature": "synthetic-private"
+                },
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "steps": [
+          {
+            "type": "thought",
+            "signature": "synthetic-private"
+          },
+          {
+            "type": "model_output",
+            "content": [
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openai-responses",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                {
+                  "image_url": {
+                    "url": "https://assets.example/image.png"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": null,
+      "expected": {
+        "error": "invalid_response"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {},
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          },
+          {
+            "url": "https://assets.example/image.png"
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "error": "Malformed image result item."
+            },
+            {
+              "base64": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+            },
+            {
+              "url": "https://assets.example/image.png"
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "queued",
+        "id": "same-job",
+        "model": "opaque/image"
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "failed",
+        "id": "same-job",
+        "data": []
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "id": "same-job",
+        "output": [
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "finishReason": "STOP",
+            "content": {
+              "parts": [
+                {
+                  "thought": true,
+                  "thoughtSignature": "synthetic-private"
+                },
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "steps": [
+          {
+            "type": "thought",
+            "signature": "synthetic-private"
+          },
+          {
+            "type": "model_output",
+            "content": [
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "openrouter-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                {
+                  "image_url": {
+                    "url": "https://assets.example/image.png"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": null,
+      "expected": {
+        "error": "invalid_response"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {},
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "data": [
+          null,
+          {
+            "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          },
+          {
+            "url": "https://assets.example/image.png"
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "queued",
+        "id": "same-job",
+        "model": "opaque/image"
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "failed",
+        "id": "same-job",
+        "data": []
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "status": "completed",
+        "id": "same-job",
+        "output": [
+          {
+            "type": "image_generation_call",
+            "status": "completed",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "candidates": [
+          {
+            "finishReason": "STOP",
+            "content": {
+              "parts": [
+                {
+                  "thought": true,
+                  "thoughtSignature": "synthetic-private"
+                },
+                {
+                  "inlineData": {
+                    "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "steps": [
+          {
+            "type": "thought",
+            "signature": "synthetic-private"
+          },
+          {
+            "type": "model_output",
+            "content": [
+              {
+                "type": "image",
+                "data": "iVBORw0KGgoAAAANSUhEUgAAAAcAAAAFCAIAAAAG+GGPAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWPokbuEiRhoJAoAIO0z9TjVNAoAAAAASUVORK5CYII="
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "error": "no_image_returned"
+      }
+    },
+    {
+      "connection": {
+        "enabled": true,
+        "adapter": "chat-images",
+        "baseUrl": "https://images.example/v1",
+        "baseUrlMode": "api-prefix",
+        "auth": {
+          "type": "none"
+        },
+        "configuredModels": [],
+        "deniedModels": [],
+        "paths": {},
+        "query": {},
+        "defaults": {},
+        "extensions": {},
+        "providerOptionKeys": [],
+        "requestTimeoutMs": 300000,
+        "discoveryTimeoutMs": 15000,
+        "maxConcurrentRequests": 2,
+        "modelOverrides": {},
+        "chatImageOutput": false
+      },
+      "raw": {
+        "choices": [
+          {
+            "message": {
+              "images": [
+                {
+                  "image_url": {
+                    "url": "https://assets.example/image.png"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "expected": {
+        "value": {
+          "images": [
+            {
+              "url": "https://assets.example/image.png"
+            }
+          ],
+          "upstreamModel": null,
+          "warnings": []
+        }
+      }
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 #[path = "common/http.rs"]
 mod http_fixture;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::http::{
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::http::{
     api::{self, Body},
     assets,
 };
@@ -207,7 +207,7 @@ async fn credential_free_assets_require_exact_allowance_and_revalidate_redirects
         .await
         .unwrap();
         assert_eq!(
-            serde_json::from_slice::<numera_image_gen_mcp::compat::value::Value>(&bytes).unwrap(),
+            serde_json::from_slice::<numera_gen_mcp::compat::value::Value>(&bytes).unwrap(),
             json!({"image":"fixture"})
         );
         assert_eq!(

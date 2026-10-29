@@ -24,6 +24,7 @@ pub struct Operation<'a> {
 }
 
 pub struct ApiResponse {
+    pub status: u16,
     pub bytes: Vec<u8>,
     pub mime: String,
     pub request_id: Option<String>,
@@ -54,6 +55,24 @@ pub async fn request_observed(
     wire: Operation<'_>,
     cancel: &CancellationToken,
     limit: usize,
+    prepared: impl FnOnce(u64, u64, u64) + Send,
+) -> Result<ApiResponse> {
+    request_inner(connection, headers, wire, cancel, limit, &[], prepared).await
+}
+
+pub async fn request_statuses(
+    connection: &Value, headers: &HashMap<String, String>, wire: Operation<'_>,
+    cancel: &CancellationToken, limit: usize, allowed: &[u16],
+) -> Result<ApiResponse> {
+    if allowed.iter().any(|status| ![400, 404].contains(status)) || wire.method != Method::PUT {
+        return Err(NumeraError::new("invalid_input", "Only documented cancellation status bodies may be inspected."));
+    }
+    request_inner(connection, headers, wire, cancel, limit, allowed, |_, _, _| {}).await
+}
+
+async fn request_inner(
+    connection: &Value, headers: &HashMap<String, String>, wire: Operation<'_>,
+    cancel: &CancellationToken, limit: usize, allowed: &[u16],
     prepared: impl FnOnce(u64, u64, u64) + Send,
 ) -> Result<ApiResponse> {
     let started = Instant::now();
@@ -144,7 +163,7 @@ pub async fn request_observed(
                     .stage("submission"),
             );
         }
-        if !(200..300).contains(&status) {
+        if !(200..300).contains(&status) && !allowed.contains(&status) {
             let code = match status {
                 401 => "authentication_error",
                 403 => "permission_denied",
@@ -193,6 +212,7 @@ pub async fn request_observed(
             bytes.finish()
         };
         Ok(ApiResponse {
+            status,
             bytes,
             mime,
             request_id,

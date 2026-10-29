@@ -2,8 +2,8 @@ mod common;
 #[path = "common/config.rs"]
 mod config_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     config::{
         Config, config_file, credentials, load_config, parse_env_config, read_config_text,
         snapshot_credentials, user_root,
@@ -18,7 +18,7 @@ fn parse(
     workspace: &Workspace,
     value: &Value,
     args: &[String],
-) -> numera_image_gen_mcp::error::Result<Config> {
+) -> numera_gen_mcp::error::Result<Config> {
     Config::parse(
         &value.to_string(),
         &workspace.0.join("config.json"),
@@ -26,7 +26,7 @@ fn parse(
         &HashMap::new(),
     )
 }
-fn invalid<T>(result: numera_image_gen_mcp::error::Result<T>) {
+fn invalid<T>(result: numera_gen_mcp::error::Result<T>) {
     assert_eq!(
         result.err().expect("unsafe fixture must reject").code,
         "invalid_configuration"

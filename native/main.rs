@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::json,
     config::{self, ConfigReload},
     error::{NumeraError, Result},
@@ -72,7 +72,7 @@ async fn http(
     env: HashMap<String, String>,
     runtime: RuntimePaths,
 ) -> Result<()> {
-    use numera_image_gen_mcp::{cli::http_settings, mcp::http_server};
+    use numera_gen_mcp::{cli::http_settings, mcp::http_server};
     let port = http_settings::port(root, &args, &env)?;
     let (_, args) = http_settings::split_port_args(&args)?;
     let token = http_settings::token(root, &env)?;
@@ -94,7 +94,7 @@ async fn http(
 }
 
 async fn menu(root: &Path, env: &HashMap<String, String>, runtime: &RuntimePaths) -> Result<()> {
-    use numera_image_gen_mcp::cli::menu::{MenuAction, step};
+    use numera_gen_mcp::cli::menu::{MenuAction, step};
     let logger = Logger::new(&root.join("logs"), "INFO");
     loop {
         let action = step(
@@ -170,13 +170,13 @@ fn main() {
     ) {
         println!(
             "{}",
-            numera_image_gen_mcp::build_identity::version("numera-image-gen-mcp")
+            numera_gen_mcp::build_identity::version("numera-gen-mcp")
         );
         return;
     }
     if matches!(args.first().map(String::as_str), Some("--help" | "help")) {
         println!(
-            "Numera Image-Gen MCP\nUsage: numera-image-gen-mcp bridge [--config ABSOLUTE_PATH]\n       numera-image-gen-mcp http [--port 1969] [--config ABSOLUTE_PATH]\n       numera-image-gen-mcp menu\nHTTP listens only on 127.0.0.1 at /mcp; a separate private local token is required.\nClaude launches bridge directly; no launcher or background service is required.\nConfiguration: adjacent .env/config.local.json, explicit --config or NUMERA_CONFIG.\nManaged temporary files and cache stay inside the installation root."
+            "Numera Gen MCP\nUsage: numera-gen-mcp bridge [--config ABSOLUTE_PATH]\n       numera-gen-mcp http [--port 1969] [--config ABSOLUTE_PATH]\n       numera-gen-mcp menu\nHTTP listens only on 127.0.0.1 at /mcp; a separate private local token is required.\nClaude launches bridge directly; no launcher or background service is required.\nConfiguration: adjacent .env/config.local.json, explicit --config or NUMERA_CONFIG.\nManaged temporary files and cache stay inside the installation root."
         );
         return;
     }
@@ -189,7 +189,7 @@ fn main() {
             env.insert(key, value);
         }
         if args.first().is_some_and(|s| s == "register") {
-            return numera_image_gen_mcp::cli::maintenance::register(
+            return numera_gen_mcp::cli::maintenance::register(
                 &args[1..],
                 &root,
                 &executable,
@@ -205,7 +205,7 @@ fn main() {
             .first()
             .is_some_and(|s| s == "readiness" || s == "diagnose")
         {
-            let (report, ready) = executor.block_on(numera_image_gen_mcp::cli::readiness::run(
+            let (report, ready) = executor.block_on(numera_gen_mcp::cli::readiness::run(
                 &args[1..],
                 &root,
                 &env,

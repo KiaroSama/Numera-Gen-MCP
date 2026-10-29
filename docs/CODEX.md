@@ -6,15 +6,19 @@ run `40244894089`, attempt2, all sixteen jobs passed, including all six real sig
 SDK checks. [Signed delivery](releases/0.2.0.md) records the verified artifacts and trust limits.
 Install the verified binary first; actual owner-host reconnection remains a separate check.
 
+Current Numera Gen MCP examples use `numera-gen-mcp` and host entry `numera-gen`. Historical signed
+0.2.0 archives retain the old executable name. Existing `numera-image-gen` tables remain untouched;
+explicitly migrate the selected Numera table with a backup, avoiding duplicate shared-state processes.
+
 Merge only Numera's table into the actual user configuration, preserving other entries:
 
 ```toml
-[mcp_servers.numera-image-gen]
-command = "C:/tools/numera-image-gen-mcp/bin/numera-image-gen-mcp.exe"
+[mcp_servers.numera-gen]
+command = "C:/tools/numera-gen-mcp/bin/numera-gen-mcp.exe"
 args = ["bridge"]
 startup_timeout_sec = 10
 tool_timeout_sec = 360
-env = { NUMERA_CONFIG = "C:/tools/numera-image-gen-mcp/.env" }
+env = { NUMERA_CONFIG = "C:/tools/numera-gen-mcp/.env" }
 ```
 
 The paths are examples. Linux/macOS use the actual absolute POSIX binary and configuration paths.
@@ -25,11 +29,11 @@ Never put an API key in the table. Restart/reconnect after command changes, then
 CLI registration from the extracted Linux/macOS installation root:
 
 ```bash
-codex mcp add numera-image-gen -- "$PWD/bin/numera-image-gen-mcp" bridge
+codex mcp add numera-gen -- "$PWD/bin/numera-gen-mcp" bridge
 ```
 
 [Codex example](../examples/codex.toml) · [Official MCP documentation](https://developers.openai.com/codex/mcp).
 
 Numera changes no host chat model. Never treat a configured/listed model as account entitlement;
-inspect capabilities, explicitly authorize a potentially billable image and retain its request ID.
+inspect capabilities, explicitly authorize a potentially billable media operation and retain its request ID.
 Unknown outcomes are inspected with `get_job`, never replaced automatically.

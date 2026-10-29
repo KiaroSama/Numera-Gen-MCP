@@ -1,6 +1,6 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     adapters::types::{Normalized, ResultItem},
     compat::value::{Value, json},
     config::Config,

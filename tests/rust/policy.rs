@@ -1,5 +1,5 @@
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     capabilities::{capabilities, effective_request, safe_options},
     dimensions::{evidence, image_dimensions, validate},
     error::Result,

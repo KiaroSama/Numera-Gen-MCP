@@ -16,7 +16,7 @@ use tokio_util::sync::CancellationToken;
 
 pub fn prefix(c: &Value) -> &'static str {
     match c["adapter"].as_str().unwrap_or("") {
-        "comfyui" => "",
+        "comfyui" | "fal-queue" => "",
         "gemini" | "gemini-interactions" => "/v1beta",
         "openrouter-images" => "/api/v1",
         _ => "/v1",
@@ -49,8 +49,24 @@ impl Discovery {
             catalog["cached"] = json!(true);
             return Ok(catalog);
         }
-        let configured=array(&c["configuredModels"]).iter().map(|m|json!({"id":m["id"],"name":m["name"],"configured":true,
-            "metadata":{"source":"configured","account_availability":"unknown","generation_verified":false}})).collect::<Vec<_>>();
+        let configured = array(&c["configuredModels"])
+            .iter()
+            .map(|model| {
+                let mut item = json!({"id":model["id"],"name":model["name"],"configured":true,
+                    "metadata":{"source":"configured","account_availability":"unknown","generation_verified":false}});
+                if let Some(declaration) = model["id"]
+                    .as_js_string()
+                    .and_then(|id| crate::config::media::declaration(&c, id))
+                {
+                    item["output_types"] = declaration["outputTypes"].clone();
+                    item["modes"] = declaration["modes"].clone();
+                }
+                item
+            })
+            .collect::<Vec<_>>();
+        if c["adapter"] == "fal-queue" {
+            return Ok(json!({"models":configured,"complete":true,"warnings":["Configured fal endpoints only; provider discovery and account availability are not verified."],"cached":false,"checked_at":time()}));
+        }
         if !refresh && !configured.is_empty() {
             return Ok(
                 json!({"models":configured,"complete":true,"warnings":["Configured model list only; provider availability is unverified. Use refresh for provider discovery."],"cached":false,"checked_at":time()}),
@@ -186,24 +202,33 @@ impl Discovery {
                 advertised = value;
             }
         }
-        let mut dimensions = dimensions::image_dimensions(
-            &c,
-            model,
-            config.value["files"]["maxPixels"]
-                .as_u64()
-                .unwrap_or(64000000),
-        );
-        dimensions["documented_limits"] = dimensions::evidence(&c, model);
-        dimensions["guidance"] = json!(
-            "Inspect documented model limits before generation. Route safety max_pixels is not a model maximum; verify original returned dimensions and do not infer account entitlement."
-        );
+        let dimensions = if c["adapter"] != "fal-queue"
+            && crate::config::media::has_image_output(&c, model)
+        {
+            let mut dimensions = dimensions::image_dimensions(
+                &c,
+                model,
+                config.value["files"]["maxPixels"]
+                    .as_u64()
+                    .unwrap_or(64000000),
+            );
+            dimensions["documented_limits"] = dimensions::evidence(&c, model);
+            dimensions["guidance"] = json!(
+                "Inspect documented model limits before generation. Route safety max_pixels is not a model maximum; verify original returned dimensions and do not infer account entitlement."
+            );
+            Some(dimensions)
+        } else {
+            None
+        };
         cap["connection"] = json!(id);
         cap["model_id"] = json!(model);
         cap["display_name"] = array(&c["configuredModels"])
             .iter()
             .find(|m| m["id"] == model)
             .map_or(Value::Null, |m| m["name"].clone());
-        cap["dimensions"] = dimensions;
+        if let Some(dimensions) = dimensions {
+            cap["dimensions"] = dimensions;
+        }
         cap["advertised"] = advertised;
         Ok(cap)
     }

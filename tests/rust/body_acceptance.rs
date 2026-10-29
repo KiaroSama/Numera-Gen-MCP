@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::{error::NumeraError, http::bounded::BoundedBytes};
+use numera_gen_mcp::{error::NumeraError, http::bounded::BoundedBytes};
 
 #[test]
 fn exact_source_chunks_advertised_actual_limits_absent_body_and_cancel_reason_are_preserved() {

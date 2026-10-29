@@ -5,8 +5,8 @@ mod config_fixture;
 mod http_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::{cli::readiness, runtime_paths::RuntimePaths};
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::{cli::readiness, runtime_paths::RuntimePaths};
 use std::{collections::HashMap, time::Duration};
 
 #[tokio::test]
@@ -25,11 +25,11 @@ async fn readiness_reports_local_probe_and_model_blockers_without_generation() {
     let bin = workspace.0.join("bin");
     std::fs::create_dir(&bin).unwrap();
     let executable = bin.join(if cfg!(windows) {
-        "numera-image-gen-mcp.exe"
+        "numera-gen-mcp.exe"
     } else {
-        "numera-image-gen-mcp"
+        "numera-gen-mcp"
     });
-    std::fs::copy(env!("CARGO_BIN_EXE_numera-image-gen-mcp"), &executable).unwrap();
+    std::fs::copy(env!("CARGO_BIN_EXE_numera-gen-mcp"), &executable).unwrap();
     let mut env = HashMap::new();
     for key in ["SystemRoot", "WINDIR", "LLVM_PROFILE_FILE"] {
         if let Ok(value) = std::env::var(key) {

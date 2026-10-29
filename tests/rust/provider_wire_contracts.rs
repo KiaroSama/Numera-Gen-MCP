@@ -5,8 +5,8 @@ mod config_fixture;
 mod image_fixture;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     adapters::{build_request, normalize, types::Input},
     config::{Config, snapshot_credentials},
     files::images,

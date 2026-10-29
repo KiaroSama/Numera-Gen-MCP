@@ -4,8 +4,8 @@ mod config_fixture;
 #[path = "common/http.rs"]
 mod http_fixture;
 use common::Workspace;
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     config::{Config, credentials, load_config},
     runtime_paths::RuntimePaths,
     services::{discovery::Discovery, health, request},
@@ -31,7 +31,7 @@ fn load(
     value: &Value,
     extra: &[String],
     env: &HashMap<String, String>,
-) -> numera_image_gen_mcp::error::Result<Config> {
+) -> numera_gen_mcp::error::Result<Config> {
     let file = workspace.0.join("config.json");
     std::fs::write(&file, value.to_string().as_bytes()).unwrap();
     let mut args = vec!["--config".into(), file.to_str().unwrap().into()];

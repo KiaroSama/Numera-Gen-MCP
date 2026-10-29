@@ -3,7 +3,7 @@ mod common;
 mod wire;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{Value, json},
     config::Config,
     files::images::{decode_base64, inspect},
@@ -96,7 +96,7 @@ async fn exact_region(polarity: &str) {
             let prompt = body["prompt"].as_str().unwrap();
             assert!(prompt.contains("Preserve the comic panels 日本語"));
             assert!(prompt.contains("Translate the text inside the selected region into Persian"));
-            let mask = numera_image_gen_mcp::files::images::data_url(
+            let mask = numera_gen_mcp::files::images::data_url(
                 body["mask"].as_str().unwrap(),
                 1048576,
             )

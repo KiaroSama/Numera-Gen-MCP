@@ -3,7 +3,7 @@ mod common;
 mod http_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     compat::value::{Value, json},
     config::Config,
     runtime_paths::RuntimePaths,

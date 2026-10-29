@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased 0.3.0 - 2026-10-29
+
+The current source adopts Numera Gen MCP and `numera-gen-mcp`, adds explicit per-model media kinds
+and transformation modes, and authors fal queue orchestration for image, video, audio and 3D outputs.
+The ten legacy image tools remain alongside `generate_media` and `get_media_output_info`.
+Maintained Python/JavaScript tooling is being ported to a separate Rust workspace; the original
+sources remain until equivalent behavior is qualified, and the five PowerShell scripts stay unchanged.
+
+These changes are uncompiled and unexecuted. Current lockfile resolution, formatting, assertion parity,
+six-target runtime/package verification and genuine signatures remain required before release.
+A separate manual source-preparation route resolves/formats candidate source without tests or signing
+inputs. Existing-key signing on `main` is authorized but has not run for this candidate.
+The installation guide uses the published 0.2.0 archive and its actual legacy executable/template;
+current-source examples and media declarations do not upgrade that binary.
+
 ## Native 0.2.0 - 2026-10-26
 
 Rust replaces the production runtime while preserving ten tools, provider wire contracts, private
@@ -17,7 +32,7 @@ rebuilding/repacking; the downloaded Windows x64 Release passed pinned signature
 trust/notarization, and actual owner-host cutover from CI/isolated readiness. Old runtime/data remain
 until the owner switches the entry and verifies the real native connection.
 
-## Unreleased - 2026-10-05
+## Historical TypeScript changes - 2026-10-05
 
 Authoritative upstream failures/cancellation now close lifecycle capacity through fenced transitions.
 Empty orphan allocations release unused journal reservations without deleting uncertain receipts.

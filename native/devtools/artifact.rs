@@ -57,7 +57,7 @@ pub fn target() -> &'static str {
         _ => "unsupported",
     }
 }
-pub(super) fn read(root: &Path, name: &str, limit: u64) -> Result<Vec<u8>> {
+pub fn read(root: &Path, name: &str, limit: u64) -> Result<Vec<u8>> {
     safe_relative(name).map_err(|_| invalid())?;
     if name.contains('\\') {
         return Err(invalid());
@@ -143,17 +143,22 @@ fn valid_version(version: &str) -> bool {
                 && part.parse::<u32>().is_ok()
         })
 }
+pub fn verify_native(path: &Path) -> Result<()> {
+    #[cfg(windows)]
+    super::signature_windows::verify(path)?;
+    #[cfg(target_os = "macos")]
+    super::signature_macos::verify(path)?;
+    #[cfg(not(any(windows, target_os = "macos")))]
+    let _ = path;
+    Ok(())
+}
+
 pub fn verify_activation(directory: &Path) -> Result<Prepared> {
     let prepared = verify(directory)?;
     for member in &prepared.manifest.files {
         if member.path.starts_with("bin/") {
             let path = prepared.root.join(&member.path);
-            #[cfg(windows)]
-            super::signature_windows::verify(&path)?;
-            #[cfg(target_os = "macos")]
-            super::signature_macos::verify(&path)?;
-            #[cfg(not(any(windows, target_os = "macos")))]
-            let _ = path;
+            verify_native(&path)?;
         }
     }
     // Pin the same bytes again after native verification, before any installation mutation.
@@ -207,10 +212,12 @@ pub fn verify(directory: &Path) -> Result<Prepared> {
     {
         return Err(invalid());
     }
-    let binary = if cfg!(windows) {
-        "bin/numera-image-gen-mcp.exe"
-    } else {
-        "bin/numera-image-gen-mcp"
+    // Historical signed releases keep their authenticated old filename; no bytes are rewritten.
+    let binary = match (manifest.version.as_str(), cfg!(windows)) {
+        ("0.1.0" | "0.2.0", true) => "bin/numera-image-gen-mcp.exe",
+        ("0.1.0" | "0.2.0", false) => "bin/numera-image-gen-mcp",
+        (_, true) => "bin/numera-gen-mcp.exe",
+        (_, false) => "bin/numera-gen-mcp",
     };
     let mut names = HashSet::new();
     let mut total = 0u64;

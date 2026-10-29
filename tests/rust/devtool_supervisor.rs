@@ -1,6 +1,6 @@
 mod common;
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     devtools::supervisor::{Bounds, run},
     logging::Logger,
 };
@@ -137,12 +137,74 @@ fn fixture_worker() {
             // Exit bypasses Drop; the outer supervisor still owns the live descendant.
             std::process::exit(37);
         }
+        "cwd" => {
+            let expected = std::env::var_os("NUMERA_DEV_FIXTURE_CWD").unwrap();
+            assert_eq!(std::env::current_dir().unwrap().canonicalize().unwrap(),
+                Path::new(&expected).canonicalize().unwrap());
+            for key in ["TEMP", "TMP", "TMPDIR"] {
+                assert_eq!(Path::new(&std::env::var_os(key).unwrap()).canonicalize().unwrap(),
+                    root.join(".runtime/temp").canonicalize().unwrap());
+            }
+            fs::write(root.join("cwd-observed"), b"verified").unwrap();
+        }
+        "metadata-output" => {
+            io::stdout().write_all(&vec![b'm'; 3 * 1024 * 1024]).unwrap();
+        }
         "output" => {
             io::stdout()
                 .write_all(&vec![b'x'; 3 * 1024 * 1024])
                 .unwrap();
         }
         _ => panic!("Unknown native fixture mode."),
+    }
+}
+
+#[test]
+fn bounded_execution_keeps_explicit_contained_cwd_and_refuses_unowned_or_missing_directories() {
+    let workspace = Workspace::new();
+    let root = &workspace.0;
+    let package = root.join("package with spaces");
+    fs::create_dir(&package).unwrap();
+    let logger = Logger::new(&root.join("logs"), "ERROR");
+    for cwd in [None, Some(package.as_path())] {
+        let expected = cwd.unwrap_or(root);
+        let mut worker = command(root, "cwd");
+        worker.env("NUMERA_DEV_FIXTURE_CWD", expected);
+        if let Some(cwd) = cwd { worker.current_dir(cwd); }
+        let outcome = run(&mut worker, root, Bounds::new(5000, 2000).unwrap(),
+            &AtomicBool::new(false), &logger).unwrap();
+        assert_eq!(outcome.code, 0);
+        assert!(outcome.reason.is_none() && outcome.cleanup_verified);
+        assert_eq!(fs::read(root.join("cwd-observed")).unwrap(), b"verified");
+        fs::remove_file(root.join("cwd-observed")).unwrap();
+    }
+    let unrelated = Workspace::new();
+    let missing = root.join("missing");
+    for invalid in [unrelated.0.as_path(), missing.as_path(), Path::new("relative")] {
+        let mut worker = command(root, "cwd");
+        worker.current_dir(invalid).env("NUMERA_DEV_FIXTURE_CWD", root);
+        assert!(run(&mut worker, root, Bounds::new(5000, 2000).unwrap(),
+            &AtomicBool::new(false), &logger).is_err());
+        assert!(!root.join("cwd-observed").exists(), "invalid CWD must reject before child execution");
+    }
+}
+
+#[test]
+fn explicitly_bounded_metadata_capture_does_not_weaken_default_output_limit() {
+    let workspace = Workspace::new();
+    let logger = Logger::new(&workspace.0.join("logs"), "INFO");
+    let cancelled = AtomicBool::new(false);
+    let default = run(&mut command(&workspace.0, "metadata-output"), &workspace.0,
+        Bounds::new(5000, 2000).unwrap(), &cancelled, &logger).unwrap();
+    assert_eq!(default.reason.as_deref(), Some("output_limit"));
+    let bounded = run(&mut command(&workspace.0, "metadata-output"), &workspace.0,
+        Bounds::new(5000, 2000).unwrap().with_output_limit(4 * 1024 * 1024).unwrap(),
+        &cancelled, &logger).unwrap();
+    assert_eq!(bounded.code, 0);
+    assert!(bounded.cleanup_verified);
+    assert_eq!(bounded.stdout.iter().filter(|byte| **byte == b'm').count(), 3 * 1024 * 1024);
+    for invalid in [0, 16 * 1024 * 1024 + 1] {
+        assert!(Bounds::new(5000, 2000).unwrap().with_output_limit(invalid).is_err());
     }
 }
 

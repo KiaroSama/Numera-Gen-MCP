@@ -5,7 +5,7 @@ mod multipart;
 mod wire;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use common::Workspace;
-use numera_image_gen_mcp::{
+use numera_gen_mcp::{
     adapters::{build_request, types::Input},
     capabilities,
     compat::value::{Value, json},
@@ -19,7 +19,7 @@ use reqwest::Method;
 use std::{collections::HashMap, path::Path, time::Duration};
 use tokio_util::sync::CancellationToken;
 
-fn config(root: &Path, connection: Value) -> numera_image_gen_mcp::error::Result<Config> {
+fn config(root: &Path, connection: Value) -> numera_gen_mcp::error::Result<Config> {
     Config::parse(
         &json!({
             "schemaVersion":1,"defaultConnection":"local",
@@ -67,7 +67,7 @@ fn original(name: &str, dimensions: (u32, u32)) -> Image {
 }
 
 fn input<'a>(c: &'a Value, r: &'a Value, references: &'a [Image]) -> Input<'a> {
-    static MODEL: std::sync::OnceLock<numera_image_gen_mcp::compat::value::JsString> =
+    static MODEL: std::sync::OnceLock<numera_gen_mcp::compat::value::JsString> =
         std::sync::OnceLock::new();
     Input {
         connection: c,

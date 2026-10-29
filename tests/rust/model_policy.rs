@@ -1,8 +1,8 @@
 #[path = "common/http.rs"]
 mod http_fixture;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::json;
-use numera_image_gen_mcp::services::{model_policy, request};
+use numera_gen_mcp::compat::value::json;
+use numera_gen_mcp::services::{model_policy, request};
 use std::{
     collections::HashMap,
     sync::{

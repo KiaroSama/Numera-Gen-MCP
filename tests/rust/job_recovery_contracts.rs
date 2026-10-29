@@ -7,8 +7,8 @@ mod http_fixture;
 mod image_fixture;
 use common::Workspace;
 use http_fixture::{Reply, Server};
-use numera_image_gen_mcp::compat::value::{Value, json};
-use numera_image_gen_mcp::{
+use numera_gen_mcp::compat::value::{Value, json};
+use numera_gen_mcp::{
     config::{Config, snapshot_credentials},
     jobs::{Receipt, Store},
     logging::Logger,
@@ -67,7 +67,7 @@ async fn seed(generation: &Generation, id: &str, kind: Option<&str>, release: bo
     }
     receipt
 }
-fn failure<T>(result: numera_image_gen_mcp::error::Result<T>) -> String {
+fn failure<T>(result: numera_gen_mcp::error::Result<T>) -> String {
     result.err().expect("expected rejection").code
 }
 fn comfy(workspace: &Workspace, origin: &str) -> Value {

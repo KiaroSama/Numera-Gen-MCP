@@ -1,4 +1,4 @@
-use numera_image_gen_mcp::{compat::hash::sha256, devtools::artifact};
+use numera_gen_mcp::{compat::hash::sha256, devtools::artifact};
 use std::path::Path;
 
 pub fn prepared(root: &Path) {
