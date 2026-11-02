@@ -61,18 +61,38 @@ pub async fn request_observed(
 }
 
 pub async fn request_statuses(
-    connection: &Value, headers: &HashMap<String, String>, wire: Operation<'_>,
-    cancel: &CancellationToken, limit: usize, allowed: &[u16],
+    connection: &Value,
+    headers: &HashMap<String, String>,
+    wire: Operation<'_>,
+    cancel: &CancellationToken,
+    limit: usize,
+    allowed: &[u16],
 ) -> Result<ApiResponse> {
     if allowed.iter().any(|status| ![400, 404].contains(status)) || wire.method != Method::PUT {
-        return Err(NumeraError::new("invalid_input", "Only documented cancellation status bodies may be inspected."));
+        return Err(NumeraError::new(
+            "invalid_input",
+            "Only documented cancellation status bodies may be inspected.",
+        ));
     }
-    request_inner(connection, headers, wire, cancel, limit, allowed, |_, _, _| {}).await
+    request_inner(
+        connection,
+        headers,
+        wire,
+        cancel,
+        limit,
+        allowed,
+        |_, _, _| {},
+    )
+    .await
 }
 
 async fn request_inner(
-    connection: &Value, headers: &HashMap<String, String>, wire: Operation<'_>,
-    cancel: &CancellationToken, limit: usize, allowed: &[u16],
+    connection: &Value,
+    headers: &HashMap<String, String>,
+    wire: Operation<'_>,
+    cancel: &CancellationToken,
+    limit: usize,
+    allowed: &[u16],
     prepared: impl FnOnce(u64, u64, u64) + Send,
 ) -> Result<ApiResponse> {
     let started = Instant::now();

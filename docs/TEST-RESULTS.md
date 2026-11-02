@@ -1,17 +1,26 @@
 # Test results
 
-## Current 0.3.0 candidate — source status, 2026-10-29
+## Current 0.3.0 candidate — source status, 2026-11-02
 
 The rebranded Numera Gen MCP workspace, Rust tooling and additive image/video/audio/3D contracts
-are authored but **not compiled, formatted or executed** on this tree. Local Rust execution remains
-prohibited; no new hosted qualification run has occurred. New regression source, JSON examples,
-source-inventory counts and whitespace checks are not passing runtime tests.
+remain **uncompiled and unexecuted** on the current tree. The isolated
+[preparation run40956557555](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40956557555)
+succeeded for `60be391`, returning the resolved workspace lock and reviewed formatting, not runtime
+qualification. Later source edits still require hosted formatting. Local Rust execution remains
+prohibited; source checks and authored regression tests are not passing runtime tests.
 
-Pending gates include Cargo-generated workspace lock/format preparation, execution of the authored
-owned bootstrap, current 470-case assertion review/execution binding, every discovered workspace suite on six native
-targets, instrumented runtime 85/80 coverage, signatures and extracted/isolated activation. Existing
-protected signing authority covers the deleted migration ref only, not `main`. No new signed release,
-provider call, upload, GPU-quality test or real host configuration change is claimed.
+Pending gates include current 470-case assertion/execution and migrated tooling scenario binding,
+every discovered workspace suite on six native targets, instrumented runtime 85/80 coverage,
+signatures and extracted/isolated activation. The owner approved the existing signing identity on
+`main`; the manual qualification and protected signing guards still apply. Authority is not a signing
+result. No new signed release, provider call, upload, GPU-quality test or real host edit is claimed.
+
+The authored evidence path now joins exact release/extracted-intermediate SDK names and the same
+tested binary, then separately collects all six signed signature/extraction/activation/SDK receipts.
+Receipt digests, successful original job logs and source/run/attempt provenance are load-bearing;
+source or synthetic validator checks do not establish that those stages ran. The final signed
+collector and its contracts remain uncompiled and unexecuted, with semantic qualification and
+retirement explicitly unapproved. See [developer tooling](DEVELOPER-TOOLS.md).
 
 ## Historical native 0.2.0 qualification
 

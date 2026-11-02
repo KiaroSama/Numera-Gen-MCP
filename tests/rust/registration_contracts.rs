@@ -39,13 +39,10 @@ fn json_host_merge_rejects_invalid_shapes_and_preserves_unrelated_unicode_fields
         );
         let added = merge(text, "ClaudeProject", false, &binary, &config).unwrap();
         let value: Value = serde_json::from_str(&added).unwrap();
-        assert_eq!(value["mcpServers"]["numera-gen"]["type"], "stdio");
+        assert_eq!(value["mcpServers"]["numera-gen-mcp"]["type"], "stdio");
+        assert_eq!(value["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
         assert_eq!(
-            value["mcpServers"]["numera-gen"]["args"],
-            json!(["bridge"])
-        );
-        assert_eq!(
-            value["mcpServers"]["numera-gen"]["env"]["NUMERA_CONFIG"],
+            value["mcpServers"]["numera-gen-mcp"]["env"]["NUMERA_CONFIG"],
             json!(config)
         );
         assert_eq!(
@@ -61,6 +58,39 @@ fn json_host_merge_rejects_invalid_shapes_and_preserves_unrelated_unicode_fields
 }
 
 #[test]
+fn current_registration_owns_only_the_exact_numera_gen_mcp_entry() {
+    let workspace = Workspace::new();
+    let binary = workspace.0.join("bin/numera-gen-mcp");
+    let config = workspace.0.join("config.json");
+    let retained = json!({"numera-gen":{"command":"old"},
+        "numera-image-gen":{"command":"legacy"},
+        "numera-gen-mcp-extra":{"command":"unrelated"}});
+    let original = json!({"model":"日本語","mcpServers":retained});
+    for client in ["ClaudeDesktop", "ClaudeProject"] {
+        let before = original.to_string();
+        assert_eq!(merge(&before, client, true, &binary, &config).unwrap(), before);
+        let added = merge(&before, client, false, &binary, &config).unwrap();
+        let parsed: Value = serde_json::from_str(&added).unwrap();
+        assert_eq!(parsed["mcpServers"].as_object().unwrap().len(), 4);
+        assert_eq!(parsed["mcpServers"]["numera-gen-mcp"]["command"], json!(binary));
+        assert_eq!(parsed["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
+        for (name, entry) in retained.as_object().unwrap() {
+            assert_eq!(&parsed["mcpServers"][name], entry);
+        }
+        assert_eq!(merge(&added, client, false, &binary, &config).unwrap(), added);
+        let removed = merge(&added, client, true, &binary, &config).unwrap();
+        assert_eq!(serde_json::from_str::<Value>(&removed).unwrap(), original);
+    }
+    let before = "# retain\r\n[mcp_servers.numera-gen]\r\ncommand = 'old'\r\n[mcp_servers.numera-image-gen]\r\ncommand = 'legacy'\r\n[mcp_servers.numera-gen-mcp-extra]\r\ncommand = 'unrelated'\r\n";
+    assert_eq!(merge(before, "Codex", true, &binary, &config).unwrap(), before);
+    let added = merge(before, "Codex", false, &binary, &config).unwrap();
+    assert!(added.starts_with(before));
+    assert_eq!(added.matches("[mcp_servers.numera-gen-mcp]\r\n").count(), 1);
+    assert_eq!(merge(&added, "Codex", false, &binary, &config).unwrap(), added);
+    assert_eq!(merge(&added, "Codex", true, &binary, &config).unwrap(), before);
+}
+
+#[test]
 fn conservative_toml_merge_handles_nested_owned_sections_and_rejects_ambiguous_syntax() {
     let workspace = Workspace::new();
     let binary = workspace.0.join("bin/server");
@@ -71,9 +101,9 @@ fn conservative_toml_merge_handles_nested_owned_sections_and_rejects_ambiguous_s
         "[]\n",
         "['quoted']\n",
         "broken\n",
-        "[mcp_servers.numera-gen]\nx=1\nx=2\n",
-        "[mcp_servers.numera-gen.env]\nx=1\n",
-        "[mcp_servers]\nnumera-gen = {}\n",
+        "[mcp_servers.numera-gen-mcp]\nx=1\nx=2\n",
+        "[mcp_servers.numera-gen-mcp.env]\nx=1\n",
+        "[mcp_servers]\nnumera-gen-mcp = {}\n",
         "x = [1\n",
         "x = }\n",
         "x = \"unterminated\n",
@@ -88,7 +118,7 @@ fn conservative_toml_merge_handles_nested_owned_sections_and_rejects_ambiguous_s
     }
     let original = "# retain\nmodel = \"日本語\"\n[mcp_servers.other]\ncommand = 'keep' # retain\n";
     let with_owned = format!(
-        "{original}[mcp_servers.numera-gen]\ncommand = \"obsolete\"\n[mcp_servers.numera-gen.env]\nX = 'old'\n[another]\na = [1, 2]\nb = {{ key = \"escaped\\\"value\" }}\n"
+        "{original}[mcp_servers.numera-gen-mcp]\ncommand = \"obsolete\"\n[mcp_servers.numera-gen-mcp.env]\nX = 'old'\n[another]\na = [1, 2]\nb = {{ key = \"escaped\\\"value\" }}\n"
     );
     let removed = merge(&with_owned, "Codex", true, &binary, &config).unwrap();
     assert!(removed.starts_with(original));
@@ -96,7 +126,7 @@ fn conservative_toml_merge_handles_nested_owned_sections_and_rejects_ambiguous_s
     assert!(!removed.contains("obsolete"));
     assert!(!removed.contains("X = 'old'"));
     let added = merge("model='keep'", "Codex", false, &binary, &config).unwrap();
-    assert!(added.starts_with("model='keep'\n[mcp_servers.numera-gen]\n"));
+    assert!(added.starts_with("model='keep'\n[mcp_servers.numera-gen-mcp]\n"));
     assert_eq!(
         merge(&added, "Codex", false, &binary, &config).unwrap(),
         added
@@ -157,10 +187,7 @@ fn registration_rejects_unsafe_files_and_creates_only_requested_entry_with_recov
     )
     .unwrap();
     let added: Value = serde_json::from_slice(&std::fs::read(&absent).unwrap()).unwrap();
-    assert_eq!(
-        added["mcpServers"]["numera-gen"]["command"],
-        json!(binary)
-    );
+    assert_eq!(added["mcpServers"]["numera-gen-mcp"]["command"], json!(binary));
     register(
         "ClaudeDesktop",
         true,

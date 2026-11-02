@@ -42,9 +42,8 @@ async fn installed_comfy_graph_gpu_preflight_upload_submission_and_terminal_hist
     }}).await;
     let config = json!({"adapter":"comfyui","baseUrl":server.origin,"baseUrlMode":"api-prefix","discoveryTimeoutMs":2000,"requestTimeoutMs":2000,
         "workflow":{"graph":{"text":{"class_type":"Text","inputs":{"text":"old"}},"sampler":{"class_type":"Sampler","inputs":{"seed":0,"batch_size":1}},"load":{"class_type":"Load","inputs":{"image":"old.png","mask":"old-mask.png"}},"save":{"class_type":"Save","inputs":{"images":["sampler",0]}}},"bindings":{"prompt":{"node":"text","input":"text"},"seed":{"node":"sampler","input":"seed"},"count":{"node":"sampler","input":"batch_size"},"image":{"node":"load","input":"image"},"mask":{"node":"load","input":"mask"}},"outputNodes":["save"],"requireGpu":true}});
-    let image =
-        numera_gen_mcp::files::images::inspect(image_fixture::original(), &json!({}), None)
-            .unwrap();
+    let image = numera_gen_mcp::files::images::inspect(image_fixture::original(), &json!({}), None)
+        .unwrap();
     let references = [image.clone()];
     let request = json!({"prompt":"fixture","count":1,"seed":42,"provider_options":{}});
     let input = Input {

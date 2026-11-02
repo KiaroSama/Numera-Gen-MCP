@@ -1,8 +1,6 @@
 mod common;
 use common::Workspace;
-use numera_gen_mcp::cli::http_settings::{
-    port, save_port, split_port_args, token, token_path,
-};
+use numera_gen_mcp::cli::http_settings::{port, save_port, split_port_args, token, token_path};
 use std::{collections::HashMap, io::Write};
 
 #[test]

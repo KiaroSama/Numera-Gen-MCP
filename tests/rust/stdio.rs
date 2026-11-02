@@ -89,10 +89,7 @@ impl Drop for Host {
 fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
     let mut host = Host::start();
     let response=host.rpc(json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"native-ci","version":"1"}}}));
-    assert_eq!(
-        response["result"]["serverInfo"]["name"],
-        "numera-gen-mcp"
-    );
+    assert_eq!(response["result"]["serverInfo"]["name"], "numera-gen-mcp");
     writeln!(
         host.child.stdin.as_mut().unwrap(),
         "{}",
@@ -100,7 +97,9 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
     )
     .unwrap();
     let response = host.rpc(json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}));
-    let tools = response["result"]["tools"].as_array().expect("twelve tools");
+    let tools = response["result"]["tools"]
+        .as_array()
+        .expect("twelve tools");
     assert_eq!(tools.len(), 12);
     for name in [
         "health_check",

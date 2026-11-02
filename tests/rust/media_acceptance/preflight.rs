@@ -1,9 +1,23 @@
-use super::{fixtures as f,host::{self,structured},provider::{Gate,Provider,Reply},support as s};
+use super::{
+    fixtures as f,
+    host::{self, structured},
+    provider::{Gate, Provider, Reply},
+    support as s,
+};
+use base64::Engine;
 use serde_json::json;
-use std::{collections::HashSet,sync::{Arc,atomic::{AtomicUsize,Ordering}},time::{Duration,Instant}};
+use std::{
+    collections::HashSet,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::{Duration, Instant},
+};
 
 pub async fn run() {
     defaults().await;
+    explicit_image_expectations_survive_original_publication_and_local_recovery().await;
     no_reference_io_before_contract_validation().await;
     absolute_poll_deadline().await;
     cancelled_completed_result_is_recoverable().await;
@@ -51,28 +65,154 @@ async fn changed_account_still_cancels_the_local_waiter() {
 }
 
 async fn defaults() {
-    host::scenario(30000,async{
-        let work=f::workspace();let directory=f::directory(&work,"media-effective-defaults");
-        let (url,mime,bytes)=s::data("audio");
-        let wire=s::normal_provider(s::AUDIO,s::output(s::AUDIO,&url,mime),Arc::new(AtomicUsize::new(0))).await;
-        let mut config=s::config(&directory,&wire.origin,&[(s::AUDIO,"text-to-audio",&["audio"])]);
-        config["connections"]["local"]["defaults"]=json!({"seconds_total":3,"steps":20});
-        config["connections"]["local"]["modelOverrides"][s::AUDIO]["defaults"]=json!({"seconds_total":2,"steps":30});
-        let mut first=s::start(&directory,&config,"media-defaults-first").await;
-        let mut request=s::request("effective-defaults",s::AUDIO,"text-to-audio",true,&[]);
-        request["parameters"]=json!({"steps":40});
-        let done=s::generate(&first,request.clone()).await;
-        s::verified(&first,&done,"audio",mime,&bytes).await;
-        let calls=wire.captured();let body=calls.iter().find(|r|r.method=="POST").unwrap().json();
-        assert_eq!(body["seconds_total"],2);assert_eq!(body["steps"],40);
+    host::scenario(30000, async {
+        let work = f::workspace();
+        let directory = f::directory(&work, "media-effective-defaults");
+        let (url, mime, bytes) = s::data("audio");
+        let wire = s::normal_provider(
+            s::AUDIO,
+            s::output(s::AUDIO, &url, mime),
+            Arc::new(AtomicUsize::new(0)),
+        )
+        .await;
+        let mut config = s::config(
+            &directory,
+            &wire.origin,
+            &[(s::AUDIO, "text-to-audio", &["audio"])],
+        );
+        config["connections"]["local"]["defaults"] = json!({"seconds_total":3,"steps":20});
+        config["connections"]["local"]["modelOverrides"][s::AUDIO]["defaults"] =
+            json!({"seconds_total":2,"steps":30});
+        let mut first = s::start(&directory, &config, "media-defaults-first").await;
+        let mut request = s::request("effective-defaults", s::AUDIO, "text-to-audio", true, &[]);
+        request["parameters"] = json!({"steps":40});
+        let done = s::generate(&first, request.clone()).await;
+        s::verified(&first, &done, "audio", mime, &bytes).await;
+        let calls = wire.captured();
+        let body = calls.iter().find(|r| r.method == "POST").unwrap().json();
+        assert_eq!(body["seconds_total"], 2);
+        assert_eq!(body["steps"], 40);
         first.close().await.unwrap();
-        config["connections"]["local"]["modelOverrides"][s::AUDIO]["defaults"]["seconds_total"]=json!(4);
-        let mut changed=s::start(&directory,&config,"media-defaults-changed").await;
-        let conflict=changed.call("generate_media",request).await;
-        assert_eq!(conflict["isError"],true);assert!(conflict.to_string().contains("request_id_conflict"));
-        assert_eq!(wire.posts(),1,"changed effective defaults may not reuse or replay a charged request");
-        changed.close().await.unwrap();wire.close().await;
-    }).await;
+        config["connections"]["local"]["modelOverrides"][s::AUDIO]["defaults"]["seconds_total"] =
+            json!(4);
+        let mut changed = s::start(&directory, &config, "media-defaults-changed").await;
+        let conflict = changed.call("generate_media", request).await;
+        assert_eq!(conflict["isError"], true);
+        assert!(conflict.to_string().contains("request_id_conflict"));
+        assert_eq!(
+            wire.posts(),
+            1,
+            "changed effective defaults may not reuse or replay a charged request"
+        );
+        changed.close().await.unwrap();
+        wire.close().await;
+    })
+    .await;
+}
+
+async fn explicit_image_expectations_survive_original_publication_and_local_recovery() {
+    for (label, mismatch, recover) in [
+        ("matching", false, false),
+        ("jpeg", false, false),
+        ("mismatching", true, false),
+        ("recovered", true, true),
+    ] {
+        host::scenario(35000, async {
+            let work = f::workspace();
+            let directory = f::directory(&work, &format!("media-expectations-{label}"));
+            let (url, mime, bytes) = if label == "jpeg" {
+                let image = image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(
+                    1, 1, image::Rgb([1, 2, 3]),
+                ));
+                let mut bytes = std::io::Cursor::new(Vec::new());
+                image.write_to(&mut bytes, image::ImageFormat::Jpeg).unwrap();
+                let bytes = bytes.into_inner();
+                let encoded = base64::engine::general_purpose::STANDARD.encode(&bytes);
+                (format!("data:image/jpeg;base64,{encoded}"), "image/jpeg", bytes)
+            } else {
+                s::data("image")
+            };
+            let format = if label == "jpeg" { "jpeg" } else { "png" };
+            let wire = s::normal_provider(
+                s::IMAGE,
+                s::output(s::IMAGE, &url, mime),
+                Arc::new(AtomicUsize::new(0)),
+            )
+            .await;
+            let mut config = s::config(
+                &directory,
+                &wire.origin,
+                &[(s::IMAGE, "text-to-image", &["image"])],
+            );
+            config["connections"]["local"]["defaults"] =
+                json!({"num_images":4,"output_format":"jpeg","image_size":{"width":2,"height":1}});
+            config["connections"]["local"]["modelOverrides"][s::IMAGE]["defaults"] =
+                json!({"num_images":3});
+            let output_root = directory.join("outputs");
+            if recover {
+                std::fs::write(&output_root, b"controlled publication blocker").unwrap();
+            }
+            let id = format!("expectations-{label}");
+            let mut first = s::start(&directory, &config, "media-expectations-first").await;
+            let mut request = s::request(&id, s::IMAGE, "text-to-image", true, &[]);
+            request["parameters"] = if mismatch {
+                json!({"num_images":2})
+            } else {
+                json!({"num_images":1,"output_format":format,"image_size":{"width":1,"height":1}})
+            };
+            let mut done = s::generate(&first, request).await;
+            let posted = wire.captured();
+            let body = posted.iter().find(|r| r.method == "POST").unwrap().json();
+            assert_eq!(body["num_images"], if mismatch { 2 } else { 1 });
+            assert_eq!(body["output_format"], if mismatch { "jpeg" } else { format });
+            if recover {
+                assert_eq!(done["status"], "finalizing");
+                assert_eq!(done["generation_outcome"], "completed");
+                assert!(done["outputs"].as_array().unwrap().is_empty());
+                first.close().await.unwrap();
+                std::fs::remove_file(&output_root).unwrap();
+                config["connections"]["local"]["defaults"] = json!({
+                    "num_images":1,"output_format":"png","image_size":{"width":1,"height":1}
+                });
+                config["connections"]["local"]["modelOverrides"][s::IMAGE]["defaults"] = json!({});
+                let mut reopened = s::start(&directory, &config, "media-expectations-reopened").await;
+                let network_before = wire.captured().len();
+                done = reopened.job(&id, true).await;
+                assert_eq!(wire.captured().len(), network_before, "retained original recovery is local");
+                let again = reopened.job(&id, true).await;
+                assert_eq!(again["outputs"], done["outputs"]);
+                assert_eq!(again["deviations"], done["deviations"]);
+                reopened.close().await.unwrap();
+            } else {
+                first.close().await.unwrap();
+            }
+            assert_eq!(done["status"], if mismatch { "partial" } else { "completed" });
+            assert_eq!(done["storage_outcome"], "completed");
+            assert_eq!(done["generation_outcome"], "completed");
+            assert!(done["errors"].as_array().unwrap().is_empty());
+            assert_eq!(done["outputs"].as_array().unwrap().len(), 1);
+            let saved = &done["outputs"][0];
+            assert_eq!(saved["format"], if label == "jpeg" { "jpg" } else { "png" });
+            assert_eq!(saved["mime_type"], mime);
+            assert_eq!(saved["media"]["width"], 1);
+            assert_eq!(saved["media"]["height"], 1);
+            assert_eq!(std::fs::read(saved["path"].as_str().unwrap()).unwrap(), bytes);
+            assert_eq!(saved["sha256"], numera_gen_mcp::compat::hash::sha256(&bytes));
+            let expected = if mismatch {
+                json!([
+                    "Output 0 format is png, not requested jpeg.",
+                    "Output 0 dimensions differ from requested size.",
+                    "Requested 2 image original(s), saved 1."
+                ])
+            } else {
+                json!([])
+            };
+            assert_eq!(done["deviations"], expected);
+            assert_eq!(wire.posts(), 1, "deviations must never trigger regeneration");
+            wire.close().await;
+        })
+        .await;
+    }
 }
 
 async fn no_reference_io_before_contract_validation() {
@@ -95,27 +235,63 @@ async fn no_reference_io_before_contract_validation() {
 }
 
 async fn absolute_poll_deadline() {
-    host::scenario(25000,async{
-        let work=f::workspace();let directory=f::directory(&work,"media-poll-absolute-deadline");
-        let entered=Gate::new();let release=Gate::new();let arrived=entered.clone();let held=release.clone();
-        let wire=Provider::new(move|request,stop|{let arrived=arrived.clone();let held=held.clone();async move{
-            s::authenticated(&request);
-            if request.method=="POST" {return Ok(Reply::json(s::handle(s::AUDIO,"deadline")));}
-            arrived.release();tokio::select!{_=held.wait()=>{},_=stop.cancelled()=>{}}
-            Ok(Reply::json(json!({"request_id":"deadline","status":"IN_PROGRESS"})))
-        }}).await;
-        let mut config=s::config(&directory,&wire.origin,&[(s::AUDIO,"text-to-audio",&["audio"])]);
-        config["connections"]["local"]["requestTimeoutMs"]=json!(1200);
-        config["connections"]["local"]["discoveryTimeoutMs"]=json!(10000);
-        let mut host=s::start(&directory,&config,"media-original-deadline").await;
-        let started=Instant::now();
-        let result=host.call_timeout("generate_media",s::request("deadline",s::AUDIO,"text-to-audio",true,&[]),5000).await;
-        assert!(started.elapsed()<Duration::from_secs(4),"status I/O must not receive a fresh ten-second budget");
-        host::bounded(1000,entered.wait()).await;
-        let receipt=if result["isError"]==true {host.job("deadline",false).await}else{structured(&result)};
-        assert_eq!(receipt["status"],"running");assert_eq!(receipt["upstream_job"]["id"],"deadline");
-        assert_eq!(wire.posts(),1);release.release();host.close().await.unwrap();wire.close().await;
-    }).await;
+    host::scenario(25000, async {
+        let work = f::workspace();
+        let directory = f::directory(&work, "media-poll-absolute-deadline");
+        let entered = Gate::new();
+        let release = Gate::new();
+        let arrived = entered.clone();
+        let held = release.clone();
+        let wire = Provider::new(move |request, stop| {
+            let arrived = arrived.clone();
+            let held = held.clone();
+            async move {
+                s::authenticated(&request);
+                if request.method == "POST" {
+                    return Ok(Reply::json(s::handle(s::AUDIO, "deadline")));
+                }
+                arrived.release();
+                tokio::select! {_=held.wait()=>{},_=stop.cancelled()=>{}}
+                Ok(Reply::json(
+                    json!({"request_id":"deadline","status":"IN_PROGRESS"}),
+                ))
+            }
+        })
+        .await;
+        let mut config = s::config(
+            &directory,
+            &wire.origin,
+            &[(s::AUDIO, "text-to-audio", &["audio"])],
+        );
+        config["connections"]["local"]["requestTimeoutMs"] = json!(1200);
+        config["connections"]["local"]["discoveryTimeoutMs"] = json!(10000);
+        let mut host = s::start(&directory, &config, "media-original-deadline").await;
+        let started = Instant::now();
+        let result = host
+            .call_timeout(
+                "generate_media",
+                s::request("deadline", s::AUDIO, "text-to-audio", true, &[]),
+                5000,
+            )
+            .await;
+        assert!(
+            started.elapsed() < Duration::from_secs(4),
+            "status I/O must not receive a fresh ten-second budget"
+        );
+        host::bounded(1000, entered.wait()).await;
+        let receipt = if result["isError"] == true {
+            host.job("deadline", false).await
+        } else {
+            structured(&result)
+        };
+        assert_eq!(receipt["status"], "running");
+        assert_eq!(receipt["upstream_job"]["id"], "deadline");
+        assert_eq!(wire.posts(), 1);
+        release.release();
+        host.close().await.unwrap();
+        wire.close().await;
+    })
+    .await;
 }
 
 async fn cancelled_completed_result_is_recoverable() {

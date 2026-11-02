@@ -204,7 +204,14 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
         if number == 0
             || number > 100
             || ![
-                "ID", "NAME", "ENABLED", "OUTPUT_FORMAT", "SIZE", "QUALITY", "OUTPUT_TYPES", "MODES",
+                "ID",
+                "NAME",
+                "ENABLED",
+                "OUTPUT_FORMAT",
+                "SIZE",
+                "QUALITY",
+                "OUTPUT_TYPES",
+                "MODES",
             ]
             .contains(&field)
         {

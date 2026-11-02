@@ -622,8 +622,8 @@ At `5b4ec24`, all 97 targets passed six stable platforms and nightly, including 
 CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
 native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
 an additional matrix. Final publication also requires approved embedded publisher identity and genuine
-platform signing. Signed0.2.0 qualified at f253557/run40244894089attempt2; its protected legacy ref
-is now deleted. Main signing authority and new0.3.0 qualification remain blocked, not inherited.
+platform signing. Signed0.2.0 qualified at f253557/run40244894089attempt2; its legacy ref is deleted.
+Existing-key main signing is owner-approved, but new0.3.0 qualification is still pending, not inherited.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with
 two workers and documented wall/idle ceilings. No Rust toolchain install/build/full test runs locally

@@ -41,9 +41,9 @@ already prepared hosted runner:
 | --- | --- |
 | `fixtures`, `evidence-capture`, `evidence-verify` | Materialize independently retained public expected inputs and bind their provenance; never generate expectations from the implementation under test. |
 | `inventory`, `stable`, `coverage`, `coverage-gate` | Check original tooling dispositions and Cargo suite discovery; run workspace gates and enforce production-runtime 85/80 floors. |
-| `ledger`, `case-execution`, `execution-matrix`, `retirement-gate` | Authenticate historical 470-case/50-suite evidence, propose current mappings and bind current exact names per context and across seven hosted contexts. Semantic review and release qualification remain separate; retirement intentionally refuses. |
+| `ledger`, `case-execution`, `execution-matrix`, `signed-execution-matrix`, `retirement-gate` | Authenticate historical 470-case/50-suite evidence, propose current mappings and bind current exact names per context and across seven hosted contexts. Semantic review and release qualification remain separate; retirement intentionally refuses. |
 | `licenses TARGET`, `prepare TARGET`, `stage TARGET` | Preserve actual dependency notices and create bounded allowlisted intermediates/prepared distributions. `prepare` is explicitly unsigned, not a completed app build. |
-| `signing-tools TARGET`, `sign TARGET`, `package TARGET`, `signature-acceptance TARGET`, `extract-intermediate TARGET`, `extract-signed TARGET`, `activation TARGET` | Require their actual prerequisites, approved signer and existing protected authority; signature/extraction/isolated activation are independent gates, not authorization to edit a real host. |
+| `signing-source TARGET`, `signing-tools TARGET`, `sign TARGET`, `package TARGET`, `signature-acceptance TARGET`, `extract-intermediate TARGET`, `extract-signed TARGET`, `activation TARGET` | Require their actual prerequisites, approved signer and existing protected authority; signature/extraction/isolated activation are independent gates, not authorization to edit a real host. |
 
 `stable` and `coverage` compile their selected targets once with `--no-run`, discover each actual
 compiler-emitted test executable, list its names without running, then execute every harness once
@@ -77,16 +77,49 @@ compares raw archive sizes/digests before bounded in-memory member decoding; ver
 original golden bytes and permitted config-path relocation; and reconstructs every case binding
 from its exact phase reports. The original job log must contain that case report's exact digest.
 Every context must have the same repository, source, branch, run and attempt, with its exact supported
-target, platform, phase and job. Self-consistent altered fixture hashes cannot redefine the independently
-retained golden bytes. The resulting `execution-matrix.json` records named execution only, not semantic
-parity, signing or release readiness. This collector and its rejection contracts still require hosted qualification.
+target, platform, phase and job. The tooling scenario binder also requires all three native phase
+reports and joins every mapped SDK/media test to both release and extracted-intermediate execution;
+the latter two must identify the same tested binary. Built-only results cannot satisfy that binding.
+Self-consistent altered fixture hashes cannot redefine the independently retained golden bytes. The
+resulting `execution-matrix.json` records named execution only, not semantic parity, signing or release
+readiness. This collector and its rejection contracts still require hosted qualification.
+
+After genuine signature negatives, signed extraction, isolated activation and SDK execution succeed,
+the signing job writes separate `signature-execution.json` and `signed-extraction-execution.json`
+receipts only after fixture cleanup. They bind the exact signing context, public provenance,
+manifest, tested binary, SDK report and extracted archive hashes. `signed-execution-matrix` waits for
+all six signing jobs, authenticates original report artifacts and unique receipt digests in each
+successful job log, and joins their SDK inventories to the authenticated seven-context report.
+It has read-only GitHub permissions and receives no publisher inputs. Its output records signed
+stage execution, not independent semantic approval, retirement authorization or release readiness;
+the collector itself remains uncompiled and unexecuted until hosted qualification. Final archive
+download and cryptographic verification are still separate delivery gates.
+
+The manual `operation=sign-qualified` route consumes an explicitly selected successful qualification
+run and attempt after main points to the identical SHA. It skips native/coverage suites, authenticates
+the original seven-context matrix and producing jobs, and downloads one exact original intermediate
+artifact ID with digest failure enforced. Before signing inputs are read, staging and signing compare
+the original package-log digest, executed binary hash and complete retained tree. Each signed report
+artifact includes `signing-source.json`; the final collector independently reconstructs that receipt
+against the original run, rather than pretending the signing run executed the earlier suites. The
+protected environment remains main-only. This source route still requires hosted proof and separate
+authority to dispatch; adding it does not authorize a merge, rerun or publication. GitHub's step-output
+file is runner-owned command transport, not an application cache; generated application state stays
+workspace-contained.
+
 `acceptance-prepare` compiles the actual SDK acceptance harnesses without running them, for a later
 extracted artifact check. Target arguments use the exact six triples in the workflow. No command
 silently installs an interpreter, changes a host entry, submits a generation or retries an unknown
 paid outcome. Source coverage and command presence are not execution results.
 
-Cargo owns the shared lockfile. The candidate lock still needs hosted preparation; removing
-`--locked` from qualification or hand-writing dependency resolution is not a substitute. The authored
+`licenses TARGET` follows the locked runtime dependency closure and retains actual notice bytes.
+A reviewed missing-notice supplement requires the corresponding original cached `.crate` digest,
+package identity, VCS revision, declared license and notice digest. Ordinary registry sources are not
+required to contain vendor-generated checksum metadata; missing or changed provenance fails before
+that package's notices are written. These contracts still need actual hosted dependency validation.
+
+Cargo owns the shared lockfile. The isolated preparation returned the resolved workspace lock and
+reviewed formatting; later edits still need final hosted qualification with `--locked`. The authored
 bootstrap downloads the exact host's published 0.2.0 archive, checks its source-pinned SHA-256, and
 selects only its qualified `numera-dev` binary. That native owner supervises contained toolchain
 installation and the first locked task build with wall/idle limits; no second shell supervisor or
@@ -98,6 +131,9 @@ is separate: only the authenticated owner/toolchain setup, real `cargo generate-
 signing environment. It returns a source/ref/run/attempt-bound patch, receipt and checksums; review
 the actual lock/format changes and rebind affected assertion ranges before committing them. Preparation
 is not qualification; `operation=qualify` retains `--locked` and every native/coverage/artifact gate.
+If formatting fails, the stable job retains a bounded tracked-source `formatting.zip` after its
+execution/provenance checks. This is a review candidate only: the original gate still fails, and
+neither the archive nor an automatically formatted workspace qualifies the changed bytes.
 Do not use the candidate to replace the working installation. See [source validation](testing/SOURCE-VALIDATION.md)
 for historical/current distinctions and [test results](TEST-RESULTS.md) for observed evidence.
 

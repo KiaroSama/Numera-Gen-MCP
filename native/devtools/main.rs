@@ -20,10 +20,7 @@ fn execute() -> io::Result<i32> {
         return Ok(0);
     }
     if args.first().is_some_and(|arg| arg == "--version") {
-        println!(
-            "{}",
-            numera_gen_mcp::build_identity::version("numera-dev")
-        );
+        println!("{}", numera_gen_mcp::build_identity::version("numera-dev"));
         return Ok(0);
     }
     if args.first().is_some_and(|arg| arg == "setup") {
@@ -60,7 +57,11 @@ fn execute() -> io::Result<i32> {
             "numera-image-gen-mcp"
         });
         // Signed historical installations retain their original distribution-owned filename.
-        let executable = if current.is_file() || !legacy.is_file() { current } else { legacy };
+        let executable = if current.is_file() || !legacy.is_file() {
+            current
+        } else {
+            legacy
+        };
         let report = numera_gen_mcp::devtools::setup::execute(
             &values,
             &executable,

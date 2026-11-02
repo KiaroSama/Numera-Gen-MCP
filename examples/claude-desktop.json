@@ -1,10 +1,13 @@
 {
   "mcpServers": {
-    "numera-gen": {
+    "numera-gen-mcp": {
       "command": "C:/tools/numera-gen-mcp/bin/numera-gen-mcp.exe",
       "args": ["bridge"],
       "env": {
-        "NUMERA_CONFIG": "C:/tools/numera-gen-mcp/.env"
+        "NUMERA_CONFIG": "C:/tools/numera-gen-mcp/.env",
+        "TEMP": "C:/tools/numera-gen-mcp/.runtime/temp",
+        "TMP": "C:/tools/numera-gen-mcp/.runtime/temp",
+        "TMPDIR": "C:/tools/numera-gen-mcp/.runtime/temp"
       }
     }
   }

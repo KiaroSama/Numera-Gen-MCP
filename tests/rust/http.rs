@@ -76,17 +76,56 @@ fn transport_observer_runs_once_before_send_and_not_for_invalid_configuration() 
 
 #[test]
 fn explicit_fal_cancel_status_is_available_without_accepting_it_for_legacy_calls() {
-    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(wire::serve(
-        |_| wire::Reply { status: 400, mime: "application/json", body: br#"{"status":"ALREADY_COMPLETED"}"#.to_vec() },
-        |origin, _| async move {
-            let c=json!({"baseUrl":origin,"baseUrlMode":"origin","discoveryTimeoutMs":2000});
-            let cancel=CancellationToken::new();
-            let result=api::request_statuses(&c,&HashMap::new(),api::Operation{operation:"cancel",prefix:"",method:Method::PUT,body:api::Body::Empty,query:None},&cancel,4096,&[400,404]).await.unwrap();
-            assert_eq!(result.status,400);assert_eq!(result.bytes,br#"{"status":"ALREADY_COMPLETED"}"#);
-            let legacy=api::request(&c,&HashMap::new(),api::Operation{operation:"cancel",prefix:"",method:Method::PUT,body:api::Body::Empty,query:None},&cancel,4096).await.err().unwrap();
-            assert_eq!(legacy.http_status,Some(400));
-        },
-    ));
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(wire::serve(
+            |_| wire::Reply {
+                status: 400,
+                mime: "application/json",
+                body: br#"{"status":"ALREADY_COMPLETED"}"#.to_vec(),
+            },
+            |origin, _| async move {
+                let c = json!({"baseUrl":origin,"baseUrlMode":"origin","discoveryTimeoutMs":2000});
+                let cancel = CancellationToken::new();
+                let result = api::request_statuses(
+                    &c,
+                    &HashMap::new(),
+                    api::Operation {
+                        operation: "cancel",
+                        prefix: "",
+                        method: Method::PUT,
+                        body: api::Body::Empty,
+                        query: None,
+                    },
+                    &cancel,
+                    4096,
+                    &[400, 404],
+                )
+                .await
+                .unwrap();
+                assert_eq!(result.status, 400);
+                assert_eq!(result.bytes, br#"{"status":"ALREADY_COMPLETED"}"#);
+                let legacy = api::request(
+                    &c,
+                    &HashMap::new(),
+                    api::Operation {
+                        operation: "cancel",
+                        prefix: "",
+                        method: Method::PUT,
+                        body: api::Body::Empty,
+                        query: None,
+                    },
+                    &cancel,
+                    4096,
+                )
+                .await
+                .err()
+                .unwrap();
+                assert_eq!(legacy.http_status, Some(400));
+            },
+        ));
 }
 
 #[test]

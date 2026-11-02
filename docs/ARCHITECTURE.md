@@ -79,6 +79,11 @@ Existing tables/receipt identities remain unchanged; old runtimes do not underst
 PNG/JPEG/WebP, PCM/float WAV, bounded
 visual-track MP4 and self-contained GLB mesh structure are checked without rewriting original bytes.
 These are deliberately limited format validators, not proof of full video decode or 3D rendering.
+`media_requirements.rs` snapshots only explicit effective Flux dev count, format and numeric image
+size requirements. Finalization compares validated primary originals and saved primary counts,
+commits deviations with publication and reports overall partial status independently of successful
+storage. Local recovery retains the original snapshot; sidecars and other media inherit no image
+expectations. Provider defaults and named size presets are not inferred.
 MCP media resource links use `numera-gen://outputs/`; legacy `numera-image://outputs/` remains readable
 and is still emitted by the old image tools. Both return the verified original MIME/blob, not fake
 image content for audio, video or a mesh.

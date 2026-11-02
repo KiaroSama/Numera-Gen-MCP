@@ -189,11 +189,7 @@ fn main() {
             env.insert(key, value);
         }
         if args.first().is_some_and(|s| s == "register") {
-            return numera_gen_mcp::cli::maintenance::register(
-                &args[1..],
-                &root,
-                &executable,
-            );
+            return numera_gen_mcp::cli::maintenance::register(&args[1..], &root, &executable);
         }
         // No target compiler/build/install or helper subprocess is required in production.
         let executor = tokio::runtime::Builder::new_multi_thread()

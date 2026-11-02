@@ -160,7 +160,18 @@ impl ServerHandler for Handler {
             for output in outputs {
                 let id = output["output_id"].as_str().ok_or_else(protocol)?;
                 content.push(ContentBlock::resource_link(
-                    Resource::new(format!("{}://outputs/{id}", if name == "generate_media" { "numera-gen" } else { "numera-image" }), id).with_mime_type(
+                    Resource::new(
+                        format!(
+                            "{}://outputs/{id}",
+                            if name == "generate_media" {
+                                "numera-gen"
+                            } else {
+                                "numera-image"
+                            }
+                        ),
+                        id,
+                    )
+                    .with_mime_type(
                         output["mime_type"]
                             .as_str()
                             .unwrap_or("application/octet-stream"),
@@ -242,15 +253,22 @@ impl ServerHandler for Handler {
         request: ReadResourceRequestParams,
         _context: RequestContext<RoleServer>,
     ) -> std::result::Result<ReadResourceResponse, ErrorData> {
-        let id = request.uri.strip_prefix("numera-gen://outputs/")
+        let id = request
+            .uri
+            .strip_prefix("numera-gen://outputs/")
             .or_else(|| request.uri.strip_prefix("numera-image://outputs/"))
             .filter(|s| uuid::Uuid::parse_str(s).is_ok())
             .ok_or_else(|| ErrorData::invalid_params("Unknown owned output resource.", None))?;
-        let (metadata, bytes) = self.application.original_media(id)
+        let (metadata, bytes) = self
+            .application
+            .original_media(id)
             .map_err(|_| ErrorData::invalid_params("Cannot read verified owned output.", None))?;
         Ok(ReadResourceResult::new(vec![
-            ResourceContents::blob(STANDARD.encode(&bytes), request.uri)
-                .with_mime_type(metadata["mime_type"].as_str().unwrap_or("application/octet-stream")),
+            ResourceContents::blob(STANDARD.encode(&bytes), request.uri).with_mime_type(
+                metadata["mime_type"]
+                    .as_str()
+                    .unwrap_or("application/octet-stream"),
+            ),
         ])
         .into())
     }

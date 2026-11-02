@@ -1,6 +1,17 @@
-use super::{fixtures as f, host::{self, structured}, provider::{Gate, Provider, Reply}, support as s};
+use super::{
+    fixtures as f,
+    host::{self, structured},
+    provider::{Gate, Provider, Reply},
+    support as s,
+};
 use serde_json::json;
-use std::{collections::HashSet, sync::{Arc, atomic::{AtomicBool, AtomicUsize, Ordering}}};
+use std::{
+    collections::HashSet,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    },
+};
 
 pub async fn recovery_and_concurrency() {
     host::scenario(35000, async {
@@ -38,48 +49,90 @@ pub async fn recovery_and_concurrency() {
         reopened.close().await.unwrap();wire.close().await;
     }).await;
     host::scenario(35000, async {
-        let work=f::workspace();let directory=f::directory(&work,"media-two-hosts");
-        let (url,mime,bytes)=s::data("audio");let polls=Arc::new(AtomicUsize::new(0));
-        let wire=s::normal_provider(s::AUDIO,s::output(s::AUDIO,&url,mime),polls).await;
-        let config=s::config(&directory,&wire.origin,&[(s::AUDIO,"text-to-audio",&["audio"])]);
-        let mut instances=HashSet::new();let mut hosts=host::pair(&directory,&config,&mut instances).await;
-        let request=s::request("concurrent",s::AUDIO,"text-to-audio",true,&[]);
-        let (a,b)=tokio::join!(hosts[0].call_timeout("generate_media",request.clone(),10000),hosts[1].call_timeout("generate_media",request,10000));
-        assert!(a["isError"]!=true||b["isError"]!=true,"one original owner must complete");
-        let done=s::settle(&hosts[0],"concurrent").await;
-        let id=s::verified(&hosts[0],&done,"audio",mime,&bytes).await;
-        assert_eq!(hosts[1].job("concurrent",false).await["outputs"][0]["output_id"],id);
-        assert_eq!(wire.posts(),1);
-        host::close_pair(&mut hosts).await;wire.close().await;
-    }).await;
+        let work = f::workspace();
+        let directory = f::directory(&work, "media-two-hosts");
+        let (url, mime, bytes) = s::data("audio");
+        let polls = Arc::new(AtomicUsize::new(0));
+        let wire = s::normal_provider(s::AUDIO, s::output(s::AUDIO, &url, mime), polls).await;
+        let config = s::config(
+            &directory,
+            &wire.origin,
+            &[(s::AUDIO, "text-to-audio", &["audio"])],
+        );
+        let mut instances = HashSet::new();
+        let mut hosts = host::pair(&directory, &config, &mut instances).await;
+        let request = s::request("concurrent", s::AUDIO, "text-to-audio", true, &[]);
+        let (a, b) = tokio::join!(
+            hosts[0].call_timeout("generate_media", request.clone(), 10000),
+            hosts[1].call_timeout("generate_media", request, 10000)
+        );
+        assert!(
+            a["isError"] != true || b["isError"] != true,
+            "one original owner must complete"
+        );
+        let done = s::settle(&hosts[0], "concurrent").await;
+        let id = s::verified(&hosts[0], &done, "audio", mime, &bytes).await;
+        assert_eq!(
+            hosts[1].job("concurrent", false).await["outputs"][0]["output_id"],
+            id
+        );
+        assert_eq!(wire.posts(), 1);
+        host::close_pair(&mut hosts).await;
+        wire.close().await;
+    })
+    .await;
 }
 
 pub async fn unknown() {
     host::scenario(25000, async {
-        let work=f::workspace();let directory=f::directory(&work,"media-unknown-ack");
-        let wire=Provider::new(|request,_|async move{s::authenticated(&request);assert_eq!(request.method,"POST");Ok(Reply::disconnect())}).await;
-        let config=s::config(&directory,&wire.origin,&[(s::AUDIO,"text-to-audio",&["audio"])]);
-        let request=s::request("unknown",s::AUDIO,"text-to-audio",true,&[]);
-        let mut host=s::start(&directory,&config,"media-unknown").await;
-        let _=host.call("generate_media",request.clone()).await;
-        let receipt=host.job("unknown",false).await;
-        assert_eq!(receipt["status"],"outcome_unknown");
-        assert_eq!(receipt["another_submission_may_charge"],true);
-        let _=host.call("generate_media",request.clone()).await;
-        let _=host.job("unknown",true).await;
-        assert_eq!(wire.posts(),1);
+        let work = f::workspace();
+        let directory = f::directory(&work, "media-unknown-ack");
+        let wire = Provider::new(|request, _| async move {
+            s::authenticated(&request);
+            assert_eq!(request.method, "POST");
+            Ok(Reply::disconnect())
+        })
+        .await;
+        let config = s::config(
+            &directory,
+            &wire.origin,
+            &[(s::AUDIO, "text-to-audio", &["audio"])],
+        );
+        let request = s::request("unknown", s::AUDIO, "text-to-audio", true, &[]);
+        let mut host = s::start(&directory, &config, "media-unknown").await;
+        let _ = host.call("generate_media", request.clone()).await;
+        let receipt = host.job("unknown", false).await;
+        assert_eq!(receipt["status"], "outcome_unknown");
+        assert_eq!(receipt["another_submission_may_charge"], true);
+        let _ = host.call("generate_media", request.clone()).await;
+        let _ = host.job("unknown", true).await;
+        assert_eq!(wire.posts(), 1);
         host.close().await.unwrap();
-        let mut restarted=s::start(&directory,&config,"media-unknown-restart").await;
-        let _=restarted.call("generate_media",request).await;
-        assert_eq!(restarted.job("unknown",true).await["status"],"outcome_unknown");
-        assert_eq!(wire.posts(),1);
-        assert_eq!(wire.captured().len(),1,"unknown acknowledgement has no original handle to poll");
-        restarted.close().await.unwrap();wire.close().await;
-    }).await;
+        let mut restarted = s::start(&directory, &config, "media-unknown-restart").await;
+        let _ = restarted.call("generate_media", request).await;
+        assert_eq!(
+            restarted.job("unknown", true).await["status"],
+            "outcome_unknown"
+        );
+        assert_eq!(wire.posts(), 1);
+        assert_eq!(
+            wire.captured().len(),
+            1,
+            "unknown acknowledgement has no original handle to poll"
+        );
+        restarted.close().await.unwrap();
+        wire.close().await;
+    })
+    .await;
 }
 
 pub async fn cancellation() {
-    for (status,body,outcome) in [(200,"OK","confirmed_queued_removal"),(202,"CANCELLATION_REQUESTED","requested"),(400,"ALREADY_COMPLETED","already_completed"),(404,"NOT_FOUND","unknown")] {
+    for (status, body, outcome) in [
+        (200, "OK", "confirmed_queued_removal"),
+        (202, "CANCELLATION_REQUESTED", "requested"),
+        (400, "ALREADY_COMPLETED", "already_completed"),
+        (404, "NOT_FOUND", "unknown"),
+    ] {
         host::scenario(30000, async {
             let work=f::workspace();let directory=f::directory(&work,&format!("media-cancel-{status}"));
             let completed=Arc::new(AtomicBool::new(false));let c=completed.clone();

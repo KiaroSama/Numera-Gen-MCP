@@ -96,11 +96,9 @@ async fn exact_region(polarity: &str) {
             let prompt = body["prompt"].as_str().unwrap();
             assert!(prompt.contains("Preserve the comic panels 日本語"));
             assert!(prompt.contains("Translate the text inside the selected region into Persian"));
-            let mask = numera_gen_mcp::files::images::data_url(
-                body["mask"].as_str().unwrap(),
-                1048576,
-            )
-            .unwrap();
+            let mask =
+                numera_gen_mcp::files::images::data_url(body["mask"].as_str().unwrap(), 1048576)
+                    .unwrap();
             let decoded = image::load_from_memory(&mask).unwrap();
             assert_eq!((decoded.width(), decoded.height()), (8, 6));
             assert_eq!(decoded.color(), image::ColorType::Rgba8);

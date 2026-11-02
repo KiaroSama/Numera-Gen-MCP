@@ -4,17 +4,25 @@ use std::{io, path::PathBuf};
 fn execute() -> io::Result<()> {
     let mut args = std::env::args().skip(1).collect::<Vec<_>>();
     if args.first().is_some_and(|s| s == "--help") || args.is_empty() {
-        println!("Numera hosted Rust tooling\nUsage: numera-task --root ABSOLUTE_ROOT COMMAND [ARGS]\nCommands are hosted-only; no implicit installation, provider call or host edit.");
+        println!(
+            "Numera hosted Rust tooling\nUsage: numera-task --root ABSOLUTE_ROOT COMMAND [ARGS]\nCommands are hosted-only; no implicit installation, provider call or host edit."
+        );
         return Ok(());
     }
-    if args.len() < 3 || args[0] != "--root" { return Err(fail("Explicit owning --root is required.")); }
+    if args.len() < 3 || args[0] != "--root" {
+        return Err(fail("Explicit owning --root is required."));
+    }
     let root = PathBuf::from(&args[1]);
-    if !root.is_absolute() { return Err(fail("Task root must be absolute.")); }
+    if !root.is_absolute() {
+        return Err(fail("Task root must be absolute."));
+    }
     args.drain(..2);
     let context = Context::new(&root)?;
     context.hosted()?;
     let target = || -> io::Result<&str> {
-        if args.len() != 2 { return Err(fail("Command requires exactly one target.")); }
+        if args.len() != 2 {
+            return Err(fail("Command requires exactly one target."));
+        }
         numera_task::distribution::target(&args[1])?;
         Ok(args[1].as_str())
     };
@@ -31,10 +39,15 @@ fn execute() -> io::Result<()> {
         "ledger" if args.len() == 1 => numera_task::ledger::check(&context),
         "case-execution" if args.len() == 1 => numera_task::qualification::check(&context),
         "execution-matrix" if args.len() == 1 => numera_task::matrix::check(&context),
+        "signed-execution-matrix" if args.len() == 1 => numera_task::signed_matrix::check(&context),
+        "signing-source" => numera_task::promotion::check(&context, target()?),
         "licenses" => numera_task::licenses::preserve(&context, target()?),
         "prepare" => numera_task::distribution::prepare(&context, target()?, true),
         "stage" => numera_task::distribution::stage(&context, target()?),
-        "signing-tools" => tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(numera_task::signing_tools::tools(&context, target()?)),
+        "signing-tools" => tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(numera_task::signing_tools::tools(&context, target()?)),
         "signature-acceptance" => numera_task::signature_acceptance::verify(&context, target()?),
         "sign" => numera_task::signing::sign(&context, target()?),
         "package" => numera_task::signing::verify(&context, target()?),
@@ -42,7 +55,10 @@ fn execute() -> io::Result<()> {
         "extract-signed" => numera_task::acceptance::extract(&context, target()?, false),
         "activation" => {
             let target = target()?;
-            numera_task::acceptance::activation(&context, &context.relative(&format!(".ci-work/prepared/{target}"))?)
+            numera_task::acceptance::activation(
+                &context,
+                &context.relative(&format!(".ci-work/prepared/{target}"))?,
+            )
         }
         _ => Err(fail("Unsupported task command; no fallback was executed.")),
     }

@@ -207,9 +207,20 @@ fn media_capabilities(connection: &Value, model: &JsString) -> Value {
         cap["modes"] = declaration["modes"].clone();
         if let Some(modes) = declaration["modes"].as_array() {
             for mode in modes.iter().filter_map(Value::as_str) {
-                let contract = model.checked_str().ok().and_then(|id| crate::media::fal::contract(id, mode).ok());
-                cap["model"][mode] = json!(if contract.is_some(){"documented"}else{"unknown"});
-                cap["mode_forwarding"][mode] = json!(if contract.is_some(){"supported"}else{"unknown"});
+                let contract = model
+                    .checked_str()
+                    .ok()
+                    .and_then(|id| crate::media::fal::contract(id, mode).ok());
+                cap["model"][mode] = json!(if contract.is_some() {
+                    "documented"
+                } else {
+                    "unknown"
+                });
+                cap["mode_forwarding"][mode] = json!(if contract.is_some() {
+                    "supported"
+                } else {
+                    "unknown"
+                });
                 if let Some(contract) = contract {
                     if let Some(evidence) = cap["evidence"].as_array_mut() {
                         evidence.push(json!({"kind":"documented","mode":mode,"source":contract.evidence,"execution_verified":false}));

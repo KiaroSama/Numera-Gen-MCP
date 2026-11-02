@@ -116,11 +116,8 @@ fn all_explicit_json_reference_encodings_preserve_order_scalar_masks_and_gateway
         .find(|fixture| fixture["metadata"]["mime"] == "image/jpeg")
         .unwrap();
     let second = inspect(
-        numera_gen_mcp::files::images::decode_base64(
-            jpeg["base64"].as_str().unwrap(),
-            1048576,
-        )
-        .unwrap(),
+        numera_gen_mcp::files::images::decode_base64(jpeg["base64"].as_str().unwrap(), 1048576)
+            .unwrap(),
         &json!({}),
         None,
     )
@@ -251,8 +248,7 @@ fn gemini_inline_references_and_interaction_format_preserve_exact_native_fields(
             &body["input"][1]["data"]
         };
         assert_eq!(
-            numera_gen_mcp::files::images::decode_base64(bytes.as_str().unwrap(), 1048576)
-                .unwrap(),
+            numera_gen_mcp::files::images::decode_base64(bytes.as_str().unwrap(), 1048576).unwrap(),
             image.bytes
         );
         if adapter == "gemini" {

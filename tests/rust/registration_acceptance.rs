@@ -243,13 +243,10 @@ fn exact_source_native_registration_dry_run_backup_rollback_remove_and_private_l
     assert_eq!(value["model"], "unchanged 日本語");
     assert_eq!(value["mcpServers"]["other"]["command"], "stay");
     assert_eq!(
-        value["mcpServers"]["numera-gen"]["command"],
+        value["mcpServers"]["numera-gen-mcp"]["command"],
         json!(fixture.executable)
     );
-    assert_eq!(
-        value["mcpServers"]["numera-gen"]["args"],
-        json!(["bridge"])
-    );
+    assert_eq!(value["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
     assert!(
         fixture
             .run("ClaudeDesktop", &file, false, false)
@@ -330,11 +327,11 @@ fn exact_source_native_toml_registration_preserves_crlf_and_refuses_five_ambigui
     assert!(fixture.run("Codex", &file, true, false).status.success());
     assert!(fs::read_to_string(&file).unwrap().starts_with(before));
     for ambiguous in [
-        "[mcp_servers.\"numera-gen\"]\ncommand=\"other\"\n",
-        "[mcp_servers.numera-gen]\ncommand=\"a\"\n[mcp_servers.numera-gen]\ncommand=\"b\"\n",
-        "description = \"\"\"\n[mcp_servers.numera-gen]\n\"\"\"\n",
-        "mcp_servers = { \"numera-gen\" = { command = \"other\" } }\n",
-        "[mcp_servers]\nnumera-gen.command = \"other\"\n",
+        "[mcp_servers.\"numera-gen-mcp\"]\ncommand=\"other\"\n",
+        "[mcp_servers.numera-gen-mcp]\ncommand=\"a\"\n[mcp_servers.numera-gen-mcp]\ncommand=\"b\"\n",
+        "description = \"\"\"\n[mcp_servers.numera-gen-mcp]\n\"\"\"\n",
+        "mcp_servers = { \"numera-gen-mcp\" = { command = \"other\" } }\n",
+        "[mcp_servers]\nnumera-gen-mcp.command = \"other\"\n",
     ] {
         fs::write(&file, ambiguous.as_bytes()).unwrap();
         let result = fixture.run("Codex", &file, false, false);

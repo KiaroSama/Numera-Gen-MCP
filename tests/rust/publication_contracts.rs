@@ -28,11 +28,8 @@ fn exact_source_image(name: &str, config: &Value) -> numera_gen_mcp::files::imag
         .find(|case| case["name"] == name)
         .unwrap();
     inspect(
-        numera_gen_mcp::files::images::decode_base64(
-            case["base64"].as_str().unwrap(),
-            1048576,
-        )
-        .unwrap(),
+        numera_gen_mcp::files::images::decode_base64(case["base64"].as_str().unwrap(), 1048576)
+            .unwrap(),
         config,
         None,
     )

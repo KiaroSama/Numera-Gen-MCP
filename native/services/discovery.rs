@@ -65,7 +65,9 @@ impl Discovery {
             })
             .collect::<Vec<_>>();
         if c["adapter"] == "fal-queue" {
-            return Ok(json!({"models":configured,"complete":true,"warnings":["Configured fal endpoints only; provider discovery and account availability are not verified."],"cached":false,"checked_at":time()}));
+            return Ok(
+                json!({"models":configured,"complete":true,"warnings":["Configured fal endpoints only; provider discovery and account availability are not verified."],"cached":false,"checked_at":time()}),
+            );
         }
         if !refresh && !configured.is_empty() {
             return Ok(

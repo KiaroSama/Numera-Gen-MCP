@@ -36,7 +36,10 @@ fn reject(workspace: &Workspace, value: &Value) {
 
 fn fal(workspace: &Workspace) -> Value {
     let mut raw = workspace.config("https://queue.fal.run", "fal-queue");
-    raw["connections"]["test"].as_object_mut().unwrap().remove("orchestrationModel");
+    raw["connections"]["test"]
+        .as_object_mut()
+        .unwrap()
+        .remove("orchestrationModel");
     raw["connections"]["test"]["auth"] =
         json!({"type":"key","apiKey":"synthetic-media-key","origin":"https://queue.fal.run"});
     raw["connections"]["test"]["defaultModel"] = json!(VIDEO);
@@ -55,15 +58,18 @@ fn full_media_declarations_round_trip_without_changing_legacy_image_defaults() {
     assert_eq!(connection["modelOverrides"], json!({}));
     let old_fingerprint = connection.fingerprint().unwrap();
     let again = parse(&workspace, &loaded.value);
-    assert_eq!(again.value["connections"]["test"].fingerprint().unwrap(), old_fingerprint);
+    assert_eq!(
+        again.value["connections"]["test"].fingerprint().unwrap(),
+        old_fingerprint
+    );
     let old_cap = capabilities::capabilities(connection, &"opaque/image".into());
     assert!(old_cap.get("output_types").is_none());
     assert_eq!(old_cap["gateway_forwarding"]["text_to_image"], "supported");
     let mut declared_image = legacy;
-    declared_image["connections"]["test"]["modelOverrides"] =
-        json!({"opaque/image":{"outputTypes":["image"],"modes":["text-to-image","image-to-image"]}});
+    declared_image["connections"]["test"]["modelOverrides"] = json!({"opaque/image":{"outputTypes":["image"],"modes":["text-to-image","image-to-image"]}});
     let image = parse(&workspace, &declared_image);
-    let image_cap = capabilities::capabilities(&image.value["connections"]["test"], &"opaque/image".into());
+    let image_cap =
+        capabilities::capabilities(&image.value["connections"]["test"], &"opaque/image".into());
     assert_eq!(image_cap["output_types"], json!(["image"]));
     assert_eq!(image_cap["mode_forwarding"]["text-to-image"], "supported");
     assert_eq!(image_cap["mode_forwarding"]["image-to-image"], "unknown");
@@ -72,14 +78,22 @@ fn full_media_declarations_round_trip_without_changing_legacy_image_defaults() {
     assert_eq!(model["outputTypes"], json!(["video"]));
     assert_eq!(model["modes"], json!(["text-to-video"]));
     assert_eq!(model["defaults"], json!({}));
-    assert_eq!(loaded.value["connections"]["test"]["configuredModels"][0], json!({"id":VIDEO,"name":"動画"}));
+    assert_eq!(
+        loaded.value["connections"]["test"]["configuredModels"][0],
+        json!({"id":VIDEO,"name":"動画"})
+    );
     let mut mesh = fal(&workspace);
     mesh["connections"]["test"]["defaultModel"] = json!("fal-ai/hyper3d/rodin");
-    mesh["connections"]["test"]["configuredModels"] = json!([{"id":"fal-ai/hyper3d/rodin","name":"Rodin"}]);
+    mesh["connections"]["test"]["configuredModels"] =
+        json!([{"id":"fal-ai/hyper3d/rodin","name":"Rodin"}]);
     mesh["connections"]["test"]["modelOverrides"] = json!({"fal-ai/hyper3d/rodin":{"outputTypes":["3d","image"],"modes":["text-to-3d","image-to-3d"]}});
     let loaded = parse(&workspace, &mesh);
-    assert_eq!(loaded.value["connections"]["test"]["modelOverrides"]["fal-ai/hyper3d/rodin"]["outputTypes"], json!(["3d","image"]));
-    mesh["connections"]["test"]["modelOverrides"]["fal-ai/hyper3d/rodin"]["outputTypes"] = json!(["3d"]);
+    assert_eq!(
+        loaded.value["connections"]["test"]["modelOverrides"]["fal-ai/hyper3d/rodin"]["outputTypes"],
+        json!(["3d", "image"])
+    );
+    mesh["connections"]["test"]["modelOverrides"]["fal-ai/hyper3d/rodin"]["outputTypes"] =
+        json!(["3d"]);
     reject(&workspace, &mesh);
 }
 
@@ -109,13 +123,14 @@ fn media_declarations_reject_unpaired_empty_duplicate_unknown_and_incompatible_v
     reject(&workspace, &raw);
     let mut unknown = fal(&workspace);
     unknown["connections"]["test"]["defaultModel"] = json!("unknown/video");
-    unknown["connections"]["test"]["configuredModels"] = json!([{"id":"unknown/video","name":"Unknown"}]);
+    unknown["connections"]["test"]["configuredModels"] =
+        json!([{"id":"unknown/video","name":"Unknown"}]);
     unknown["connections"]["test"]["modelOverrides"] =
         json!({"unknown/video":{"outputTypes":["video"],"modes":["text-to-video"]}});
     reject(&workspace, &unknown);
     let mut types = fal(&workspace);
     types["connections"]["test"]["modelOverrides"][VIDEO]["outputTypes"] =
-        json!(["image","video","audio","3d","image"]);
+        json!(["image", "video", "audio", "3d", "image"]);
     reject(&workspace, &types);
     let mut raw = fal(&workspace);
     raw["connections"]["test"]["adapter"] = json!("openai-images");
@@ -124,13 +139,21 @@ fn media_declarations_reject_unpaired_empty_duplicate_unknown_and_incompatible_v
     let mut raw = fal(&workspace);
     raw["connections"]["test"]["baseUrl"] = json!("https://queue.fal.run/fal-ai/model");
     reject(&workspace, &raw);
-    for origin in ["http://queue.fal.run", "https://example.invalid", "https://queue.fal.run:8443", "http://192.168.1.2"] {
+    for origin in [
+        "http://queue.fal.run",
+        "https://example.invalid",
+        "https://queue.fal.run:8443",
+        "http://192.168.1.2",
+    ] {
         let mut raw = fal(&workspace);
         raw["connections"]["test"]["baseUrl"] = json!(origin);
         raw["connections"]["test"]["auth"]["origin"] = json!(origin);
         reject(&workspace, &raw);
     }
-    for auth in [json!({"type":"none"}), json!({"type":"bearer","apiKey":"synthetic"})] {
+    for auth in [
+        json!({"type":"none"}),
+        json!({"type":"bearer","apiKey":"synthetic"}),
+    ] {
         let mut raw = fal(&workspace);
         raw["connections"]["test"]["auth"] = auth;
         reject(&workspace, &raw);
@@ -151,10 +174,17 @@ fn compact_and_strict_env_media_declarations_keep_model_identity_and_defaults() 
     assert_eq!(connection["adapter"], "fal-queue");
     assert_eq!(connection["auth"]["type"], "key");
     assert_eq!(connection["defaultModel"], VIDEO);
-    assert_eq!(connection["modelOverrides"][VIDEO]["outputTypes"], json!(["video"]));
+    assert_eq!(
+        connection["modelOverrides"][VIDEO]["outputTypes"],
+        json!(["video"])
+    );
     assert_eq!(connection["modelOverrides"][VIDEO]["defaults"], json!({}));
-    assert_eq!(connection["configuredModels"], json!([{"id":VIDEO,"name":"動画"}]));
-    let empty = text.replace("MODEL_1_OUTPUT_TYPES=video", "MODEL_1_OUTPUT_TYPES=\"\"")
+    assert_eq!(
+        connection["configuredModels"],
+        json!([{"id":VIDEO,"name":"動画"}])
+    );
+    let empty = text
+        .replace("MODEL_1_OUTPUT_TYPES=video", "MODEL_1_OUTPUT_TYPES=\"\"")
         .replace("MODEL_1_MODES=text-to-video", "MODEL_1_MODES=\"\"");
     let empty = parse_env_config(&empty).unwrap();
     assert!(empty["models"][0].get("output_types").is_none());
@@ -162,19 +192,53 @@ fn compact_and_strict_env_media_declarations_keep_model_identity_and_defaults() 
     // Empty declarations preserve legacy image slots, but cannot enable an undeclared fal model.
     reject(&workspace, &empty);
     let mut template = parse_env_config(include_str!("../../.env.example")).unwrap();
-    assert!(template["models"].as_array().unwrap().iter().all(|model|
-        model.get("output_types").is_none() && model.get("modes").is_none()));
+    assert!(
+        template["models"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|model| model.get("output_types").is_none() && model.get("modes").is_none())
+    );
     template["api_endpoint"] = json!("https://example.invalid/v1");
     let loaded_template = parse(&workspace, &template);
-    assert!(loaded_template.value["connections"]["default"]["modelOverrides"].as_object().unwrap().values()
-        .all(|model| model.get("outputTypes").is_none() && model.get("modes").is_none()));
-    for bad in ["", "video,", "video,,audio", "video,video", "Video", "video, audio"] {
-        let invalid = text.replace("MODEL_1_OUTPUT_TYPES=video", &format!("MODEL_1_OUTPUT_TYPES={bad}"));
-        assert_eq!(parse_env_config(&invalid).unwrap_err().code, "invalid_configuration");
+    assert!(
+        loaded_template.value["connections"]["default"]["modelOverrides"]
+            .as_object()
+            .unwrap()
+            .values()
+            .all(|model| model.get("outputTypes").is_none() && model.get("modes").is_none())
+    );
+    for bad in [
+        "",
+        "video,",
+        "video,,audio",
+        "video,video",
+        "Video",
+        "video, audio",
+    ] {
+        let invalid = text.replace(
+            "MODEL_1_OUTPUT_TYPES=video",
+            &format!("MODEL_1_OUTPUT_TYPES={bad}"),
+        );
+        assert_eq!(
+            parse_env_config(&invalid).unwrap_err().code,
+            "invalid_configuration"
+        );
     }
-    for bad in ["", "text-to-video,", "text-to-video,text-to-video", "text_to_video"] {
-        let invalid = text.replace("MODEL_1_MODES=text-to-video", &format!("MODEL_1_MODES={bad}"));
-        assert_eq!(parse_env_config(&invalid).unwrap_err().code, "invalid_configuration");
+    for bad in [
+        "",
+        "text-to-video,",
+        "text-to-video,text-to-video",
+        "text_to_video",
+    ] {
+        let invalid = text.replace(
+            "MODEL_1_MODES=text-to-video",
+            &format!("MODEL_1_MODES={bad}"),
+        );
+        assert_eq!(
+            parse_env_config(&invalid).unwrap_err().code,
+            "invalid_configuration"
+        );
     }
     assert_eq!(
         parse_env_config(&text.replace("MODEL_1_MODES=text-to-video\n", ""))
@@ -183,7 +247,10 @@ fn compact_and_strict_env_media_declarations_keep_model_identity_and_defaults() 
         "invalid_configuration"
     );
     let mut unpaired = raw.clone();
-    unpaired["models"][0].as_object_mut().unwrap().remove("modes");
+    unpaired["models"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("modes");
     reject(&workspace, &unpaired);
     let mut disabled = raw;
     disabled["models"].as_array_mut().unwrap().push(json!({"id":"disabled","name":"Disabled","enabled":false,"output_types":["image","image"],"modes":["text-to-image"]}));
@@ -193,8 +260,13 @@ fn compact_and_strict_env_media_declarations_keep_model_identity_and_defaults() 
 #[test]
 fn public_fal_example_loads_every_explicit_mode_without_reading_a_key_or_contacting_a_provider() {
     let workspace = Workspace::new();
-    let loaded = Config::parse(include_str!("../../examples/fal.json"),
-        &workspace.0.join("fal.json"), &[], &HashMap::new()).unwrap();
+    let loaded = Config::parse(
+        include_str!("../../examples/fal.json"),
+        &workspace.0.join("fal.json"),
+        &[],
+        &HashMap::new(),
+    )
+    .unwrap();
     let connection = &loaded.value["connections"]["fal"];
     assert_eq!(connection["auth"]["secretEnv"], "FAL_KEY");
     assert!(connection["auth"].get("apiKey").is_none());
@@ -215,10 +287,19 @@ fn public_fal_example_loads_every_explicit_mode_without_reading_a_key_or_contact
             kinds.insert(kind.as_str().unwrap().to_owned());
         }
     }
-    assert_eq!(kinds, ["image", "video", "audio", "3d"].map(str::to_owned).into_iter().collect());
+    assert_eq!(
+        kinds,
+        ["image", "video", "audio", "3d"]
+            .map(str::to_owned)
+            .into_iter()
+            .collect()
+    );
     assert_eq!(modes.len(), 10);
     assert!(!modes.contains("video-to-audio"));
-    assert_eq!(connection["modelOverrides"]["fal-ai/hyper3d/rodin"]["defaults"]["geometry_file_format"], "glb");
+    assert_eq!(
+        connection["modelOverrides"]["fal-ai/hyper3d/rodin"]["defaults"]["geometry_file_format"],
+        "glb"
+    );
 }
 
 #[tokio::test]
@@ -239,14 +320,25 @@ async fn configured_media_discovery_is_offline_and_keeps_evidence_and_dimensions
     tokio::time::timeout(Duration::from_secs(2), async {
         let mut discovery = Discovery::default();
         for refresh in [false, true] {
-            let catalog = discovery.list(&config, &runtime, &env, None, refresh, &cancel).await.unwrap();
+            let catalog = discovery
+                .list(&config, &runtime, &env, None, refresh, &cancel)
+                .await
+                .unwrap();
             assert_eq!(catalog["complete"], true);
             assert_eq!(catalog["models"][0]["output_types"], json!(["video"]));
             assert_eq!(catalog["models"][0]["modes"], json!(["text-to-video"]));
-            assert_eq!(catalog["models"][0]["metadata"]["account_availability"], "unknown");
-            assert_eq!(catalog["models"][0]["metadata"]["generation_verified"], false);
+            assert_eq!(
+                catalog["models"][0]["metadata"]["account_availability"],
+                "unknown"
+            );
+            assert_eq!(
+                catalog["models"][0]["metadata"]["generation_verified"],
+                false
+            );
         }
-        let cap = Discovery::model(&config, &runtime, &env, None, &VIDEO.into(), &cancel).await.unwrap();
+        let cap = Discovery::model(&config, &runtime, &env, None, &VIDEO.into(), &cancel)
+            .await
+            .unwrap();
         assert_eq!(cap["output_types"], json!(["video"]));
         assert_eq!(cap["modes"], json!(["text-to-video"]));
         assert_eq!(cap["account_availability"], "unknown");
@@ -255,9 +347,20 @@ async fn configured_media_discovery_is_offline_and_keeps_evidence_and_dimensions
         assert!(cap.get("dimensions").is_none());
         assert!(cap.get("max_references").is_none());
         assert_eq!(cap["advertised"], Value::Null);
-        let unknown = Discovery::model(&config, &runtime, &env, None, &"unknown/video".into(), &cancel).await.unwrap();
+        let unknown = Discovery::model(
+            &config,
+            &runtime,
+            &env,
+            None,
+            &"unknown/video".into(),
+            &cancel,
+        )
+        .await
+        .unwrap();
         assert_eq!(unknown["mode_forwarding"], json!({}));
         assert!(unknown.get("dimensions").is_none());
         assert_eq!(unknown["account_availability"], "unknown");
-    }).await.unwrap();
+    })
+    .await
+    .unwrap();
 }

@@ -201,13 +201,10 @@ async fn retained_routes_recover_original_handles_and_refuse_ambiguous_history_w
     let action = async {
         let first = app.current().unwrap();
         let (_, connection) = first.config.select(Some("test")).unwrap();
-        let pinned = numera_gen_mcp::config::snapshot_credentials(
-            &connection,
-            &first.env,
-            &first.runtime,
-        )
-        .await
-        .unwrap();
+        let pinned =
+            numera_gen_mcp::config::snapshot_credentials(&connection, &first.env, &first.runtime)
+                .await
+                .unwrap();
         let identity =
             numera_gen_mcp::services::identity::connection_identity("test", &pinned).unwrap();
         {

@@ -1,5 +1,36 @@
 # References
 
+## Rust tooling evidence, checked 2026-11-02
+
+- [GitHub workflow jobs API](https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2026-03-10):
+  read the exact run attempt's jobs and require source, successful completion and original log receipts.
+- [GitHub artifacts API](https://docs.github.com/en/rest/actions/artifacts?apiVersion=2026-03-10):
+  authenticate original archive size/digest and repository/run/head identities before bounded decoding.
+- [Pinned upload implementation](https://github.com/actions/upload-artifact/blob/cf430e030ddbb5b0abf93d22962f4752f3646cd9/src/shared/upload-artifact.ts)
+  and its [multihost tests](https://github.com/actions/upload-artifact/blob/cf430e030ddbb5b0abf93d22962f4752f3646cd9/.github/workflows/test.yml):
+  backend artifact IDs/digests and download-content assertions, not permission to copy automatic
+  triggers, overwrite artifacts or delete evidence. MIT reference; no implementation copied.
+- [Pinned artifact downloader](https://github.com/actions/download-artifact/blob/9000827ccba6bdab643e8b6fd33ac0654aef8333/src/download-artifact.ts)
+  and [input definitions](https://github.com/actions/download-artifact/blob/9000827ccba6bdab643e8b6fd33ac0654aef8333/action.yml):
+  cross-run selection requires an explicit token, repository and run; select one authenticated artifact
+  ID with digest mismatches fatal. The original package-log digest and executed binary remain separate
+  checks before signing. [Status expressions](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#status-check-functions)
+  require explicit cancellation and prerequisite-result guards for intentionally skipped jobs.
+  [Step outputs](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-output-parameter)
+  use GitHub's runner-owned UTF-8 command file, not an application cache.
+- [serde_json1.0.154 value indexing](https://github.com/serde-rs/json/blob/v1.0.154/README.md#operating-on-untyped-json-values)
+  and [map source](https://github.com/serde-rs/json/blob/v1.0.154/src/map.rs): typed accessors and exact
+  inventories precede equality checks; absent indexing yields null.
+- [Cargo home](https://doc.rust-lang.org/cargo/guide/cargo-home.html) and
+  [directory sources](https://doc.rust-lang.org/cargo/reference/source-replacement.html): original
+  registry archives and extracted sources differ from vendor-generated checksum metadata.
+  The [pinned vendor reference test](https://github.com/rust-lang/cargo/blob/809bcc525b6169903fc41aa861a2029ab7388381/tests/testsuite/vendor.rs)
+  confirms that distinction. Reviewed notice supplements bind original cached crate bytes, not an
+  assumed vendor file. No Cargo source copied or local compilation performed.
+
+Source-authored receipt and execution collectors are not current hosted execution, semantic parity
+or cryptographic verification. Final original archive/download verification remains a separate gate.
+
 ## Native migration references, checked 2026-10-11
 
 Rust1.99 stable manifest and Cargo environment reference govern hosted-only compiler/workspace cache

@@ -1,25 +1,28 @@
 mod common;
 #[allow(dead_code)]
-#[path = "sdk_acceptance/host.rs"]
-mod host;
-#[allow(dead_code)]
-#[path = "sdk_acceptance/provider.rs"]
-mod provider;
+#[path = "sdk_acceptance/cleanup.rs"]
+mod cleanup;
+#[path = "media_acceptance/failures.rs"]
+mod failures;
 #[allow(dead_code)]
 #[path = "sdk_acceptance/fixtures.rs"]
 mod fixtures;
-#[path = "../fixtures/media/bytes.rs"]
-mod media_bytes;
-#[path = "media_acceptance/support.rs"]
-mod support;
-#[path = "media_acceptance/modes.rs"]
-mod modes;
+#[allow(dead_code)]
+#[path = "sdk_acceptance/host.rs"]
+mod host;
 #[path = "media_acceptance/lifecycle.rs"]
 mod lifecycle;
-#[path = "media_acceptance/failures.rs"]
-mod failures;
+#[path = "../fixtures/media/bytes.rs"]
+mod media_bytes;
+#[path = "media_acceptance/modes.rs"]
+mod modes;
 #[path = "media_acceptance/preflight.rs"]
 mod preflight;
+#[allow(dead_code)]
+#[path = "sdk_acceptance/provider.rs"]
+mod provider;
+#[path = "media_acceptance/support.rs"]
+mod support;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn real_sdk_media_kinds_modes_outputs_and_legacy_catalog() {

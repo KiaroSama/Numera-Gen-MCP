@@ -683,7 +683,8 @@ Every applicable baseline case now has reviewed native assertions and qualified 
 case ledger preserves frozen identities and explicit mechanism adaptations; the suite index derives
 from those cases. CI fails on missing, pending, stale or unexecuted mappings; no blanket retirement.
 
-Ordinary users need no Node, Rust or Python runtime. Node is retained only in hosted pinned-source
-oracle checks; Python helpers are CI tooling, never dependencies of the shipped binary. Release0.2.0
-is published and its Windows download verified. Actual owner-host cutover and old-runtime cleanup
-remain gated separately; missing historical test-first provenance is not reconstructed by passing CI.
+Ordinary users need no Node, Rust or Python runtime. The historical0.2.0 qualification used hosted
+Node oracle checks and Python tooling; neither is a dependency of its shipped binary. The0.3.0 source
+replaces maintained tooling with Rust and authenticates retained independent goldens, but still needs
+its own qualification. Release0.2.0 is published and its Windows download verified. Host cutover and
+cleanup are separate; passing CI cannot reconstruct missing historical test-first provenance.

@@ -55,15 +55,72 @@ The 46-file Python/JavaScript disposition manifest and five unchanged PowerShell
 in [the tooling migration inventory](tooling-migration.json). Counts and existing test files do not
 qualify retirement; `retirement-gate` refuses until genuine current qualification is bound.
 
+## Current assertion review
+
+[The primary source-review receipt](current-assertion-review.json) covers all 606 original assertion
+records (411 unique obligations): 385 Rust obligations grouped by 64 complete files and 26 explicit
+SDK translations. It pins the original assertion aggregate, all 81 current assertion/helper source
+files and exact SDK excerpt ranges. The reviewer is the primary implementer, not an independent
+reviewer. Authorized executable/catalog adaptations are identified separately from source continuity.
+
+`tooling/src/source_review.rs` rejects missing, duplicated, unknown or stale obligations, unsupported
+review labels, changed source/helper bytes and mismatched SDK traceability. Its integration contract
+loads the actual committed ledger, historical reference and review, rather than a synthetic substitute.
+A review can omit its own future commit hash; its complete content hashes still bind the source, and
+the authenticated rebind and execution reports must identify the same exact current revision.
+
+The execution-matrix collector includes the receipt hash in tracked provenance and reconstructs each
+of the seven named-case reports before joining it to the source review. Neither a review disposition
+nor a successful named test alone authorizes retirement. Semantic qualification, migrated tooling
+scenario coverage and signed delivery remain separate requirements; the current collector deliberately
+reports `semantic_parity_claimed=false` and `qualification_verified=false`.
+
+## Current tooling harness binding
+
+`tooling/src/tooling_execution.rs` joins the exact 46-file disposition manifest and five retained
+PowerShell identities to the built workspace report. It reuses the existing strict execution verifier
+and checks original/replacement/test-helper hashes against authenticated source provenance. Every
+applicable declared harness needs nonempty successful named results. Each original also declares
+exact `named_tests`: attributed Rust tests must resolve uniquely in the correct harness, so an
+unrelated passing test cannot satisfy the mapping. SDK child tests use their root harness. The five
+source-verified platform-specific mappings retain explicit non-applicability, not fabricated passes.
+
+Each original's `scenario_tests` also assigns every unchanged scenario to explicit tests from its
+`named_tests`. The binder rejects missing, extra or duplicate scenarios, empty/duplicate/unknown test
+assignments and named tests left unassigned. It records each scenario's exact named results, including
+explicit platform non-applicability; it does not infer semantic equivalence from those assignments.
+
+The matrix reconstructs this binding only for the six built contexts, not runtime-only coverage.
+The binding records declared scenario and exact named-test execution: it does **not** prove that every
+described scenario or assertion is equivalent. Synthetic contract reports test validator shape only. Scenario equivalence,
+signing and retirement remain separate gates; the binder keeps `scenario_assertions_verified=false`,
+`qualification_verified=false` and `retirement_authorized=false`.
+
+## Formatting-failure diagnostics
+
+A failed hosted formatting gate remains failed. After execution and source-provenance checks,
+`tooling/src/formatting.rs` runs the bounded formatter and retains `formatting.zip` for review.
+It contains only tracked Rust sources from the runtime, tests and tooling, with strict UTF-8,
+regular-file/link checks, duplicate rejection and a 16MiB aggregate bound. The workflow uploads
+that exact diagnostic archive only when it exists after failure. Diagnostic candidates are not
+successful execution evidence, a completed build or permission to apply changes automatically.
+
 ## Current qualification limits
 
 The 0.3.0 tooling/media candidate is source-authored, not compiled, formatted or executed locally.
-Its workspace lockfile requires hosted resolution and reviewed formatting before a final locked run.
+The approved isolated preparation resolved its real workspace lockfile and returned reviewed formatting.
+Responsibility-based ledger extraction and later cleanup edits still require hosted formatting,
+compilation and execution on the final locked tree; preparation is not qualification.
 All discovered workspace suites, six native targets, instrumented runtime 85/80 floors, current
 470-case assertion bindings, extracted SDK behavior and signatures must qualify on the final SHA.
 The owner separately authorized the existing signing identity on `main`; workflow and native guards
-require a manual qualification and the signing job. The isolated source-preparation route receives no
-signing inputs and returns reviewed lock/format candidates only; it proves no runtime acceptance.
+require the signing job and authenticated qualification. The source-authored `sign-qualified` route
+selects an exact successful original run/attempt at the identical SHA, retains its original binaries
+and executes only outstanding signing/extracted-signed acceptance, not the earlier native/coverage
+suites again. The final collector joins both execution identities. This route still needs actual
+hosted proof and dispatch authority; it does not clear semantic or retirement gates. The isolated
+source-preparation route receives no signing inputs and returns reviewed lock/format candidates only;
+it proves no runtime acceptance.
 The installed signed 0.2.0 runtime and private configuration/receipts/originals remain intact.
 
 Official references: [Cargo locked builds](https://doc.rust-lang.org/cargo/commands/cargo-build.html),

@@ -3,13 +3,22 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Qualification or the separately authorized lock/format preparation
+        description: Qualification, approved same-source signing, or isolated source preparation
         type: choice
         required: true
         default: qualify
         options:
           - qualify
           - source-preparation
+          - sign-qualified
+      qualification-run-id:
+        description: Original successful qualification run ID, only for sign-qualified
+        type: string
+        required: false
+      qualification-run-attempt:
+        description: Exact original successful attempt, only for sign-qualified
+        type: string
+        required: false
 permissions:
   contents: read
 env:
@@ -25,6 +34,8 @@ env:
   TMPDIR: ${{ github.workspace }}/.ci-work/temp
   NUMERA_BUILD_SHA: ${{ github.sha }}
   NUMERA_CI_OPERATION: ${{ inputs.operation }}
+  NUMERA_QUALIFICATION_RUN_ID: ${{ inputs.qualification-run-id }}
+  NUMERA_QUALIFICATION_RUN_ATTEMPT: ${{ inputs.qualification-run-attempt }}
 jobs:
   source-preparation:
     if: inputs.operation == 'source-preparation' && github.repository == 'KiaroSama/Numera-Gen-MCP' && github.event_name == 'workflow_dispatch'
@@ -140,6 +151,14 @@ jobs:
         run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" extract-intermediate '${{ matrix.target }}'
       - name: Bind every original case to current exact execution without semantic promotion
         run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" case-execution
+      - name: Preserve diagnostic formatting candidates without clearing failure
+        if: failure() && hashFiles('.ci-work/native/formatting.zip') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-format-${{ matrix.target }}
+          path: .ci-work/native/formatting.zip
+          if-no-files-found: error
+          retention-days: 7
       - name: Preserve exact native test execution evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -255,9 +274,16 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   signing:
+    name: signing-${{ matrix.target }}
     needs: [native, native-coverage, execution-matrix]
-    # Existing-key main signing is owner-approved; preparation never enters this environment.
-    if: inputs.operation == 'qualify' && github.repository == 'KiaroSama/Numera-Gen-MCP' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    # Existing-key main signing only; source preparation never enters this environment.
+    if: >-
+      !cancelled() && github.repository == 'KiaroSama/Numera-Gen-MCP' &&
+      github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' &&
+      ((inputs.operation == 'qualify' && needs.native.result == 'success' &&
+        needs.native-coverage.result == 'success' && needs.execution-matrix.result == 'success') ||
+       (inputs.operation == 'sign-qualified' && needs.native.result == 'skipped' &&
+        needs.native-coverage.result == 'skipped' && needs.execution-matrix.result == 'skipped'))
     environment: numera-signing
     permissions:
       contents: read
@@ -298,9 +324,19 @@ jobs:
         run: |
           ./target/debug/numera-task --root "$GITHUB_WORKSPACE" acceptance-prepare
           ./target/debug/numera-task --root "$GITHUB_WORKSPACE" evidence-capture
+      - name: Authenticate exact original qualification and select its intermediate
+        id: source
+        timeout-minutes: 8
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 420000 60000 --exec ./target/debug/numera-task --root "$GITHUB_WORKSPACE" signing-source '${{ matrix.target }}'
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: native-unsigned-intermediate-${{ matrix.target }}
+          artifact-ids: ${{ steps.source.outputs.artifact-id }}
+          run-id: ${{ steps.source.outputs.run-id }}
+          repository: KiaroSama/Numera-Gen-MCP
+          github-token: ${{ github.token }}
           path: .ci-work/signing-download
           digest-mismatch: error
       - name: Authenticate complete intermediate and qualify native signing tools
@@ -324,6 +360,9 @@ jobs:
         with:
           name: native-execution-signed-${{ matrix.target }}
           path: |
+            .ci-work/native/signing-source.json
+            .ci-work/native/signature-execution.json
+            .ci-work/native/signed-extraction-execution.json
             .ci-work/native/sdk-execution-extracted-signed.json
             .ci-work/native/oracle-evidence.zip
           if-no-files-found: error
@@ -332,5 +371,45 @@ jobs:
         with:
           name: native-signed-${{ matrix.target }}
           path: .ci-work/release/*
+          if-no-files-found: error
+          retention-days: 7
+  signed-execution-matrix:
+    if: >-
+      !cancelled() && needs.signing.result == 'success' &&
+      github.repository == 'KiaroSama/Numera-Gen-MCP' &&
+      github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' &&
+      ((inputs.operation == 'qualify' && needs.native.result == 'success' &&
+        needs.native-coverage.result == 'success' && needs.execution-matrix.result == 'success') ||
+       (inputs.operation == 'sign-qualified' && needs.native.result == 'skipped' &&
+        needs.native-coverage.result == 'skipped' && needs.execution-matrix.result == 'skipped'))
+    needs: [native, native-coverage, execution-matrix, signing]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    timeout-minutes: 50
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bootstrap the public signed execution collector
+        uses: ./.github/actions/native-bootstrap
+        timeout-minutes: 30
+        with:
+          target: x86_64-unknown-linux-gnu
+      - name: Bind original signed bytes and all six actual native acceptance contexts
+        timeout-minutes: 16
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: '"$NUMERA_BOOTSTRAP_OWNER" bounded 900000 60000 --exec ./target/debug/numera-task --root "$GITHUB_WORKSPACE" signed-execution-matrix'
+      - name: Preserve authenticated signed execution without semantic promotion
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-signed-execution-matrix
+          path: .ci-work/native/signed-execution-matrix.json
           if-no-files-found: error
           retention-days: 7

@@ -274,7 +274,7 @@ Save .env and call `list_models` again to apply a valid change; no image is subm
 ### 4. Register with your MCP client
 
 Registration is one-time. Preserve unrelated settings and back up the host file before merging only
-Numera's entry. `numera-gen` below is a client label; it need not match the binary filename. If you
+Numera's entry. The exact current client entry is `numera-gen-mcp`; use that name consistently. If you
 already have `numera-image-gen`, update that selected entry instead of adding a second server against
 the same state. The optional 0.2.0 `register` command manages its legacy entry name. Use either manual
 configuration or that command, not both. After registration **no launcher needs to be opened**: the host runs the executable
@@ -289,7 +289,7 @@ installation. Keep every other `mcpServers` member unchanged:
 ```json
 {
   "mcpServers": {
-    "numera-gen": {
+    "numera-gen-mcp": {
       "command": "C:/tools/numera-gen-mcp/bin/numera-image-gen-mcp.exe",
       "args": ["bridge"]
     }
@@ -318,13 +318,13 @@ Use Desktop's Edit Config to locate its actual settings, fully quit/reopen the a
 Linux/macOS, from the extracted installation root:
 
 ```bash
-claude mcp add --transport stdio --scope user numera-gen -- "$PWD/bin/numera-image-gen-mcp" bridge
+claude mcp add --transport stdio --scope user numera-gen-mcp -- "$PWD/bin/numera-image-gen-mcp" bridge
 ```
 
 Windows PowerShell, with your actual executable:
 
 ```powershell
-claude mcp add --transport stdio --scope user numera-gen -- 'C:/tools/numera-gen-mcp/bin/numera-image-gen-mcp.exe' bridge
+claude mcp add --transport stdio --scope user numera-gen-mcp -- 'C:/tools/numera-gen-mcp/bin/numera-image-gen-mcp.exe' bridge
 ```
 
 For project scope, use the same command with `--scope project` instead of `--scope user`; review
@@ -341,7 +341,7 @@ allows the server's ordinary long-operation timeout to report its receipt instea
 60-second default ending first. Do not add duplicate tables.
 
 ```toml
-[mcp_servers.numera-gen]
+[mcp_servers.numera-gen-mcp]
 command = "C:/tools/numera-gen-mcp/bin/numera-image-gen-mcp.exe"
 args = ["bridge"]
 startup_timeout_sec = 10
@@ -353,7 +353,7 @@ On Linux/macOS use actual absolute POSIX paths. The alternative CLI command belo
 entry; set `tool_timeout_sec = 360` in its resulting table afterward, then restart/reconnect Codex:
 
 ```bash
-codex mcp add numera-gen -- "$PWD/bin/numera-image-gen-mcp" bridge
+codex mcp add numera-gen-mcp -- "$PWD/bin/numera-image-gen-mcp" bridge
 ```
 
 Cursor/Windsurf use their local `mcpServers` configuration. Kiro uses `mcpServers` with its `disabled`
@@ -373,6 +373,38 @@ Review the dry run first. Removing `--dry-run` deliberately updates only Numera 
 backup and concurrent-change protection. `--remove` removes only that member, never user images or
 application data. Ambiguous TOML, links, active registration locks and invalid host JSON are rejected.
 These instructions are not registration performed by this repository task.
+
+#### Current-name replacement (0.3.0; not yet qualified)
+
+The new build is `numera-gen-mcp.exe` on Windows and `numera-gen-mcp` on Linux/macOS; its exact
+host entry is `numera-gen-mcp`. **Do not switch until that build is signed, qualified and installed.**
+The 0.2.0 commands above deliberately use its immutable legacy executable; renaming that file does
+not install 0.3.0. For a qualified new installation, replace only the selected Numera entry:
+
+```json
+{
+  "mcpServers": {
+    "numera-gen-mcp": {
+      "command": "C:/tools/numera-gen-mcp/bin/numera-gen-mcp.exe",
+      "args": ["bridge"],
+      "env": {
+        "NUMERA_CONFIG": "C:/tools/numera-gen-mcp/.env",
+        "TEMP": "C:/tools/numera-gen-mcp/.runtime/temp",
+        "TMP": "C:/tools/numera-gen-mcp/.runtime/temp",
+        "TMPDIR": "C:/tools/numera-gen-mcp/.runtime/temp"
+      }
+    }
+  }
+}
+```
+
+Replace every example root with the same actual project directory. The binary's installation root
+(parent of `bin/`) owns `.runtime/temp` and `.runtime/cache`, regardless of the config path or host
+working directory; there is no extra cache environment key. [Desktop](examples/claude-desktop.json),
+[project JSON](examples/claude-project.json) and [Codex TOML](examples/codex.toml) use the same new name.
+Back up and explicitly migrate a selected old `numera-gen`/`numera-image-gen` entry rather than running
+two processes against the same state. Registration manages only the exact current entry; it does not
+remove legacy entries automatically. Keep the working runtime and data until actual reconnection.
 
 ### 5. Verify the connection before approving an image
 
@@ -517,6 +549,11 @@ GLB 2.0 mesh subset. Audio tracks in MP4, fragmented video, compressed/animated/
 media formats are not supported by these validators. Structural validation is not full decode,
 rendering, semantic quality or live-provider proof. Provider artifacts outside these limits can yield
 partial or failed storage after generation; inspect the receipt, never resubmit automatically.
+For the exact Flux dev image endpoints, explicit effective `num_images`, `output_format` and numeric
+`image_size` requirements are saved with the request. Mismatching originals remain unchanged and
+produce `deviations` with overall `partial` status; successful storage remains `completed`.
+Local recovery uses that saved requirement snapshot, not later configuration defaults. Omitted
+provider defaults, named size presets and other media parameters are not conformance guarantees.
 
 `get_media_output_info` checks owned original bytes, actual MIME, kind, role, format, byte count,
 SHA-256 and available kind-specific metadata. No invented image dimensions for audio or meshes.

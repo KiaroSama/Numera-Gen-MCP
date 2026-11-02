@@ -48,14 +48,20 @@ pub(crate) struct Api {
 }
 
 fn available(pointer: *mut c_void) -> io::Result<*mut c_void> {
-    if pointer.is_null() { Err(fail("macos_signing_capability_unavailable")) } else { Ok(pointer) }
+    if pointer.is_null() {
+        Err(fail("macos_signing_capability_unavailable"))
+    } else {
+        Ok(pointer)
+    }
 }
 impl Api {
     /// # Safety
     /// The resolver must return live addresses with the exact declared Apple function ABIs,
     /// or addresses of live CF reference variables for constants. Their code/data stays loaded
     /// through this table's last call and every associated object's release.
-    pub(crate) unsafe fn resolve(mut address: impl FnMut(&'static [u8]) -> io::Result<*mut c_void>) -> io::Result<Self> {
+    pub(crate) unsafe fn resolve(
+        mut address: impl FnMut(&'static [u8]) -> io::Result<*mut c_void>,
+    ) -> io::Result<Self> {
         macro_rules! function {
             ($name:literal, $kind:ty) => {{
                 let pointer = available(address(concat!($name, "\0").as_bytes())?)?;
@@ -80,7 +86,8 @@ impl Api {
             item_identity: constant!("kSecImportItemIdentity"),
             signer_identity: constant!("kSecCodeSignerIdentity"),
             timestamp: constant!("kSecCodeSignerRequireTimestamp"),
-            yes: constant!("kCFBooleanTrue"), no: constant!("kCFBooleanFalse"),
+            yes: constant!("kCFBooleanTrue"),
+            no: constant!("kCFBooleanFalse"),
             data_create: function!("CFDataCreate", DataCreate),
             string_create: function!("CFStringCreateWithBytes", StringCreate),
             dictionary_create: function!("CFDictionaryCreate", DictionaryCreate),
@@ -100,20 +107,37 @@ impl Api {
         })
     }
     fn own(&self, value: Ref) -> io::Result<Owned<'_>> {
-        if value.is_null() { Err(fail("macos_signing_allocation_failed")) } else { Ok(Owned { value, api: self }) }
+        if value.is_null() {
+            Err(fail("macos_signing_allocation_failed"))
+        } else {
+            Ok(Owned { value, api: self })
+        }
     }
     fn output(&self, status: i32, value: Ref) -> io::Result<Owned<'_>> {
         // Own a partial out-reference before checking its status: Apple can return an object
         // alongside failure. It must be released even when the caller never receives a result.
         let owned = Owned { value, api: self };
-        if status != 0 || value.is_null() { Err(fail("macos_signing_native_operation_failed")) } else { Ok(owned) }
+        if status != 0 || value.is_null() {
+            Err(fail("macos_signing_native_operation_failed"))
+        } else {
+            Ok(owned)
+        }
     }
     fn dictionary(&self, pairs: &[(Ref, Ref)]) -> io::Result<Owned<'_>> {
         let keys = pairs.iter().map(|pair| pair.0).collect::<Vec<_>>();
         let values = pairs.iter().map(|pair| pair.1).collect::<Vec<_>>();
         // SAFETY: bounded equal-length live slices; null callbacks deliberately retain nothing.
         // Every referenced input remains owned on the enclosing stack through dictionary release.
-        self.own(unsafe { (self.dictionary_create)(null(), keys.as_ptr(), values.as_ptr(), pairs.len() as isize, null(), null()) })
+        self.own(unsafe {
+            (self.dictionary_create)(
+                null(),
+                keys.as_ptr(),
+                values.as_ptr(),
+                pairs.len() as isize,
+                null(),
+                null(),
+            )
+        })
     }
     fn sign(&self, pfx: &[u8], password: &[u8], pin: &str, files: &[&Path]) -> io::Result<()> {
         // SAFETY: validated bounded slices and platform-native path bytes remain live; exact ABI
@@ -121,44 +145,77 @@ impl Api {
         // owner immediately; borrowed identities remain anchored by the imported-items owner.
         unsafe {
             let data = self.own((self.data_create)(null(), pfx.as_ptr(), pfx.len() as isize))?;
-            let secret = self.own((self.string_create)(null(), password.as_ptr(), password.len() as isize, 0x08000100, 0))?;
-            let options = self.dictionary(&[(self.memory, self.yes), (self.passphrase, secret.value)])?;
+            let secret = self.own((self.string_create)(
+                null(),
+                password.as_ptr(),
+                password.len() as isize,
+                0x08000100,
+                0,
+            ))?;
+            let options =
+                self.dictionary(&[(self.memory, self.yes), (self.passphrase, secret.value)])?;
             let mut items = null();
             let status = (self.import)(data.value, options.value, &mut items);
             let items = self.output(status, items)?;
-            if (self.array_count)(items.value) != 1 { return Err(fail("macos_signing_single_identity_required")); }
+            if (self.array_count)(items.value) != 1 {
+                return Err(fail("macos_signing_single_identity_required"));
+            }
             let item = (self.array_item)(items.value, 0);
-            let identity = if item.is_null() { null() } else { (self.dictionary_value)(item, self.item_identity) };
-            if identity.is_null() { return Err(fail("macos_signing_identity_not_found")); }
+            let identity = if item.is_null() {
+                null()
+            } else {
+                (self.dictionary_value)(item, self.item_identity)
+            };
+            if identity.is_null() {
+                return Err(fail("macos_signing_identity_not_found"));
+            }
             let mut certificate = null();
             let status = (self.copy_certificate)(identity, &mut certificate);
             let certificate = self.output(status, certificate)?;
             let der = self.own((self.certificate_data)(certificate.value))?;
             let length = (self.data_length)(der.value);
             let bytes = (self.data_pointer)(der.value);
-            if !(1..=16384).contains(&length) { return Err(fail("macos_signing_certificate_bound")); }
-            if bytes.is_null() || sha(std::slice::from_raw_parts(bytes, length as usize)) != pin { return Err(fail("macos_signing_certificate_mismatch")); }
-            let parameters = self.dictionary(&[(self.signer_identity, identity), (self.timestamp, self.no)])?;
+            if !(1..=16384).contains(&length) {
+                return Err(fail("macos_signing_certificate_bound"));
+            }
+            if bytes.is_null() || sha(std::slice::from_raw_parts(bytes, length as usize)) != pin {
+                return Err(fail("macos_signing_certificate_mismatch"));
+            }
+            let parameters =
+                self.dictionary(&[(self.signer_identity, identity), (self.timestamp, self.no)])?;
             let mut signer = null();
             let status = (self.create_signer)(parameters.value, 0, &mut signer);
             let signer = self.output(status, signer)?;
             for file in files {
                 let path = file.as_os_str().as_encoded_bytes();
-                let url = self.own((self.url_create)(null(), path.as_ptr(), path.len() as isize, 0))?;
+                let url = self.own((self.url_create)(
+                    null(),
+                    path.as_ptr(),
+                    path.len() as isize,
+                    0,
+                ))?;
                 let mut code = null();
                 let status = (self.static_code)(url.value, 0, &mut code);
                 let code = self.output(status, code)?;
                 let mut error = null();
                 let status = (self.add_signature)(signer.value, code.value, 0, &mut error);
-                let _error = Owned { value: error, api: self };
-                if status != 0 { return Err(fail("macos_signing_native_signature_failed")); }
+                let _error = Owned {
+                    value: error,
+                    api: self,
+                };
+                if status != 0 {
+                    return Err(fail("macos_signing_native_signature_failed"));
+                }
             }
         }
         Ok(())
     }
 }
 
-struct Owned<'a> { value: Ref, api: &'a Api }
+struct Owned<'a> {
+    value: Ref,
+    api: &'a Api,
+}
 impl Drop for Owned<'_> {
     fn drop(&mut self) {
         if !self.value.is_null() {
@@ -169,19 +226,33 @@ impl Drop for Owned<'_> {
 }
 
 pub(crate) fn validate(pfx: &[u8], password: &[u8], pin: &str, files: &[&Path]) -> io::Result<()> {
-    if pfx.is_empty() || pfx.len() > 1024 * 1024 || password.is_empty() || password.len() > 4095
-        || !password.iter().all(|byte| byte.is_ascii_alphanumeric() || b"+/=_-".contains(byte))
-        || pin.len() != 64 || !pin.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-        || !(1..=2).contains(&files.len()) {
+    if pfx.is_empty()
+        || pfx.len() > 1024 * 1024
+        || password.is_empty()
+        || password.len() > 4095
+        || !password
+            .iter()
+            .all(|byte| byte.is_ascii_alphanumeric() || b"+/=_-".contains(byte))
+        || pin.len() != 64
+        || !pin
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        || !(1..=2).contains(&files.len())
+    {
         Err(fail("invalid_memory_signing_input"))
-    } else { Ok(()) }
+    } else {
+        Ok(())
+    }
 }
 
 /// # Safety
 /// The resolver must meet `Api::resolve`'s exact ABI/lifetime contract.
 pub(crate) unsafe fn sign_with(
     resolve: impl FnMut(&'static [u8]) -> io::Result<*mut c_void>,
-    pfx: &[u8], password: &[u8], pin: &str, files: &[&Path],
+    pfx: &[u8],
+    password: &[u8],
+    pin: &str,
+    files: &[&Path],
 ) -> io::Result<()> {
     validate(pfx, password, pin, files)?;
     // SAFETY: the caller supplies a resolver satisfying the exact named Apple ABI contract.

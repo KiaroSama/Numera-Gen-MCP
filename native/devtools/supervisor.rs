@@ -38,7 +38,10 @@ impl Bounds {
     }
     pub fn with_output_limit(mut self, bytes: usize) -> io::Result<Self> {
         if !(1..=16 * 1024 * 1024).contains(&bytes) {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Capture ceiling must be between one byte and sixteen MiB."));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Capture ceiling must be between one byte and sixteen MiB.",
+            ));
         }
         self.output_limit = bytes;
         Ok(self)
@@ -80,13 +83,28 @@ pub fn run(
     let paths = RuntimePaths::new(root)
         .map_err(|_| io::Error::other("Cannot resolve contained command scratch."))?;
     let cwd = command.get_current_dir().unwrap_or(&paths.root);
-    if !cwd.is_absolute() || cwd.components().any(|part| matches!(part, std::path::Component::ParentDir)) {
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Child working directory must be absolute and contained."));
+    if !cwd.is_absolute()
+        || cwd
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Child working directory must be absolute and contained.",
+        ));
     }
     let cwd = cwd.canonicalize()?;
-    paths.verify(&cwd).map_err(|_| io::Error::new(io::ErrorKind::PermissionDenied, "Child working directory escapes owning root."))?;
+    paths.verify(&cwd).map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "Child working directory escapes owning root.",
+        )
+    })?;
     if !cwd.is_dir() {
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Child working directory must exist."));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Child working directory must exist.",
+        ));
     }
     let work = paths.root.join(".ci-work");
     paths

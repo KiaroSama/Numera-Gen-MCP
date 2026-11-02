@@ -9,7 +9,10 @@ fn pcm_original_is_verified_without_invented_image_dimensions() {
     let bytes = wav();
     let original = bytes.clone();
     let info = media::inspect(Kind::Audio, &bytes, 1024, 16).unwrap();
-    assert_eq!((info.kind, info.mime.as_str(), info.format.as_str()), (Kind::Audio, "audio/wav", "wav"));
+    assert_eq!(
+        (info.kind, info.mime.as_str(), info.format.as_str()),
+        (Kind::Audio, "audio/wav", "wav")
+    );
     assert_eq!(info.metadata["sample_rate"], 8000);
     assert_eq!(info.metadata["channels"], 1);
     assert_eq!(info.metadata["sample_count"], 2);
@@ -57,7 +60,9 @@ fn glb_rejects_header_only_truncated_buffer_and_external_resources() {
     let mut doc: serde_json::Value = serde_json::from_slice(&good[20..20 + text_len]).unwrap();
     doc["buffers"][0]["uri"] = json!("https://example.invalid/private.bin");
     let mut text = serde_json::to_vec(&doc).unwrap();
-    while !text.len().is_multiple_of(4) { text.push(b' '); }
+    while !text.len().is_multiple_of(4) {
+        text.push(b' ');
+    }
     let bin_chunk = &good[20 + text_len..];
     let mut external = b"glTF\x02\0\0\0".to_vec();
     external.extend_from_slice(&((20 + text.len() + bin_chunk.len()) as u32).to_le_bytes());
@@ -101,9 +106,13 @@ fn mp4_rejects_magic_only_bad_offsets_and_truncated_samples() {
 #[test]
 fn malformed_inputs_never_escape_as_panics_or_image_shaped_success() {
     let valid = [wav(), glb(), mp4()];
-    for (kind, original) in [Kind::Audio, Kind::Model3d, Kind::Video].into_iter().zip(valid) {
+    for (kind, original) in [Kind::Audio, Kind::Model3d, Kind::Video]
+        .into_iter()
+        .zip(valid)
+    {
         for length in [0, 1, 7, 11, original.len() / 2, original.len() - 1] {
-            let result = std::panic::catch_unwind(|| media::inspect(kind, &original[..length], 8192, 64));
+            let result =
+                std::panic::catch_unwind(|| media::inspect(kind, &original[..length], 8192, 64));
             assert!(result.is_ok(), "truncated media panicked");
             assert!(result.unwrap().is_err());
         }

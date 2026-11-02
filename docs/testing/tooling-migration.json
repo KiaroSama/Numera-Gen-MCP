@@ -14,254 +14,484 @@
       "source": "scripts/bounded.mjs", "source_sha256": "0ed1d48d2f0c548bc7fbe36d4cafe14f77df8c4cb9d9951696180b55cc677deb",
       "rust": ["native/devtools/supervisor.rs", "native/devtools/process_unix.rs", "native/devtools/process_windows.rs"],
       "tests": ["tests/rust/devtool_supervisor.rs", "native/devtools/process_unix.rs"],
-      "scenarios": ["Wall/idle/cancel/output ceilings, full exit codes, private capture, descendant cleanup and unrelated-process preservation", "Post-close EPERM resolves only after definitive group absence; observation failures never mean absence"]
+      "named_tests": ["tests/rust/devtool_supervisor.rs::bounds_exit_wall_cancellation_and_output_limit_are_observable", "tests/rust/devtool_supervisor.rs::idle_timeout_reaps_owned_tree_preserves_unrelated_and_records_cleanup", "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status", "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence", "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence"],
+      "scenarios": ["Wall/idle/cancel/output ceilings, full exit codes, private capture, descendant cleanup and unrelated-process preservation", "Post-close EPERM resolves only after definitive group absence; observation failures never mean absence"],
+      "scenario_tests": {
+        "Wall/idle/cancel/output ceilings, full exit codes, private capture, descendant cleanup and unrelated-process preservation": ["tests/rust/devtool_supervisor.rs::bounds_exit_wall_cancellation_and_output_limit_are_observable", "tests/rust/devtool_supervisor.rs::idle_timeout_reaps_owned_tree_preserves_unrelated_and_records_cleanup", "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status"],
+        "Post-close EPERM resolves only after definitive group absence; observation failures never mean absence": ["native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence", "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence"]
+      }
     },
     {
       "source": "scripts/check.mjs", "source_sha256": "4a6b0f1dee87d3756e16183b6c424ef24bd5e29e30aaa4c07175ca9ca98f507f",
       "rust": ["tooling/src/inventory.rs"], "tests": ["tooling/tests/ci_contracts.rs"],
-      "scenarios": ["Strict tracked UTF-8 and source800-line ceiling", "Root/workspace suite discovery must match actual files"]
+      "named_tests": ["tooling/tests/ci_contracts.rs::tracked_text_requires_strict_utf8_and_the_exact_eight_hundred_source_line_boundary", "tooling/tests/ci_contracts.rs::workspace_discovery_includes_every_real_test_file_and_rejects_missing_or_extra_targets", "tooling/tests/ci_contracts.rs::original_tooling_manifest_accounts_for_every_file_without_promoting_source_mapping_to_acceptance"],
+      "scenarios": ["Strict tracked UTF-8 and source800-line ceiling", "Root/workspace suite discovery must match actual files"],
+      "scenario_tests": {
+        "Strict tracked UTF-8 and source800-line ceiling": ["tooling/tests/ci_contracts.rs::tracked_text_requires_strict_utf8_and_the_exact_eight_hundred_source_line_boundary"],
+        "Root/workspace suite discovery must match actual files": ["tooling/tests/ci_contracts.rs::workspace_discovery_includes_every_real_test_file_and_rejects_missing_or_extra_targets", "tooling/tests/ci_contracts.rs::original_tooling_manifest_accounts_for_every_file_without_promoting_source_mapping_to_acceptance"]
+      }
     },
     {
       "source": "scripts/logging.mjs", "source_sha256": "e33145c2a621867d56134bbd706dc23a152bd5ae185971442cc6042cdb7cf28f",
-      "rust": ["native/logging.rs", "tooling/src/context.rs", "tooling/src/main.rs"], "tests": ["tooling/tests/ci_contracts.rs", "tests/rust/sdk_acceptance/configuration.rs"],
-      "scenarios": ["Unique UTF-8 UTC file, safe init fallback, correlation and closed handles", "Safe diagnostics without private child output, credentials, prompts or paths"]
+      "rust": ["native/logging.rs", "tooling/src/context.rs", "tooling/src/main.rs"], "tests": ["tooling/tests/ci_contracts.rs", "tests/rust/runtime_contracts.rs", "tests/rust/sdk_acceptance.rs", "tests/rust/sdk_acceptance/configuration.rs"],
+      "named_tests": ["tooling/tests/ci_contracts.rs::diagnostics_expose_only_explicit_safe_messages_not_os_or_private_child_text", "tests/rust/runtime_contracts.rs::log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed", "tests/rust/runtime_contracts.rs::exact_source_two_loggers_keep_four_levels_private_and_distinct_files", "tests/rust/runtime_contracts.rs::exact_source_log_metadata_cannot_be_forged_and_closed_file_can_rename", "tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"],
+      "scenarios": ["Unique UTF-8 UTC file, safe init fallback, correlation and closed handles", "Safe diagnostics without private child output, credentials, prompts or paths"],
+      "scenario_tests": {
+        "Unique UTF-8 UTC file, safe init fallback, correlation and closed handles": ["tests/rust/runtime_contracts.rs::log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed", "tests/rust/runtime_contracts.rs::exact_source_two_loggers_keep_four_levels_private_and_distinct_files", "tests/rust/runtime_contracts.rs::exact_source_log_metadata_cannot_be_forged_and_closed_file_can_rename", "tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"],
+        "Safe diagnostics without private child output, credentials, prompts or paths": ["tooling/tests/ci_contracts.rs::diagnostics_expose_only_explicit_safe_messages_not_os_or_private_child_text", "tests/rust/runtime_contracts.rs::log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed", "tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"]
+      }
     },
     {
       "source": "scripts/native-activation-acceptance.py", "source_sha256": "0b599fa279db7778d51a17ac1a3de545aa8fb53c6569f03990283338e791dd03",
       "rust": ["tooling/src/acceptance.rs"], "tests": ["tests/rust/devtool_setup.rs", "tests/rust/artifact_signatures.rs"],
+      "named_tests": ["tests/rust/devtool_setup.rs::signed_prepared_install_and_update_preserve_private_files_without_compilation", "tests/rust/devtool_setup.rs::unsigned_update_is_rejected_before_replacing_a_locked_installation", "tests/rust/devtool_setup.rs::native_register_and_remove_change_only_selected_fixture_entry", "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation"],
       "scenarios": ["Actual signed install/update/register/remove, Windows rollback and private-file/other-host-entry preservation", "Owned scratch/lock/staging cleanup; no actual owner-host edit"],
+      "scenario_tests": {
+        "Actual signed install/update/register/remove, Windows rollback and private-file/other-host-entry preservation": ["tests/rust/devtool_setup.rs::signed_prepared_install_and_update_preserve_private_files_without_compilation", "tests/rust/devtool_setup.rs::unsigned_update_is_rejected_before_replacing_a_locked_installation", "tests/rust/devtool_setup.rs::native_register_and_remove_change_only_selected_fixture_entry", "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation"],
+        "Owned scratch/lock/staging cleanup; no actual owner-host edit": ["tests/rust/devtool_setup.rs::signed_prepared_install_and_update_preserve_private_files_without_compilation", "tests/rust/devtool_setup.rs::native_register_and_remove_change_only_selected_fixture_entry"]
+      },
       "required_execution": "Six signed extracted activation passes; source tests alone are insufficient"
     },
     {
       "source": "scripts/native-case-inventory.mjs", "source_sha256": "b50c772041af2f371fec229e0b7c8035df885d07c3b268cca1b45710d80046c7",
       "rust": ["tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/ledger_contracts.rs"],
+      "named_tests": ["tooling/tests/ledger_contracts.rs::independent_collection_binds_case_name_location_applicability_and_frozen_source_bytes", "tooling/tests/ledger_contracts.rs::every_suite_is_bound_to_immutable_source_and_registered_native_tests"],
       "scenarios": ["Authenticate three original expanded470-case/50-suite collections", "Preserve name/location/platform applicability; collection is not test-body execution"],
+      "scenario_tests": {
+        "Authenticate three original expanded470-case/50-suite collections": ["tooling/tests/ledger_contracts.rs::independent_collection_binds_case_name_location_applicability_and_frozen_source_bytes", "tooling/tests/ledger_contracts.rs::every_suite_is_bound_to_immutable_source_and_registered_native_tests"],
+        "Preserve name/location/platform applicability; collection is not test-body execution": ["tooling/tests/ledger_contracts.rs::independent_collection_binds_case_name_location_applicability_and_frozen_source_bytes"]
+      },
       "strategy": "Authenticate retained Node-generated collections, never generate expected identities with the Rust target"
     },
     {
       "source": "scripts/native-case-ledger.py", "source_sha256": "abbb977daac25d1f59e963f1300009342eb02b50f84527ef2fb1e3fdbe291239",
-      "rust": ["tooling/src/ledger.rs", "tooling/src/ledger_inputs.rs", "tooling/src/execution_evidence.rs", "tooling/src/qualification.rs", "tooling/src/matrix.rs"], "tests": ["tooling/tests/ledger_contracts.rs", "tooling/tests/execution_evidence_contracts.rs", "tooling/tests/qualification_contracts.rs", "tooling/tests/matrix_contracts.rs"],
+      "rust": ["tooling/src/ledger.rs", "tooling/src/ledger_inputs.rs", "tooling/src/execution_evidence.rs", "tooling/src/qualification.rs", "tooling/src/matrix.rs", "tooling/src/source_review.rs", "tooling/src/tooling_execution.rs"], "tests": ["tooling/tests/ledger_contracts.rs", "tooling/tests/execution_evidence_contracts.rs", "tooling/tests/qualification_contracts.rs", "tooling/tests/matrix_contracts.rs", "tooling/tests/source_review_contracts.rs", "tooling/tests/tooling_execution_contracts.rs"],
+      "named_tests": ["tooling/tests/ledger_contracts.rs::mapping_cache_is_per_validation_and_never_hides_changed_file_bytes", "tooling/tests/ledger_contracts.rs::mapping_requires_a_real_attributed_test_not_helper_comment_literal_or_ignored_function", "tooling/tests/ledger_contracts.rs::assertion_source_native_ranges_claims_and_evidence_hashes_cannot_silently_drift", "tooling/tests/qualification_contracts.rs::every_original_case_binds_exact_names_in_each_required_context_without_semantic_promotion", "tooling/tests/matrix_contracts.rs::matrix_requires_six_native_targets_and_separate_instrumented_linux_without_duplicates", "tooling/tests/source_review_contracts.rs::committed_primary_review_covers_the_actual_historical_ledger_and_current_source", "tooling/tests/tooling_execution_contracts.rs::stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected", "tooling/tests/tooling_execution_contracts.rs::sdk_tooling_bindings_require_both_authenticated_artifact_phases_and_exact_names"],
       "scenarios": ["470 unique identities, exact frozen suites/hashes and invocation-local caches", "Actual attributed tests, assertion ranges/claims/review/hashes and exact named six-target plus coverage execution", "Historical authentication never proves current execution"],
+      "scenario_tests": {
+        "470 unique identities, exact frozen suites/hashes and invocation-local caches": ["tooling/tests/ledger_contracts.rs::mapping_cache_is_per_validation_and_never_hides_changed_file_bytes"],
+        "Actual attributed tests, assertion ranges/claims/review/hashes and exact named six-target plus coverage execution": ["tooling/tests/ledger_contracts.rs::mapping_requires_a_real_attributed_test_not_helper_comment_literal_or_ignored_function", "tooling/tests/ledger_contracts.rs::assertion_source_native_ranges_claims_and_evidence_hashes_cannot_silently_drift", "tooling/tests/qualification_contracts.rs::every_original_case_binds_exact_names_in_each_required_context_without_semantic_promotion", "tooling/tests/matrix_contracts.rs::matrix_requires_six_native_targets_and_separate_instrumented_linux_without_duplicates", "tooling/tests/source_review_contracts.rs::committed_primary_review_covers_the_actual_historical_ledger_and_current_source"],
+        "Historical authentication never proves current execution": ["tooling/tests/tooling_execution_contracts.rs::stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected", "tooling/tests/qualification_contracts.rs::every_original_case_binds_exact_names_in_each_required_context_without_semantic_promotion", "tooling/tests/tooling_execution_contracts.rs::sdk_tooling_bindings_require_both_authenticated_artifact_phases_and_exact_names"]
+      },
       "remaining": ["Current assertion-range semantic review and actual hosted qualification of authored per-context/seven-context execution binding are pending"]
     },
     {
       "source": "scripts/native-ci.py", "source_sha256": "4754884415f3258980ccec3648c5f7bc30a28c7972ef982f0a5c09e43c736338",
-      "rust": ["tooling/src/ci.rs", "tooling/src/context.rs", "tooling/src/coverage_environment.rs", "tooling/src/inventory.rs", "tooling/src/test_execution.rs", "tooling/src/execution_evidence.rs"],
-      "tests": ["tooling/tests/ci_contracts.rs", "tooling/tests/coverage_environment_contracts.rs", "tooling/tests/test_execution_contracts.rs", "tooling/tests/execution_evidence_contracts.rs", "tests/rust/devtool_supervisor.rs"],
-      "scenarios": ["Hosted-only contained workers2 and complete workspace discovery", "Format/Clippy/test/release/SDK failure aggregation", "Root-runtime85/80 floors; coverage cannot override failed tests", "Compiler executable inventory and private bounded cleanup"]
+      "rust": ["tooling/src/ci.rs", "tooling/src/context.rs", "tooling/src/coverage_environment.rs", "tooling/src/inventory.rs", "tooling/src/test_execution.rs", "tooling/src/execution_evidence.rs", "tooling/src/formatting.rs"],
+      "tests": ["tooling/tests/ci_contracts.rs", "tooling/tests/coverage_environment_contracts.rs", "tooling/tests/test_execution_contracts.rs", "tooling/tests/execution_evidence_contracts.rs", "tooling/tests/formatting_contracts.rs", "tests/rust/devtool_supervisor.rs"],
+      "named_tests": ["tooling/tests/ci_contracts.rs::workspace_discovery_includes_every_real_test_file_and_rejects_missing_or_extra_targets", "tooling/tests/ci_contracts.rs::runtime_coverage_requires_both_eighty_five_region_and_eighty_branch_floors", "tooling/tests/test_execution_contracts.rs::harness_inventory_requires_every_selected_package_target_and_rejects_omissions_or_extras", "tooling/tests/test_execution_contracts.rs::exact_results_require_every_listed_name_and_an_unfiltered_zero_failure_summary", "tooling/tests/execution_evidence_contracts.rs::missing_failed_filtered_duplicate_or_malformed_execution_never_becomes_a_pass", "tests/rust/devtool_supervisor.rs::bounded_execution_keeps_explicit_contained_cwd_and_refuses_unowned_or_missing_directories", "tooling/tests/ci_contracts.rs::successful_diagnostics_never_clear_required_format_or_other_gate_failures", "tooling/tests/formatting_contracts.rs::formatting_archive_returns_only_tracked_workspace_rust_with_exact_unicode_bytes", "tooling/tests/formatting_contracts.rs::formatting_archive_rejects_malformed_duplicate_linked_missing_and_oversized_sources"],
+      "scenarios": ["Hosted-only contained workers2 and complete workspace discovery", "Format/Clippy/test/release/SDK failure aggregation", "Failed formatting returns bounded tracked Rust candidates without clearing failure or qualifying changed bytes", "Root-runtime85/80 floors; coverage cannot override failed tests", "Compiler executable inventory and private bounded cleanup"],
+      "scenario_tests": {
+        "Hosted-only contained workers2 and complete workspace discovery": ["tooling/tests/ci_contracts.rs::workspace_discovery_includes_every_real_test_file_and_rejects_missing_or_extra_targets", "tooling/tests/test_execution_contracts.rs::harness_inventory_requires_every_selected_package_target_and_rejects_omissions_or_extras"],
+        "Format/Clippy/test/release/SDK failure aggregation": ["tooling/tests/ci_contracts.rs::successful_diagnostics_never_clear_required_format_or_other_gate_failures", "tooling/tests/execution_evidence_contracts.rs::missing_failed_filtered_duplicate_or_malformed_execution_never_becomes_a_pass"],
+        "Failed formatting returns bounded tracked Rust candidates without clearing failure or qualifying changed bytes": ["tooling/tests/formatting_contracts.rs::formatting_archive_returns_only_tracked_workspace_rust_with_exact_unicode_bytes", "tooling/tests/formatting_contracts.rs::formatting_archive_rejects_malformed_duplicate_linked_missing_and_oversized_sources", "tooling/tests/ci_contracts.rs::successful_diagnostics_never_clear_required_format_or_other_gate_failures"],
+        "Root-runtime85/80 floors; coverage cannot override failed tests": ["tooling/tests/ci_contracts.rs::runtime_coverage_requires_both_eighty_five_region_and_eighty_branch_floors", "tooling/tests/test_execution_contracts.rs::exact_results_require_every_listed_name_and_an_unfiltered_zero_failure_summary"],
+        "Compiler executable inventory and private bounded cleanup": ["tooling/tests/test_execution_contracts.rs::harness_inventory_requires_every_selected_package_target_and_rejects_omissions_or_extras", "tests/rust/devtool_supervisor.rs::bounded_execution_keeps_explicit_contained_cwd_and_refuses_unowned_or_missing_directories"]
+      }
     },
     {
       "source": "scripts/native-compact-acceptance.mjs", "source_sha256": "733f0249f6554a66242a5d582552fd443a8abb8c372082f8e8468b0d27bf0c9a",
       "rust": ["tests/rust/sdk_acceptance/configuration.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Adjacent executable/spaces/foreign CWD, compact defaults/overrides, Responses body, replay/conflict and private logs"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"],
+      "scenarios": ["Adjacent executable/spaces/foreign CWD, compact defaults/overrides, Responses body, replay/conflict and private logs"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Adjacent executable/spaces/foreign CWD, compact defaults/overrides, Responses body, replay/conflict and private logs": ["tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"]
+      }
     },
     {
       "source": "scripts/native-config-reload-acceptance.mjs", "source_sha256": "bc89a0afa7db6c2fa386fc79907cbe887e4a85b978a8eb1ec37252175efc6c88",
       "rust": ["tests/rust/sdk_acceptance/reload.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Valid/invalid env reload, deduplicated warnings, original retained account/endpoint and captured in-flight config"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_three_saved_configuration_reload_schedules"],
+      "scenarios": ["Valid/invalid env reload, deduplicated warnings, original retained account/endpoint and captured in-flight config"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Valid/invalid env reload, deduplicated warnings, original retained account/endpoint and captured in-flight config": ["tests/rust/sdk_acceptance.rs::native_sdk_three_saved_configuration_reload_schedules"]
+      }
     },
     {
       "source": "scripts/native-env-acceptance.mjs", "source_sha256": "3de78bc2f5b5f8059eee657eed227025d6ae4a1fef824e8b47c7b36800372020",
       "rust": ["tests/rust/sdk_acceptance/configuration.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Actual adjacent dotenv, Unicode reload, invalid-save last-good behavior and private logs"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"],
+      "scenarios": ["Actual adjacent dotenv, Unicode reload, invalid-save last-good behavior and private logs"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Actual adjacent dotenv, Unicode reload, invalid-save last-good behavior and private logs": ["tests/rust/sdk_acceptance.rs::native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reload"]
+      }
     },
     {
       "source": "scripts/native-extract-check.py", "source_sha256": "b5c38df117aa7869a8e849317b178c71869d3574ddecc7efdf7972d836f06527",
       "rust": ["tooling/src/acceptance.rs", "tooling/src/distribution.rs"], "tests": ["tooling/tests/distribution_contracts.rs", "tests/rust/sdk_acceptance.rs", "tests/rust/media_acceptance.rs"],
-      "scenarios": ["Exact checksum/target/source/version/publisher and complete regular archive", "Extracted real version/stdio/HTTP/media SDK, signed activation and owned cleanup"]
+      "named_tests": ["tooling/tests/distribution_contracts.rs::archive_checksum_identity_and_complete_inventory_precede_staging", "tooling/tests/distribution_contracts.rs::complete_inventory_is_authenticated_before_any_staging_write", "tests/rust/sdk_acceptance.rs::native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit", "tests/rust/media_acceptance.rs::real_sdk_media_kinds_modes_outputs_and_legacy_catalog"],
+      "scenarios": ["Exact checksum/target/source/version/publisher and complete regular archive", "Extracted real version/stdio/HTTP/media SDK, signed activation and owned cleanup"],
+      "scenario_tests": {
+        "Exact checksum/target/source/version/publisher and complete regular archive": ["tooling/tests/distribution_contracts.rs::archive_checksum_identity_and_complete_inventory_precede_staging", "tooling/tests/distribution_contracts.rs::complete_inventory_is_authenticated_before_any_staging_write"],
+        "Extracted real version/stdio/HTTP/media SDK, signed activation and owned cleanup": ["tests/rust/sdk_acceptance.rs::native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit", "tests/rust/media_acceptance.rs::real_sdk_media_kinds_modes_outputs_and_legacy_catalog"]
+      }
     },
     {
       "source": "scripts/native-host-fixture.mjs", "source_sha256": "34c7d256faf389efcc2544c67465a01672c3b8c0e5d0ea84a58376a31f4eb27f",
-      "rust": ["tests/rust/sdk_acceptance/host.rs", "tests/rust/sdk_acceptance/provider.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Actual SDK over owned process pipes, allowlisted env/contained scratch", "Call/host/scenario bounds and late-handler error/cleanup propagation"], "detail": "sdk_scenario_manifest"
+      "rust": ["tests/rust/sdk_acceptance/host.rs", "tests/rust/sdk_acceptance/provider.rs", "tests/rust/sdk_acceptance/cleanup.rs"], "tests": ["tests/rust/sdk_acceptance.rs", "tests/rust/sdk_acceptance/cleanup_contracts.rs"],
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership", "tests/rust/sdk_acceptance/cleanup_contracts.rs::failed_scenario_awaits_late_provider_errors_and_preserves_the_original_failure", "tests/rust/sdk_acceptance/cleanup_contracts.rs::timed_out_scenario_releases_held_handlers_before_removing_its_workspace", "tests/rust/sdk_acceptance/cleanup_contracts.rs::failed_actual_sdk_scenario_reaps_the_child_and_diagnostics_before_workspace_cleanup"],
+      "scenarios": ["Actual SDK over owned process pipes, allowlisted env/contained scratch", "Call/host/scenario bounds and late-handler error/cleanup propagation"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Actual SDK over owned process pipes, allowlisted env/contained scratch": ["tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership", "tests/rust/sdk_acceptance/cleanup_contracts.rs::failed_actual_sdk_scenario_reaps_the_child_and_diagnostics_before_workspace_cleanup"],
+        "Call/host/scenario bounds and late-handler error/cleanup propagation": ["tests/rust/sdk_acceptance/cleanup_contracts.rs::failed_scenario_awaits_late_provider_errors_and_preserves_the_original_failure", "tests/rust/sdk_acceptance/cleanup_contracts.rs::timed_out_scenario_releases_held_handlers_before_removing_its_workspace", "tests/rust/sdk_acceptance/cleanup_contracts.rs::failed_actual_sdk_scenario_reaps_the_child_and_diagnostics_before_workspace_cleanup"]
+      }
     },
     {
       "source": "scripts/native-http-interop.mjs", "source_sha256": "17eb11e22efc3382a1f17a32d8c645471d5ec52744f7119600dc47d77364b759",
       "rust": ["tests/rust/sdk_acceptance/http.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Two HTTP SDK sessions, legacy tools/resources plus additive media", "Bearer401/origin403/token privacy/zero stdout/session-close/graceful owned exit"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit"],
+      "scenarios": ["Two HTTP SDK sessions, legacy tools/resources plus additive media", "Bearer401/origin403/token privacy/zero stdout/session-close/graceful owned exit"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Two HTTP SDK sessions, legacy tools/resources plus additive media": ["tests/rust/sdk_acceptance.rs::native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit"],
+        "Bearer401/origin403/token privacy/zero stdout/session-close/graceful owned exit": ["tests/rust/sdk_acceptance.rs::native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit"]
+      }
     },
     {
       "source": "scripts/native-interop.mjs", "source_sha256": "18e272079e8fbbe8a6020a2f3da3920ff88db387fee71cbf0ef6bfb5f3feac99",
       "rust": ["tests/rust/sdk_acceptance/recovery.rs", "tests/rust/sdk_acceptance/host.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Legacy/auto/modern negotiation, pre-cancelled handshake", "Two hosts/two restarts, resources/previews/exact originals and no recovery POST"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership", "tests/rust/sdk_acceptance.rs::native_sdk_recovery_controls_two_hosts_and_two_actual_restarts"],
+      "scenarios": ["Legacy/auto/modern negotiation, pre-cancelled handshake", "Two hosts/two restarts, resources/previews/exact originals and no recovery POST"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Legacy/auto/modern negotiation, pre-cancelled handshake": ["tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership"],
+        "Two hosts/two restarts, resources/previews/exact originals and no recovery POST": ["tests/rust/sdk_acceptance.rs::native_sdk_recovery_controls_two_hosts_and_two_actual_restarts"]
+      }
     },
     {
       "source": "scripts/native-licenses.py", "source_sha256": "dd47a487f398f17e9b368a327754955ba25cc6e3f38c2824fd430aa04d572269",
       "rust": ["tooling/src/licenses.rs"], "tests": ["tooling/tests/licenses_contracts.rs"],
-      "scenarios": ["Actual resolved runtime notices with exact bytes/hashes", "Escaping/missing refusal; supplements bind crate/revision/license/notice"]
+      "named_tests": ["tooling/tests/licenses_contracts.rs::actual_and_declared_nonstandard_notices_preserve_exact_bytes_and_hashes", "tooling/tests/licenses_contracts.rs::unknown_missing_notice_and_escaping_declared_file_fail_closed", "tooling/tests/licenses_contracts.rs::reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash", "tooling/tests/licenses_contracts.rs::notice_depth_and_aggregate_limits_fail_before_any_destination_write", "tooling/tests/licenses_contracts.rs::license_declarations_require_valid_nonempty_strings_before_copying_real_notice_bytes"],
+      "scenarios": ["Actual resolved runtime notices with exact bytes/hashes", "Escaping/missing refusal; supplements bind crate/revision/license/notice", "Bounded package traversal and aggregate bytes before notice publication"],
+      "scenario_tests": {
+        "Actual resolved runtime notices with exact bytes/hashes": ["tooling/tests/licenses_contracts.rs::actual_and_declared_nonstandard_notices_preserve_exact_bytes_and_hashes"],
+        "Escaping/missing refusal; supplements bind crate/revision/license/notice": ["tooling/tests/licenses_contracts.rs::unknown_missing_notice_and_escaping_declared_file_fail_closed", "tooling/tests/licenses_contracts.rs::reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash", "tooling/tests/licenses_contracts.rs::license_declarations_require_valid_nonempty_strings_before_copying_real_notice_bytes"],
+        "Bounded package traversal and aggregate bytes before notice publication": ["tooling/tests/licenses_contracts.rs::notice_depth_and_aggregate_limits_fail_before_any_destination_write"]
+      }
     },
     {
       "source": "scripts/native-lifecycle-acceptance.mjs", "source_sha256": "557d3ed7ef407f39c0d26ae5f2d163add8632506d55c44581f28e4f81bef45c2",
       "rust": ["tests/rust/sdk_acceptance/lifecycle.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Four authoritative terminals/three reopens, eight uncertainty controls, six cancellation schedules", "GET-only/no-auth/no-new-generation and capacity retention"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_eighteen_literal_terminal_lifecycle_scenarios"],
+      "scenarios": ["Four authoritative terminals/three reopens, eight uncertainty controls, six cancellation schedules", "GET-only/no-auth/no-new-generation and capacity retention"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Four authoritative terminals/three reopens, eight uncertainty controls, six cancellation schedules": ["tests/rust/sdk_acceptance.rs::native_sdk_eighteen_literal_terminal_lifecycle_scenarios"],
+        "GET-only/no-auth/no-new-generation and capacity retention": ["tests/rust/sdk_acceptance.rs::native_sdk_eighteen_literal_terminal_lifecycle_scenarios"]
+      }
     },
     {
       "source": "scripts/native-macos-signing.py", "source_sha256": "53da8efb49f4cc8f755e609b2c781658d25ec29d817bd28e9b437c65570d262f",
       "rust": ["tooling/src/signing_macos.rs", "tooling/src/apple_signer.rs"], "tests": ["tooling/tests/signing_platform_contracts.rs"],
+      "named_tests": ["tooling/tests/signing_platform_contracts.rs::memory_only_identity_is_pinned_and_all_native_references_are_released", "tooling/tests/signing_platform_contracts.rs::missing_memory_only_symbol_fails_before_private_import_without_fallback", "tooling/tests/signing_platform_contracts.rs::every_allocation_and_partial_failure_output_is_released_once"],
       "scenarios": ["Required memory-only import and certificate pin before signing; no TSA", "Bounded original files and release on all partial failures; no keychain/trust fallback"],
+      "scenario_tests": {
+        "Required memory-only import and certificate pin before signing; no TSA": ["tooling/tests/signing_platform_contracts.rs::memory_only_identity_is_pinned_and_all_native_references_are_released", "tooling/tests/signing_platform_contracts.rs::missing_memory_only_symbol_fails_before_private_import_without_fallback"],
+        "Bounded original files and release on all partial failures; no keychain/trust fallback": ["tooling/tests/signing_platform_contracts.rs::every_allocation_and_partial_failure_output_is_released_once", "tooling/tests/signing_platform_contracts.rs::memory_only_identity_is_pinned_and_all_native_references_are_released"]
+      },
       "required_execution": "Matching macOS hosts; fake ABI is not native signing proof"
     },
     {
       "source": "scripts/native-negotiation-acceptance.mjs", "source_sha256": "d052098f1ffc0a1e592f64773eeff37ac528bc5f0abd8c49180b56c693d363b7",
       "rust": ["tests/rust/sdk_acceptance/configuration.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Legacy initialize, auto-discover/legacy fallback and modern discover-only rejection"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership"],
+      "scenarios": ["Legacy initialize, auto-discover/legacy fallback and modern discover-only rejection"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Legacy initialize, auto-discover/legacy fallback and modern discover-only rejection": ["tests/rust/sdk_acceptance.rs::native_sdk_three_protocol_eras_and_failed_handshake_ownership"]
+      }
     },
     {
       "source": "scripts/native-oracle-evidence.py", "source_sha256": "24bb4c1375e8fa8a3fe04a201487398b564171492cca7405acf1ebbe26ada69f",
       "rust": ["tooling/src/evidence.rs", "tooling/src/fixtures.rs"], "tests": ["tooling/tests/evidence_contracts.rs"],
+      "named_tests": ["tooling/tests/evidence_contracts.rs::exact_allowlisted_original_inputs_bind_current_source_dependencies_and_historical_materialization", "tooling/tests/evidence_contracts.rs::changed_inputs_dependencies_source_provenance_or_archive_inventory_cannot_pass"],
       "scenarios": ["Exactly15 original public inputs plus provenance; private DPAPI/config/registry excluded", "Current source/dependencies and historical identity; tamper/extra/missing/truncated/overwrite refusal"],
+      "scenario_tests": {
+        "Exactly15 original public inputs plus provenance; private DPAPI/config/registry excluded": ["tooling/tests/evidence_contracts.rs::exact_allowlisted_original_inputs_bind_current_source_dependencies_and_historical_materialization"],
+        "Current source/dependencies and historical identity; tamper/extra/missing/truncated/overwrite refusal": ["tooling/tests/evidence_contracts.rs::changed_inputs_dependencies_source_provenance_or_archive_inventory_cannot_pass"]
+      },
       "strategy": "Authenticate retained independent inputs instead of regenerating expected values"
     },
     {
       "source": "scripts/native-package.py", "source_sha256": "21302d75e69bb2c7e1ab17187d23d8495d6d3b98fb9a40604a32d48ed3e684e3",
       "rust": ["tooling/src/distribution.rs", "tooling/src/archives.rs"], "tests": ["tooling/tests/archive_contracts.rs", "tooling/tests/distribution_contracts.rs"],
-      "scenarios": ["Deterministic sorted ZIP/tar.gz regular4096members/256MiB and executable modes", "Private/escape/device/link/casefold/unlisted refusal; separate unsigned intermediate and signed final"]
+      "named_tests": ["tooling/tests/archive_contracts.rs::sorted_archive_members_round_trip_exact_bytes_in_both_formats", "tooling/tests/archive_contracts.rs::member_policy_rejects_private_escape_device_and_ambiguous_names", "tooling/tests/distribution_contracts.rs::archive_checksum_identity_and_complete_inventory_precede_staging"],
+      "scenarios": ["Deterministic sorted ZIP/tar.gz regular4096members/256MiB and executable modes", "Private/escape/device/link/casefold/unlisted refusal; separate unsigned intermediate and signed final"],
+      "scenario_tests": {
+        "Deterministic sorted ZIP/tar.gz regular4096members/256MiB and executable modes": ["tooling/tests/archive_contracts.rs::sorted_archive_members_round_trip_exact_bytes_in_both_formats"],
+        "Private/escape/device/link/casefold/unlisted refusal; separate unsigned intermediate and signed final": ["tooling/tests/archive_contracts.rs::member_policy_rejects_private_escape_device_and_ambiguous_names", "tooling/tests/distribution_contracts.rs::archive_checksum_identity_and_complete_inventory_precede_staging"]
+      }
     },
     {
       "source": "scripts/native-races-acceptance.mjs", "source_sha256": "18d3c21c8d7c8e239b942c2496885cfde1d2013e8af6391708c046f586f8ff27",
       "rust": ["tests/rust/sdk_acceptance/races.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Four held Responses/three Comfy two-host cancellation races", "Two restarts preserve outcomes/output UUIDs without duplicate polling/submission"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_seven_actual_two_host_races_and_restarts"],
+      "scenarios": ["Four held Responses/three Comfy two-host cancellation races", "Two restarts preserve outcomes/output UUIDs without duplicate polling/submission"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Four held Responses/three Comfy two-host cancellation races": ["tests/rust/sdk_acceptance.rs::native_sdk_seven_actual_two_host_races_and_restarts"],
+        "Two restarts preserve outcomes/output UUIDs without duplicate polling/submission": ["tests/rust/sdk_acceptance.rs::native_sdk_seven_actual_two_host_races_and_restarts"]
+      }
     },
     {
       "source": "scripts/native-setup.py", "source_sha256": "eb07d742e858c3a550c11b952ea00fadeba3eece3e2e0ee7a11ff026b3d82507",
-      "rust": ["tooling/src/fetch.rs", "tooling/src/signing_tools.rs"], "tests": ["tooling/tests/download_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
+      "rust": ["tooling/src/fetch.rs", "tooling/src/signing_tools.rs"], "tests": ["tooling/tests/download_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs", "tooling/tests/bootstrap_contracts.rs"],
+      "named_tests": ["tooling/tests/download_contracts.rs::timeout_retry_discards_partial_bytes_and_preserves_attempt_and_idle_bounds", "tooling/tests/download_contracts.rs::oversized_incomplete_permanent_error_and_unsafe_redirect_are_never_retried", "tooling/tests/signature_acceptance_contracts.rs::signing_tool_archive_accepts_only_exact_regular_bounded_allowlisted_members", "tooling/tests/bootstrap_contracts.rs::initial_hosted_build_uses_the_qualified_native_owner_in_every_context", "tooling/tests/bootstrap_contracts.rs::source_preparation_cannot_build_qualify_or_receive_signing_inputs"],
       "scenarios": ["Official bounded GET, timeout-only retry discards partial bytes, unsafe redirects refuse", "Known signing-tool hash/members and hosted-only toolchain setup"],
-      "remaining": ["Published native-owner bootstrap and structural contracts are authored in .github/actions/native-bootstrap/action.yml and tooling/tests/bootstrap_contracts.rs; six-target hosted execution and current locked resolution remain pending"]
+      "scenario_tests": {
+        "Official bounded GET, timeout-only retry discards partial bytes, unsafe redirects refuse": ["tooling/tests/download_contracts.rs::timeout_retry_discards_partial_bytes_and_preserves_attempt_and_idle_bounds", "tooling/tests/download_contracts.rs::oversized_incomplete_permanent_error_and_unsafe_redirect_are_never_retried"],
+        "Known signing-tool hash/members and hosted-only toolchain setup": ["tooling/tests/signature_acceptance_contracts.rs::signing_tool_archive_accepts_only_exact_regular_bounded_allowlisted_members", "tooling/tests/bootstrap_contracts.rs::initial_hosted_build_uses_the_qualified_native_owner_in_every_context", "tooling/tests/bootstrap_contracts.rs::source_preparation_cannot_build_qualify_or_receive_signing_inputs"]
+      },
+      "remaining": ["Published native-owner bootstrap and structural contracts are authored in .github/actions/native-bootstrap/action.yml and tooling/tests/bootstrap_contracts.rs; actual source-preparation resolved the workspace lock, but six-target compilation and execution remain pending"]
     },
     {
       "source": "scripts/native-signing-acceptance.py", "source_sha256": "781cbeb84891e2dc3584273e3bd378fa344f2cae6708040487955d56a2371946",
-      "rust": ["tooling/src/signature_acceptance.rs"], "tests": ["tooling/tests/signature_acceptance_contracts.rs"],
+      "rust": ["tooling/src/signature_acceptance.rs", "tooling/src/signed_execution.rs", "tooling/src/signed_matrix.rs"], "tests": ["tooling/tests/signature_acceptance_contracts.rs", "tooling/tests/signed_execution_contracts.rs"],
+      "named_tests": ["tooling/tests/signature_acceptance_contracts.rs::only_completed_negative_commands_count_as_signature_rejections", "tooling/tests/signature_acceptance_contracts.rs::acceptance_requires_both_distinct_native_executables_on_every_supported_target", "tooling/tests/signed_execution_contracts.rs::signed_stages_bind_same_manifest_binary_sdk_and_original_report_bytes_without_retirement", "tooling/tests/signed_execution_contracts.rs::signed_stage_log_receipts_require_one_exact_digest_in_the_successful_native_job", "tooling/tests/signed_execution_contracts.rs::signed_matrix_requires_every_native_target_and_the_same_current_execution_source", "tooling/tests/signed_execution_contracts.rs::final_signed_collection_waits_for_every_signing_job_without_receiving_private_inputs", "tooling/tests/signed_execution_contracts.rs::signed_sdk_keeps_every_original_mapped_name_from_the_authenticated_native_context", "tooling/tests/signed_execution_contracts.rs::signed_stage_join_rejects_stale_identity_missing_proof_and_self_consistent_wrong_binary"],
       "scenarios": ["Both real native executables: approved positive/unsigned/tampered/wrong-signer negatives", "Timeout/spawn/cleanup failure is not verified rejection; manifest/extracted activation"],
+      "scenario_tests": {
+        "Both real native executables: approved positive/unsigned/tampered/wrong-signer negatives": ["tooling/tests/signature_acceptance_contracts.rs::acceptance_requires_both_distinct_native_executables_on_every_supported_target", "tooling/tests/signed_execution_contracts.rs::signed_stages_bind_same_manifest_binary_sdk_and_original_report_bytes_without_retirement", "tooling/tests/signed_execution_contracts.rs::signed_matrix_requires_every_native_target_and_the_same_current_execution_source", "tooling/tests/signed_execution_contracts.rs::signed_sdk_keeps_every_original_mapped_name_from_the_authenticated_native_context"],
+        "Timeout/spawn/cleanup failure is not verified rejection; manifest/extracted activation": ["tooling/tests/signature_acceptance_contracts.rs::only_completed_negative_commands_count_as_signature_rejections", "tooling/tests/signed_execution_contracts.rs::signed_stage_log_receipts_require_one_exact_digest_in_the_successful_native_job", "tooling/tests/signed_execution_contracts.rs::final_signed_collection_waits_for_every_signing_job_without_receiving_private_inputs", "tooling/tests/signed_execution_contracts.rs::signed_stage_join_rejects_stale_identity_missing_proof_and_self_consistent_wrong_binary"]
+      },
       "required_execution": "Six signed native targets with approved protected authority"
     },
     {
       "source": "scripts/native-signing-stage.py", "source_sha256": "6892bc128d687150e0b84016b12dafb079ef8046ddd0901f96c6f333332f65a1",
-      "rust": ["tooling/src/distribution.rs", "tooling/src/signing_tools.rs"], "tests": ["tooling/tests/distribution_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
-      "scenarios": ["Authenticate complete intermediate before writes; existing destination refused", "Qualified tool path/version/hash/member inventory"]
+      "rust": ["tooling/src/distribution.rs", "tooling/src/signing_tools.rs", "tooling/src/promotion.rs"], "tests": ["tooling/tests/distribution_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs", "tooling/tests/promotion_contracts.rs"],
+      "named_tests": ["tooling/tests/distribution_contracts.rs::complete_inventory_is_authenticated_before_any_staging_write", "tooling/tests/distribution_contracts.rs::actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destination", "tooling/tests/signature_acceptance_contracts.rs::signing_tool_archive_accepts_only_exact_regular_bounded_allowlisted_members", "tooling/tests/promotion_contracts.rs::promotion_accepts_only_the_exact_successful_original_attempt_workflow_and_source", "tooling/tests/promotion_contracts.rs::promoted_matrix_preserves_all_seven_original_identities_and_false_qualification_boundary", "tooling/tests/promotion_contracts.rs::original_intermediate_metadata_is_bound_to_the_successful_producing_job_attempt", "tooling/tests/promotion_contracts.rs::intermediate_archive_digest_comes_from_one_original_successful_package_log", "tooling/tests/promotion_contracts.rs::actual_promotion_stage_and_sign_refuse_changed_original_bytes_before_private_import", "tooling/tests/promotion_contracts.rs::signing_only_workflow_selects_one_original_artifact_without_rerunning_native_suites"],
+      "scenarios": ["Authenticate complete intermediate before writes; existing destination refused", "Qualified tool path/version/hash/member inventory"],
+      "scenario_tests": {
+        "Authenticate complete intermediate before writes; existing destination refused": ["tooling/tests/distribution_contracts.rs::complete_inventory_is_authenticated_before_any_staging_write", "tooling/tests/distribution_contracts.rs::actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destination", "tooling/tests/promotion_contracts.rs::promotion_accepts_only_the_exact_successful_original_attempt_workflow_and_source", "tooling/tests/promotion_contracts.rs::promoted_matrix_preserves_all_seven_original_identities_and_false_qualification_boundary", "tooling/tests/promotion_contracts.rs::original_intermediate_metadata_is_bound_to_the_successful_producing_job_attempt", "tooling/tests/promotion_contracts.rs::intermediate_archive_digest_comes_from_one_original_successful_package_log", "tooling/tests/promotion_contracts.rs::actual_promotion_stage_and_sign_refuse_changed_original_bytes_before_private_import", "tooling/tests/promotion_contracts.rs::signing_only_workflow_selects_one_original_artifact_without_rerunning_native_suites"],
+        "Qualified tool path/version/hash/member inventory": ["tooling/tests/signature_acceptance_contracts.rs::signing_tool_archive_accepts_only_exact_regular_bounded_allowlisted_members"]
+      }
     },
     {
       "source": "scripts/native-signing.py", "source_sha256": "060e1ac6993d7363125f67914dae4ba9c77e5110487c7a8b9cb24445b74a00fc",
-      "rust": ["tooling/src/signing.rs", "tooling/src/private_files.rs"], "tests": ["tooling/tests/signing_contracts.rs", "tooling/tests/signing_platform_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
+      "rust": ["tooling/src/signing.rs", "tooling/src/private_files.rs"], "tests": ["tooling/tests/signing_contracts.rs", "tooling/tests/signing_platform_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs", "tooling/tests/ci_contracts.rs"],
+      "named_tests": ["tooling/tests/signing_contracts.rs::approved_signer_and_private_input_authority_fail_closed", "tooling/tests/ci_contracts.rs::actual_task_cli_reports_help_invalid_input_and_unauthorized_signing_without_private_mutation", "tooling/tests/signing_contracts.rs::selected_pfx_output_requires_one_exact_approved_certificate_before_native_import", "tooling/tests/signing_contracts.rs::private_children_keep_only_selected_os_environment_and_capture_never_logs_private_output", "tooling/tests/signing_platform_contracts.rs::temporary_signing_inputs_are_exclusive_and_normal_or_unwind_cleanup_removes_only_owned_files"],
       "scenarios": ["Public pins and exact hosted authority before secret reads", "Exclusive bounded inputs and PFX pin before import; no secret argv/env/output", "Native signatures, exact rehashed inventory, cryptographic manifest and cleanup"],
+      "scenario_tests": {
+        "Public pins and exact hosted authority before secret reads": ["tooling/tests/signing_contracts.rs::approved_signer_and_private_input_authority_fail_closed", "tooling/tests/ci_contracts.rs::actual_task_cli_reports_help_invalid_input_and_unauthorized_signing_without_private_mutation"],
+        "Exclusive bounded inputs and PFX pin before import; no secret argv/env/output": ["tooling/tests/signing_contracts.rs::selected_pfx_output_requires_one_exact_approved_certificate_before_native_import", "tooling/tests/signing_contracts.rs::private_children_keep_only_selected_os_environment_and_capture_never_logs_private_output", "tooling/tests/signing_platform_contracts.rs::temporary_signing_inputs_are_exclusive_and_normal_or_unwind_cleanup_removes_only_owned_files"],
+        "Native signatures, exact rehashed inventory, cryptographic manifest and cleanup": ["tooling/tests/signing_platform_contracts.rs::temporary_signing_inputs_are_exclusive_and_normal_or_unwind_cleanup_removes_only_owned_files"]
+      },
       "remaining": ["Fixed-code diagnostics and real private-child capture/cleanup contracts are authored; hosted qualification remains pending"]
     },
     {
       "source": "scripts/native-terminal-acceptance.mjs", "source_sha256": "ca96ee98a577e208acf93a49141eacf3b08a8b930857682eef10b2c90bd6db16",
       "rust": ["tests/rust/sdk_acceptance/terminal.rs", "tests/rust/sdk_acceptance/contracts.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Terminal rounds/capacity/Comfy cancellation modes and exact counts", "Fixed numeric-only bounded complete diagnostic rows"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity"],
+      "scenarios": ["Terminal rounds/capacity/Comfy cancellation modes and exact counts", "Fixed numeric-only bounded complete diagnostic rows"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Terminal rounds/capacity/Comfy cancellation modes and exact counts": ["tests/rust/sdk_acceptance.rs::native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity"],
+        "Fixed numeric-only bounded complete diagnostic rows": ["tests/rust/sdk_acceptance.rs::native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity"]
+      }
     },
     {
       "source": "scripts/native-tools-acceptance.mjs", "source_sha256": "e3ee29af66506143d658ca794a8bd9891000667a3459e3d19c5f13d6c9b0a452",
       "rust": ["tests/rust/sdk_acceptance/catalog.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Ten original tools within additive twelve-tool catalog, exact edit description", "Original resource/preview bytes, paging/cancel/refusal and exact two POSTs"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request"],
+      "scenarios": ["Ten original tools within additive twelve-tool catalog, exact edit description", "Original resource/preview bytes, paging/cancel/refusal and exact two POSTs"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Ten original tools within additive twelve-tool catalog, exact edit description": ["tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request"],
+        "Original resource/preview bytes, paging/cancel/refusal and exact two POSTs": ["tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request"]
+      }
     },
     {
       "source": "scripts/native-transport-acceptance.mjs", "source_sha256": "27231ce49e0cd563a29e3156d0cd08cae6b090e220a001de7d64f4b162b6db79",
       "rust": ["tests/rust/sdk_acceptance/transport.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Split SSE finals, ambiguous error IDs, sync/detached identity and Comfy rejection", "No preview promotion, credentialed assets or repeat generation"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios"],
+      "scenarios": ["Split SSE finals, ambiguous error IDs, sync/detached identity and Comfy rejection", "No preview promotion, credentialed assets or repeat generation"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Split SSE finals, ambiguous error IDs, sync/detached identity and Comfy rejection": ["tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios"],
+        "No preview promotion, credentialed assets or repeat generation": ["tests/rust/sdk_acceptance.rs::native_sdk_thirteen_transport_boundary_scenarios"]
+      }
     },
     {
       "source": "scripts/native-two-host-acceptance.mjs", "source_sha256": "49871a5dfd0964cd3535204c2db9dd3f458744bd8dea2ff4dbfe83576103c680",
       "rust": ["tests/rust/sdk_acceptance/catalog.rs"], "tests": ["tests/rust/sdk_acceptance.rs"],
-      "scenarios": ["Two literal bridge clients share one Unicode submission", "Exact model/prompt/count/8x6 originals and changed fingerprint conflict"], "detail": "sdk_scenario_manifest"
+      "named_tests": ["tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request"],
+      "scenarios": ["Two literal bridge clients share one Unicode submission", "Exact model/prompt/count/8x6 originals and changed fingerprint conflict"], "detail": "sdk_scenario_manifest",
+      "scenario_tests": {
+        "Two literal bridge clients share one Unicode submission": ["tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request"],
+        "Exact model/prompt/count/8x6 originals and changed fingerprint conflict": ["tests/rust/sdk_acceptance.rs::native_sdk_all_ten_tools_and_exact_shared_two_host_request"]
+      }
     },
     {
       "source": "scripts/native-validation.py", "source_sha256": "398eab32a5c00deffc55edf2a58fd6e3d862294a85f66fa4330a6ab8554dfb57",
       "rust": ["tooling/src/validation.rs", "tooling/src/fixtures.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/validation_contracts.rs", "tooling/tests/fixture_contracts.rs", "tooling/tests/ledger_contracts.rs"],
+      "named_tests": ["tooling/tests/validation_contracts.rs::historical_validation_changes_only_reviewed_dependencies_supervisor_and_child_fixture", "tooling/tests/validation_contracts.rs::validation_refuses_unreviewed_source_paths_versions_fixture_and_any_later_byte_drift"],
       "scenarios": ["Separate validation preserves frozen oracle/assertions; exact four-file reviewed delta", "Identity/traversal/duplicates/unexpected dependency/fixture/existing destination refusal"],
+      "scenario_tests": {
+        "Separate validation preserves frozen oracle/assertions; exact four-file reviewed delta": ["tooling/tests/validation_contracts.rs::historical_validation_changes_only_reviewed_dependencies_supervisor_and_child_fixture"],
+        "Identity/traversal/duplicates/unexpected dependency/fixture/existing destination refusal": ["tooling/tests/validation_contracts.rs::validation_refuses_unreviewed_source_paths_versions_fixture_and_any_later_byte_drift"]
+      },
       "remaining": ["Native archival four-file preparation/verification is wired into historical ledger checking; new validation_contracts tests still require hosted execution"]
     },
     {
       "source": "scripts/parity.py", "source_sha256": "b49c46bbd4225298ca2a0be76ccff441b587242891ebc885355f4749801c08fc",
       "rust": ["tooling/src/ledger.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/ledger_contracts.rs"],
-      "scenarios": ["Exactly50 frozen suites/470 cases and registered test mappings", "Suite grouping cannot bypass case-level pending/current execution gates"]
+      "named_tests": ["tooling/tests/ledger_contracts.rs::every_suite_is_bound_to_immutable_source_and_registered_native_tests", "tooling/tests/ledger_contracts.rs::complete_boolean_cannot_bypass_pending_assertions_or_missing_exact_execution_receipts"],
+      "scenarios": ["Exactly50 frozen suites/470 cases and registered test mappings", "Suite grouping cannot bypass case-level pending/current execution gates"],
+      "scenario_tests": {
+        "Exactly50 frozen suites/470 cases and registered test mappings": ["tooling/tests/ledger_contracts.rs::every_suite_is_bound_to_immutable_source_and_registered_native_tests"],
+        "Suite grouping cannot bypass case-level pending/current execution gates": ["tooling/tests/ledger_contracts.rs::complete_boolean_cannot_bypass_pending_assertions_or_missing_exact_execution_receipts"]
+      }
     },
     {
       "source": "scripts/rust-image-acceptance-oracle.mjs", "source_sha256": "1c409bb95e66ff4171507d30bddfd7a5c9d63ff3fd16b7706df412b37dc1995c",
       "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/images.rs", "tests/rust/image_editing_acceptance.rs", "tests/rust/output_recovery.rs"],
+      "named_tests": ["tests/rust/images.rs::exact_source_eight_by_six_png_jpeg_webp_metadata_hash_and_base64_round_trips_match", "tests/rust/image_editing_acceptance.rs::exact_source_transparent_region_edit_preserves_mask_pixels_and_original", "tests/rust/image_editing_acceptance.rs::exact_source_white_region_edit_preserves_mask_pixels_and_original", "tests/rust/image_editing_acceptance.rs::exact_source_black_region_edit_preserves_mask_pixels_and_original", "tests/rust/output_recovery.rs::exact_source_two_item_partial_receipt_saves_original_and_repeated_request_posts_once"],
       "fixtures": ["image-acceptance.json"], "scenarios": ["Independent8x6 originals, bytes/hash/alpha/masks/regions/preview/partial recovery"],
+      "scenario_tests": {
+        "Independent8x6 originals, bytes/hash/alpha/masks/regions/preview/partial recovery": ["tests/rust/images.rs::exact_source_eight_by_six_png_jpeg_webp_metadata_hash_and_base64_round_trips_match", "tests/rust/image_editing_acceptance.rs::exact_source_transparent_region_edit_preserves_mask_pixels_and_original", "tests/rust/image_editing_acceptance.rs::exact_source_white_region_edit_preserves_mask_pixels_and_original", "tests/rust/image_editing_acceptance.rs::exact_source_black_region_edit_preserves_mask_pixels_and_original", "tests/rust/output_recovery.rs::exact_source_two_item_partial_receipt_saves_original_and_repeated_request_posts_once"]
+      },
       "strategy": "Authenticate immutable independent original bytes; never regenerate expectations with target"
     },
     {
       "source": "scripts/rust-image-edge-oracle.mjs", "source_sha256": "0abc5824d8dfa8bc25c958b0ea14ed216bb565275dae6445832f5fa3ae3bf68d",
       "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/images.rs"],
+      "named_tests": ["tests/rust/images.rs::generated_original_image_fixtures_are_preserved_and_validated", "tests/rust/images.rs::exact_source_png_byte_pixel_truncation_and_real_mask_dimension_inputs_reject"],
       "fixtures": ["images.json", "animated-webp.json"], "scenarios": ["Independent original metadata/hash, animated/malformed/pixel/byte bounds"],
+      "scenario_tests": {
+        "Independent original metadata/hash, animated/malformed/pixel/byte bounds": ["tests/rust/images.rs::generated_original_image_fixtures_are_preserved_and_validated", "tests/rust/images.rs::exact_source_png_byte_pixel_truncation_and_real_mask_dimension_inputs_reject"]
+      },
       "strategy": "Original golden bytes retained instead of a maintained JS generator"
     },
     {
       "source": "scripts/rust-json-oracle.mjs", "source_sha256": "ed30b2dcdee2b97ecfee33c9844bf016300b432945e730b17fb2a701f79f1cd0",
       "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/js_json.rs", "tests/rust/js_schema.rs", "tests/rust/canonical_parity.rs"],
+      "named_tests": ["tests/rust/js_json.rs::raw_source_json_preserves_binary64_utf16_and_object_identity", "tests/rust/js_schema.rs::raw_hosted_schema_oracle_matches_source_validity_and_preserved_effective_values", "tests/rust/canonical_parity.rs::generated_source_canonicalization_cases_are_nonempty_and_exact"],
       "fixtures": ["raw-json.json", "raw-js-schema.json", "sqlite-utf16-text.json"], "scenarios": ["Original JSON/schema/UTF16/number/string behavior and canonical identities"],
+      "scenario_tests": {
+        "Original JSON/schema/UTF16/number/string behavior and canonical identities": ["tests/rust/js_json.rs::raw_source_json_preserves_binary64_utf16_and_object_identity", "tests/rust/js_schema.rs::raw_hosted_schema_oracle_matches_source_validity_and_preserved_effective_values", "tests/rust/canonical_parity.rs::generated_source_canonicalization_cases_are_nonempty_and_exact"]
+      },
       "strategy": "Independent immutable expectations, not target-generated snapshots"
     },
     {
       "source": "scripts/rust-normalization-oracle.mjs", "source_sha256": "8470ad2a920e54233e8f28735e0ccf31c02fb814825eece2430e97295e776ec0",
       "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/normalization_acceptance.rs"],
+      "named_tests": ["tests/rust/normalization_acceptance.rs::six_exact_persian_prompt_only_wires_match_source_body_and_distinct_protocol_fields", "tests/rust/normalization_acceptance.rs::all_twenty_four_source_sibling_pairs_keep_two_exact_errors_and_the_original_middle_image", "tests/rust/normalization_acceptance.rs::five_exact_source_envelopes_refusals_and_text_only_outputs_remain_fatal", "tests/rust/normalization_acceptance.rs::exact_gemini_signatures_stay_in_private_sqlite_and_out_of_the_public_receipt"],
       "fixtures": ["normalization-acceptance.json"], "scenarios": ["Exact normalization status/error/metadata/originals without preview promotion"],
+      "scenario_tests": {
+        "Exact normalization status/error/metadata/originals without preview promotion": ["tests/rust/normalization_acceptance.rs::six_exact_persian_prompt_only_wires_match_source_body_and_distinct_protocol_fields", "tests/rust/normalization_acceptance.rs::all_twenty_four_source_sibling_pairs_keep_two_exact_errors_and_the_original_middle_image", "tests/rust/normalization_acceptance.rs::five_exact_source_envelopes_refusals_and_text_only_outputs_remain_fatal", "tests/rust/normalization_acceptance.rs::exact_gemini_signatures_stay_in_private_sqlite_and_out_of_the_public_receipt"]
+      },
       "strategy": "Retained source outputs, no interpreted generator execution"
     },
     {
       "source": "scripts/rust-oracle.mjs", "source_sha256": "d5b33fa7eefa385035e7d483dc777e5d24c733d14a800a3db8793dbe2982bc55",
       "rust": ["tooling/src/fixtures.rs", "tooling/src/evidence.rs"], "tests": ["tooling/tests/fixture_contracts.rs", "tests/rust/config_parity.rs", "tests/rust/adapters.rs", "tests/rust/canonical_parity.rs"],
+      "named_tests": ["tooling/tests/fixture_contracts.rs::cross_platform_materialization_accepts_only_exact_originals_and_explicit_config_path_relocation", "tests/rust/config_parity.rs::source_generated_defaults_compact_advanced_and_overrides_match", "tests/rust/config_parity.rs::source_generated_strict_dotenv_matches", "tests/rust/config_parity.rs::source_generated_connection_selection_matches", "tests/rust/adapters.rs::source_generated_wire_and_result_contracts_match", "tests/rust/adapters.rs::base64_source_acceptance_and_bytes_match", "tests/rust/canonical_parity.rs::generated_source_canonicalization_cases_are_nonempty_and_exact"],
       "fixtures": ["config.json", "policy.json", "canonical.json", "adapters.json", "base64.json", "images.json"],
       "scenarios": ["Three platform config goldens/deep512nesting/dotenv/fingerprints", "Exact wires/results/base64; isolated same-user DPAPI excluded from public evidence"],
+      "scenario_tests": {
+        "Three platform config goldens/deep512nesting/dotenv/fingerprints": ["tooling/tests/fixture_contracts.rs::cross_platform_materialization_accepts_only_exact_originals_and_explicit_config_path_relocation", "tests/rust/config_parity.rs::source_generated_defaults_compact_advanced_and_overrides_match", "tests/rust/config_parity.rs::source_generated_strict_dotenv_matches", "tests/rust/config_parity.rs::source_generated_connection_selection_matches", "tests/rust/canonical_parity.rs::generated_source_canonicalization_cases_are_nonempty_and_exact"],
+        "Exact wires/results/base64; isolated same-user DPAPI excluded from public evidence": ["tests/rust/adapters.rs::source_generated_wire_and_result_contracts_match", "tests/rust/adapters.rs::base64_source_acceptance_and_bytes_match"]
+      },
       "strategy": "Authenticate independent source-generated goldens; never target-derived expectations"
     },
     {
       "source": "scripts/rust-requirements-oracle.mjs", "source_sha256": "a4c4d9d454249e501a4076fa262c8bb1c5b1dc4a290f75585782f72754d204fd",
       "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/output_requirements.rs"],
+      "named_tests": ["tests/rust/output_requirements.rs::every_source_requirement_deviation_and_warning_matches_exact_metadata_and_json_round_trip", "tests/rust/output_requirements.rs::normal_finalization_preserves_exact_source_aspect_tier_deviations_and_original_bytes", "tests/rust/output_requirements.rs::real_sql_commit_failure_recovers_identical_source_requirements_without_network"],
       "fixtures": ["output-requirements.json"], "scenarios": ["Original ratio/tier/dimension/deviation warnings and same-byte local recovery without new POST"],
+      "scenario_tests": {
+        "Original ratio/tier/dimension/deviation warnings and same-byte local recovery without new POST": ["tests/rust/output_requirements.rs::every_source_requirement_deviation_and_warning_matches_exact_metadata_and_json_round_trip", "tests/rust/output_requirements.rs::normal_finalization_preserves_exact_source_aspect_tier_deviations_and_original_bytes", "tests/rust/output_requirements.rs::real_sql_commit_failure_recovers_identical_source_requirements_without_network"]
+      },
       "strategy": "Independent historical expected requirements retained byte-exact"
     },
     {
       "source": "scripts/rust-stream-acceptance-oracle.mjs", "source_sha256": "14afe7e901839641b46f18eebd368a29b6ae18249f1efa8fcd847e70bed2b9c8",
       "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/streams_acceptance.rs"],
+      "named_tests": ["tests/rust/streams_acceptance.rs::exact_source_normalization_preserves_metadata_siblings_jobs_and_all_terminal_statuses", "tests/rust/streams_acceptance.rs::exact_source_json_binary_and_sse_results_require_finals_and_never_promote_partial_frames", "tests/rust/streams_acceptance.rs::exact_source_json_edits_settings_and_all_unsupported_options_and_masks_match"],
       "fixtures": ["stream-acceptance.json"], "scenarios": ["Original completed JSON/binary/SSE, exact error/refusal/unsupported explicit fields"],
+      "scenario_tests": {
+        "Original completed JSON/binary/SSE, exact error/refusal/unsupported explicit fields": ["tests/rust/streams_acceptance.rs::exact_source_normalization_preserves_metadata_siblings_jobs_and_all_terminal_statuses", "tests/rust/streams_acceptance.rs::exact_source_json_binary_and_sse_results_require_finals_and_never_promote_partial_frames", "tests/rust/streams_acceptance.rs::exact_source_json_edits_settings_and_all_unsupported_options_and_masks_match"]
+      },
       "strategy": "Independent source results retained instead of regenerated"
     },
     {
       "source": "scripts/rust-stream-oracle.mjs", "source_sha256": "ace974bc2cf0a9fcd82dfc56b1e484b79b79eea1ad045d2f166a0130d355c139",
       "rust": ["tooling/src/fixtures.rs"], "tests": ["tests/rust/streams.rs"],
+      "named_tests": ["tests/rust/streams.rs::complete_frame_parsing_matches_source_crlf_multiline_unicode_and_error_contracts", "tests/rust/streams.rs::exact_source_seven_byte_preview_completed_done_chunks_preserve_only_terminal_images", "tests/rust/streams.rs::exact_source_truncated_completed_frame_and_one_byte_limit_never_return_success"],
       "fixtures": ["streams.json"], "scenarios": ["Original CRLF/multiline/Unicode/frame/preview/final/error/oversize/truncation"],
+      "scenario_tests": {
+        "Original CRLF/multiline/Unicode/frame/preview/final/error/oversize/truncation": ["tests/rust/streams.rs::complete_frame_parsing_matches_source_crlf_multiline_unicode_and_error_contracts", "tests/rust/streams.rs::exact_source_seven_byte_preview_completed_done_chunks_preserve_only_terminal_images", "tests/rust/streams.rs::exact_source_truncated_completed_frame_and_one_byte_limit_never_return_success"]
+      },
       "strategy": "Retain independent original stream expectations"
     },
     {
       "source": "tests/tooling/native_case_ledger_contracts.py", "source_sha256": "e8c6a615c16cb939ad32803596723d24bc76f82f32eaeeb94fabed443bc62c3b",
       "rust": ["tooling/src/ledger.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/ledger_contracts.rs"],
-      "scenarios": ["Structural/accepted distinction, fresh file cache and identity mutations", "Only registered tests/historical whitelist; complete flag cannot bypass pending/absent exact execution"]
+      "named_tests": ["tooling/tests/ledger_contracts.rs::independent_collection_binds_case_name_location_applicability_and_frozen_source_bytes", "tooling/tests/ledger_contracts.rs::mapping_cache_is_per_validation_and_never_hides_changed_file_bytes", "tooling/tests/ledger_contracts.rs::mapping_requires_a_real_attributed_test_not_helper_comment_literal_or_ignored_function", "tooling/tests/ledger_contracts.rs::historical_sdk_whitelist_does_not_claim_current_rust_execution", "tooling/tests/ledger_contracts.rs::complete_boolean_cannot_bypass_pending_assertions_or_missing_exact_execution_receipts"],
+      "scenarios": ["Structural/accepted distinction, fresh file cache and identity mutations", "Only registered tests/historical whitelist; complete flag cannot bypass pending/absent exact execution"],
+      "scenario_tests": {
+        "Structural/accepted distinction, fresh file cache and identity mutations": ["tooling/tests/ledger_contracts.rs::independent_collection_binds_case_name_location_applicability_and_frozen_source_bytes", "tooling/tests/ledger_contracts.rs::mapping_cache_is_per_validation_and_never_hides_changed_file_bytes"],
+        "Only registered tests/historical whitelist; complete flag cannot bypass pending/absent exact execution": ["tooling/tests/ledger_contracts.rs::mapping_requires_a_real_attributed_test_not_helper_comment_literal_or_ignored_function", "tooling/tests/ledger_contracts.rs::historical_sdk_whitelist_does_not_claim_current_rust_execution", "tooling/tests/ledger_contracts.rs::complete_boolean_cannot_bypass_pending_assertions_or_missing_exact_execution_receipts"]
+      }
     },
     {
       "source": "tests/tooling/native_ci_contracts.py", "source_sha256": "43befb7aad0fd86379ad37ef7b5db62f1ca41043556a0769d1c4c4b0c9f1ec78",
       "rust": ["tooling/src/ci.rs", "tooling/src/licenses.rs", "tooling/src/fetch.rs", "tooling/src/evidence.rs"],
       "tests": ["tooling/tests/ci_contracts.rs", "tooling/tests/licenses_contracts.rs", "tooling/tests/download_contracts.rs", "tooling/tests/evidence_contracts.rs"],
-      "scenarios": ["Notice/supplement hashes and escaping/missing refusal", "Timeout-only retries/oversize/incomplete/permanent/exhausted cases", "Desktop/project JSON and Codex TOML", "Input/source/dependency/archive mutation and private exclusion"]
+      "named_tests": ["tooling/tests/licenses_contracts.rs::actual_and_declared_nonstandard_notices_preserve_exact_bytes_and_hashes", "tooling/tests/licenses_contracts.rs::unknown_missing_notice_and_escaping_declared_file_fail_closed", "tooling/tests/licenses_contracts.rs::reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash", "tooling/tests/download_contracts.rs::timeout_retry_discards_partial_bytes_and_preserves_attempt_and_idle_bounds", "tooling/tests/download_contracts.rs::oversized_incomplete_permanent_error_and_unsafe_redirect_are_never_retried", "tooling/tests/ci_contracts.rs::client_json_examples_launch_only_native_bridge_and_do_not_embed_provider_credentials", "tooling/tests/evidence_contracts.rs::changed_inputs_dependencies_source_provenance_or_archive_inventory_cannot_pass"],
+      "scenarios": ["Notice/supplement hashes and escaping/missing refusal", "Timeout-only retries/oversize/incomplete/permanent/exhausted cases", "Desktop/project JSON and Codex TOML", "Input/source/dependency/archive mutation and private exclusion"],
+      "scenario_tests": {
+        "Notice/supplement hashes and escaping/missing refusal": ["tooling/tests/licenses_contracts.rs::actual_and_declared_nonstandard_notices_preserve_exact_bytes_and_hashes", "tooling/tests/licenses_contracts.rs::unknown_missing_notice_and_escaping_declared_file_fail_closed", "tooling/tests/licenses_contracts.rs::reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash"],
+        "Timeout-only retries/oversize/incomplete/permanent/exhausted cases": ["tooling/tests/download_contracts.rs::timeout_retry_discards_partial_bytes_and_preserves_attempt_and_idle_bounds", "tooling/tests/download_contracts.rs::oversized_incomplete_permanent_error_and_unsafe_redirect_are_never_retried"],
+        "Desktop/project JSON and Codex TOML": ["tooling/tests/ci_contracts.rs::client_json_examples_launch_only_native_bridge_and_do_not_embed_provider_credentials"],
+        "Input/source/dependency/archive mutation and private exclusion": ["tooling/tests/evidence_contracts.rs::changed_inputs_dependencies_source_provenance_or_archive_inventory_cannot_pass"]
+      }
     },
     {
       "source": "tests/tooling/native_host_fixture_contracts.mjs", "source_sha256": "c523069dc65dc02b36f625e8cf6610895ed7f1e8e94ed9bd25a8d4827a32162d",
-      "rust": ["native/devtools/process_unix.rs", "tests/rust/sdk_acceptance/contracts.rs"], "tests": ["tests/rust/devtool_supervisor.rs", "tests/rust/sdk_acceptance.rs", "native/devtools/process_unix.rs"],
-      "scenarios": ["Post-close EPERM/open leader/live group/live survivor/probe error/deadline/wrong error", "Numeric-only bounded complete diagnostics", "Late handler failure after successful/failed body still fails and closes sockets"]
+      "rust": ["native/devtools/process_unix.rs", "tests/rust/sdk_acceptance/contracts.rs"], "tests": ["tests/rust/devtool_supervisor.rs", "tests/rust/sdk_acceptance.rs", "tests/rust/sdk_acceptance/contracts.rs", "tests/rust/sdk_acceptance/cleanup_contracts.rs", "native/devtools/process_unix.rs"],
+      "named_tests": ["native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence", "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence", "tests/rust/sdk_acceptance/contracts.rs::probe_diagnostics_expose_only_fixed_stages_and_nonnegative_numeric_durations", "tests/rust/sdk_acceptance/cleanup_contracts.rs::failed_scenario_awaits_late_provider_errors_and_preserves_the_original_failure"],
+      "scenarios": ["Post-close EPERM/open leader/live group/live survivor/probe error/deadline/wrong error", "Numeric-only bounded complete diagnostics", "Late handler failure after successful/failed body still fails and closes sockets"],
+      "scenario_tests": {
+        "Post-close EPERM/open leader/live group/live survivor/probe error/deadline/wrong error": ["native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence", "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence"],
+        "Numeric-only bounded complete diagnostics": ["tests/rust/sdk_acceptance/contracts.rs::probe_diagnostics_expose_only_fixed_stages_and_nonnegative_numeric_durations"],
+        "Late handler failure after successful/failed body still fails and closes sockets": ["tests/rust/sdk_acceptance/cleanup_contracts.rs::failed_scenario_awaits_late_provider_errors_and_preserves_the_original_failure"]
+      }
     },
     {
       "source": "tests/tooling/native_macos_signing_contracts.py", "source_sha256": "095d2e47278c151ab51fbeed6a031e01a8a74c9b29b5cb436caac487c87b6255",
       "rust": ["tooling/src/apple_signer.rs", "tooling/src/signing_macos.rs"], "tests": ["tooling/tests/signing_platform_contracts.rs"],
-      "scenarios": ["Memory-only pinned identity and native releases on all partial failures", "Missing required symbol refuses before import without fallback"]
+      "named_tests": ["tooling/tests/signing_platform_contracts.rs::memory_only_identity_is_pinned_and_all_native_references_are_released", "tooling/tests/signing_platform_contracts.rs::missing_memory_only_symbol_fails_before_private_import_without_fallback", "tooling/tests/signing_platform_contracts.rs::every_allocation_and_partial_failure_output_is_released_once"],
+      "scenarios": ["Memory-only pinned identity and native releases on all partial failures", "Missing required symbol refuses before import without fallback"],
+      "scenario_tests": {
+        "Memory-only pinned identity and native releases on all partial failures": ["tooling/tests/signing_platform_contracts.rs::memory_only_identity_is_pinned_and_all_native_references_are_released", "tooling/tests/signing_platform_contracts.rs::every_allocation_and_partial_failure_output_is_released_once"],
+        "Missing required symbol refuses before import without fallback": ["tooling/tests/signing_platform_contracts.rs::missing_memory_only_symbol_fails_before_private_import_without_fallback"]
+      }
     },
     {
       "source": "tests/tooling/native_signing_contracts.py", "source_sha256": "7eb54da5dea91afed48b799e3eaf815e43d385eb2d6a34ed6debe6b944417dce",
       "rust": ["tooling/src/signing.rs", "tooling/src/private_files.rs", "tooling/src/signature_acceptance.rs"],
-      "tests": ["tooling/tests/signing_contracts.rs", "tooling/tests/signing_platform_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs", "tooling/tests/archive_contracts.rs"],
+      "tests": ["tooling/tests/signing_contracts.rs", "tooling/tests/signing_platform_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs", "tooling/tests/archive_contracts.rs", "tooling/tests/distribution_contracts.rs", "tooling/tests/ci_contracts.rs"],
+      "named_tests": ["tooling/tests/ci_contracts.rs::comfy_transport_remains_in_services_outside_pure_adapter_mapping", "tooling/tests/signing_contracts.rs::approved_signer_and_private_input_authority_fail_closed", "tooling/tests/signing_contracts.rs::selected_pfx_output_requires_one_exact_approved_certificate_before_native_import", "tooling/tests/signing_contracts.rs::private_children_keep_only_selected_os_environment_and_capture_never_logs_private_output", "tooling/tests/signing_contracts.rs::private_codesign_output_is_projected_to_fixed_codes_only", "tooling/tests/signing_platform_contracts.rs::selected_input_password_bound_includes_one_transport_newline_without_storing_it", "tooling/tests/signing_platform_contracts.rs::memory_only_identity_is_pinned_and_all_native_references_are_released", "tooling/tests/archive_contracts.rs::member_policy_rejects_private_escape_device_and_ambiguous_names", "tooling/tests/distribution_contracts.rs::unsigned_final_archive_is_rejected_before_any_output"],
       "scenarios": ["Public pins/duplicate/unsafe/private members and authorized input reads", "Password newline bound, selected PFX pin and native verifier", "Private child capture/bounds/cleanup/fixed-code diagnostics/no secret argv/env", "Memory-only signing and unsigned-final refusal"],
+      "scenario_tests": {
+        "Public pins/duplicate/unsafe/private members and authorized input reads": ["tooling/tests/ci_contracts.rs::comfy_transport_remains_in_services_outside_pure_adapter_mapping", "tooling/tests/signing_contracts.rs::approved_signer_and_private_input_authority_fail_closed", "tooling/tests/archive_contracts.rs::member_policy_rejects_private_escape_device_and_ambiguous_names"],
+        "Password newline bound, selected PFX pin and native verifier": ["tooling/tests/signing_contracts.rs::selected_pfx_output_requires_one_exact_approved_certificate_before_native_import", "tooling/tests/signing_platform_contracts.rs::selected_input_password_bound_includes_one_transport_newline_without_storing_it"],
+        "Private child capture/bounds/cleanup/fixed-code diagnostics/no secret argv/env": ["tooling/tests/signing_contracts.rs::private_children_keep_only_selected_os_environment_and_capture_never_logs_private_output", "tooling/tests/signing_contracts.rs::private_codesign_output_is_projected_to_fixed_codes_only"],
+        "Memory-only signing and unsigned-final refusal": ["tooling/tests/signing_platform_contracts.rs::memory_only_identity_is_pinned_and_all_native_references_are_released", "tooling/tests/distribution_contracts.rs::unsigned_final_archive_is_rejected_before_any_output"]
+      },
       "remaining": ["Private diagnostic and real-child capture/cleanup assertions are authored but unexecuted; genuine native signing proof remains separate"]
     },
     {
       "source": "tests/tooling/native_signing_stage_contracts.py", "source_sha256": "0fc0bc8fba2263d5e2d47e233a6b7357104e05b6dc670b51e67eeb982517b12f",
       "rust": ["tooling/src/distribution.rs", "tooling/src/signing_tools.rs"], "tests": ["tooling/tests/distribution_contracts.rs", "tooling/tests/signature_acceptance_contracts.rs"],
-      "scenarios": ["Checksum/source/target/complete inventory before writes", "Fresh destination/path/link/private/casefold/extra-member refusal"]
+      "named_tests": ["tooling/tests/distribution_contracts.rs::archive_checksum_identity_and_complete_inventory_precede_staging", "tooling/tests/distribution_contracts.rs::complete_inventory_is_authenticated_before_any_staging_write", "tooling/tests/distribution_contracts.rs::actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destination", "tooling/tests/signature_acceptance_contracts.rs::signing_tool_archive_accepts_only_exact_regular_bounded_allowlisted_members"],
+      "scenarios": ["Checksum/source/target/complete inventory before writes", "Fresh destination/path/link/private/casefold/extra-member refusal"],
+      "scenario_tests": {
+        "Checksum/source/target/complete inventory before writes": ["tooling/tests/distribution_contracts.rs::archive_checksum_identity_and_complete_inventory_precede_staging", "tooling/tests/distribution_contracts.rs::actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destination"],
+        "Fresh destination/path/link/private/casefold/extra-member refusal": ["tooling/tests/distribution_contracts.rs::complete_inventory_is_authenticated_before_any_staging_write", "tooling/tests/distribution_contracts.rs::actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destination", "tooling/tests/signature_acceptance_contracts.rs::signing_tool_archive_accepts_only_exact_regular_bounded_allowlisted_members"]
+      }
     },
     {
       "source": "tests/tooling/native_validation_contracts.py", "source_sha256": "e1c57bf6acfd4a7caea9007957736cd94aff2a8963ee8ea34a20e7e4cc2b53a4",
       "rust": ["tooling/src/validation.rs", "tooling/src/fixtures.rs", "tooling/src/ledger_inputs.rs"], "tests": ["tooling/tests/validation_contracts.rs", "tooling/tests/fixture_contracts.rs", "tooling/tests/ledger_contracts.rs"],
+      "named_tests": ["tooling/tests/validation_contracts.rs::historical_validation_changes_only_reviewed_dependencies_supervisor_and_child_fixture", "tooling/tests/validation_contracts.rs::validation_refuses_unreviewed_source_paths_versions_fixture_and_any_later_byte_drift"],
       "scenarios": ["Frozen source unchanged, exact four-file validation delta and all other assertions unchanged", "Traversal/duplicate/unexpected dependency/fixture/existing destination refusal"],
+      "scenario_tests": {
+        "Frozen source unchanged, exact four-file validation delta and all other assertions unchanged": ["tooling/tests/validation_contracts.rs::historical_validation_changes_only_reviewed_dependencies_supervisor_and_child_fixture"],
+        "Traversal/duplicate/unexpected dependency/fixture/existing destination refusal": ["tooling/tests/validation_contracts.rs::validation_refuses_unreviewed_source_paths_versions_fixture_and_any_later_byte_drift"]
+      },
       "remaining": ["Historical four-file delta and mutation contracts are authored in tooling/tests/validation_contracts.rs but unexecuted"]
     }
   ],
@@ -282,6 +512,6 @@
     "Current470-case rebinding/review/execution pending; historical proof and source proposals are not release acceptance",
     "Do not retire Python/JavaScript merely to make inventory green",
     "Historical validation, private signing and published-owner bootstrap contracts are authored but unexecuted; initial hosted bootstrap qualification remains pending",
-    "Real hosted Cargo.lock resolution and protected signing-ref authority remain blockers"
+    "Hosted source-preparation resolved Cargo.lock and existing-key main authority is approved; neither preparation nor authority qualifies current Rust or permits signing before validation"
   ]
 }

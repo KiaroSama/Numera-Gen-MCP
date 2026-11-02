@@ -206,8 +206,7 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
             .unwrap()
             .values_mut()
             .next()
-            .unwrap()["gatewayVersion"] =
-            numera_gen_mcp::compat::value::json!(index.to_string());
+            .unwrap()["gatewayVersion"] = numera_gen_mcp::compat::value::json!(index.to_string());
         assert_eq!(
             reload
                 .refresh_text(Some(&candidate.to_string()), |_| true)
@@ -233,7 +232,8 @@ fn reload_retains_last_good_fixed_policy_and_sixty_four_snapshots() {
 async fn operation_credentials_are_private_pinned_and_do_not_fall_back() {
     let workspace = Workspace::new();
     let runtime = RuntimePaths::new(&workspace.0).unwrap();
-    let connection = numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretEnv":"SELECTED"}});
+    let connection =
+        numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretEnv":"SELECTED"}});
     let mut env = HashMap::from([
         ("SELECTED".into(), "synthetic-one".into()),
         ("OPENAI_API_KEY".into(), "unrelated".into()),
@@ -302,7 +302,8 @@ async fn declared_secret_files_are_bounded_private_and_pinned_across_changes() {
             .code,
         "missing_credentials"
     );
-    let relative = numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretFile":"relative"}});
+    let relative =
+        numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretFile":"relative"}});
     assert_eq!(
         credentials(&relative, &HashMap::new(), &runtime)
             .await

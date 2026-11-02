@@ -37,9 +37,17 @@ impl Store {
             if index < 64 {
                 return Ok("media_result_overflow");
             }
-            return Err(NumeraError::new("invalid_response", "Provider returned too many final media items.").stage("response"));
+            return Err(NumeraError::new(
+                "invalid_response",
+                "Provider returned too many final media items.",
+            )
+            .stage("response"));
         }
-        Err(NumeraError::new("invalid_response", "Provider returned too many final image items.").stage("response"))
+        Err(NumeraError::new(
+            "invalid_response",
+            "Provider returned too many final image items.",
+        )
+        .stage("response"))
     }
     fn item(&self, id: &str, index: u32) -> Result<Option<ResultItem>> {
         self.journal_table(id, index)?;

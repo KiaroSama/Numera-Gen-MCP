@@ -109,7 +109,9 @@ impl Logger {
             for entry in entries.flatten() {
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if ["numera-gen-mcp_", "numera-image-gen-mcp_"].iter().any(|prefix| name.starts_with(*prefix))
+                if ["numera-gen-mcp_", "numera-image-gen-mcp_"]
+                    .iter()
+                    .any(|prefix| name.starts_with(*prefix))
                     && name.ends_with(".log")
                     && let Ok(info) = std::fs::symlink_metadata(entry.path())
                     && info.is_file()

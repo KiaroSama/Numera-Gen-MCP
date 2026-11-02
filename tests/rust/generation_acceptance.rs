@@ -218,16 +218,12 @@ async fn exact_source_owned_responses_job_refresh_and_active_cancel_are_separate
     let g = generation_with_connection(&workspace, connection, None);
     let result = tokio::time::timeout(Duration::from_secs(6), async {
         let (_, connection) = g.config.select(None).unwrap();
-        let pinned = numera_gen_mcp::config::snapshot_credentials(
-            &connection,
-            &HashMap::new(),
-            &g.runtime,
-        )
-        .await
-        .unwrap();
-        let identity =
-            numera_gen_mcp::services::identity::connection_identity("local", &pinned)
+        let pinned =
+            numera_gen_mcp::config::snapshot_credentials(&connection, &HashMap::new(), &g.runtime)
+                .await
                 .unwrap();
+        let identity =
+            numera_gen_mcp::services::identity::connection_identity("local", &pinned).unwrap();
         let mut initial = Receipt::new(json!({
             "request_id":"request-1","connection":"local","adapter":"openai-images",
             "operation":"generate","status":"running","requested_model":"image-model",

@@ -11,17 +11,16 @@ fn owned_native_entry_preserves_unrelated_host_settings_and_toml_bytes() {
     let workspace = Workspace::new();
     let executable = workspace.0.join("numera-gen-mcp");
     let config = workspace.0.join("config.json");
-    let before =
-        "{\"model\":\"unchanged 日本語\",\"mcpServers\":{\"other\":{\"command\":\"stay\"},\"numera-image-gen\":{\"command\":\"legacy-unchanged\"}}}\n";
+    let before = "{\"model\":\"unchanged 日本語\",\"mcpServers\":{\"other\":{\"command\":\"stay\"},\"numera-image-gen\":{\"command\":\"legacy-unchanged\"}}}\n";
     let after = merge(before, "ClaudeDesktop", false, &executable, &config).unwrap();
     let value: serde_json::Value = serde_json::from_str(&after).unwrap();
     assert_eq!(value["model"], "unchanged 日本語");
     assert_eq!(value["mcpServers"]["other"]["command"], "stay");
-    assert_eq!(value["mcpServers"]["numera-image-gen"]["command"], "legacy-unchanged");
     assert_eq!(
-        value["mcpServers"]["numera-gen"]["args"],
-        json!(["bridge"])
+        value["mcpServers"]["numera-image-gen"]["command"],
+        "legacy-unchanged"
     );
+    assert_eq!(value["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
     assert_eq!(
         merge(&after, "ClaudeDesktop", false, &executable, &config).unwrap(),
         after
@@ -45,10 +44,10 @@ fn owned_native_entry_preserves_unrelated_host_settings_and_toml_bytes() {
             .starts_with(toml)
     );
     for ambiguous in [
-        "[mcp_servers.\"numera-gen\"]\ncommand=\"other\"\n",
-        "[mcp_servers.numera-gen]\ncommand=\"a\"\n[mcp_servers.numera-gen]\ncommand=\"b\"\n",
-        "description = \"\"\"\n[mcp_servers.numera-gen]\n\"\"\"\n",
-        "mcp_servers = { \"numera-gen\" = { command = \"other\" } }\n",
+        "[mcp_servers.\"numera-gen-mcp\"]\ncommand=\"other\"\n",
+        "[mcp_servers.numera-gen-mcp]\ncommand=\"a\"\n[mcp_servers.numera-gen-mcp]\ncommand=\"b\"\n",
+        "description = \"\"\"\n[mcp_servers.numera-gen-mcp]\n\"\"\"\n",
+        "mcp_servers = { \"numera-gen-mcp\" = { command = \"other\" } }\n",
     ] {
         assert_eq!(
             merge(ambiguous, "Codex", false, &executable, &config)

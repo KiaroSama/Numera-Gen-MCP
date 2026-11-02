@@ -5,7 +5,7 @@ run `40244894089`, attempt2, all sixteen jobs passed, including six native targe
 signed extracted SDK checks. [Signed delivery](releases/0.2.0.md) records artifacts and trust limits;
 install the verified archive before switching a live client.
 
-Current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen` host entry.
+Current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen-mcp` host entry.
 The immutable historical 0.2.0 archives still contain `numera-image-gen-mcp`; substitute that actual
 filename when using those signed assets. Migrate an old Numera host entry explicitly with a backup;
 do not automatically remove it or run both entries against the same state.
@@ -27,13 +27,13 @@ chmod 600 .env
 Claude Code registration from the extracted root:
 
 ```bash
-claude mcp add --transport stdio --scope user numera-gen -- "$PWD/bin/numera-gen-mcp" bridge
+claude mcp add --transport stdio --scope user numera-gen-mcp -- "$PWD/bin/numera-gen-mcp" bridge
 ```
 
 Codex registration:
 
 ```bash
-codex mcp add numera-gen -- "$PWD/bin/numera-gen-mcp" bridge
+codex mcp add numera-gen-mcp -- "$PWD/bin/numera-gen-mcp" bridge
 ```
 
 Claude Desktop uses the absolute native POSIX command and `args: ["bridge"]` in only Numera's entry.
@@ -45,8 +45,10 @@ After reconnect call `health_check`, `list_connections`, `list_models` and model
 approving generation. Passing a probe does not prove account/model entitlement. Saved settings reload
 without a new submission; storage/security policy changes require restart.
 
-Managed temp/cache stays in the installation root; output/state/log/input defaults stay beside the
-selected private config. Preserve originals, receipts/journals and migration snapshots. Keep the old
+Managed temp/cache stays at `<installation-root>/.runtime/temp` and `.runtime/cache`; changing
+`NUMERA_CONFIG` or caller CWD does not move it. Keep the new executable under the owning project's
+`bin/`; optional TEMP/TMP/TMPDIR must select that same project's `.runtime/temp`. Output/state/log/input
+defaults stay beside the selected private config. Preserve originals, receipts/journals and migration snapshots. Keep the old
 runtime until the owner has switched configuration and verified the actual native connection; then
 remove only inspected obsolete project-local dependencies/build/temp/cache, never global caches.
 

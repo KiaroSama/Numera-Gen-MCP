@@ -1,9 +1,7 @@
 use base64::{Engine, engine::general_purpose::STANDARD};
 use numera_gen_mcp::compat::hash::sha256;
 use numera_gen_mcp::compat::value::{Value, json};
-use numera_gen_mcp::files::images::{
-    data_url, decode_base64, inspect, preview, validate_mask,
-};
+use numera_gen_mcp::files::images::{data_url, decode_base64, inspect, preview, validate_mask};
 
 fn exact_source_images() -> Value {
     let file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))

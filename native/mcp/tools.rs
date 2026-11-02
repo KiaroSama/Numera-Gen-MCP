@@ -25,8 +25,15 @@ pub fn definitions() -> Result<Vec<Tool>> {
             "Invalid bundled image request schema.",
         )
     })?;
-    let media: Value = serde_json::from_str(include_str!("../../schemas/media-request.schema.json"))
-        .map_err(|_| NumeraError::new("invalid_configuration", "Invalid bundled media request schema."))?;
+    let media: Value = serde_json::from_str(include_str!(
+        "../../schemas/media-request.schema.json"
+    ))
+    .map_err(|_| {
+        NumeraError::new(
+            "invalid_configuration",
+            "Invalid bundled media request schema.",
+        )
+    })?;
     let mut models = pagination();
     models["connection"] = string();
     models["refresh"] = json!({"type":"boolean","default":false});
@@ -72,7 +79,10 @@ pub fn definitions() -> Result<Vec<Tool>> {
         (
             "get_media_output_info",
             "Verify an owned original media file, kind, format, byte hash and structural metadata. Does not decode/render video or 3D or establish model quality.",
-            object(json!({"output_id":{"type":"string","format":"uuid"}}), &["output_id"]),
+            object(
+                json!({"output_id":{"type":"string","format":"uuid"}}),
+                &["output_id"],
+            ),
         ),
         (
             "get_job",
@@ -108,12 +118,18 @@ pub fn definitions() -> Result<Vec<Tool>> {
                 .as_object()
                 .cloned()
                 .ok_or_else(NumeraError::runtime)?;
-            let read = !matches!(name, "generate_image" | "edit_image" | "generate_media" | "cancel_job");
+            let read = !matches!(
+                name,
+                "generate_image" | "edit_image" | "generate_media" | "cancel_job"
+            );
             let annotations = ToolAnnotations::new()
                 .read_only(read)
                 .destructive(false)
                 .idempotent(read || name == "cancel_job")
-                .open_world(!matches!(name, "list_outputs" | "get_output_info" | "get_media_output_info"));
+                .open_world(!matches!(
+                    name,
+                    "list_outputs" | "get_output_info" | "get_media_output_info"
+                ));
             Ok(Tool::new(name, description, Arc::new(schema))
                 .with_annotations(annotations)
                 .with_raw_output_schema(Arc::new(

@@ -1,6 +1,6 @@
-[mcp_servers.numera-gen]
+[mcp_servers.numera-gen-mcp]
 command = "C:/tools/numera-gen-mcp/bin/numera-gen-mcp.exe"
 args = ["bridge"]
 startup_timeout_sec = 10
 tool_timeout_sec = 360
-env = { NUMERA_CONFIG = "C:/tools/numera-gen-mcp/.env" }
+env = { NUMERA_CONFIG = "C:/tools/numera-gen-mcp/.env", TEMP = "C:/tools/numera-gen-mcp/.runtime/temp", TMP = "C:/tools/numera-gen-mcp/.runtime/temp", TMPDIR = "C:/tools/numera-gen-mcp/.runtime/temp" }

@@ -145,9 +145,13 @@ fn resolve_group_kill(
     closed: impl FnOnce() -> io::Result<bool>,
     live: impl FnOnce() -> io::Result<bool>,
 ) -> io::Result<()> {
-    if error.raw_os_error() == Some(libc::ESRCH) { return Ok(()); }
+    if error.raw_os_error() == Some(libc::ESRCH) {
+        return Ok(());
+    }
     // macOS can refuse a zombie-only group; neither permission failure nor liveness is absence.
-    if error.raw_os_error() == Some(libc::EPERM) && closed()? && !live()? { return Ok(()); }
+    if error.raw_os_error() == Some(libc::EPERM) && closed()? && !live()? {
+        return Ok(());
+    }
     Err(error)
 }
 
@@ -178,7 +182,10 @@ mod cleanup_contracts {
             );
             assert_eq!(result.is_ok(), accepted);
             if let Err(error) = result {
-                assert_eq!(error.raw_os_error(), Some(inspection_error.unwrap_or(kill_error)));
+                assert_eq!(
+                    error.raw_os_error(),
+                    Some(inspection_error.unwrap_or(kill_error))
+                );
             }
         }
     }
@@ -188,15 +195,26 @@ mod cleanup_contracts {
         let probes = Cell::new(0);
         resolve_group_kill(
             io::Error::from_raw_os_error(libc::ESRCH),
-            || { probes.set(probes.get() + 1); Ok(true) },
-            || { probes.set(probes.get() + 1); Ok(false) },
-        ).unwrap();
+            || {
+                probes.set(probes.get() + 1);
+                Ok(true)
+            },
+            || {
+                probes.set(probes.get() + 1);
+                Ok(false)
+            },
+        )
+        .unwrap();
         assert_eq!(probes.get(), 0);
         let error = resolve_group_kill(
             io::Error::from_raw_os_error(libc::EPERM),
             || Err(io::Error::from_raw_os_error(libc::EIO)),
-            || { probes.set(probes.get() + 1); Ok(false) },
-        ).unwrap_err();
+            || {
+                probes.set(probes.get() + 1);
+                Ok(false)
+            },
+        )
+        .unwrap_err();
         assert_eq!(error.raw_os_error(), Some(libc::EIO));
         assert_eq!(probes.get(), 0);
     }

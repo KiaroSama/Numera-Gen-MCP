@@ -53,7 +53,7 @@ pub fn merge(
         .as_object_mut()
         .ok_or_else(|| invalid("INVALID_HOST_CONFIG", "mcpServers must be an object."))?;
     if remove {
-        if servers.remove("numera-gen").is_none() {
+        if servers.remove("numera-gen-mcp").is_none() {
             return Ok(text.into());
         }
     } else {
@@ -62,7 +62,7 @@ pub fn merge(
         if client == "ClaudeProject" {
             entry["type"] = json!("stdio");
         }
-        servers.insert("numera-gen".into(), entry);
+        servers.insert("numera-gen-mcp".into(), entry);
     }
     Ok(serde_json::to_string_pretty(&parsed)
         .map_err(|_| invalid("INVALID_HOST_CONFIG", "Cannot encode host configuration."))?
@@ -119,12 +119,12 @@ fn merge_toml(text: &str, remove: bool, executable: &Path, config: &Path) -> Res
         let key = bare_name(raw).ok_or_else(invalid)?;
         if (section.is_empty() && (key == "mcp_servers" || key.starts_with("mcp_servers.")))
             || (section == "mcp_servers"
-                && (key == "numera-gen" || key.starts_with("numera-gen.")))
+                && (key == "numera-gen-mcp" || key.starts_with("numera-gen-mcp.")))
         {
             return Err(invalid());
         }
-        if (section == "mcp_servers.numera-gen"
-            || section.starts_with("mcp_servers.numera-gen."))
+        if (section == "mcp_servers.numera-gen-mcp"
+            || section.starts_with("mcp_servers.numera-gen-mcp."))
             && !keys.insert(key)
         {
             return Err(invalid());
@@ -159,9 +159,9 @@ fn merge_toml(text: &str, remove: bool, executable: &Path, config: &Path) -> Res
         }
     }
     let owned = |s: &str| {
-        s == "mcp_servers.numera-gen" || s.starts_with("mcp_servers.numera-gen.")
+        s == "mcp_servers.numera-gen-mcp" || s.starts_with("mcp_servers.numera-gen-mcp.")
     };
-    if sections.iter().any(|(_, s)| owned(s)) && !headers.contains("mcp_servers.numera-gen") {
+    if sections.iter().any(|(_, s)| owned(s)) && !headers.contains("mcp_servers.numera-gen-mcp") {
         return Err(invalid());
     }
     let mut omitted = HashSet::new();
@@ -189,7 +189,7 @@ fn merge_toml(text: &str, remove: bool, executable: &Path, config: &Path) -> Res
     let config = serde_json::to_string(&config.to_string_lossy()).map_err(|_| invalid())?;
     retained.push_str(
         &[
-            "[mcp_servers.numera-gen]".into(),
+            "[mcp_servers.numera-gen-mcp]".into(),
             format!("command = {command}"),
             "args = [\"bridge\"]".into(),
             "startup_timeout_sec = 10".into(),

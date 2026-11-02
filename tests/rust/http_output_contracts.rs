@@ -249,21 +249,18 @@ async fn actual_http_tools_preserve_originals_previews_resource_reads_and_error_
             numera_gen_mcp::services::identity::connection_identity("test", &pinned).unwrap();
         {
             let mut store = app.store.lock().unwrap();
-            let seeded = numera_gen_mcp::jobs::Receipt::new(
-                numera_gen_mcp::compat::value::json!({
-                    "request_id":"public-http-owned-job","connection":"test","adapter":"openai-images",
-                    "operation":"generate","status":"prepared","requested_model":"opaque/image",
-                    "outputs":[],"warnings":[],"errors":[],"deviations":[],
-                    "generation_outcome":"not_submitted","storage_outcome":"not_started",
-                    "created_at":"2026-10-13T00:00:00.000Z",
-                    "upstream_job":{"id":"remote-owned","kind":"responses"}
-                }),
-            );
+            let seeded = numera_gen_mcp::jobs::Receipt::new(numera_gen_mcp::compat::value::json!({
+                "request_id":"public-http-owned-job","connection":"test","adapter":"openai-images",
+                "operation":"generate","status":"prepared","requested_model":"opaque/image",
+                "outputs":[],"warnings":[],"errors":[],"deviations":[],
+                "generation_outcome":"not_submitted","storage_outcome":"not_started",
+                "created_at":"2026-10-13T00:00:00.000Z",
+                "upstream_job":{"id":"remote-owned","kind":"responses"}
+            }));
             let (_, mut receipt) = store.prepare(seeded, "seed", &identity).unwrap();
             assert!(store.admit("public-http-owned-job", "test", 8, 8).unwrap());
             receipt.value["status"] = numera_gen_mcp::compat::value::json!("running");
-            receipt.value["generation_outcome"] =
-                numera_gen_mcp::compat::value::json!("running");
+            receipt.value["generation_outcome"] = numera_gen_mcp::compat::value::json!("running");
             store.update(&mut receipt).unwrap();
             store
                 .release("public-http-owned-job", Some(&receipt))

@@ -421,7 +421,7 @@ fn actual_setup_cli_registers_selected_installation_not_unpacked_sibling() {
             "numera-image-gen-mcp"
         });
     assert_eq!(
-        value["mcpServers"]["numera-gen"]["command"],
+        value["mcpServers"]["numera-gen-mcp"]["command"],
         serde_json::json!(expected)
     );
     assert_eq!(value["retained"], true);
@@ -480,7 +480,7 @@ fn native_register_and_remove_change_only_selected_fixture_entry() {
     assert_eq!(registered["retained"], true);
     assert_eq!(registered["mcpServers"]["other"]["command"], "unchanged");
     assert_eq!(
-        registered["mcpServers"]["numera-gen"]["args"],
+        registered["mcpServers"]["numera-gen-mcp"]["args"],
         serde_json::json!(["bridge"])
     );
     setup::execute(&args("Remove"), &executable, &HashMap::new()).unwrap();

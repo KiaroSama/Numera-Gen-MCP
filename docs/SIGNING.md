@@ -19,10 +19,13 @@ plus isolated ten-tool SDK readiness on the current host, without provider acces
 [Release0.2.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.2.0) contains only original
 verified CI archives. Actual owner-host cutover is separate; the working runtime is retained.
 Unsigned intermediate CI archives remain internal test artifacts, never completed distributions.
-The current candidate's existing-key signing route is restricted to a manual qualification on `main`,
-after native, coverage and execution-matrix jobs pass. Source preparation cannot enter the protected
-signing environment or receive its inputs. This authorization and its guards are not evidence that
-0.3.0 has been compiled, qualified, signed or published.
+The current candidate's existing-key signing route remains manual and `main`-only. It requires either
+successful native, coverage and execution-matrix jobs in the same qualification run, or explicit
+`sign-qualified` promotion of an original successful run/attempt at the identical SHA. Promotion
+skips those already executed suites; it authenticates their original matrix, jobs and intermediate
+bytes before signing. Source preparation cannot enter the protected environment or receive its inputs.
+These source-authored guards are not evidence that 0.3.0 has been compiled, qualified, signed or published,
+and do not independently authorize a signing dispatch.
 
 ## What the signature must prove
 
@@ -73,14 +76,17 @@ artifacts. Keep the existing encrypted exportable identity in access-restricted 
 retain its recovery information. Never upload a whole credential registry or private custody folder.
 Only exact separately authorized signing inputs may enter a reviewed protected GitHub environment.
 
-The hosted macOS signer imports the selected PKCS12 identity into process memory only, using
-Apple's `kSecImportToMemoryOnly` on macOS 15 or newer. It never imports a keychain item or changes
-keychain search/default preferences or trust. The actual imported certificate must match the pinned
-DER fingerprint before signing. A bounded isolated Python child calls Apple's native signing service;
-Python is CI tooling, never an end-user dependency. Passwords use protected stdin, never process
-arguments. All owned CoreFoundation references are released on success or failure, and child exit
-ends their lifetime. Missing memory-only support fails before import; no persistence fallback exists.
-Default/search preferences are independently compared before and after signing.
+The current Rust candidate's macOS signer imports the selected PKCS12 identity into process memory
+only, using Apple's `kSecImportToMemoryOnly` on macOS 15 or newer. It never imports a keychain item
+or changes keychain search/default preferences or trust. The actual imported certificate must match
+the pinned DER fingerprint before signing. `tooling/src/signing_macos.rs` calls Apple's native signing
+service through the portable ownership choreography in `apple_signer.rs`; no Python child or
+interpreter fallback is used. Password bytes stay in memory at that boundary, never in process arguments.
+All owned CoreFoundation references are released on success or failure. Missing memory-only support
+fails before import; no persistence fallback exists. Default/search preferences are independently
+compared before and after signing. This Rust implementation still needs its own hosted qualification.
+The historical signed 0.2.0 release used the isolated Python helper and protected stdin; its verified
+results do not qualify the new Rust signer.
 
 `SecCodeSignerCreate` and `SecCodeSignerAddSignatureWithErrors` are exported Apple signing SPI,
 not a stable public API. The job qualifies their availability before receiving publisher inputs;
@@ -101,10 +107,16 @@ artifacts and Release, while independent source/test work may continue.
 The manual workflow waits for all unprivileged checks, then enters the branch-restricted signing
 environment without a separate deployment review, as requested by the owner. Its exact branch
 restriction is migration-only; a future branch needs a fresh owner decision. Only the existing encrypted publisher PFX and its password are selected inputs.
-The signing step verifies the certificate pin before native import, writes owner-only temporary files,
-passes passwords through protected stdin and removes its inputs before any extracted app executes.
-Two jobs at most sign concurrently. Each target authenticates the current-run intermediate and
-its source/target/member hashes, then verifies native signatures, tampered copies, an unrelated
+The current Rust signing step verifies the certificate pin before native import and writes exclusive,
+owner-only temporary inputs. OpenSSL reads the password through `-passin file:PATH`; osslsigncode uses
+`-readpass PATH`. Only the protected filename enters arguments, not the password or an inherited secret
+environment. The Apple API receives bounded password bytes in memory. Inputs are removed before any
+extracted app executes; cleanup failure blocks success. The historical 0.2.0 tools used protected stdin.
+Two jobs at most sign concurrently. Each target authenticates the explicitly selected original
+intermediate, its successful producing job/attempt, package-log digest, executed binary hash and
+complete source/target/member inventory before private inputs are read. The selected artifact ID and
+original execution identity remain in `signing-source.json` for independent final collection. It then
+verifies native signatures, tampered copies, an unrelated
 disposable fixture signer, final packaging and extracted SDK behavior. Test keys never leave the
 runner; no publisher key appears in logs or artifact uploads. A failed or unavailable native tool
 blocks that target; no unsigned final fallback exists. No approval bot or deployment-approval API is

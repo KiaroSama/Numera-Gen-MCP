@@ -4,7 +4,9 @@ use serde_json::json;
 
 pub fn inspect(kind: Kind, bytes: &[u8], max_bytes: usize, max_pixels: u64) -> Result<Inspected> {
     if bytes.is_empty() || bytes.len() > max_bytes {
-        return Err(invalid("Media is empty or exceeds the configured byte limit."));
+        return Err(invalid(
+            "Media is empty or exceeds the configured byte limit.",
+        ));
     }
     let (mime, format, metadata) = match kind {
         Kind::Image => {
