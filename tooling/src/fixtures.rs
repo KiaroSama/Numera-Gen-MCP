@@ -72,8 +72,10 @@ pub fn relocate(
     if old.is_empty() || new.is_empty() {
         return Err(fail("Explicit fixture roots required."));
     }
-    let escaped_old = serde_json::to_string(old).map_err(|_| fail("Cannot encode fixture path."))?;
-    let escaped_new = serde_json::to_string(new).map_err(|_| fail("Cannot encode fixture path."))?;
+    let escaped_old =
+        serde_json::to_string(old).map_err(|_| fail("Cannot encode fixture path."))?;
+    let escaped_new =
+        serde_json::to_string(new).map_err(|_| fail("Cannot encode fixture path."))?;
     let mut result = value.clone();
     let mut pending = vec![&mut result];
     while let Some(value) = pending.pop() {

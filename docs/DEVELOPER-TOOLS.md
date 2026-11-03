@@ -31,8 +31,13 @@ not production server dependencies. It does not wrap Python or JavaScript. The f
 PowerShell scripts remain unchanged. Qualification41526803432 compiled the Unix task executable,
 but SDK/tooling test compilation and quality gates failed; Windows failed during bootstrap.
 Replacement41554639558 compiled the task on both Windows targets, but deep fixture materialization
-aborted before their suites. Unix suites exposed further runtime and tooling failures. The next
-corrective working tree still requires its own hosted compilation and execution.
+aborted before their suites. Unix suites exposed further runtime and tooling failures.
+Qualification41597832142 passed fixture materialization but failed all seven contexts: Windows
+external C build tools rejected verbatim workspace paths, while Unix media integer validation,
+terminal SDK stack size and quality gates failed. Current corrections retain canonical containment,
+pass equivalent conventional path spelling to child tools and heap-own SDK scenario storage without
+raising stack, worker or time bounds. The corrective working tree still requires its own hosted
+compilation and execution.
 
 Every task command requires an explicit absolute root and hosted environment. For example, on an
 already prepared hosted runner:

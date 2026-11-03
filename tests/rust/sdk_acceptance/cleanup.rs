@@ -75,7 +75,12 @@ async fn outcome<T>(operation: impl Future<Output = T>) -> Result<T, Failure> {
 
 /// Drop the body inside its scope, await every registered owner, then remove fixture files.
 /// Cleanup failures never replace or silently approve an original scenario failure.
-pub async fn run<T>(operation: impl Future<Output = T>) -> T {
+pub fn run<T>(operation: impl Future<Output = T>) -> impl Future<Output = T> {
+    // Allocate before constructing the scope future, which would otherwise embed the scenario.
+    run_boxed(Box::pin(operation))
+}
+
+async fn run_boxed<T>(operation: Pin<Box<impl Future<Output = T>>>) -> T {
     let pending = Arc::new(Mutex::new(Pending::default()));
     let result = PENDING.scope(pending.clone(), outcome(operation)).await;
     let Pending { jobs, workspaces } = std::mem::take(&mut *pending.lock().unwrap());

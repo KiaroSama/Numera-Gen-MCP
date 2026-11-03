@@ -32,12 +32,12 @@ struct HttpChild {
 }
 impl Drop for HttpChild {
     fn drop(&mut self) {
-        if let Some(mut child) = self.child.take() {
-            if child.stop(Instant::now() + Duration::from_secs(2)).is_err() {
-                super::cleanup::defer(async {
-                    Err("HTTP fixture child cleanup unverified".into())
-                });
-            }
+        if let Some(mut child) = self.child.take()
+            && child.stop(Instant::now() + Duration::from_secs(2)).is_err()
+        {
+            super::cleanup::defer(async {
+                Err("HTTP fixture child cleanup unverified".into())
+            });
         }
         if let Some(task) = self.diagnostics.take() {
             let task = tokio_util::task::AbortOnDropHandle::new(task);

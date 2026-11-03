@@ -17,9 +17,9 @@ use std::{
 pub async fn run() {
     let (row, _) = f::image("png");
     for adapter in ["openai-responses", "gemini-interactions"] {
-        host::scenario(60000, terminal(adapter, row.clone())).await;
+        host::scenario(60000, Box::pin(terminal(adapter, row.clone()))).await;
     }
-    host::scenario(60000, comfy(row)).await;
+    host::scenario(60000, Box::pin(comfy(row))).await;
 }
 fn configuration(directory: &std::path::Path, connections: Value, default: &str) -> Value {
     let mut value = f::config(directory, connections);
@@ -55,7 +55,7 @@ async fn terminal(adapter: &'static str, row: Value) {
     let wire=Provider::new(move|request,_|{let captured=captured.clone();let states=states_wire.clone();let row=row_wire.clone();async move{
         let mode=request.path.split('/').nth(1).unwrap_or("").to_owned();let image=if adapter=="openai-responses"{json!({"output":[{"type":"image_generation_call","status":"completed","result":row["base64"]}]})}else{json!({"steps":[{"type":"model_output","content":[{"type":"image","data":row["base64"]}]}]})};
         if request.method=="POST"{captured.lock().unwrap().push(mode);let mut body=json!({"id":"probe","status":"completed"});body.as_object_mut().unwrap().extend(image.as_object().unwrap().clone());return Ok(Reply::json(body));}
-        if mode=="disconnect"{return Ok(Reply::disconnect());}if mode=="malformed"{return Ok(Reply::bytes(200,"",b"not-json".to_vec()));}
+        if mode=="disconnect"{return Ok(Reply::disconnect());}else if mode=="malformed"{return Ok(Reply::bytes(200,"",b"not-json".to_vec()));}
         let mut body=json!({"id":if mode=="wrong-id"{"other"}else{mode.as_str()},"status":if states.contains(&mode.as_str()){mode.as_str()}else if mode=="queued"{"queued"}else{"in_progress"}});
         if["completed","incomplete"].contains(&mode.as_str()){body.as_object_mut().unwrap().extend(image.as_object().unwrap().clone());}
         Ok(Reply::status(body,mode.parse::<u16>().ok().filter(|s|[401,429,500].contains(s)).unwrap_or(200)))
@@ -75,11 +75,8 @@ async fn terminal(adapter: &'static str, row: Value) {
         f::seed(
             &config,
             &directory,
-            mode,
-            mode,
-            kind,
-            mode,
-            "running",
+            (mode, mode),
+            (kind, mode, "running"),
             mode,
             if *mode == "identity" {
                 Some("other-account")
@@ -203,11 +200,8 @@ async fn comfy(row: Value) {
         f::seed(
             &config,
             &directory,
-            mode,
-            mode,
-            "comfyui",
-            mode,
-            "running",
+            (mode, mode),
+            ("comfyui", mode, "running"),
             mode,
             None,
             (32, 1),

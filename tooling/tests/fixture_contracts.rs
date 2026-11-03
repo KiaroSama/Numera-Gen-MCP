@@ -108,7 +108,10 @@ fn cross_platform_materialization_accepts_only_exact_originals_and_explicit_conf
         let mut changed = payloads.clone();
         let mut config = numera_task::fixtures::parse_json(&changed["config.json"]).unwrap();
         config["extra-unapproved-fixture"] = true.into();
-        changed.insert("config.json".into(), config.stringify().unwrap().into_bytes());
+        changed.insert(
+            "config.json".into(),
+            config.stringify().unwrap().into_bytes(),
+        );
         assert!(
             verify_materialized(
                 project,

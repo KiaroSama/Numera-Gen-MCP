@@ -14,7 +14,7 @@ pub async fn run() {
     let wire=Provider::new(move|request,_|{let original=original.clone();async move{
         let parts=request.path.split('/').filter(|p|!p.is_empty()).collect::<Vec<_>>();let adapter=parts.first().copied().unwrap_or("");let mode=parts.get(1).copied().unwrap_or("");
         if request.method=="POST"{return Ok(Reply::status(json!({"error":"unexpected-submission"}),500));}
-        if mode=="disconnect"{return Ok(Reply::disconnect());}if mode=="malformed"{return Ok(Reply::bytes(200,"application/json",b"not-json".to_vec()));}
+        if mode=="disconnect"{return Ok(Reply::disconnect());}else if mode=="malformed"{return Ok(Reply::bytes(200,"application/json",b"not-json".to_vec()));}
         if["401","429","500"].contains(&mode){return Ok(Reply::status(json!({}),mode.parse().unwrap()));}
         let mut value=json!({"id":if mode=="wrong-id"{"another-job".into()}else{format!("original-{mode}")},"status":if mode=="wrong-id"{"completed"}else{mode}});
         if["incomplete","completed","wrong-id"].contains(&mode){let encoded=base64::Engine::encode(&base64::engine::general_purpose::STANDARD,&original);if adapter=="responses"{value["output"]=json!([{"type":"image_generation_call","status":"completed","result":encoded}]);}else{value["steps"]=json!([{"type":"model_output","content":[{"type":"image","data":encoded}]}]);}}

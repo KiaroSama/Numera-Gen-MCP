@@ -5,8 +5,17 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
 };
 
+type ModeCase<'a> = (
+    &'a str,
+    &'a str,
+    &'a str,
+    bool,
+    &'a [(&'a str, &'a str)],
+    &'a [&'a str],
+);
+
 pub async fn run() {
-    let cases: &[(&str, &str, &str, bool, &[(&str, &str)], &[&str])] = &[
+    let cases: &[ModeCase<'_>] = &[
         (s::IMAGE, "text-to-image", "image", true, &[], &["image"]),
         (
             s::IMAGE_EDIT,

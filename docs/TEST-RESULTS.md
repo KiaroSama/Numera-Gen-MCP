@@ -19,7 +19,17 @@ unchanged media metadata comparing unequal across numeric representations, archi
 rejection, deep fixture handling, an SDK race future stack overflow and four remaining tooling Clippy
 diagnostics. The supervisor payload assertion also counted a matching byte in libtest's own suffix.
 These observed failures are being repaired without changing original expected bytes, assertions,
-resource ceilings or fail-closed qualification flags. The changed tree has not yet run in hosted CI.
+resource ceilings or fail-closed qualification flags.
+
+The next [qualification41597832142, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/41597832142/attempts/1)
+on `023fce6413100908d0b10a21f02a613b5f6fd09e` completed with all seven native/coverage contexts
+failed. Windows passed fixture materialization but C dependency builds rejected verbatim workspace
+paths; Unix execution exposed valid integral media parameters rejected after binary64 conversion
+and a terminal SDK scenario stack overflow. Eight distinct Clippy locations and three formatting
+locations also failed. The current corrections keep canonical containment internally, use equivalent
+external-tool path spelling, reuse authoritative integer semantics and heap-own SDK scenario frames.
+Focused regressions were authored before these repairs; their execution and the corrected tree's
+qualification remain pending. No stack, timeout, worker or coverage ceiling was raised.
 The isolated
 [preparation40956557555](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40956557555)
 only resolved the workspace lock/format for `60be391`; neither preparation nor diagnostic artifacts

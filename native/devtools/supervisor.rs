@@ -166,8 +166,12 @@ pub fn run(
         started: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
         run_id: uuid::Uuid::new_v4().to_string(),
     };
+    let command_cwd = crate::runtime_paths::command_path(&cwd);
+    if command_cwd.canonicalize()? != cwd {
+        return Err(io::Error::other("External child directory identity differs."));
+    }
     command
-        .current_dir(cwd)
+        .current_dir(command_cwd)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());

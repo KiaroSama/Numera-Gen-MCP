@@ -77,7 +77,10 @@ async fn native_sdk_thirteen_transport_boundary_scenarios() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity() {
-    cleanup::run(terminal::run()).await;
+    let operation = terminal::run();
+    let bytes = std::mem::size_of_val(&operation);
+    assert!(bytes <= 16 * 1024, "terminal scenario frame is {bytes} bytes");
+    cleanup::run(operation).await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

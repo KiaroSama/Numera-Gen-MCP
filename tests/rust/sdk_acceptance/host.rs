@@ -399,12 +399,12 @@ impl Drop for Host {
         self.cancellation.cancel();
         drop(self.client.take());
         // The anchored child stops synchronously; readers settle before its workspace is removed.
-        if let Some(mut child) = self.child.take() {
-            if child.stop(Instant::now() + Duration::from_secs(2)).is_err() {
-                super::cleanup::defer(async {
-                    Err("Owned native child cleanup unverified".into())
-                });
-            }
+        if let Some(mut child) = self.child.take()
+            && child.stop(Instant::now() + Duration::from_secs(2)).is_err()
+        {
+            super::cleanup::defer(async {
+                Err("Owned native child cleanup unverified".into())
+            });
         }
         if let Some(task) = self.diagnostics.take() {
             let task = tokio_util::task::AbortOnDropHandle::new(task);

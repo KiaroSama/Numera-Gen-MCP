@@ -314,7 +314,7 @@ fn compiler_inventory_binds_source_and_executable_but_never_claims_execution() {
         actual["tests/rust/sdk_acceptance.rs"],
         fixture.0.join("target/debug/deps/sdk")
     );
-    assert!(compiled_harnesses(&fixture.0, &messages(&[sdk.clone()])).is_err());
+    assert!(compiled_harnesses(&fixture.0, &messages(std::slice::from_ref(&sdk))).is_err());
     let mut not_test = library.clone();
     not_test["profile"]["test"] = json!(false);
     assert!(compiled_harnesses(&fixture.0, &messages(&[not_test, done.clone()])).is_err());

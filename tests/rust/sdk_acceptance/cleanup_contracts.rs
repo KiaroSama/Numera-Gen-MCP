@@ -16,6 +16,20 @@ fn panic_text(error: tokio::task::JoinError) -> String {
     }
 }
 
+#[test]
+fn cleanup_scope_keeps_large_scenario_storage_out_of_its_returned_frame() {
+    let payload = [0u8; 64 * 1024];
+    let operation = cleanup::run(async move {
+        std::future::pending::<()>().await;
+        std::hint::black_box(&payload);
+    });
+    let bytes = std::mem::size_of_val(&operation);
+    assert!(
+        bytes <= 1024,
+        "cleanup scope embeds {bytes} bytes of scenario storage"
+    );
+}
+
 #[tokio::test]
 async fn failed_scenario_awaits_late_provider_errors_and_preserves_the_original_failure() {
     for run_fails in [false, true] {

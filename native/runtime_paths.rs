@@ -18,6 +18,13 @@ impl RuntimePaths {
             ));
         }
         let root = fs::canonicalize(root).map_err(|_| NumeraError::storage())?;
+        #[cfg(windows)]
+        if fs::canonicalize(command_path(&root)).map_err(|_| NumeraError::storage())? != root {
+            return Err(NumeraError::new(
+                "permission_denied",
+                "External command root spelling changes its physical identity.",
+            ));
+        }
         let temp = root.join(".runtime/temp");
         let cache = root.join(".runtime/cache");
         let paths = Self { root, temp, cache };
@@ -59,13 +66,42 @@ impl RuntimePaths {
     }
 
     pub fn child_environment(&self) -> [(String, String); 3] {
-        let path = self.temp.to_string_lossy().into_owned();
+        let path = command_path(&self.temp).to_string_lossy().into_owned();
         [
             ("TEMP".into(), path.clone()),
             ("TMP".into(), path.clone()),
             ("TMPDIR".into(), path),
         ]
     }
+}
+
+/// Preserve a verified path's identity while avoiding verbatim syntax in external tools.
+pub fn command_path(path: &Path) -> PathBuf {
+    #[cfg(windows)]
+    {
+        use std::{ffi::OsString, path::Prefix};
+        let mut components = path.components();
+        let Some(Component::Prefix(prefix)) = components.next() else {
+            return path.to_path_buf();
+        };
+        let mut result = match prefix.kind() {
+            Prefix::VerbatimDisk(drive) => PathBuf::from(format!("{}:", char::from(drive))),
+            Prefix::VerbatimUNC(server, share) => {
+                let mut prefix = OsString::from(r"\\");
+                prefix.push(server);
+                prefix.push(r"\");
+                prefix.push(share);
+                PathBuf::from(prefix)
+            }
+            _ => return path.to_path_buf(),
+        };
+        for component in components {
+            result.push(component.as_os_str());
+        }
+        result
+    }
+    #[cfg(not(windows))]
+    path.to_path_buf()
 }
 
 pub fn private_directory(path: &Path) -> Result<()> {

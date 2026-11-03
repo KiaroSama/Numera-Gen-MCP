@@ -74,20 +74,21 @@ impl Context {
     }
     pub fn command(&self, program: impl AsRef<std::ffi::OsStr>) -> Command {
         let mut command = Command::new(program);
-        command.current_dir(&self.root);
+        let root = numera_gen_mcp::runtime_paths::command_path(&self.root);
+        command.current_dir(&root);
         command
             .env("CARGO_BUILD_JOBS", "2")
             .env("RUST_TEST_THREADS", "2")
             .env("NUMERA_TEST_WORKERS", "2")
-            .env("CARGO_HOME", self.root.join(".ci-cache/cargo"))
-            .env("RUSTUP_HOME", self.root.join(".ci-cache/rustup"))
-            .env("CARGO_TARGET_DIR", self.root.join("target"))
+            .env("CARGO_HOME", root.join(".ci-cache/cargo"))
+            .env("RUSTUP_HOME", root.join(".ci-cache/rustup"))
+            .env("CARGO_TARGET_DIR", root.join("target"))
             .env("CARGO_TERM_COLOR", "never")
             .env(
                 "NUMERA_BUILD_SHA",
                 std::env::var("GITHUB_SHA").unwrap_or_else(|_| "unverified-source".into()),
             );
-        let mut paths = vec![self.root.join(".ci-cache/cargo/bin")];
+        let mut paths = vec![root.join(".ci-cache/cargo/bin")];
         paths.extend(std::env::split_paths(
             &std::env::var_os("PATH").unwrap_or_default(),
         ));

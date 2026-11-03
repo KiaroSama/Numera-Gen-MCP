@@ -20,6 +20,30 @@ fn scratch_is_project_owned_and_escape_is_rejected() {
     assert!(paths.verify(&paths.temp).is_ok());
 }
 
+#[cfg(windows)]
+#[test]
+fn external_command_paths_preserve_verified_disk_unc_and_unicode_identity() {
+    use numera_gen_mcp::runtime_paths::command_path;
+    use std::path::{Path, PathBuf};
+    for (input, expected) in [
+        (r"\\?\C:\owned root\東京\file", r"C:\owned root\東京\file"),
+        (r"\\?\UNC\server\share\owned root", r"\\server\share\owned root"),
+        (r"C:\ordinary\file", r"C:\ordinary\file"),
+    ] {
+        assert_eq!(command_path(Path::new(input)), PathBuf::from(expected));
+    }
+    let workspace = common::Workspace::new();
+    let paths = RuntimePaths::new(&workspace.0).unwrap();
+    for (_, value) in paths.child_environment() {
+        assert!(!value.starts_with(r"\\?\"));
+        assert_eq!(std::fs::canonicalize(value).unwrap(), paths.temp);
+    }
+    assert_eq!(
+        std::fs::canonicalize(command_path(&paths.root)).unwrap(),
+        paths.root
+    );
+}
+
 #[test]
 fn exact_source_nested_signed_query_redaction_preserves_status_without_private_values() {
     let result = redact(

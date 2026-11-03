@@ -41,6 +41,34 @@ impl Drop for Fixture {
         }
     }
 }
+#[test]
+fn child_cargo_paths_keep_physical_ownership_without_verbatim_windows_arguments() {
+    let fixture = Fixture::new();
+    fs::create_dir_all(fixture.root.join("native")).unwrap();
+    fs::write(fixture.root.join("Cargo.toml"), b"[workspace]\n").unwrap();
+    fs::write(fixture.root.join("native/lib.rs"), b"").unwrap();
+    let context = Context::new(&fixture.root).unwrap();
+    let command = context.command("cargo");
+    let cwd = command.get_current_dir().unwrap();
+    assert_eq!(cwd.canonicalize().unwrap(), context.root);
+    let environment = command.get_envs().collect::<std::collections::BTreeMap<_, _>>();
+    for (key, suffix) in [
+        ("CARGO_HOME", ".ci-cache/cargo"),
+        ("RUSTUP_HOME", ".ci-cache/rustup"),
+        ("CARGO_TARGET_DIR", "target"),
+    ] {
+        let value = environment[std::ffi::OsStr::new(key)].unwrap();
+        assert_eq!(
+            Path::new(value),
+            numera_gen_mcp::runtime_paths::command_path(&context.root).join(suffix)
+        );
+        #[cfg(windows)]
+        assert!(!value.to_string_lossy().starts_with(r"\\?\"));
+    }
+    #[cfg(windows)]
+    assert!(!cwd.to_string_lossy().starts_with(r"\\?\"));
+}
+
 fn coverage(regions: (u64, u64), branches: (u64, u64)) -> Value {
     json!({"data":[{"totals":{"regions":{"count":regions.0,"covered":regions.1},"branches":{"count":branches.0,"covered":branches.1}}}]})
 }

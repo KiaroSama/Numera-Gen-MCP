@@ -93,6 +93,43 @@ fn preparation_preserves_unicode_roles_and_native_parameter_types() {
 }
 
 #[test]
+fn authoritative_integer_round_trips_keep_native_bounds_without_numeric_coercion() {
+    use numera_gen_mcp::compat::value::Value;
+    for parameters in [
+        json!({"num_images":2,"image_size":{"width":1024,"height":768},"seed":-1}),
+        json!({"num_images":1,"num_inference_steps":50,"seed":4294967296u64}),
+    ] {
+        let parameters = Value::from_serde(&parameters).unwrap().to_serde().unwrap();
+        assert!(parameters["num_images"].as_u64().is_none());
+        let body = fal::prepare(FLUX, "text-to-image", Some("x"), &[], &parameters).unwrap();
+        let mut expected = parameters;
+        expected["prompt"] = json!("x");
+        assert_eq!(body, expected);
+    }
+    for parameters in [
+        json!({"num_images":1.5}),
+        json!({"num_images":0}),
+        json!({"num_images":5}),
+        json!({"num_images":"2"}),
+        json!({"num_images":true}),
+        json!({"image_size":{"width":1.5,"height":1}}),
+        json!({"image_size":{"width":14143,"height":1}}),
+        json!({"seed":1.5}),
+        json!({"seed":18446744073709551616.0}),
+    ] {
+        let parameters = Value::from_serde(&parameters).unwrap().to_serde().unwrap();
+        assert!(fal::prepare(FLUX, "text-to-image", Some("x"), &[], &parameters).is_err());
+    }
+    let parameters = Value::parse("{\"seconds_total\":2,\"steps\":40}")
+        .unwrap()
+        .to_serde()
+        .unwrap();
+    assert!(
+        fal::prepare("fal-ai/stable-audio", "text-to-audio", Some("x"), &[], &parameters).is_ok()
+    );
+}
+
+#[test]
 fn preparation_fails_before_submission_when_inputs_cannot_be_forwarded() {
     let image = || fal::Reference {
         kind: Kind::Image,

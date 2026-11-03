@@ -225,7 +225,8 @@ async fn comfy_history() {
     let posts = Arc::new(AtomicUsize::new(0));
     let v = views.clone();
     let p = posts.clone();
-    let wire=Provider::new(move|request,_|{let v=v.clone();let p=p.clone();async move{if request.path.starts_with("/view"){v.fetch_add(1,Ordering::SeqCst);}if request.method=="POST"{p.fetch_add(1,Ordering::SeqCst);}assert_eq!(request.method,"GET");assert_eq!(request.path,"/history/job");Ok(Reply::json(json!({"job":{"status":{"status_str":"error"},"outputs":{"save":{"images":[{"filename":"not-output.png","type":"input"}]}}}})))}}).await;
+    let wire=Provider::new(move|request,_|{let v=v.clone();let p=p.clone();async move{if request.path.starts_with("/view"){v.fetch_add(1,Ordering::SeqCst);}
+        if request.method=="POST"{p.fetch_add(1,Ordering::SeqCst);}assert_eq!(request.method,"GET");assert_eq!(request.path,"/history/job");Ok(Reply::json(json!({"job":{"status":{"status_str":"error"},"outputs":{"save":{"images":[{"filename":"not-output.png","type":"input"}]}}}})))}}).await;
     let config = f::config(
         &directory,
         json!({"local":{"adapter":"comfyui","baseUrl":wire.origin,"auth":{"type":"none"},"discoveryTimeoutMs":2000,"requestTimeoutMs":2000,"workflow":{

@@ -116,8 +116,14 @@ authenticated hosted formatting. Replacement41554639558 on exact `b72e20e` also 
 compiled the task but deep fixture materialization overflowed its stack; Unix execution exposed
 media-schema, example-path, numeric metadata, archive-prefix, deep fixture and SDK-race failures plus
 remaining tooling quality gates. The next corrective tree retains iterative authoritative JSON
-through fixture lifetime/relocation and exact original provenance, and still needs hosted execution. No Rust compiler,
-formatter, build or test ran locally. The earlier isolated lock/format preparation is not qualification.
+through fixture lifetime/relocation and exact original provenance.
+Qualification41597832142 at `023fce6` subsequently failed all seven contexts: fixture materialization
+passed, but Windows external C builds rejected verbatim workspace paths; Unix tests exposed valid
+integral media parameters rejected after binary64 conversion and a terminal SDK stack overflow.
+The current source repairs those boundaries and the eight observed Clippy/three formatting
+locations, with additive path, integer and future-frame regressions. Their hosted proof is pending;
+canonical containment, original assertions, time/worker/stack limits and qualification flags remain.
+No Rust compiler, formatter, build or test ran locally. The earlier isolated lock/format preparation is not qualification.
 All discovered workspace suites, six native targets, instrumented runtime 85/80 floors, current
 470-case assertion bindings, extracted SDK behavior and signatures must qualify on the final SHA.
 The owner separately authorized the existing signing identity on `main`; workflow and native guards

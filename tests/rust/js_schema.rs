@@ -229,7 +229,7 @@ fn media_schema_preserves_bounded_ids_roles_and_unknown_rule_refusal() {
     ] {
         let text = serde_json::json!({"request_id":id,"mode":"image-to-image",
             "references":[{"kind":"image","role":role,"path":"original.png"}]})
-            .to_string();
+        .to_string();
         let mut value = parse(&text).expect("JSON");
         assert_eq!(schema.default_and_validate(&mut value).is_ok(), accepted);
     }

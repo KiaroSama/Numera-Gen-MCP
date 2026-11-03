@@ -113,7 +113,7 @@ fn valid_parameter(key: &str, value: &Value, endpoint: &str) -> bool {
             .as_f64()
             .is_some_and(|n| n.is_finite() && n >= min && n <= max)
     };
-    let integer = |min: u64, max: u64| value.as_u64().is_some_and(|n| n >= min && n <= max);
+    let integer = |min: u64, max: u64| unsigned(value).is_some_and(|n| n >= min && n <= max);
     let choice = |values: &[&str]| value.as_str().is_some_and(|v| values.contains(&v));
     match key {
         "enable_safety_checker"
@@ -123,7 +123,13 @@ fn valid_parameter(key: &str, value: &Value, endpoint: &str) -> bool {
         | "TAPose"
         | "use_hyper" => value.is_boolean(),
         "seed" if endpoint == "fal-ai/hyper3d/rodin" => value.is_null() || integer(0, 65535),
-        "seed" => value.is_null() || value.is_i64() || value.is_u64(),
+        "seed" => {
+            value.is_null()
+                || unsigned(value).is_some()
+                || value
+                    .as_f64()
+                    .is_some_and(|n| crate::compat::value::Number(n).as_i64().is_some())
+        }
         "duration" => choice(&["5", "10"]),
         "aspect_ratio" => choice(&["16:9", "9:16", "1:1"]),
         "output_format" => choice(&["jpeg", "png"]),
@@ -181,14 +187,14 @@ fn valid_parameter(key: &str, value: &Value, endpoint: &str) -> bool {
         "seconds_start" | "seconds_total" => integer(0, 47),
         "total_seconds" => value.is_null() || integer(1, 190),
         "export_fps" => integer(4, 32),
-        "texture_size" => value.as_u64().is_some_and(|n| {
+        "texture_size" => unsigned(value).is_some_and(|n| {
             if endpoint.ends_with("retexture") {
                 [1024, 2048, 4096].contains(&n)
             } else {
                 [512, 1024, 2048].contains(&n)
             }
         }),
-        "resolution" => value.as_u64().is_some_and(|n| [512, 1024].contains(&n)),
+        "resolution" => unsigned(value).is_some_and(|n| [512, 1024].contains(&n)),
         "face_count" => integer(40000, 1500000),
         "polygon_type" => choice(&["triangle", "quadrilateral"]),
         "generate_type" => choice(&["Normal", "LowPoly", "Geometry"]),
@@ -199,6 +205,14 @@ fn valid_parameter(key: &str, value: &Value, endpoint: &str) -> bool {
         "material" => choice(&["PBR", "Shaded"]),
         _ => false,
     }
+}
+
+fn unsigned(value: &Value) -> Option<u64> {
+    value.as_u64().or_else(|| {
+        value
+            .as_f64()
+            .and_then(|n| crate::compat::value::Number(n).as_u64())
+    })
 }
 
 fn size(value: &Value) -> bool {
@@ -217,7 +231,7 @@ fn size(value: &Value) -> bool {
         o.len() == 2
             && ["width", "height"].iter().all(|k| {
                 o.get(*k)
-                    .and_then(Value::as_u64)
+                    .and_then(unsigned)
                     .is_some_and(|v| v > 0 && v <= 14142)
             })
     })

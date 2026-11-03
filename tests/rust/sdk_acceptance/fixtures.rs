@@ -152,15 +152,14 @@ pub async fn identity(config: &Value, name: &str, directory: &Path) -> String {
 pub async fn seed(
     config: &Value,
     directory: &Path,
-    id: &str,
-    name: &str,
-    kind: &str,
-    handle: &str,
-    status: &str,
+    request: (&str, &str),
+    upstream: (&str, &str, &str),
     hash: &str,
     wrong: Option<&str>,
     capacity: (usize, usize),
 ) -> String {
+    let (id, name) = request;
+    let (kind, handle, status) = upstream;
     let identity = identity(config, name, directory).await;
     let adapter = config["connections"][name]["adapter"].as_str().unwrap();
     let mut store = store(config);
