@@ -492,12 +492,12 @@ pub fn validate_reference(
                 .as_str()
                 .and_then(|v| v.split_once("::"))
                 .ok_or_else(|| fail("Invalid historical mapping."))?;
-            if checked.insert(file) {
-                if binding["current_git_files"][file] != sha(&read(project, file)?) {
-                    return Err(fail(
-                        "Materialized historical native bytes differ from execution reference.",
-                    ));
-                }
+            if checked.insert(file)
+                && binding["current_git_files"][file] != sha(&read(project, file)?)
+            {
+                return Err(fail(
+                    "Materialized historical native bytes differ from execution reference.",
+                ));
             }
         }
     }

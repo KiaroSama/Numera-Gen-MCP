@@ -15,7 +15,7 @@ fn fixture_provenance_is_checked_before_explicit_path_relocation() {
     assert!(validate_bundle(&manifest, "config.json", b"changed").is_err());
     manifest["source_sha"] = json!("another");
     assert!(validate_bundle(&manifest, "config.json", bytes).is_err());
-    let original = json!({"file":"/old/root/.ci-work/parity/config.json", "expected":{"path":"/old/root/state"},"text":"{\"path\":\"/old/root/output\"}","unrelated":"/old/rootish/keep"});
+    let original = numera_gen_mcp::compat::value::json!({"file":"/old/root/.ci-work/parity/config.json", "expected":{"path":"/old/root/state"},"text":"{\"path\":\"/old/root/output\"}","unrelated":"/old/rootish/keep"});
     let result = relocate(&original, "/old/root", "/new/root").expect("explicit relocation");
     assert_eq!(result["file"], "/new/root/.ci-work/parity/config.json");
     assert_eq!(result["expected"]["path"], "/new/root/state");
@@ -53,19 +53,19 @@ fn cross_platform_materialization_accepts_only_exact_originals_and_explicit_conf
                     .unwrap()
                     .strip_suffix(suffix)
                     .unwrap();
-                serde_json::to_vec(
-                    &relocate(
-                        &config,
-                        old,
-                        if platform == "windows" {
-                            "G:\\isolated fixture"
-                        } else {
-                            "/isolated fixture"
-                        },
-                    )
-                    .unwrap(),
+                relocate(
+                    &config,
+                    old,
+                    if platform == "windows" {
+                        "G:\\isolated fixture"
+                    } else {
+                        "/isolated fixture"
+                    },
                 )
                 .unwrap()
+                .stringify()
+                .unwrap()
+                .into_bytes()
             } else {
                 bytes.clone()
             };
@@ -107,8 +107,8 @@ fn cross_platform_materialization_accepts_only_exact_originals_and_explicit_conf
         assert!(verify_materialized(project, platform, &source, &claimed, &payloads).is_err());
         let mut changed = payloads.clone();
         let mut config = numera_task::fixtures::parse_json(&changed["config.json"]).unwrap();
-        config["extra-unapproved-fixture"] = json!(true);
-        changed.insert("config.json".into(), serde_json::to_vec(&config).unwrap());
+        config["extra-unapproved-fixture"] = true.into();
+        changed.insert("config.json".into(), config.stringify().unwrap().into_bytes());
         assert!(
             verify_materialized(
                 project,
@@ -143,10 +143,8 @@ fn original_deep_config_golden_remains_parseable_without_serde_default_depth_rej
             .unwrap()
             .join("tests/fixtures/oracle")
             .join(platform);
-        let manifest = numera_task::fixtures::parse_json(
-            &std::fs::read(base.join("provenance.json")).unwrap(),
-        )
-        .unwrap();
+        let manifest =
+            serde_json::from_slice(&std::fs::read(base.join("provenance.json")).unwrap()).unwrap();
         validate_bundle(
             &manifest,
             "config.json",

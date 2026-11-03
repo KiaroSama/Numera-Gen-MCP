@@ -332,7 +332,7 @@ pub fn owned_media(config: &Value, store: &Store, id: &str) -> Result<(Value, Ve
         ));
     }
     if let Some(metadata) = output.get("media")
-        && metadata.to_serde()? != inspected.metadata
+        && metadata != &Value::from_serde(&inspected.metadata)?
     {
         return Err(NumeraError::new(
             "output_file_error",

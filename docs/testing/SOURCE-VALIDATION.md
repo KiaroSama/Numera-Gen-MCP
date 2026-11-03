@@ -111,8 +111,12 @@ The 0.3.0 tooling/media candidate has not qualified. Exact `49a6288` failed all 
 jobs in [qualification41526803432, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/41526803432/attempts/1).
 Unix task/release compilation did not overcome failed SDK/tooling test compilation and format/Clippy
 gates. Windows bootstrap rejected authenticated ZIP bytes through GNU tar before Rust setup.
-The corrective tree repairs those diagnostics and rebinds reviewed source hashes/ranges after applying
-authenticated hosted formatting; it still requires replacement hosted execution. No Rust compiler,
+The corrective tree repaired those diagnostics and rebound reviewed source hashes/ranges after applying
+authenticated hosted formatting. Replacement41554639558 on exact `b72e20e` also failed: Windows now
+compiled the task but deep fixture materialization overflowed its stack; Unix execution exposed
+media-schema, example-path, numeric metadata, archive-prefix, deep fixture and SDK-race failures plus
+remaining tooling quality gates. The next corrective tree retains iterative authoritative JSON
+through fixture lifetime/relocation and exact original provenance, and still needs hosted execution. No Rust compiler,
 formatter, build or test ran locally. The earlier isolated lock/format preparation is not qualification.
 All discovered workspace suites, six native targets, instrumented runtime 85/80 floors, current
 470-case assertion bindings, extracted SDK behavior and signatures must qualify on the final SHA.

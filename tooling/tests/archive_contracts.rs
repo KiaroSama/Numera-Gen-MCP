@@ -14,16 +14,19 @@ fn sorted_archive_members_round_trip_exact_bytes_in_both_formats() {
         ),
     ]);
     for zip in [true, false] {
-        let first = encode("fixture", &entries, zip).expect("bounded archive");
+        let first = encode("fixture-x86_64", &entries, zip).expect("bounded archive");
         assert_eq!(
             first,
-            encode("fixture", &entries, zip).expect("deterministic archive")
+            encode("fixture-x86_64", &entries, zip).expect("deterministic archive")
         );
         assert_eq!(
-            decode(&first, "fixture", zip).expect("regular files"),
+            decode(&first, "fixture-x86_64", zip).expect("regular files"),
             entries
         );
-        let expected_names = ["fixture/bin/numera-gen-mcp", "fixture/docs/東京.txt"];
+        let expected_names = [
+            "fixture-x86_64/bin/numera-gen-mcp",
+            "fixture-x86_64/docs/東京.txt",
+        ];
         if zip {
             let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&first)).unwrap();
             assert_eq!(archive.len(), expected_names.len());
@@ -63,16 +66,16 @@ fn sorted_archive_members_round_trip_exact_bytes_in_both_formats() {
             }
         }
         assert!(decode(&first, "another", zip).is_err());
-        assert!(decode(&first[..first.len() / 2], "fixture", zip).is_err());
+        assert!(decode(&first[..first.len() / 2], "fixture-x86_64", zip).is_err());
         if !zip {
-            assert!(decode(&first[..first.len() - 1], "fixture", false).is_err());
+            assert!(decode(&first[..first.len() - 1], "fixture-x86_64", false).is_err());
             let mut corrupt = first.clone();
             let at = corrupt.len() - 8;
             corrupt[at] ^= 1;
-            assert!(decode(&corrupt, "fixture", false).is_err());
+            assert!(decode(&corrupt, "fixture-x86_64", false).is_err());
             let mut trailing = first.clone();
             trailing.extend_from_slice(b"unexpected");
-            assert!(decode(&trailing, "fixture", false).is_err());
+            assert!(decode(&trailing, "fixture-x86_64", false).is_err());
         }
     }
 }

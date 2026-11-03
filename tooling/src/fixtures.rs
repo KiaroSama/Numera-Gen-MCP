@@ -26,10 +26,9 @@ pub const INPUTS: &[&str] = &[
     "sqlite-utf16-text.json",
 ];
 
-pub fn parse_json(bytes: &[u8]) -> io::Result<Value> {
+pub fn parse_json(bytes: &[u8]) -> io::Result<numera_gen_mcp::compat::value::Value> {
     let text = std::str::from_utf8(bytes).map_err(|_| fail("Fixture JSON must be UTF-8."))?;
     numera_gen_mcp::compat::value::Value::parse_with_limit(text, 16 * 1024 * 1024)
-        .and_then(|value| value.to_serde())
         .map_err(|_| fail("Invalid bounded fixture JSON."))
 }
 
@@ -64,37 +63,38 @@ fn text_relocate(text: &str, old: &str, new: &str) -> String {
     out
 }
 
-pub fn relocate(value: &Value, old: &str, new: &str) -> io::Result<Value> {
+pub fn relocate(
+    value: &numera_gen_mcp::compat::value::Value,
+    old: &str,
+    new: &str,
+) -> io::Result<numera_gen_mcp::compat::value::Value> {
+    use numera_gen_mcp::compat::value::Value as FixtureValue;
     if old.is_empty() || new.is_empty() {
         return Err(fail("Explicit fixture roots required."));
     }
-    Ok(match value {
-        Value::String(text) => {
-            let direct = text_relocate(text, old, new);
-            let escaped_old =
-                serde_json::to_string(old).map_err(|_| fail("Cannot encode fixture path."))?;
-            let escaped_new =
-                serde_json::to_string(new).map_err(|_| fail("Cannot encode fixture path."))?;
-            Value::String(text_relocate(
-                &direct,
-                &escaped_old[1..escaped_old.len() - 1],
-                &escaped_new[1..escaped_new.len() - 1],
-            ))
+    let escaped_old = serde_json::to_string(old).map_err(|_| fail("Cannot encode fixture path."))?;
+    let escaped_new = serde_json::to_string(new).map_err(|_| fail("Cannot encode fixture path."))?;
+    let mut result = value.clone();
+    let mut pending = vec![&mut result];
+    while let Some(value) = pending.pop() {
+        match value {
+            FixtureValue::String(text) => {
+                if let Some(unicode) = text.as_str() {
+                    let direct = text_relocate(unicode, old, new);
+                    *text = text_relocate(
+                        &direct,
+                        &escaped_old[1..escaped_old.len() - 1],
+                        &escaped_new[1..escaped_new.len() - 1],
+                    )
+                    .into();
+                }
+            }
+            FixtureValue::Array(values) => pending.extend(values.iter_mut()),
+            FixtureValue::Object(values) => pending.extend(values.values_mut()),
+            _ => {}
         }
-        Value::Array(values) => Value::Array(
-            values
-                .iter()
-                .map(|v| relocate(v, old, new))
-                .collect::<io::Result<_>>()?,
-        ),
-        Value::Object(values) => Value::Object(
-            values
-                .iter()
-                .map(|(key, value)| relocate(value, old, new).map(|v| (key.clone(), v)))
-                .collect::<io::Result<_>>()?,
-        ),
-        other => other.clone(),
-    })
+    }
+    Ok(result)
 }
 
 pub fn verify_materialized(
@@ -160,7 +160,7 @@ pub fn verify_materialized(
             } else {
                 "/.ci-work/parity/config.json"
             };
-            let checkout = |value: &Value| -> io::Result<String> {
+            let checkout = |value: &numera_gen_mcp::compat::value::Value| -> io::Result<String> {
                 value["parse"][0]["file"]
                     .as_str()
                     .and_then(|file| file.strip_suffix(suffix))
@@ -168,12 +168,10 @@ pub fn verify_materialized(
                     .map(str::to_owned)
                     .ok_or_else(|| fail("Explicit fixture checkout relocation missing."))
             };
-            serde_json::to_vec(&relocate(
-                &config,
-                &checkout(&config)?,
-                &checkout(&current)?,
-            )?)
-            .map_err(|_| fail("Cannot compare relocated fixture bytes."))?
+            relocate(&config, &checkout(&config)?, &checkout(&current)?)?
+                .stringify()
+                .map_err(|_| fail("Cannot compare relocated fixture bytes."))?
+                .into_bytes()
         } else {
             original
         };
@@ -225,8 +223,10 @@ pub fn materialize(context: &Context) -> io::Result<()> {
         validate_bundle(&provenance, name, &bytes)?;
         let materialized = if *name == "config.json" {
             let input = parse_json(&bytes)?;
-            serde_json::to_vec(&relocate(&input, old, new)?)
+            relocate(&input, old, new)?
+                .stringify()
                 .map_err(|_| fail("Cannot relocate fixture paths."))?
+                .into_bytes()
         } else {
             bytes.clone()
         };

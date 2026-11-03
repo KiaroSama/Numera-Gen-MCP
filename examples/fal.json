@@ -1,6 +1,9 @@
 {
   "schemaVersion": 1,
   "defaultConnection": "fal",
+  "outputDir": "/absolute/numera-gen-mcp/outputs",
+  "stateDir": "/absolute/numera-gen-mcp/state",
+  "logging": {"directory": "/absolute/numera-gen-mcp/logs"},
   "connections": {
     "fal": {
       "adapter": "fal-queue",

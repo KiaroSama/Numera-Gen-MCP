@@ -74,6 +74,7 @@ fn supported(schema: &Value) -> Result<()> {
         "$schema",
         "$ref",
         "$defs",
+        "title",
         "type",
         "properties",
         "propertyNames",
@@ -97,6 +98,9 @@ fn supported(schema: &Value) -> Result<()> {
         "pattern",
     ];
     if object.keys().any(|key| !KEYS.contains(&key.as_str())) {
+        return Err(unsupported());
+    }
+    if object.get("title").is_some_and(|value| !value.is_string()) {
         return Err(unsupported());
     }
     if let Some(dialect) = object.get("$schema")
@@ -156,6 +160,8 @@ fn supported(schema: &Value) -> Result<()> {
                 "^\\/.*",
                 "^[a-zA-Z0-9_-]{1,64}$",
                 "^[a-zA-Z0-9_-]{1,100}$",
+                "^[A-Za-z0-9_-]+$",
+                "^[a-z][a-z0-9_-]*$",
             ]
             .contains(&p)
         })
@@ -427,6 +433,18 @@ fn string_matches(units: &[u16], schema: &Value) -> bool {
                     && units
                         .iter()
                         .all(|u| matches!(*u, 45 | 48..=57 | 65..=90 | 95 | 97..=122))
+            }
+            "^[A-Za-z0-9_-]+$" => {
+                !units.is_empty()
+                    && units
+                        .iter()
+                        .all(|u| matches!(*u, 45 | 48..=57 | 65..=90 | 95 | 97..=122))
+            }
+            "^[a-z][a-z0-9_-]*$" => {
+                units.first().is_some_and(|u| matches!(*u, 97..=122))
+                    && units
+                        .iter()
+                        .all(|u| matches!(*u, 45 | 48..=57 | 95 | 97..=122))
             }
             _ => false,
         };

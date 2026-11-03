@@ -30,7 +30,9 @@ It reuses native supervision, logging and artifact verification; task-only archi
 not production server dependencies. It does not wrap Python or JavaScript. The five original
 PowerShell scripts remain unchanged. Qualification41526803432 compiled the Unix task executable,
 but SDK/tooling test compilation and quality gates failed; Windows failed during bootstrap.
-The corrective working tree still requires its own hosted compilation and execution.
+Replacement41554639558 compiled the task on both Windows targets, but deep fixture materialization
+aborted before their suites. Unix suites exposed further runtime and tooling failures. The next
+corrective working tree still requires its own hosted compilation and execution.
 
 Every task command requires an explicit absolute root and hosted environment. For example, on an
 already prepared hosted runner:

@@ -59,7 +59,9 @@ fn initial_hosted_build_uses_the_qualified_native_owner_in_every_context() {
     assert!(action.contains("extractor=\"$(cygpath -u \"$SYSTEMROOT\")/System32/tar.exe\""));
     assert!(action.contains("test -x \"$extractor\""));
     assert!(
-        action.contains("\"$extractor\" -xf \"$archive\" -C \"$directory\" \"$prefix/bin/$executable\"")
+        action.contains(
+            "\"$extractor\" -xf \"$archive\" -C \"$directory\" \"$prefix/bin/$executable\""
+        )
     );
     assert!(!action.contains("\n        tar -xf"));
     assert!(action.contains("1.99.1"));

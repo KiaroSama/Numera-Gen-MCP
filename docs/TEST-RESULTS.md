@@ -11,7 +11,16 @@ verified their bootstrap ZIP hashes but GNU tar rejected ZIP extraction before R
 
 The corrective source retains the original assertions, uses the explicit native Windows ZIP-capable
 extractor, repairs compilation/Clippy diagnostics and applies authenticated hosted-format candidates.
-Its replacement hosted verification remains pending. The isolated
+Its replacement [qualification41554639558, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/41554639558/attempts/1)
+ran on `b72e20ee8c43556909e0a28497dd6351f727c02e` and also failed all seven native/coverage contexts.
+Both Windows bootstrap and task compilation passed, then fixture materialization overflowed its
+stack. Unix execution exposed unsupported bundled media-schema rules, incomplete example paths,
+unchanged media metadata comparing unequal across numeric representations, archive target-prefix
+rejection, deep fixture handling, an SDK race future stack overflow and four remaining tooling Clippy
+diagnostics. The supervisor payload assertion also counted a matching byte in libtest's own suffix.
+These observed failures are being repaired without changing original expected bytes, assertions,
+resource ceilings or fail-closed qualification flags. The changed tree has not yet run in hosted CI.
+The isolated
 [preparation40956557555](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40956557555)
 only resolved the workspace lock/format for `60be391`; neither preparation nor diagnostic artifacts
 qualify the current tree. No local Rust compiler, formatter, build or test was run.
@@ -26,7 +35,7 @@ The authored evidence path now joins exact release/extracted-intermediate SDK na
 tested binary, then separately collects all six signed signature/extraction/activation/SDK receipts.
 Receipt digests, successful original job logs and source/run/attempt provenance are load-bearing;
 source or synthetic validator checks do not establish that those stages ran. The final signed
-collector and its contracts remain uncompiled and unexecuted, with semantic qualification and
+collector has no successful hosted invocation or qualification, with semantic qualification and
 retirement explicitly unapproved. See [developer tooling](DEVELOPER-TOOLS.md).
 
 ## Historical native 0.2.0 qualification

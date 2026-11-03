@@ -160,8 +160,9 @@ an exact implemented endpoint. Only owned loopback HTTP origins are allowed for 
 remote plaintext HTTP, arbitrary production hosts and alternate ports are rejected. No automatic
 catalog API, file upload, account switch or SDK runtime is introduced.
 The [complete public fal example](../examples/fal.json) uses `secretEnv: "FAL_KEY"` and declares every
-implemented model explicitly. Copy it only to a new private configuration; do not replace an existing
-file. Rodin selects `geometry_file_format: "glb"`; explicit USDZ/FBX/OBJ/STL requests reject before
+implemented model explicitly. Replace its three `/absolute/numera-gen-mcp` storage/log paths with
+absolute paths beneath your own installation before use. Copy it only to a new private configuration;
+do not replace an existing file. Rodin selects `geometry_file_format: "glb"`; explicit USDZ/FBX/OBJ/STL requests reject before
 submission because these original-byte validators are not implemented. An incompatible returned format
 still fails validation without conversion.
 

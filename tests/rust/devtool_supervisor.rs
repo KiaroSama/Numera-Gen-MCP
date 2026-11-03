@@ -155,7 +155,7 @@ fn fixture_worker() {
         }
         "metadata-output" => {
             io::stdout()
-                .write_all(&vec![b'm'; 3 * 1024 * 1024])
+                .write_all(&vec![0xff; 3 * 1024 * 1024])
                 .unwrap();
         }
         "output" => {
@@ -250,7 +250,7 @@ fn explicitly_bounded_metadata_capture_does_not_weaken_default_output_limit() {
     assert_eq!(bounded.code, 0);
     assert!(bounded.cleanup_verified);
     assert_eq!(
-        bounded.stdout.iter().filter(|byte| **byte == b'm').count(),
+        bounded.stdout.iter().filter(|byte| **byte == 0xff).count(),
         3 * 1024 * 1024
     );
     for invalid in [0, 16 * 1024 * 1024 + 1] {

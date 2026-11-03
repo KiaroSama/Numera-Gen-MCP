@@ -212,28 +212,28 @@ fn functions(text: &str) -> io::Result<Vec<Function>> {
             continue;
         }
         if tokens[n] == "fn" {
-            if let Some(name) = tokens.get(n + 1) {
-                if tokens.get(n + 2).is_some_and(|s| s == "(") {
-                    let test = attributes.iter().any(|a| {
-                        (a.len() == 1 && a[0] == "test")
-                            || (a
-                                .iter()
-                                .take(4)
-                                .map(String::as_str)
-                                .eq(["tokio", ":", ":", "test"])
-                                && (a.len() == 4 || a.get(4).is_some_and(|token| token == "(")))
-                    });
-                    let ignored = attributes
-                        .iter()
-                        .any(|a| a.first().is_some_and(|s| s == "ignore"));
-                    if ignored && test {
-                        return Err(fail("Ignored native mapping cannot prove execution."));
-                    }
-                    functions.push(Function {
-                        name: name.clone(),
-                        test,
-                    });
+            if let Some(name) = tokens.get(n + 1)
+                && tokens.get(n + 2).is_some_and(|s| s == "(")
+            {
+                let test = attributes.iter().any(|a| {
+                    (a.len() == 1 && a[0] == "test")
+                        || (a
+                            .iter()
+                            .take(4)
+                            .map(String::as_str)
+                            .eq(["tokio", ":", ":", "test"])
+                            && (a.len() == 4 || a.get(4).is_some_and(|token| token == "(")))
+                });
+                let ignored = attributes
+                    .iter()
+                    .any(|a| a.first().is_some_and(|s| s == "ignore"));
+                if ignored && test {
+                    return Err(fail("Ignored native mapping cannot prove execution."));
                 }
+                functions.push(Function {
+                    name: name.clone(),
+                    test,
+                });
             }
             attributes.clear();
             n += 1;

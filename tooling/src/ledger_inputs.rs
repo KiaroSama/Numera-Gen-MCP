@@ -164,7 +164,7 @@ pub fn decode_archive(
 ) -> io::Result<BTreeMap<String, Vec<u8>>> {
     if bytes.len() < 1024
         || bytes.len() > LIMIT
-        || bytes.len() % 512 != 0
+        || !bytes.len().is_multiple_of(512)
         || bytes[bytes.len() - 1024..].iter().any(|b| *b != 0)
         || expected.is_empty()
         || expected.len() > 512

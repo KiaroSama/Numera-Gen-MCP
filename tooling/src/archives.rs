@@ -60,7 +60,7 @@ fn prefix_ok(prefix: &str) -> io::Result<()> {
         || prefix.len() > 200
         || !prefix
             .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'.')
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.' | b'_'))
     {
         return Err(invalid());
     }

@@ -216,6 +216,29 @@ fn request_refs_select_exactly_one_source_and_preserve_provider_options() {
 }
 
 #[test]
+fn media_schema_preserves_bounded_ids_roles_and_unknown_rule_refusal() {
+    let source = bundled(include_str!("../../schemas/media-request.schema.json"));
+    let schema = Schema::compile(&source).expect("bundled media schema");
+    for (id, role, accepted) in [
+        ("A_9-x", "source_3d", true),
+        ("x", "a", true),
+        ("bad/id", "source", false),
+        ("x", "Source", false),
+        ("x", "3source", false),
+        ("x", "source/mesh", false),
+    ] {
+        let text = serde_json::json!({"request_id":id,"mode":"image-to-image",
+            "references":[{"kind":"image","role":role,"path":"original.png"}]})
+            .to_string();
+        let mut value = parse(&text).expect("JSON");
+        assert_eq!(schema.default_and_validate(&mut value).is_ok(), accepted);
+    }
+    let mut invalid = source;
+    invalid["title"] = serde_json::json!(false);
+    assert!(Schema::compile(&invalid).is_err());
+}
+
+#[test]
 fn schema_drift_is_explicit_not_silently_accepted() {
     for source in [
         serde_json::json!({"type":"object","unevaluatedProperties":false}),

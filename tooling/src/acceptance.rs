@@ -66,10 +66,10 @@ fn setup(
     target: &Path,
     action: &str,
     prepared: &Path,
-    host: &Path,
-    config: &Path,
+    registration: (&Path, &Path),
     reject: bool,
 ) -> io::Result<Value> {
+    let (host, config) = registration;
     let mut command = context.command(developer);
     command.args(["setup", action, "--root"]).arg(target);
     if matches!(action, "Install" | "Update") {
@@ -152,7 +152,13 @@ pub fn activation(context: &Context, prepared: &Path) -> io::Result<()> {
     )?;
     let developer = binary(prepared, true);
     if setup(
-        context, &developer, &target, "Install", prepared, &host, &config, false,
+        context,
+        &developer,
+        &target,
+        "Install",
+        prepared,
+        (&host, &config),
+        false,
     )?["installed"]
         != true
     {
@@ -177,13 +183,25 @@ pub fn activation(context: &Context, prepared: &Path) -> io::Result<()> {
             .share_mode(1)
             .open(target.join(&second.path))?;
         setup(
-            context, &developer, &target, "Update", prepared, &host, &config, true,
+            context,
+            &developer,
+            &target,
+            "Update",
+            prepared,
+            (&host, &config),
+            true,
         )?;
         unchanged(&target, &original, &authenticated.manifest)?;
         drop(held);
     }
     setup(
-        context, &developer, &target, "Update", prepared, &host, &config, false,
+        context,
+        &developer,
+        &target,
+        "Update",
+        prepared,
+        (&host, &config),
+        false,
     )?;
     unchanged(&target, &original, &authenticated.manifest)?;
     let before = json!({"retained":true,"mcpServers":{"other":{"command":"unchanged"}}});
@@ -193,7 +211,13 @@ pub fn activation(context: &Context, prepared: &Path) -> io::Result<()> {
     )?;
     fs::write(&config, br#"{"api_endpoint":"https://example.invalid/v1","api_key":"fixture-not-used","models":[{"id":"fixture","name":"Fixture"}]}"#)?;
     setup(
-        context, &developer, &target, "Register", prepared, &host, &config, false,
+        context,
+        &developer,
+        &target,
+        "Register",
+        prepared,
+        (&host, &config),
+        false,
     )?;
     let registered: Value = serde_json::from_slice(&fs::read(&host)?)
         .map_err(|_| fail("Invalid registered fixture."))?;
@@ -211,7 +235,13 @@ pub fn activation(context: &Context, prepared: &Path) -> io::Result<()> {
         return Err(fail("Entry-scoped registration differs."));
     }
     setup(
-        context, &developer, &target, "Remove", prepared, &host, &config, false,
+        context,
+        &developer,
+        &target,
+        "Remove",
+        prepared,
+        (&host, &config),
+        false,
     )?;
     let after: Value =
         serde_json::from_slice(&fs::read(&host)?).map_err(|_| fail("Invalid removed fixture."))?;

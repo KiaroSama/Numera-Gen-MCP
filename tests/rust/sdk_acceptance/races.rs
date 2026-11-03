@@ -15,11 +15,11 @@ use std::{
 pub async fn run() {
     let (_, bytes) = f::image("png");
     for state in ["failed", "cancelled", "incomplete", "completed"] {
-        host::scenario(30000, responses(state, &bytes)).await;
+        host::scenario(30000, Box::pin(responses(state, &bytes))).await;
         writeln!(std::io::stderr().lock(),"{}",json!({"component":"native-races-acceptance","adapter":"openai-responses","state":state,"message":"Actual two-host race and restarts completed."})).unwrap();
     }
     for state in ["cancelled", "failed", "completed"] {
-        host::scenario(30000, comfy(state, &bytes)).await;
+        host::scenario(30000, Box::pin(comfy(state, &bytes))).await;
         writeln!(std::io::stderr().lock(),"{}",json!({"component":"native-races-acceptance","adapter":"comfyui","state":state,"message":"Actual two-host race and restarts completed."})).unwrap();
     }
 }
