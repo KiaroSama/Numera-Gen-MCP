@@ -13,8 +13,8 @@ mod mapping;
 pub use execution::{assertion_digest, validate_execution_binding, validate_reference_binding};
 pub(crate) use input::{parse, read};
 use input::{relative, text};
-pub use mapping::{historical_mapping_source, mapping_source};
 use mapping::{MappingPolicy, mapping};
+pub use mapping::{historical_mapping_source, mapping_source};
 
 const PLATFORMS: [&str; 3] = ["win32", "linux", "darwin"];
 fn hex(value: &str, length: usize) -> bool {

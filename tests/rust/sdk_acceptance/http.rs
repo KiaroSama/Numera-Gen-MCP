@@ -34,20 +34,24 @@ impl Drop for HttpChild {
     fn drop(&mut self) {
         if let Some(mut child) = self.child.take() {
             if child.stop(Instant::now() + Duration::from_secs(2)).is_err() {
-                super::cleanup::defer(async { Err("HTTP fixture child cleanup unverified".into()) });
+                super::cleanup::defer(async {
+                    Err("HTTP fixture child cleanup unverified".into())
+                });
             }
         }
         if let Some(task) = self.diagnostics.take() {
             let task = tokio_util::task::AbortOnDropHandle::new(task);
             super::cleanup::defer(async move {
-                super::cleanup::join(task, 3000, false).await?
+                super::cleanup::join(task, 3000, false)
+                    .await?
                     .ok_or("HTTP diagnostic owner cancelled")?
             });
         }
         if let Some(task) = self.stdout.take() {
             let task = tokio_util::task::AbortOnDropHandle::new(task);
             super::cleanup::defer(async move {
-                let bytes = super::cleanup::join(task, 3000, false).await?
+                let bytes = super::cleanup::join(task, 3000, false)
+                    .await?
                     .ok_or("HTTP stdout owner cancelled")??;
                 if bytes.is_empty() {
                     Ok(())
@@ -73,17 +77,19 @@ async fn connect(url: &str) -> Client {
         Implementation::new("native-http-fixture", "1"),
     )
     .with_protocol_version(ProtocolVersion::V_2025_11_25);
-    Client::new(host::bounded(
-        8000,
-        serve_client_with_lifecycle_and_ct(
-            info,
-            transport,
-            Era::Legacy.lifecycle(),
-            CancellationToken::new(),
-        ),
+    Client::new(
+        host::bounded(
+            8000,
+            serve_client_with_lifecycle_and_ct(
+                info,
+                transport,
+                Era::Legacy.lifecycle(),
+                CancellationToken::new(),
+            ),
+        )
+        .await
+        .unwrap(),
     )
-    .await
-    .unwrap())
 }
 async fn call(client: &Client, name: &str, args: Value) -> Value {
     let request = serde_json::from_value(

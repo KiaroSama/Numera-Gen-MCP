@@ -31,8 +31,7 @@ pub fn validate_public_identity(
     certificate: &[u8],
     now: chrono::DateTime<chrono::Utc>,
 ) -> io::Result<()> {
-    if sha(key)
-        != "31ccb588ae7e529535dcccd94f06d8d39ae1b8847b7003e884ad8f44cd340c80"
+    if sha(key) != "31ccb588ae7e529535dcccd94f06d8d39ae1b8847b7003e884ad8f44cd340c80"
         || sha(certificate) != CERT_PIN
         || identity["publisher"] != "KiaroSama"
         || identity["algorithm"] != "rsa-pkcs1-sha256"
@@ -95,7 +94,10 @@ pub fn validate_authority(env: &Value) -> io::Result<()> {
         || env["GITHUB_REF"] != "refs/heads/main"
         || env["GITHUB_EVENT_NAME"] != "workflow_dispatch"
         || env["GITHUB_JOB"] != "signing"
-        || !matches!(env["NUMERA_CI_OPERATION"].as_str(), Some("qualify" | "sign-qualified"))
+        || !matches!(
+            env["NUMERA_CI_OPERATION"].as_str(),
+            Some("qualify" | "sign-qualified")
+        )
     {
         Err(fail("Protected hosted signing route not authorized."))
     } else {

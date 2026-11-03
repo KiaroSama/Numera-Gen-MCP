@@ -24,7 +24,7 @@ impl Fixture {
     fn new(coverage: bool) -> Self {
         let file = "tests/rust/sdk_acceptance.rs";
         let mapping = format!("{file}::original_case");
-        let dependencies = BTreeMap::from([
+        let dependencies: BTreeMap<String, String> = BTreeMap::from([
             (file.into(), sha(b"SDK entry")),
             ("tests/rust/media_acceptance.rs".into(), sha(b"media entry")),
         ]);

@@ -547,7 +547,7 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
     let mut brands = [ftyp.body.get(..4)]
         .into_iter()
         .flatten()
-        .chain(ftyp.body[8..].chunks_exact(4));
+        .chain(ftyp.body[8..].as_chunks::<4>().0.iter().map(AsRef::as_ref));
     if !brands.any(|b| {
         matches!(
             b,

@@ -57,10 +57,16 @@ impl Fixture {
                             "approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
                                 target.contains("windows") || target.contains("apple")
                             }
-                            _ => file != "native/devtools/process_unix.rs" || !target.contains("windows"),
+                            _ => {
+                                file != "native/devtools/process_unix.rs"
+                                    || !target.contains("windows")
+                            }
                         };
                         if applicable {
-                            names.entry(harness.into()).or_default().insert(symbol.into());
+                            names
+                                .entry(harness.into())
+                                .or_default()
+                                .insert(symbol.into());
                         }
                     }
                 }
@@ -122,9 +128,15 @@ impl Fixture {
                 artifact["component"] = json!("native-exact-sdk-execution");
                 artifact["identity"]["phase"] = json!(phase);
                 artifact["tested_binary_sha256"] = json!("6".repeat(64));
-                artifact["harnesses"].as_object_mut().unwrap().retain(|path, _| {
-                    matches!(path.as_str(), "tests/rust/sdk_acceptance.rs" | "tests/rust/media_acceptance.rs")
-                });
+                artifact["harnesses"]
+                    .as_object_mut()
+                    .unwrap()
+                    .retain(|path, _| {
+                        matches!(
+                            path.as_str(),
+                            "tests/rust/sdk_acceptance.rs" | "tests/rust/media_acceptance.rs"
+                        )
+                    });
                 (phase.to_owned(), artifact)
             })
             .collect();
@@ -139,7 +151,9 @@ impl Fixture {
         }
     }
     fn bind(&self) -> std::io::Result<Value> {
-        let mut reports = self.artifact_reports.iter()
+        let mut reports = self
+            .artifact_reports
+            .iter()
             .map(|(phase, report)| (phase.clone(), serde_json::to_vec(report).unwrap()))
             .collect::<BTreeMap<_, _>>();
         reports.insert("built".into(), serde_json::to_vec(&self.report).unwrap());
@@ -190,14 +204,20 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
         let unix_mapping = "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence";
         let wide_exit = "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status";
         if target.contains("windows") {
-            assert_eq!(bounded["named_execution"][unix_mapping]["applicable"], false);
+            assert_eq!(
+                bounded["named_execution"][unix_mapping]["applicable"],
+                false
+            );
             assert_eq!(
                 bounded["named_execution"][wide_exit]["exact_test_name"],
                 "actual_developer_cli_preserves_full_windows_child_exit_status"
             );
         } else {
             assert_eq!(bounded["named_execution"][wide_exit]["applicable"], false);
-            assert_eq!(bounded["named_execution"][unix_mapping]["harness"], "native/lib.rs");
+            assert_eq!(
+                bounded["named_execution"][unix_mapping]["harness"],
+                "native/lib.rs"
+            );
         }
         let activation = result["entries"]
             .as_array()
@@ -207,9 +227,15 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
             .unwrap();
         let platform_signature = "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation";
         if target.contains("linux") {
-            assert_eq!(activation["named_execution"][platform_signature]["applicable"], false);
+            assert_eq!(
+                activation["named_execution"][platform_signature]["applicable"],
+                false
+            );
         } else {
-            assert_eq!(activation["named_execution"][platform_signature]["harness"], "tests/rust/artifact_signatures.rs");
+            assert_eq!(
+                activation["named_execution"][platform_signature]["harness"],
+                "tests/rust/artifact_signatures.rs"
+            );
         }
         let logging = result["entries"]
             .as_array()
@@ -233,26 +259,52 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
         assert_eq!(result["sdk_artifact_phase_execution_verified"], true);
         assert_eq!(result["sdk_tested_binary_sha256"], "6".repeat(64));
         for phase in ["built", "release", "extracted-intermediate"] {
-            let report = if phase == "built" { &fixture.report } else { &fixture.artifact_reports[phase] };
-            assert_eq!(result["phase_reports_sha256"][phase], sha(&serde_json::to_vec(report).unwrap()));
+            let report = if phase == "built" {
+                &fixture.report
+            } else {
+                &fixture.artifact_reports[phase]
+            };
+            assert_eq!(
+                result["phase_reports_sha256"][phase],
+                sha(&serde_json::to_vec(report).unwrap())
+            );
         }
         for entry in result["entries"].as_array().unwrap() {
-            let expected = entry["named_execution"].as_object().unwrap().iter()
-                .filter(|(_, execution)| matches!(execution["harness"].as_str(),
-                    Some("tests/rust/sdk_acceptance.rs" | "tests/rust/media_acceptance.rs")))
+            let expected = entry["named_execution"]
+                .as_object()
+                .unwrap()
+                .iter()
+                .filter(|(_, execution)| {
+                    matches!(
+                        execution["harness"].as_str(),
+                        Some("tests/rust/sdk_acceptance.rs" | "tests/rust/media_acceptance.rs")
+                    )
+                })
                 .collect::<BTreeMap<_, _>>();
             let phases = entry["artifact_phase_execution"].as_object().unwrap();
             if expected.is_empty() {
                 assert!(phases.is_empty());
             } else {
-                assert_eq!(phases.keys().map(String::as_str).collect::<BTreeSet<_>>(),
-                    BTreeSet::from(["release", "extracted-intermediate"]));
+                assert_eq!(
+                    phases.keys().map(String::as_str).collect::<BTreeSet<_>>(),
+                    BTreeSet::from(["release", "extracted-intermediate"])
+                );
                 for executions in phases.values() {
-                    assert_eq!(executions.as_object().unwrap().iter().collect::<BTreeMap<_, _>>(), expected);
+                    assert_eq!(
+                        executions
+                            .as_object()
+                            .unwrap()
+                            .iter()
+                            .collect::<BTreeMap<_, _>>(),
+                        expected
+                    );
                 }
             }
             let scenarios = entry["scenario_execution"].as_object().unwrap();
-            assert_eq!(scenarios.len(), entry["scenarios"].as_array().unwrap().len());
+            assert_eq!(
+                scenarios.len(),
+                entry["scenarios"].as_array().unwrap().len()
+            );
             for scenario in entry["scenarios"].as_array().unwrap() {
                 let bindings = scenarios[scenario.as_str().unwrap()].as_object().unwrap();
                 assert!(!bindings.is_empty());
@@ -263,7 +315,10 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
         }
         let mapped = &logging["named_execution"];
         let expected = "tests/rust/runtime_contracts.rs::log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed";
-        assert_eq!(mapped[expected]["harness"], "tests/rust/runtime_contracts.rs");
+        assert_eq!(
+            mapped[expected]["harness"],
+            "tests/rust/runtime_contracts.rs"
+        );
         let helpers = result["entries"]
             .as_array()
             .unwrap()
@@ -271,8 +326,14 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
             .find(|entry| entry["source"] == "tests/tooling/native_host_fixture_contracts.mjs")
             .unwrap();
         let diagnostic = "tests/rust/sdk_acceptance/contracts.rs::probe_diagnostics_expose_only_fixed_stages_and_nonnegative_numeric_durations";
-        assert_eq!(helpers["named_execution"][diagnostic]["harness"], "tests/rust/sdk_acceptance.rs");
-        assert_eq!(helpers["named_execution"][diagnostic]["exact_test_name"], "probe_diagnostics_expose_only_fixed_stages_and_nonnegative_numeric_durations");
+        assert_eq!(
+            helpers["named_execution"][diagnostic]["harness"],
+            "tests/rust/sdk_acceptance.rs"
+        );
+        assert_eq!(
+            helpers["named_execution"][diagnostic]["exact_test_name"],
+            "probe_diagnostics_expose_only_fixed_stages_and_nonnegative_numeric_durations"
+        );
         assert_eq!(
             mapped[expected]["exact_test_name"],
             "log_runs_are_distinct_redacted_at_all_levels_immutable_and_closed"
@@ -287,18 +348,42 @@ fn sdk_tooling_bindings_require_both_authenticated_artifact_phases_and_exact_nam
     let media = "tests/rust/media_acceptance.rs";
     let mapped_name = "real_sdk_media_kinds_modes_outputs_and_legacy_catalog";
     let result = original.bind().unwrap();
-    let entry = result["entries"].as_array().unwrap().iter()
-        .find(|entry| entry["source"] == source).unwrap();
+    let entry = result["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["source"] == source)
+        .unwrap();
     for phase in ["release", "extracted-intermediate"] {
-        assert_eq!(entry["artifact_phase_execution"][phase][format!("{media}::{mapped_name}")]["exact_test_name"], mapped_name);
-        for mutation in ["missing", "extra", "phase", "attempt", "source", "target",
-            "provenance", "source-hash", "binary", "different-binary", "missing-harness", "extra-harness",
-            "cleanup", "failed", "missing-name"] {
+        assert_eq!(
+            entry["artifact_phase_execution"][phase][format!("{media}::{mapped_name}")]["exact_test_name"],
+            mapped_name
+        );
+        for mutation in [
+            "missing",
+            "extra",
+            "phase",
+            "attempt",
+            "source",
+            "target",
+            "provenance",
+            "source-hash",
+            "binary",
+            "different-binary",
+            "missing-harness",
+            "extra-harness",
+            "cleanup",
+            "failed",
+            "missing-name",
+        ] {
             let mut fixture = original.clone();
             if mutation == "missing" {
                 fixture.artifact_reports.remove(phase);
             } else if mutation == "extra" {
-                fixture.artifact_reports.insert("extracted-signed".into(), fixture.artifact_reports[phase].clone());
+                fixture.artifact_reports.insert(
+                    "extracted-signed".into(),
+                    fixture.artifact_reports[phase].clone(),
+                );
             } else {
                 let report = fixture.artifact_reports.get_mut(phase).unwrap();
                 match mutation {
@@ -307,11 +392,18 @@ fn sdk_tooling_bindings_require_both_authenticated_artifact_phases_and_exact_nam
                     "source" => report["identity"]["source_sha"] = json!("b".repeat(40)),
                     "target" => report["identity"]["target"] = json!("aarch64-unknown-linux-gnu"),
                     "provenance" => report["provenance_sha256"] = json!("7".repeat(64)),
-                    "source-hash" => report["harnesses"][media]["source_sha256"] = json!("8".repeat(64)),
+                    "source-hash" => {
+                        report["harnesses"][media]["source_sha256"] = json!("8".repeat(64))
+                    }
                     "binary" => report["tested_binary_sha256"] = Value::Null,
                     "different-binary" => report["tested_binary_sha256"] = json!("9".repeat(64)),
-                    "missing-harness" => { report["harnesses"].as_object_mut().unwrap().remove(media); }
-                    "extra-harness" => report["harnesses"]["native/lib.rs"] = fixture.report["harnesses"]["native/lib.rs"].clone(),
+                    "missing-harness" => {
+                        report["harnesses"].as_object_mut().unwrap().remove(media);
+                    }
+                    "extra-harness" => {
+                        report["harnesses"]["native/lib.rs"] =
+                            fixture.report["harnesses"]["native/lib.rs"].clone()
+                    }
                     "cleanup" => report["harnesses"][media]["cleanup_verified"] = json!(false),
                     "failed" => report["harnesses"][media]["exit_code"] = json!(1),
                     "missing-name" => {
@@ -372,10 +464,9 @@ fn stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected() {
                     .insert("scripts/bounded.mjs".into(), "0".repeat(64));
             }
             "replacement" => {
-                fixture.dependencies.insert(
-                    "native/devtools/supervisor.rs".into(),
-                    "0".repeat(64),
-                );
+                fixture
+                    .dependencies
+                    .insert("native/devtools/supervisor.rs".into(), "0".repeat(64));
             }
             "helper" => {
                 fixture.dependencies.insert(
@@ -410,15 +501,22 @@ fn stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected() {
                 let harness = &mut fixture.report["harnesses"]["tooling/tests/ci_contracts.rs"];
                 harness["passed"] = json!([]);
                 harness["count"] = json!(0);
-                harness["summary"] = json!("test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s");
+                harness["summary"] = json!(
+                    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+                );
             }
             "unrelated-names" => {
                 let harness = &mut fixture.report["harnesses"]["tests/rust/sdk_acceptance.rs"];
                 harness["passed"] = json!(["unrelated_passing_test"]);
                 harness["count"] = json!(1);
-                harness["summary"] = json!("test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s");
+                harness["summary"] = json!(
+                    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+                );
             }
-            "duplicate-mapping" | "unregistered-mapping" | "wrong-mapping-harness" | "empty-mappings" => {
+            "duplicate-mapping"
+            | "unregistered-mapping"
+            | "wrong-mapping-harness"
+            | "empty-mappings" => {
                 let mut manifest: Value = serde_json::from_slice(&fixture.manifest).unwrap();
                 let mappings = &mut manifest["entries"][0]["named_tests"];
                 match mutation {
@@ -430,7 +528,9 @@ fn stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected() {
                         mappings[0] = json!("tests/rust/devtool_supervisor.rs::command");
                     }
                     "wrong-mapping-harness" => {
-                        mappings[0] = json!("tests/rust/config_parity.rs::source_generated_defaults_compact_advanced_and_overrides_match");
+                        mappings[0] = json!(
+                            "tests/rust/config_parity.rs::source_generated_defaults_compact_advanced_and_overrides_match"
+                        );
                     }
                     _ => *mappings = json!([]),
                 }
@@ -440,28 +540,48 @@ fn stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected() {
                     sha(&fixture.manifest),
                 );
             }
-            "missing-scenario-bindings" | "missing-scenario" | "extra-scenario"
-            | "duplicate-scenario" | "empty-scenario-tests" | "duplicate-scenario-test"
-            | "unknown-scenario-test" | "unused-named-test" => {
+            "missing-scenario-bindings"
+            | "missing-scenario"
+            | "extra-scenario"
+            | "duplicate-scenario"
+            | "empty-scenario-tests"
+            | "duplicate-scenario-test"
+            | "unknown-scenario-test"
+            | "unused-named-test" => {
                 let mut manifest: Value = serde_json::from_slice(&fixture.manifest).unwrap();
                 let row = &mut manifest["entries"][0];
                 let scenario = row["scenarios"][0].as_str().unwrap().to_owned();
                 match mutation {
-                    "missing-scenario-bindings" => { row.as_object_mut().unwrap().remove("scenario_tests"); }
-                    "missing-scenario" => { row["scenario_tests"].as_object_mut().unwrap().remove(&scenario); }
+                    "missing-scenario-bindings" => {
+                        row.as_object_mut().unwrap().remove("scenario_tests");
+                    }
+                    "missing-scenario" => {
+                        row["scenario_tests"]
+                            .as_object_mut()
+                            .unwrap()
+                            .remove(&scenario);
+                    }
                     "extra-scenario" => {
-                        row["scenario_tests"]["Unrequested scenario"] = row["scenario_tests"][&scenario].clone();
+                        row["scenario_tests"]["Unrequested scenario"] =
+                            row["scenario_tests"][&scenario].clone();
                     }
                     "duplicate-scenario" => {
-                        row["scenarios"].as_array_mut().unwrap().push(json!(scenario));
+                        row["scenarios"]
+                            .as_array_mut()
+                            .unwrap()
+                            .push(json!(scenario));
                     }
                     "empty-scenario-tests" => row["scenario_tests"][&scenario] = json!([]),
                     "duplicate-scenario-test" => {
                         let first = row["scenario_tests"][&scenario][0].clone();
-                        row["scenario_tests"][&scenario].as_array_mut().unwrap().push(first);
+                        row["scenario_tests"][&scenario]
+                            .as_array_mut()
+                            .unwrap()
+                            .push(first);
                     }
                     "unknown-scenario-test" => {
-                        row["scenario_tests"][&scenario][0] = json!("tooling/tests/ci_contracts.rs::unrelated");
+                        row["scenario_tests"][&scenario][0] =
+                            json!("tooling/tests/ci_contracts.rs::unrelated");
                     }
                     _ => {
                         let first = row["named_tests"][0].clone();
@@ -471,7 +591,10 @@ fn stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected() {
                     }
                 }
                 fixture.manifest = serde_json::to_vec(&manifest).unwrap();
-                fixture.dependencies.insert(tooling_execution::MANIFEST_FILE.into(), sha(&fixture.manifest));
+                fixture.dependencies.insert(
+                    tooling_execution::MANIFEST_FILE.into(),
+                    sha(&fixture.manifest),
+                );
             }
             "cleanup" => {
                 fixture.report["harnesses"]["native/lib.rs"]["cleanup_verified"] = json!(false);

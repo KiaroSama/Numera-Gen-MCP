@@ -245,47 +245,48 @@ async fn late_provider_handler_error_fails_even_when_scenario_body_already_passe
     };
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     host::scenario(10000, async {
-    for run_fails in [false, true] {
-        let entered = Gate::new();
-        let enter = entered.clone();
-        let provider = Provider::new(move |_, stop| {
-            let enter = enter.clone();
-            async move {
-                enter.release();
-                stop.cancelled().await;
-                Err("Controlled late handler failure".into())
+        for run_fails in [false, true] {
+            let entered = Gate::new();
+            let enter = entered.clone();
+            let provider = Provider::new(move |_, stop| {
+                let enter = enter.clone();
+                async move {
+                    enter.release();
+                    stop.cancelled().await;
+                    Err("Controlled late handler failure".into())
+                }
+            })
+            .await;
+            let address = provider.origin.strip_prefix("http://").unwrap();
+            let mut socket = tokio::net::TcpStream::connect(address).await.unwrap();
+            socket
+                .write_all(b"GET / HTTP/1.1\r\nHost: fixture\r\nConnection: close\r\n\r\n")
+                .await
+                .unwrap();
+            host::bounded(1000, entered.wait()).await;
+            let mut errors = if run_fails {
+                vec!["Controlled original scenario failure".to_owned()]
+            } else {
+                Vec::new()
+            };
+            errors.extend(provider.finish().await);
+            assert!(
+                errors
+                    .iter()
+                    .any(|e| e == "Controlled late handler failure")
+            );
+            if run_fails {
+                assert_eq!(errors[0], "Controlled original scenario failure");
             }
-        })
-        .await;
-        let address = provider.origin.strip_prefix("http://").unwrap();
-        let mut socket = tokio::net::TcpStream::connect(address).await.unwrap();
-        socket
-            .write_all(b"GET / HTTP/1.1\r\nHost: fixture\r\nConnection: close\r\n\r\n")
-            .await
-            .unwrap();
-        host::bounded(1000, entered.wait()).await;
-        let mut errors = if run_fails {
-            vec!["Controlled original scenario failure".to_owned()]
-        } else {
-            Vec::new()
-        };
-        errors.extend(provider.finish().await);
-        assert!(
-            errors
-                .iter()
-                .any(|e| e == "Controlled late handler failure")
-        );
-        if run_fails {
-            assert_eq!(errors[0], "Controlled original scenario failure");
+            let mut bytes = Vec::new();
+            host::bounded(1000, socket.read_to_end(&mut bytes))
+                .await
+                .unwrap();
+            assert!(
+                bytes.is_empty(),
+                "late failed handler must close its owned response socket"
+            );
         }
-        let mut bytes = Vec::new();
-        host::bounded(1000, socket.read_to_end(&mut bytes))
-            .await
-            .unwrap();
-        assert!(
-            bytes.is_empty(),
-            "late failed handler must close its owned response socket"
-        );
-    }
-    }).await;
+    })
+    .await;
 }

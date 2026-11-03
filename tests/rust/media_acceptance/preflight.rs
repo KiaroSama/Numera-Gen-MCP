@@ -122,13 +122,21 @@ async fn explicit_image_expectations_survive_original_publication_and_local_reco
             let directory = f::directory(&work, &format!("media-expectations-{label}"));
             let (url, mime, bytes) = if label == "jpeg" {
                 let image = image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(
-                    1, 1, image::Rgb([1, 2, 3]),
+                    1,
+                    1,
+                    image::Rgb([1, 2, 3]),
                 ));
                 let mut bytes = std::io::Cursor::new(Vec::new());
-                image.write_to(&mut bytes, image::ImageFormat::Jpeg).unwrap();
+                image
+                    .write_to(&mut bytes, image::ImageFormat::Jpeg)
+                    .unwrap();
                 let bytes = bytes.into_inner();
                 let encoded = base64::engine::general_purpose::STANDARD.encode(&bytes);
-                (format!("data:image/jpeg;base64,{encoded}"), "image/jpeg", bytes)
+                (
+                    format!("data:image/jpeg;base64,{encoded}"),
+                    "image/jpeg",
+                    bytes,
+                )
             } else {
                 s::data("image")
             };
@@ -164,7 +172,10 @@ async fn explicit_image_expectations_survive_original_publication_and_local_reco
             let posted = wire.captured();
             let body = posted.iter().find(|r| r.method == "POST").unwrap().json();
             assert_eq!(body["num_images"], if mismatch { 2 } else { 1 });
-            assert_eq!(body["output_format"], if mismatch { "jpeg" } else { format });
+            assert_eq!(
+                body["output_format"],
+                if mismatch { "jpeg" } else { format }
+            );
             if recover {
                 assert_eq!(done["status"], "finalizing");
                 assert_eq!(done["generation_outcome"], "completed");
@@ -175,10 +186,15 @@ async fn explicit_image_expectations_survive_original_publication_and_local_reco
                     "num_images":1,"output_format":"png","image_size":{"width":1,"height":1}
                 });
                 config["connections"]["local"]["modelOverrides"][s::IMAGE]["defaults"] = json!({});
-                let mut reopened = s::start(&directory, &config, "media-expectations-reopened").await;
+                let mut reopened =
+                    s::start(&directory, &config, "media-expectations-reopened").await;
                 let network_before = wire.captured().len();
                 done = reopened.job(&id, true).await;
-                assert_eq!(wire.captured().len(), network_before, "retained original recovery is local");
+                assert_eq!(
+                    wire.captured().len(),
+                    network_before,
+                    "retained original recovery is local"
+                );
                 let again = reopened.job(&id, true).await;
                 assert_eq!(again["outputs"], done["outputs"]);
                 assert_eq!(again["deviations"], done["deviations"]);
@@ -186,7 +202,10 @@ async fn explicit_image_expectations_survive_original_publication_and_local_reco
             } else {
                 first.close().await.unwrap();
             }
-            assert_eq!(done["status"], if mismatch { "partial" } else { "completed" });
+            assert_eq!(
+                done["status"],
+                if mismatch { "partial" } else { "completed" }
+            );
             assert_eq!(done["storage_outcome"], "completed");
             assert_eq!(done["generation_outcome"], "completed");
             assert!(done["errors"].as_array().unwrap().is_empty());
@@ -196,8 +215,14 @@ async fn explicit_image_expectations_survive_original_publication_and_local_reco
             assert_eq!(saved["mime_type"], mime);
             assert_eq!(saved["media"]["width"], 1);
             assert_eq!(saved["media"]["height"], 1);
-            assert_eq!(std::fs::read(saved["path"].as_str().unwrap()).unwrap(), bytes);
-            assert_eq!(saved["sha256"], numera_gen_mcp::compat::hash::sha256(&bytes));
+            assert_eq!(
+                std::fs::read(saved["path"].as_str().unwrap()).unwrap(),
+                bytes
+            );
+            assert_eq!(
+                saved["sha256"],
+                numera_gen_mcp::compat::hash::sha256(&bytes)
+            );
             let expected = if mismatch {
                 json!([
                     "Output 0 format is png, not requested jpeg.",
@@ -208,7 +233,11 @@ async fn explicit_image_expectations_survive_original_publication_and_local_reco
                 json!([])
             };
             assert_eq!(done["deviations"], expected);
-            assert_eq!(wire.posts(), 1, "deviations must never trigger regeneration");
+            assert_eq!(
+                wire.posts(),
+                1,
+                "deviations must never trigger regeneration"
+            );
             wire.close().await;
         })
         .await;

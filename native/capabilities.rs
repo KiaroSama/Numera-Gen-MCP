@@ -221,10 +221,10 @@ fn media_capabilities(connection: &Value, model: &JsString) -> Value {
                 } else {
                     "unknown"
                 });
-                if let Some(contract) = contract {
-                    if let Some(evidence) = cap["evidence"].as_array_mut() {
-                        evidence.push(json!({"kind":"documented","mode":mode,"source":contract.evidence,"execution_verified":false}));
-                    }
+                if let Some(contract) = contract
+                    && let Some(evidence) = cap["evidence"].as_array_mut()
+                {
+                    evidence.push(json!({"kind":"documented","mode":mode,"source":contract.evidence,"execution_verified":false}));
                 }
             }
         }

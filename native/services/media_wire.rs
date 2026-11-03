@@ -1,10 +1,9 @@
 use crate::{
     compat::value::Value,
     error::{NumeraError, Result},
-    http::api::{self, Body, Operation},
+    http::api::{self, Operation},
     media::fal,
 };
-use reqwest::Method;
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
@@ -76,9 +75,7 @@ pub fn job(handle: &fal::Handle) -> Result<Value> {
 pub async fn request_until(
     connection: &Value,
     headers: &HashMap<String, String>,
-    path: &str,
-    method: Method,
-    body: Body,
+    wire: Operation<'_>,
     cancel: &CancellationToken,
     cancellation: bool,
     deadline: tokio::time::Instant,
@@ -91,11 +88,8 @@ pub async fn request_until(
     headers.insert("X-Fal-Store-IO".into(), "0".into());
     let query = crate::compat::value::json!({"logs":"0"});
     let wire = Operation {
-        operation: path,
-        prefix: "",
-        method,
-        body,
-        query: (!cancellation && path.ends_with("/status")).then_some(&query),
+        query: (!cancellation && wire.operation.ends_with("/status")).then_some(&query),
+        ..wire
     };
     let operation = async {
         if cancellation {

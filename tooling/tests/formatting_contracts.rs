@@ -34,13 +34,19 @@ impl Drop for Fixture {
 fn formatting_archive_returns_only_tracked_workspace_rust_with_exact_unicode_bytes() {
     let fixture = Fixture::new();
     let expected = BTreeMap::from([
-        ("native/lib.rs", b"pub const NAME: &str = \"Numera\";\n".to_vec()),
+        (
+            "native/lib.rs",
+            b"pub const NAME: &str = \"Numera\";\n".to_vec(),
+        ),
         (
             "tests/rust/example.rs",
             "// تصویر 東京\r\nfn example() {}\r\n".as_bytes().to_vec(),
         ),
         ("tooling/src/lib.rs", b"pub fn task() {}\n".to_vec()),
-        ("tooling/tests/example.rs", b"#[test]\nfn example() {}\n".to_vec()),
+        (
+            "tooling/tests/example.rs",
+            b"#[test]\nfn example() {}\n".to_vec(),
+        ),
     ])
     .into_iter()
     .map(|(name, bytes)| (name.to_owned(), bytes))
@@ -77,7 +83,10 @@ fn formatting_archive_returns_only_tracked_workspace_rust_with_exact_unicode_byt
         actual.insert(file.name().unwrap().into_owned(), data);
     }
     assert_eq!(actual, expected);
-    assert_eq!(formatting::archive(&fixture.0, inventory.as_bytes()).unwrap(), bytes);
+    assert_eq!(
+        formatting::archive(&fixture.0, inventory.as_bytes()).unwrap(),
+        bytes
+    );
 }
 
 #[test]

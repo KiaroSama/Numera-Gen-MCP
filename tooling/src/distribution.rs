@@ -367,11 +367,19 @@ pub fn stage(context: &Context, target: &str) -> io::Result<()> {
         || context.relative(crate::promotion::RECEIPT)?.try_exists()?
     {
         let original = crate::promotion::selected(context, target)?;
-        let suffix = if target.contains("windows") { ".exe" } else { "" };
-        if original["archive"] != name || original["archive_sha256"] != sha(&bytes)
-            || original["unsigned_binary_sha256"] != sha(&entries[&format!("bin/numera-gen-mcp{suffix}")])
+        let suffix = if target.contains("windows") {
+            ".exe"
+        } else {
+            ""
+        };
+        if original["archive"] != name
+            || original["archive_sha256"] != sha(&bytes)
+            || original["unsigned_binary_sha256"]
+                != sha(&entries[&format!("bin/numera-gen-mcp{suffix}")])
         {
-            return Err(fail("Signing download differs from original executed package bytes."));
+            return Err(fail(
+                "Signing download differs from original executed package bytes.",
+            ));
         }
     }
     let destination = context.relative(&format!(".ci-work/prepared/{target}"))?;

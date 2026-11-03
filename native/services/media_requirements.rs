@@ -9,7 +9,10 @@ pub fn snapshot(endpoint: &str, parameters: &serde_json::Value) -> Result<Value>
     let mut expected = json!({});
     // Only explicit effective parameters of these exact contracts define image expectations.
     // Other media and mesh sidecars must not inherit image dimensions or an inferred format.
-    if matches!(endpoint, "fal-ai/flux/dev" | "fal-ai/flux/dev/image-to-image") {
+    if matches!(
+        endpoint,
+        "fal-ai/flux/dev" | "fal-ai/flux/dev/image-to-image"
+    ) {
         expected["kind"] = json!("image");
         expected["role"] = json!("image");
         for key in ["num_images", "output_format", "image_size"] {
@@ -44,7 +47,9 @@ pub fn deviations(receipt: &Receipt, inspected: &Inspected, role: &str, index: u
     ) && (inspected.metadata["width"].as_u64() != Some(width)
         || inspected.metadata["height"].as_u64() != Some(height))
     {
-        deviations.push(format!("Output {index} dimensions differ from requested size."));
+        deviations.push(format!(
+            "Output {index} dimensions differ from requested size."
+        ));
     }
     deviations
 }
@@ -67,7 +72,9 @@ pub fn reconcile_count(receipt: &mut Receipt) -> Result<()> {
         })
     });
     if count != actual as u64 {
-        deviations.push(json!(format!("Requested {count} image original(s), saved {actual}.")));
+        deviations.push(json!(format!(
+            "Requested {count} image original(s), saved {actual}."
+        )));
     }
     Ok(())
 }

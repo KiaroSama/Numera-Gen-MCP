@@ -158,9 +158,8 @@ fn merge_toml(text: &str, remove: bool, executable: &Path, config: &Path) -> Res
             return Err(invalid());
         }
     }
-    let owned = |s: &str| {
-        s == "mcp_servers.numera-gen-mcp" || s.starts_with("mcp_servers.numera-gen-mcp.")
-    };
+    let owned =
+        |s: &str| s == "mcp_servers.numera-gen-mcp" || s.starts_with("mcp_servers.numera-gen-mcp.");
     if sections.iter().any(|(_, s)| owned(s)) && !headers.contains("mcp_servers.numera-gen-mcp") {
         return Err(invalid());
     }

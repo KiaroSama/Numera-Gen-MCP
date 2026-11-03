@@ -30,16 +30,21 @@ pub struct Client {
 }
 impl Client {
     pub fn new(service: Service) -> Self {
-        Self { service: Some(service), closing: None }
+        Self {
+            service: Some(service),
+            closing: None,
+        }
     }
     pub async fn close(&mut self) -> Result<()> {
         if let Some(mut service) = self.service.take() {
-            self.closing = Some(tokio_util::task::AbortOnDropHandle::new(tokio::spawn(async move {
-                match timeout(Duration::from_secs(5), service.close()).await {
-                    Ok(Ok(_)) => Ok(()),
-                    _ => Err("SDK client close failed".into()),
-                }
-            })));
+            self.closing = Some(tokio_util::task::AbortOnDropHandle::new(tokio::spawn(
+                async move {
+                    match timeout(Duration::from_secs(5), service.close()).await {
+                        Ok(Ok(_)) => Ok(()),
+                        _ => Err("SDK client close failed".into()),
+                    }
+                },
+            )));
         }
         if let Some(task) = self.closing.as_mut() {
             let result = task.await;
@@ -67,7 +72,8 @@ impl Drop for Client {
         }
         if let Some(task) = self.closing.take() {
             super::cleanup::defer(async move {
-                super::cleanup::join(task, 6000, false).await?
+                super::cleanup::join(task, 6000, false)
+                    .await?
                     .ok_or("SDK close owner cancelled")?
             });
         }
@@ -395,13 +401,16 @@ impl Drop for Host {
         // The anchored child stops synchronously; readers settle before its workspace is removed.
         if let Some(mut child) = self.child.take() {
             if child.stop(Instant::now() + Duration::from_secs(2)).is_err() {
-                super::cleanup::defer(async { Err("Owned native child cleanup unverified".into()) });
+                super::cleanup::defer(async {
+                    Err("Owned native child cleanup unverified".into())
+                });
             }
         }
         if let Some(task) = self.diagnostics.take() {
             let task = tokio_util::task::AbortOnDropHandle::new(task);
             super::cleanup::defer(async move {
-                super::cleanup::join(task, 2000, false).await?
+                super::cleanup::join(task, 2000, false)
+                    .await?
                     .ok_or("SDK diagnostic owner cancelled")?
             });
         }

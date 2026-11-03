@@ -1,7 +1,7 @@
-mod common;
 #[allow(dead_code)]
 #[path = "sdk_acceptance/cleanup.rs"]
 mod cleanup;
+mod common;
 #[path = "media_acceptance/failures.rs"]
 mod failures;
 #[allow(dead_code)]

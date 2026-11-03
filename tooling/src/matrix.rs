@@ -72,7 +72,10 @@ pub fn verify_contexts(observed: &BTreeMap<String, Value>) -> io::Result<()> {
     }
     Ok(())
 }
-pub(crate) fn decode(bytes: &[u8], expected: &BTreeSet<String>) -> io::Result<BTreeMap<String, Vec<u8>>> {
+pub(crate) fn decode(
+    bytes: &[u8],
+    expected: &BTreeSet<String>,
+) -> io::Result<BTreeMap<String, Vec<u8>>> {
     if bytes.is_empty() || bytes.len() > LIMIT || expected.is_empty() || expected.len() > 32 {
         return Err(fail(
             "Execution artifact exceeds its inventory or byte bounds.",
@@ -423,7 +426,9 @@ pub fn check(context: &Context) -> io::Result<()> {
     let review_path = crate::source_review::REVIEW_FILE;
     let review_bytes = ledger::read(&context.root, review_path)?;
     if dependencies.get(review_path) != Some(&sha(&review_bytes)) {
-        return Err(fail("Assertion review is not part of the tracked execution provenance."));
+        return Err(fail(
+            "Assertion review is not part of the tracked execution provenance.",
+        ));
     }
     let review = ledger::parse(&review_bytes)?;
     let tooling_manifest = ledger::read(&context.root, crate::tooling_execution::MANIFEST_FILE)?;
@@ -607,7 +612,8 @@ pub fn check(context: &Context) -> io::Result<()> {
         "contexts":records,"cases":470,"suites":50,"current_named_execution_verified":true,
         "source_review_sha256":sha(&review_bytes),"current_assertion_review_verified":true,
         "semantic_parity_claimed":false,"qualification_verified":false,"original_evidence_rewritten":false});
-    let bytes = serde_json::to_vec_pretty(&report).map_err(|_| fail("Cannot encode matrix evidence."))?;
+    let bytes =
+        serde_json::to_vec_pretty(&report).map_err(|_| fail("Cannot encode matrix evidence."))?;
     context.write_new(".ci-work/native/execution-matrix.json", &bytes)?;
     println!(
         "{}",

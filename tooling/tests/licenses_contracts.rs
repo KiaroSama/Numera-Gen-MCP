@@ -21,7 +21,9 @@ impl Fixture {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../.ci-work/tooling-tests")
             .join(format!("notice {}", uuid::Uuid::new_v4()));
-        let package_root = root.join(format!(".ci-cache/cargo/registry/src/fixture-registry/{name}-{version}"));
+        let package_root = root.join(format!(
+            ".ci-cache/cargo/registry/src/fixture-registry/{name}-{version}"
+        ));
         fs::create_dir_all(&package_root).unwrap();
         let output = root.join("notices");
         Self {
@@ -68,7 +70,10 @@ fn actual_and_declared_nonstandard_notices_preserve_exact_bytes_and_hashes() {
     fs::write(fixture.package_root.join("legal/COPYRIGHT"), expected).unwrap();
     package["license_file"] = json!("terms.txt");
     let result = preserve_package(&context, &package, &fixture.output, &json!({})).unwrap();
-    assert_eq!(result["notices"], json!(["LICENSE-MIT", "legal/COPYRIGHT", "terms.txt"]));
+    assert_eq!(
+        result["notices"],
+        json!(["LICENSE-MIT", "legal/COPYRIGHT", "terms.txt"])
+    );
     for name in result["notices"].as_array().unwrap() {
         let name = name.as_str().unwrap();
         let original = fs::read(fixture.package_root.join(name)).unwrap();
@@ -105,7 +110,11 @@ fn unknown_missing_notice_and_escaping_declared_file_fail_closed() {
 fn license_declarations_require_valid_nonempty_strings_before_copying_real_notice_bytes() {
     let fixture = Fixture::new();
     let context = fixture.context();
-    fs::write(fixture.package_root.join("LICENSE"), b"Original notice bytes.\n").unwrap();
+    fs::write(
+        fixture.package_root.join("LICENSE"),
+        b"Original notice bytes.\n",
+    )
+    .unwrap();
     for (license, license_file, accepted) in [
         (json!("MIT"), Value::Null, true),
         (Value::Null, json!("LICENSE"), true),
@@ -125,10 +134,16 @@ fn license_declarations_require_valid_nonempty_strings_before_copying_real_notic
         let result = preserve_package(&context, &package, &fixture.output, &json!({}));
         assert_eq!(result.is_ok(), accepted);
         if accepted {
-            assert_eq!(fs::read(fixture.output.join("fixture-1.0.0/LICENSE")).unwrap(), b"Original notice bytes.\n");
+            assert_eq!(
+                fs::read(fixture.output.join("fixture-1.0.0/LICENSE")).unwrap(),
+                b"Original notice bytes.\n"
+            );
             fs::remove_dir_all(&fixture.output).unwrap();
         } else {
-            assert_eq!(result.unwrap_err().to_string(), "Dependency license declaration missing or invalid.");
+            assert_eq!(
+                result.unwrap_err().to_string(),
+                "Dependency license declaration missing or invalid."
+            );
             assert!(!fixture.output.exists());
         }
     }
@@ -159,12 +174,18 @@ fn notice_depth_and_aggregate_limits_fail_before_any_destination_write() {
         }
         let error = preserve_package(&context, &fixture.package(), &fixture.output, &json!({}))
             .unwrap_err();
-        assert_eq!(error.to_string(), if case == "depth" {
-            "Dependency notice nesting exceeds bound."
-        } else {
-            "Dependency notice aggregate exceeds bound."
-        });
-        assert!(!fixture.output.exists(), "{case} must fail before copying any notice");
+        assert_eq!(
+            error.to_string(),
+            if case == "depth" {
+                "Dependency notice nesting exceeds bound."
+            } else {
+                "Dependency notice aggregate exceeds bound."
+            }
+        );
+        assert!(
+            !fixture.output.exists(),
+            "{case} must fail before copying any notice"
+        );
     }
 }
 
@@ -190,9 +211,12 @@ fn reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash() {
         let context = fixture.context();
         let mut supplements = supplements.clone();
         // Synthetic cache bytes test the provenance join, not a real registry download.
-        supplements[identity]["crate_sha256"] = json!("131137cac86325f14df8e94bc27dc9961a8cfee82c7c6a12ed56f051cfa7e9f8");
+        supplements[identity]["crate_sha256"] =
+            json!("131137cac86325f14df8e94bc27dc9961a8cfee82c7c6a12ed56f051cfa7e9f8");
         let supplement = &supplements[identity];
-        let archive = fixture.root.join(format!(".ci-cache/cargo/registry/cache/fixture-registry/{name}-{version}.crate"));
+        let archive = fixture.root.join(format!(
+            ".ci-cache/cargo/registry/cache/fixture-registry/{name}-{version}.crate"
+        ));
         fs::create_dir_all(archive.parent().unwrap()).unwrap();
         fs::write(&archive, b"synthetic crate fixture; never unpacked\n").unwrap();
         assert!(!fixture.package_root.join(".cargo-checksum.json").exists());
@@ -225,7 +249,10 @@ fn reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash() {
             supplement["source_revision"]
         );
         assert_eq!(result["notice_sha256"]["LICENSE"], sha(&original));
-        assert_eq!(result["supplement"]["crate_sha256"], "131137cac86325f14df8e94bc27dc9961a8cfee82c7c6a12ed56f051cfa7e9f8");
+        assert_eq!(
+            result["supplement"]["crate_sha256"],
+            "131137cac86325f14df8e94bc27dc9961a8cfee82c7c6a12ed56f051cfa7e9f8"
+        );
         fs::remove_dir_all(&fixture.output).unwrap();
         for field in ["crate_sha256", "source_revision", "license", "sha256"] {
             let mut changed = supplements.clone();
@@ -240,12 +267,28 @@ fn reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash() {
                     "Supplement source identity differs."
                 }
             );
-            assert!(!fixture.output.exists(), "{identity}/{field} wrote unauthenticated notices");
+            assert!(
+                !fixture.output.exists(),
+                "{identity}/{field} wrote unauthenticated notices"
+            );
         }
-        for mutation in ["archive-changed", "archive-missing", "archive-linked", "vcs-changed", "vcs-missing", "source-missing", "crate-missing", "layout"] {
+        for mutation in [
+            "archive-changed",
+            "archive-missing",
+            "archive-linked",
+            "vcs-changed",
+            "vcs-missing",
+            "source-missing",
+            "crate-missing",
+            "layout",
+        ] {
             fs::write(&archive, b"synthetic crate fixture; never unpacked\n").unwrap();
             let vcs = fixture.package_root.join(".cargo_vcs_info.json");
-            fs::write(&vcs, json!({"git":{"sha1":supplement["source_revision"]}}).to_string()).unwrap();
+            fs::write(
+                &vcs,
+                json!({"git":{"sha1":supplement["source_revision"]}}).to_string(),
+            )
+            .unwrap();
             let mut changed = supplements.clone();
             let mut package = package.clone();
             match mutation {
@@ -258,21 +301,41 @@ fn reviewed_supplement_requires_exact_crate_revision_license_and_notice_hash() {
                 "vcs-changed" => fs::write(&vcs, br#"{"git":{"sha1":"changed"}}"#).unwrap(),
                 "vcs-missing" => fs::write(&vcs, b"{}").unwrap(),
                 "source-missing" => {
-                    changed[identity].as_object_mut().unwrap().remove("source_revision");
+                    changed[identity]
+                        .as_object_mut()
+                        .unwrap()
+                        .remove("source_revision");
                     fs::write(&vcs, b"{}").unwrap();
                 }
-                "crate-missing" => { changed[identity].as_object_mut().unwrap().remove("crate_sha256"); }
+                "crate-missing" => {
+                    changed[identity]
+                        .as_object_mut()
+                        .unwrap()
+                        .remove("crate_sha256");
+                }
                 "layout" => {
                     let misplaced = fixture.package_root.parent().unwrap().join("wrong-package");
                     fs::create_dir(&misplaced).unwrap();
-                    fs::write(misplaced.join(".cargo_vcs_info.json"), fs::read(&vcs).unwrap()).unwrap();
+                    fs::write(
+                        misplaced.join(".cargo_vcs_info.json"),
+                        fs::read(&vcs).unwrap(),
+                    )
+                    .unwrap();
                     package["manifest_path"] = json!(misplaced.join("Cargo.toml"));
                 }
                 _ => unreachable!(),
             }
-            assert!(preserve_package(&context, &package, &fixture.output, &changed).is_err(), "{identity}/{mutation}");
-            assert!(!fixture.output.exists(), "{identity}/{mutation} wrote unauthenticated notices");
-            if archive.exists() { fs::remove_file(&archive).unwrap(); }
+            assert!(
+                preserve_package(&context, &package, &fixture.output, &changed).is_err(),
+                "{identity}/{mutation}"
+            );
+            assert!(
+                !fixture.output.exists(),
+                "{identity}/{mutation} wrote unauthenticated notices"
+            );
+            if archive.exists() {
+                fs::remove_file(&archive).unwrap();
+            }
             assert_eq!(fs::read(&copy).unwrap(), original);
         }
     }

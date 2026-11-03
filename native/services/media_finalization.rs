@@ -2,7 +2,7 @@ use super::{
     finalization::locked, generation::Generation, media_request::decode_data, media_requirements,
 };
 use crate::{
-    compat::value::{Value, json},
+    compat::value::json,
     error::{NumeraError, Result},
     files::output,
     http::assets,

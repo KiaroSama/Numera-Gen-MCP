@@ -122,14 +122,21 @@ fn malformed_empty_negative_and_noninteger_coverage_reports_fail_closed() {
 
 #[test]
 fn tracked_text_requires_strict_utf8_and_the_exact_eight_hundred_source_line_boundary() {
-    for name in ["native/example.rs", "scripts/example.py", "scripts/example.mjs", "scripts/example.ps1"] {
+    for name in [
+        "native/example.rs",
+        "scripts/example.py",
+        "scripts/example.mjs",
+        "scripts/example.ps1",
+    ] {
         for ending in ["\n", "\r\n"] {
             let limit = format!("{}last", ending.repeat(799));
             inventory::validate_source(name, limit.as_bytes()).unwrap();
             inventory::validate_source(name, format!("{limit}{ending}").as_bytes()).unwrap();
             let oversized = format!("{limit}{ending}extra");
             assert_eq!(
-                inventory::validate_source(name, oversized.as_bytes()).unwrap_err().to_string(),
+                inventory::validate_source(name, oversized.as_bytes())
+                    .unwrap_err()
+                    .to_string(),
                 "Source exceeds 800 lines."
             );
         }
@@ -279,12 +286,42 @@ fn actual_task_cli_reports_help_invalid_input_and_unauthorized_signing_without_p
     let owner = fixture.context();
     let target = numera_gen_mcp::devtools::artifact::target();
     for (arguments, hosted, expected_code, expected) in [
-        (vec!["--help"], false, 0, "Usage: numera-task --root ABSOLUTE_ROOT COMMAND [ARGS]"),
-        (vec!["--root", "relative", "inventory"], true, 1, "Task root must be absolute."),
-        (vec!["--root", root_text], true, 1, "Explicit owning --root is required."),
-        (vec!["--root", root_text, "inventory"], false, 1, "Compilation and verification are hosted CI only."),
-        (vec!["--root", root_text, "unrequested"], true, 1, "Unsupported task command; no fallback was executed."),
-        (vec!["--root", root_text, "sign", target], true, 1, "Protected hosted signing route not authorized."),
+        (
+            vec!["--help"],
+            false,
+            0,
+            "Usage: numera-task --root ABSOLUTE_ROOT COMMAND [ARGS]",
+        ),
+        (
+            vec!["--root", "relative", "inventory"],
+            true,
+            1,
+            "Task root must be absolute.",
+        ),
+        (
+            vec!["--root", root_text],
+            true,
+            1,
+            "Explicit owning --root is required.",
+        ),
+        (
+            vec!["--root", root_text, "inventory"],
+            false,
+            1,
+            "Compilation and verification are hosted CI only.",
+        ),
+        (
+            vec!["--root", root_text, "unrequested"],
+            true,
+            1,
+            "Unsupported task command; no fallback was executed.",
+        ),
+        (
+            vec!["--root", root_text, "sign", target],
+            true,
+            1,
+            "Protected hosted signing route not authorized.",
+        ),
     ] {
         let mut command = Command::new(env!("CARGO_BIN_EXE_numera-task"));
         command.args(arguments).env_clear();
@@ -324,24 +361,45 @@ fn actual_task_cli_reports_help_invalid_input_and_unauthorized_signing_without_p
             assert!(stdout.is_empty());
             assert_eq!(stderr.trim(), format!("ERROR: {expected}"));
         }
-        for private in [root_text, "synthetic-invalid-identity", "synthetic-private-password"] {
+        for private in [
+            root_text,
+            "synthetic-invalid-identity",
+            "synthetic-private-password",
+        ] {
             assert!(!stdout.contains(private));
             assert!(!stderr.contains(private));
         }
-        for forbidden in [".ci-work/signing", ".ci-work/prepared", ".ci-work/release", "target"] {
+        for forbidden in [
+            ".ci-work/signing",
+            ".ci-work/prepared",
+            ".ci-work/release",
+            "target",
+        ] {
             assert!(!root.join(forbidden).exists());
         }
-        assert_eq!(fs::read(root.join("retained.txt")).unwrap(), b"unrelated original bytes");
-        assert_eq!(fs::read(root.join("Cargo.toml")).unwrap(), b"inert fixture; never compiled");
+        assert_eq!(
+            fs::read(root.join("retained.txt")).unwrap(),
+            b"unrelated original bytes"
+        );
+        assert_eq!(
+            fs::read(root.join("Cargo.toml")).unwrap(),
+            b"inert fixture; never compiled"
+        );
     }
 }
 
 #[test]
 fn successful_diagnostics_never_clear_required_format_or_other_gate_failures() {
     numera_task::ci::finish(Vec::new()).unwrap();
-    for failures in [vec!["format".to_owned()], vec!["format".to_owned(), "clippy".to_owned()]] {
+    for failures in [
+        vec!["format".to_owned()],
+        vec!["format".to_owned(), "clippy".to_owned()],
+    ] {
         let error = numera_task::ci::finish(failures).unwrap_err();
-        assert_eq!(error.to_string(), "Required native gates failed; retained coverage or artifacts do not override execution failures.");
+        assert_eq!(
+            error.to_string(),
+            "Required native gates failed; retained coverage or artifacts do not override execution failures."
+        );
     }
 }
 
@@ -350,7 +408,11 @@ fn comfy_transport_remains_in_services_outside_pure_adapter_mapping() {
     let project = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     assert!(!project.join("native/adapters/comfy.rs").exists());
     let service = fs::read_to_string(project.join("native/services/comfy.rs")).unwrap();
-    for entry in ["pub async fn prepare(", "pub async fn submit(", "pub async fn status("] {
+    for entry in [
+        "pub async fn prepare(",
+        "pub async fn submit(",
+        "pub async fn status(",
+    ] {
         assert!(service.contains(entry), "missing service boundary: {entry}");
     }
 }
@@ -405,7 +467,11 @@ fn client_json_examples_launch_only_native_bridge_and_do_not_embed_provider_cred
                 "TMPDIR":"C:/tools/numera-gen-mcp/.runtime/temp"})
         );
     }
-    assert!(desktop["mcpServers"]["numera-gen-mcp"].get("type").is_none());
+    assert!(
+        desktop["mcpServers"]["numera-gen-mcp"]
+            .get("type")
+            .is_none()
+    );
     assert_eq!(code["mcpServers"]["numera-gen-mcp"]["type"], "stdio");
     // The maintained example deliberately uses this exact small TOML surface; unknown lines fail.
     let codex = fs::read_to_string(project.join("examples/codex.toml")).unwrap();

@@ -48,7 +48,9 @@ pub fn verify(
             || value["historical_source_sha"] != SOURCE
             || value["historical_reference_sha256"] != REFERENCE_SHA256
         {
-            return Err(fail("Current assertion review historical identity differs."));
+            return Err(fail(
+                "Current assertion review historical identity differs.",
+            ));
         }
     }
     if rebind["component"] != "native-case-source-rebind"
@@ -167,9 +169,7 @@ pub fn verify(
                 || ranges[0]["file"] != file
                 || ranges[0]["lines"] != json!([1, lines])
             {
-                return Err(fail(
-                    "A file review must cover the complete current file.",
-                ));
+                return Err(fail("A file review must cover the complete current file."));
             }
             for (digest, _) in originals {
                 let mut assertion = group.clone();
@@ -242,8 +242,8 @@ pub fn verify(
             let bytes = files
                 .get(path)
                 .ok_or_else(|| fail("Reviewed assertion source missing."))?;
-            let source = std::str::from_utf8(bytes)
-                .map_err(|_| fail("Reviewed source must be UTF-8."))?;
+            let source =
+                std::str::from_utf8(bytes).map_err(|_| fail("Reviewed source must be UTF-8."))?;
             let lines = source.lines().collect::<Vec<_>>();
             let bounds = array(range, "lines")?;
             let start = bounds
@@ -272,10 +272,12 @@ pub fn verify(
             }
         }
     }
-    Ok(json!({"schema_version":1,"component":"native-current-assertion-review-verification",
+    Ok(
+        json!({"schema_version":1,"component":"native-current-assertion-review-verification",
         "cases":rows.len(),"assertion_records":records,"unique_assertions":seen.len(),
         "current_assertion_review_verified":true,"reviewer":"primary",
-        "current_execution_claimed":false,"qualification_verified":false}))
+        "current_execution_claimed":false,"qualification_verified":false}),
+    )
 }
 
 /// Combine source review with an already authenticated, reconstructed bind_cases result.
@@ -327,9 +329,11 @@ pub fn bind_execution(
             ));
         }
     }
-    Ok(json!({"schema_version":1,"component":"native-reviewed-named-case-execution",
+    Ok(
+        json!({"schema_version":1,"component":"native-reviewed-named-case-execution",
         "identity":execution["identity"],"source_review":checked,
         "cases":cases.len(),"suites":50,"current_assertion_review_verified":true,
         "current_named_execution_verified":true,"semantic_parity_claimed":false,
-        "qualification_verified":false,"original_evidence_rewritten":false}))
+        "qualification_verified":false,"original_evidence_rewritten":false}),
+    )
 }

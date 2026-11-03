@@ -20,7 +20,10 @@ fn owned_native_entry_preserves_unrelated_host_settings_and_toml_bytes() {
         value["mcpServers"]["numera-image-gen"]["command"],
         "legacy-unchanged"
     );
-    assert_eq!(value["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
+    assert_eq!(
+        value["mcpServers"]["numera-gen-mcp"]["args"],
+        json!(["bridge"])
+    );
     assert_eq!(
         merge(&after, "ClaudeDesktop", false, &executable, &config).unwrap(),
         after

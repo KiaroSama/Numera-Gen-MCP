@@ -40,7 +40,10 @@ fn json_host_merge_rejects_invalid_shapes_and_preserves_unrelated_unicode_fields
         let added = merge(text, "ClaudeProject", false, &binary, &config).unwrap();
         let value: Value = serde_json::from_str(&added).unwrap();
         assert_eq!(value["mcpServers"]["numera-gen-mcp"]["type"], "stdio");
-        assert_eq!(value["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
+        assert_eq!(
+            value["mcpServers"]["numera-gen-mcp"]["args"],
+            json!(["bridge"])
+        );
         assert_eq!(
             value["mcpServers"]["numera-gen-mcp"]["env"]["NUMERA_CONFIG"],
             json!(config)
@@ -68,26 +71,47 @@ fn current_registration_owns_only_the_exact_numera_gen_mcp_entry() {
     let original = json!({"model":"日本語","mcpServers":retained});
     for client in ["ClaudeDesktop", "ClaudeProject"] {
         let before = original.to_string();
-        assert_eq!(merge(&before, client, true, &binary, &config).unwrap(), before);
+        assert_eq!(
+            merge(&before, client, true, &binary, &config).unwrap(),
+            before
+        );
         let added = merge(&before, client, false, &binary, &config).unwrap();
         let parsed: Value = serde_json::from_str(&added).unwrap();
         assert_eq!(parsed["mcpServers"].as_object().unwrap().len(), 4);
-        assert_eq!(parsed["mcpServers"]["numera-gen-mcp"]["command"], json!(binary));
-        assert_eq!(parsed["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
+        assert_eq!(
+            parsed["mcpServers"]["numera-gen-mcp"]["command"],
+            json!(binary)
+        );
+        assert_eq!(
+            parsed["mcpServers"]["numera-gen-mcp"]["args"],
+            json!(["bridge"])
+        );
         for (name, entry) in retained.as_object().unwrap() {
             assert_eq!(&parsed["mcpServers"][name], entry);
         }
-        assert_eq!(merge(&added, client, false, &binary, &config).unwrap(), added);
+        assert_eq!(
+            merge(&added, client, false, &binary, &config).unwrap(),
+            added
+        );
         let removed = merge(&added, client, true, &binary, &config).unwrap();
         assert_eq!(serde_json::from_str::<Value>(&removed).unwrap(), original);
     }
     let before = "# retain\r\n[mcp_servers.numera-gen]\r\ncommand = 'old'\r\n[mcp_servers.numera-image-gen]\r\ncommand = 'legacy'\r\n[mcp_servers.numera-gen-mcp-extra]\r\ncommand = 'unrelated'\r\n";
-    assert_eq!(merge(before, "Codex", true, &binary, &config).unwrap(), before);
+    assert_eq!(
+        merge(before, "Codex", true, &binary, &config).unwrap(),
+        before
+    );
     let added = merge(before, "Codex", false, &binary, &config).unwrap();
     assert!(added.starts_with(before));
     assert_eq!(added.matches("[mcp_servers.numera-gen-mcp]\r\n").count(), 1);
-    assert_eq!(merge(&added, "Codex", false, &binary, &config).unwrap(), added);
-    assert_eq!(merge(&added, "Codex", true, &binary, &config).unwrap(), before);
+    assert_eq!(
+        merge(&added, "Codex", false, &binary, &config).unwrap(),
+        added
+    );
+    assert_eq!(
+        merge(&added, "Codex", true, &binary, &config).unwrap(),
+        before
+    );
 }
 
 #[test]
@@ -187,7 +211,10 @@ fn registration_rejects_unsafe_files_and_creates_only_requested_entry_with_recov
     )
     .unwrap();
     let added: Value = serde_json::from_slice(&std::fs::read(&absent).unwrap()).unwrap();
-    assert_eq!(added["mcpServers"]["numera-gen-mcp"]["command"], json!(binary));
+    assert_eq!(
+        added["mcpServers"]["numera-gen-mcp"]["command"],
+        json!(binary)
+    );
     register(
         "ClaudeDesktop",
         true,

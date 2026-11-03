@@ -428,7 +428,11 @@ pub fn verify(context: &Context, target: &str) -> io::Result<()> {
     let cleanup = scratch.cleanup();
     result?;
     cleanup?;
-    crate::signed_execution::signature(context, &initial_manifest, &authenticated.manifest.binary_sha256)?;
+    crate::signed_execution::signature(
+        context,
+        &initial_manifest,
+        &authenticated.manifest.binary_sha256,
+    )?;
     println!(
         "{}",
         json!({"component":"native-signing-acceptance","target":target,"source_sha":source,

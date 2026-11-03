@@ -107,10 +107,13 @@ successful execution evidence, a completed build or permission to apply changes 
 
 ## Current qualification limits
 
-The 0.3.0 tooling/media candidate is source-authored, not compiled, formatted or executed locally.
-The approved isolated preparation resolved its real workspace lockfile and returned reviewed formatting.
-Responsibility-based ledger extraction and later cleanup edits still require hosted formatting,
-compilation and execution on the final locked tree; preparation is not qualification.
+The 0.3.0 tooling/media candidate has not qualified. Exact `49a6288` failed all seven native/coverage
+jobs in [qualification41526803432, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/41526803432/attempts/1).
+Unix task/release compilation did not overcome failed SDK/tooling test compilation and format/Clippy
+gates. Windows bootstrap rejected authenticated ZIP bytes through GNU tar before Rust setup.
+The corrective tree repairs those diagnostics and rebinds reviewed source hashes/ranges after applying
+authenticated hosted formatting; it still requires replacement hosted execution. No Rust compiler,
+formatter, build or test ran locally. The earlier isolated lock/format preparation is not qualification.
 All discovered workspace suites, six native targets, instrumented runtime 85/80 floors, current
 470-case assertion bindings, extracted SDK behavior and signatures must qualify on the final SHA.
 The owner separately authorized the existing signing identity on `main`; workflow and native guards

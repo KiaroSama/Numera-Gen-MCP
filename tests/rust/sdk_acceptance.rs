@@ -37,7 +37,8 @@ async fn native_sdk_all_ten_tools_and_exact_shared_two_host_request() {
     cleanup::run(async {
         catalog::tools().await;
         catalog::two_hosts().await;
-    }).await;
+    })
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -45,7 +46,8 @@ async fn native_sdk_compact_defaults_adjacent_discovery_and_private_dotenv_reloa
     cleanup::run(async {
         configuration::compact().await;
         configuration::dotenv().await;
-    }).await;
+    })
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

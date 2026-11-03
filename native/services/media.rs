@@ -13,7 +13,7 @@ use crate::{
     },
     config::snapshot_credentials,
     error::{NumeraError, Result},
-    http::api::Body,
+    http::api::{Body, Operation},
     jobs::Receipt,
     media::fal,
 };
@@ -168,9 +168,13 @@ pub async fn run(
         let (_, response) = media_wire::request_until(
             connection,
             &pinned.headers(),
-            &model,
-            Method::POST,
-            Body::Json(parameters),
+            Operation {
+                operation: &model,
+                prefix: "",
+                method: Method::POST,
+                body: Body::Json(parameters),
+                query: None,
+            },
             &cancel,
             false,
             deadline,
@@ -192,10 +196,10 @@ pub async fn run(
             Err(_) => {
                 // An unsafe acknowledgement is uncertain after POST; retain only a canonical ID,
                 // never its untrusted tracking destinations and never a new submission.
-                if let Some(id) = response.get("request_id") {
-                    if let Ok(handle) = fal::handle(&model, &serde_json::json!({"request_id":id})) {
-                        receipt.value["upstream_job"] = media_wire::job(&handle)?;
-                    }
+                if let Some(id) = response.get("request_id")
+                    && let Ok(handle) = fal::handle(&model, &serde_json::json!({"request_id":id}))
+                {
+                    receipt.value["upstream_job"] = media_wire::job(&handle)?;
                 }
                 receipt.value["acknowledgement_unverified"] = json!(true);
                 receipt.value["status"] = json!("outcome_unknown");

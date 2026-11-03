@@ -1,6 +1,6 @@
 use numera_task::ledger::{
     historical_mapping_source, mapping_source, validate, validate_execution_binding,
-    validate_historical, validate_parity, validate_rows,
+    validate_parity, validate_rows,
 };
 use serde_json::{Value, json};
 use std::path::Path;
@@ -328,7 +328,13 @@ fn tooling_mapping_requires_the_same_real_attributed_test_boundary() {
     let file = fixture.root.join("tooling/tests/synthetic.rs");
     fs::create_dir_all(file.parent().unwrap()).unwrap();
     fs::write(&file, "#[test]\nfn exact_case() {}\n").unwrap();
-    mapping_source(&fixture.root, "tooling/tests/synthetic.rs", "::", "exact_case").unwrap();
+    mapping_source(
+        &fixture.root,
+        "tooling/tests/synthetic.rs",
+        "::",
+        "exact_case",
+    )
+    .unwrap();
     for source in [
         "fn exact_case() {}\n",
         "// #[test] fn exact_case() {}\n",
@@ -336,7 +342,15 @@ fn tooling_mapping_requires_the_same_real_attributed_test_boundary() {
         "fn outer(){ #[test] fn exact_case() {} }\n",
     ] {
         fs::write(&file, source).unwrap();
-        assert!(mapping_source(&fixture.root, "tooling/tests/synthetic.rs", "::", "exact_case").is_err());
+        assert!(
+            mapping_source(
+                &fixture.root,
+                "tooling/tests/synthetic.rs",
+                "::",
+                "exact_case"
+            )
+            .is_err()
+        );
     }
 }
 
@@ -481,7 +495,10 @@ fn historical_sdk_whitelist_does_not_claim_current_rust_execution() {
         ("native-compact-acceptance.mjs", "compactAcceptance"),
         ("native-env-acceptance.mjs", "envAcceptance"),
         ("native-negotiation-acceptance.mjs", "negotiationAcceptance"),
-        ("native-config-reload-acceptance.mjs", "configReloadAcceptance"),
+        (
+            "native-config-reload-acceptance.mjs",
+            "configReloadAcceptance",
+        ),
         ("native-terminal-acceptance.mjs", "terminalAcceptance"),
         ("native-races-acceptance.mjs", "racesAcceptance"),
         ("native-lifecycle-acceptance.mjs", "lifecycleAcceptance"),
@@ -489,9 +506,14 @@ fn historical_sdk_whitelist_does_not_claim_current_rust_execution() {
     ];
     let mut caller = String::new();
     for (file, symbol) in registrations {
-        fs::write(fixture.root.join("scripts").join(file),
-            format!("export async function {symbol}(context) {{}}\n")).unwrap();
-        caller.push_str(&format!("import {{ {symbol} }} from \"./{file}\";\nawait {symbol}({{}});\n"));
+        fs::write(
+            fixture.root.join("scripts").join(file),
+            format!("export async function {symbol}(context) {{}}\n"),
+        )
+        .unwrap();
+        caller.push_str(&format!(
+            "import {{ {symbol} }} from \"./{file}\";\nawait {symbol}({{}});\n"
+        ));
     }
     fs::write(fixture.root.join("scripts/native-interop.mjs"), caller).unwrap();
     let path = "scripts/native-tools-acceptance.mjs";
@@ -509,7 +531,11 @@ fn historical_sdk_whitelist_does_not_claim_current_rust_execution() {
     }
     for (path, separator, symbol) in [
         (path, "::", "missing"),
-        ("scripts/native-compact-acceptance.mjs", "::", "twoHostAcceptance"),
+        (
+            "scripts/native-compact-acceptance.mjs",
+            "::",
+            "twoHostAcceptance",
+        ),
         ("scripts/native-interop.mjs", "::", "tool"),
         ("tests/integration/tools.test.ts", "::", "toolsAcceptance"),
         (path, "", "toolsAcceptance"),

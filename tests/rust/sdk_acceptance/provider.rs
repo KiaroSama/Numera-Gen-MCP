@@ -190,7 +190,9 @@ impl Drop for Provider {
             }
             let task = tokio_util::task::AbortOnDropHandle::new(task);
             super::cleanup::defer(async move {
-                let errors = super::cleanup::join(task, 7000, false).await?.unwrap_or_default();
+                let errors = super::cleanup::join(task, 7000, false)
+                    .await?
+                    .unwrap_or_default();
                 if errors.is_empty() {
                     Ok(())
                 } else {

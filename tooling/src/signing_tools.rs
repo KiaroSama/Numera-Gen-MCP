@@ -9,7 +9,7 @@ use std::{
     ffi::OsStr,
     fs,
     io::{self, Cursor, Read, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::Command,
 };
 

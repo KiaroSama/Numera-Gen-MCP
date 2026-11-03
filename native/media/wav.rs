@@ -110,12 +110,15 @@ pub(super) fn inspect(bytes: &[u8]) -> Result<Value> {
     }
     if code == 3 {
         let finite = if bits == 32 {
-            data.chunks_exact(4)
-                .all(|v| f32::from_le_bytes([v[0], v[1], v[2], v[3]]).is_finite())
+            data.as_chunks::<4>()
+                .0
+                .iter()
+                .all(|v| f32::from_le_bytes(*v).is_finite())
         } else {
-            data.chunks_exact(8).all(|v| {
-                f64::from_le_bytes([v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]]).is_finite()
-            })
+            data.as_chunks::<8>()
+                .0
+                .iter()
+                .all(|v| f64::from_le_bytes(*v).is_finite())
         };
         if !finite {
             return Err(invalid("WAV floating-point samples must be finite."));

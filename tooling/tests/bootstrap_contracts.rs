@@ -55,6 +55,13 @@ fn initial_hosted_build_uses_the_qualified_native_owner_in_every_context() {
         action.contains("numera-image-gen-mcp-0.2.0-"),
         "immutable signed bootstrap name is historical"
     );
+    assert!(action.contains("extractor=tar"));
+    assert!(action.contains("extractor=\"$(cygpath -u \"$SYSTEMROOT\")/System32/tar.exe\""));
+    assert!(action.contains("test -x \"$extractor\""));
+    assert!(
+        action.contains("\"$extractor\" -xf \"$archive\" -C \"$directory\" \"$prefix/bin/$executable\"")
+    );
+    assert!(!action.contains("\n        tar -xf"));
     assert!(action.contains("1.99.1"));
     assert!(action.contains("nightly-2026-10-10"));
     assert_eq!(
@@ -146,9 +153,14 @@ fn source_preparation_cannot_build_qualify_or_receive_signing_inputs() {
         3
     );
     let signing = workflow.split_once("  signing:\n").unwrap().1;
-    for required in ["!cancelled()", "github.ref == 'refs/heads/main'",
-        "inputs.operation == 'qualify'", "inputs.operation == 'sign-qualified'",
-        "needs.execution-matrix.result == 'success'", "needs.execution-matrix.result == 'skipped'"] {
+    for required in [
+        "!cancelled()",
+        "github.ref == 'refs/heads/main'",
+        "inputs.operation == 'qualify'",
+        "inputs.operation == 'sign-qualified'",
+        "needs.execution-matrix.result == 'success'",
+        "needs.execution-matrix.result == 'skipped'",
+    ] {
         assert!(signing.contains(required), "{required}");
     }
 }

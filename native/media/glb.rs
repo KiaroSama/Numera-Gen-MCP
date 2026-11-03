@@ -142,10 +142,10 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
         if stride.is_some_and(|s| !(4..=252).contains(&s) || !s.is_multiple_of(4)) {
             return Err(invalid("GLB vertex stride is invalid."));
         }
-        if let Some(target) = value.get("target") {
-            if !matches!(uint(target)?, 34962 | 34963) {
-                return Err(invalid("Invalid GLB buffer view target."));
-            }
+        if let Some(target) = value.get("target")
+            && !matches!(uint(target)?, 34962 | 34963)
+        {
+            return Err(invalid("Invalid GLB buffer view target."));
         }
         views.push(View {
             start,
@@ -211,21 +211,20 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
                 "Overlapping GLB accessors exceed the bounded structural inspection budget.",
             ));
         }
-        if let Some(normalized) = value.get("normalized") {
-            if !normalized.is_boolean()
-                || (normalized.as_bool() == Some(true) && matches!(component, 5125 | 5126))
-            {
-                return Err(invalid("GLB accessor normalization is invalid."));
-            }
+        if let Some(normalized) = value.get("normalized")
+            && (!normalized.is_boolean()
+                || (normalized.as_bool() == Some(true) && matches!(component, 5125 | 5126)))
+        {
+            return Err(invalid("GLB accessor normalization is invalid."));
         }
         for name in ["min", "max"] {
-            if let Some(bounds) = value.get(name) {
-                if bounds.as_array().is_none_or(|a| {
+            if let Some(bounds) = value.get(name)
+                && bounds.as_array().is_none_or(|a| {
                     a.len() != rows * columns
                         || a.iter().any(|v| v.as_f64().is_none_or(|n| !n.is_finite()))
-                }) {
-                    return Err(invalid("GLB accessor bounds are invalid."));
-                }
+                })
+            {
+                return Err(invalid("GLB accessor bounds are invalid."));
             }
         }
         if component == 5126 {
@@ -303,10 +302,10 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
         if uint(&texture["source"])? >= images.len() {
             return Err(invalid("GLB texture selects a missing embedded image."));
         }
-        if let Some(sampler) = texture.get("sampler") {
-            if uint(sampler)? >= samplers.len() {
-                return Err(invalid("GLB texture selects a missing sampler."));
-            }
+        if let Some(sampler) = texture.get("sampler")
+            && uint(sampler)? >= samplers.len()
+        {
+            return Err(invalid("GLB texture selects a missing sampler."));
         }
     }
     let materials = array(&document, "materials")?;
@@ -399,10 +398,10 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
                     "GLB primitive element count is inconsistent with its mode.",
                 ));
             }
-            if let Some(material) = primitive.get("material") {
-                if uint(material)? >= materials.len() {
-                    return Err(invalid("GLB primitive selects a missing material."));
-                }
+            if let Some(material) = primitive.get("material")
+                && uint(material)? >= materials.len()
+            {
+                return Err(invalid("GLB primitive selects a missing material."));
             }
         }
     }
@@ -418,15 +417,15 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
             ("rotation", 4),
             ("scale", 3),
         ] {
-            if let Some(transform) = node.get(name) {
-                if transform.as_array().is_none_or(|values| {
+            if let Some(transform) = node.get(name)
+                && transform.as_array().is_none_or(|values| {
                     values.len() != size
                         || values
                             .iter()
                             .any(|v| v.as_f64().is_none_or(|n| !n.is_finite()))
-                }) {
-                    return Err(invalid("GLB node transform has an invalid shape or value."));
-                }
+                })
+            {
+                return Err(invalid("GLB node transform has an invalid shape or value."));
             }
         }
         if node.get("matrix").is_some()
@@ -438,10 +437,10 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
                 "GLB nodes cannot combine matrix and TRS transforms.",
             ));
         }
-        if let Some(mesh) = node.get("mesh") {
-            if uint(mesh)? >= meshes.len() {
-                return Err(invalid("GLB node selects a missing mesh."));
-            }
+        if let Some(mesh) = node.get("mesh")
+            && uint(mesh)? >= meshes.len()
+        {
+            return Err(invalid("GLB node selects a missing mesh."));
         }
         if node.get("skin").is_some() {
             return Err(invalid("Skinned GLB nodes are unsupported."));
@@ -481,10 +480,10 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
             }
         }
     }
-    if let Some(scene) = document.get("scene") {
-        if uint(scene)? >= scenes.len() {
-            return Err(invalid("GLB default scene is missing."));
-        }
+    if let Some(scene) = document.get("scene")
+        && uint(scene)? >= scenes.len()
+    {
+        return Err(invalid("GLB default scene is missing."));
     }
     Ok(
         json!({"mesh_count":meshes.len(),"primitive_count":primitive_count,"vertex_count":vertex_count,

@@ -59,7 +59,12 @@ runs:
           printf '%s  %s\n' "$digest" "$archive" | sha256sum -c -
         fi
         # Only the authenticated immutable developer binary is selected from the archive.
-        tar -xf "$archive" -C "$directory" "$prefix/bin/$executable"
+        extractor=tar
+        if [[ "$RUNNER_OS" == Windows ]]; then
+          extractor="$(cygpath -u "$SYSTEMROOT")/System32/tar.exe"
+          test -x "$extractor"
+        fi
+        "$extractor" -xf "$archive" -C "$directory" "$prefix/bin/$executable"
         chmod 700 "$directory/$prefix/bin/$executable"
         printf 'NUMERA_BOOTSTRAP_OWNER=%s/%s/%s/bin/%s\n' "$GITHUB_WORKSPACE" "$directory" "$prefix" "$executable" >> "$GITHUB_ENV"
     - name: Install contained toolchains and build the locked task runner under the native owner

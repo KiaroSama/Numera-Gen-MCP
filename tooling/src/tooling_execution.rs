@@ -44,10 +44,16 @@ fn harness(path: &str) -> io::Result<&str> {
 fn platforms(mapping: &str) -> &'static [&'static str] {
     match mapping {
         "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence"
-        | "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence" => &["linux", "darwin"],
+        | "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence" => {
+            &["linux", "darwin"]
+        }
         "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status"
-        | "tests/rust/devtool_setup.rs::unsigned_update_is_rejected_before_replacing_a_locked_installation" => &["win32"],
-        "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation" => &["win32", "darwin"],
+        | "tests/rust/devtool_setup.rs::unsigned_update_is_rejected_before_replacing_a_locked_installation" => {
+            &["win32"]
+        }
+        "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
+            &["win32", "darwin"]
+        }
         _ => &["win32", "linux", "darwin"],
     }
 }
@@ -82,10 +88,10 @@ pub fn bind(
         return Err(fail("Tooling SDK scenario manifest identity differs."));
     }
     let phases = ["built", "release", "extracted-intermediate"];
-    if reports.keys().map(String::as_str).collect::<BTreeSet<_>>()
-        != phases.into_iter().collect()
-    {
-        return Err(fail("Tooling binding requires every exact artifact execution phase."));
+    if reports.keys().map(String::as_str).collect::<BTreeSet<_>>() != phases.into_iter().collect() {
+        return Err(fail(
+            "Tooling binding requires every exact artifact execution phase.",
+        ));
     }
     let sdk_sources = BTreeSet::from([
         "tests/rust/sdk_acceptance.rs".to_owned(),
@@ -96,18 +102,27 @@ pub fn bind(
     for phase in phases {
         let mut expected = identity.clone();
         expected["phase"] = json!(phase);
-        verified.insert(phase, execution_evidence::verify_report(
-            &reports[phase],
-            &expected,
-            provenance,
-            dependencies,
-            if phase == "built" { sources } else { &sdk_sources },
-        )?);
+        verified.insert(
+            phase,
+            execution_evidence::verify_report(
+                &reports[phase],
+                &expected,
+                provenance,
+                dependencies,
+                if phase == "built" {
+                    sources
+                } else {
+                    &sdk_sources
+                },
+            )?,
+        );
         report_hashes.insert(phase, sha(&reports[phase]));
     }
     let sdk_binary = &verified["release"]["tested_binary_sha256"];
     if verified["extracted-intermediate"]["tested_binary_sha256"] != *sdk_binary {
-        return Err(fail("Release and extracted tooling SDK execution tested different binaries."));
+        return Err(fail(
+            "Release and extracted tooling SDK execution tested different binaries.",
+        ));
     }
     let report = &verified["built"];
     let mut required = BTreeSet::from([
@@ -181,8 +196,12 @@ pub fn bind(
                 let resolved = format!("{harness}::{symbol}");
                 if sdk_sources.contains(harness) {
                     for phase in ["release", "extracted-intermediate"] {
-                        let execution = execution_evidence::named_test(&verified[phase], &resolved)?;
-                        artifact_phases.entry(phase).or_default().insert(mapping, execution);
+                        let execution =
+                            execution_evidence::named_test(&verified[phase], &resolved)?;
+                        artifact_phases
+                            .entry(phase)
+                            .or_default()
+                            .insert(mapping, execution);
                     }
                 }
                 execution_evidence::named_test(report, &resolved)?
@@ -199,7 +218,9 @@ pub fn bind(
         if declared_scenarios.len() != scenarios.len()
             || bindings.keys().map(String::as_str).collect::<BTreeSet<_>>() != declared_scenarios
         {
-            return Err(fail("Tooling scenario test coverage is incomplete or duplicated."));
+            return Err(fail(
+                "Tooling scenario test coverage is incomplete or duplicated.",
+            ));
         }
         let mut scenario_execution = BTreeMap::new();
         let mut used = BTreeSet::new();
@@ -217,14 +238,19 @@ pub fn bind(
             scenario_execution.insert(scenario, results);
         }
         if used != named.keys().copied().collect() {
-            return Err(fail("Named tooling test is not assigned to a declared scenario."));
+            return Err(fail(
+                "Named tooling test is not assigned to a declared scenario.",
+            ));
         }
-        entries.push(json!({"source":row["source"],"source_sha256":row["source_sha256"],
+        entries.push(
+            json!({"source":row["source"],"source_sha256":row["source_sha256"],
             "replacements":row["rust"],"scenarios":row["scenarios"],"tests":tests,
             "named_execution":named,"scenario_execution":scenario_execution,
-            "artifact_phase_execution":artifact_phases}));
+            "artifact_phase_execution":artifact_phases}),
+        );
     }
-    Ok(json!({"schema_version":1,"component":"native-tooling-harness-execution",
+    Ok(
+        json!({"schema_version":1,"component":"native-tooling-harness-execution",
         "identity":identity,"manifest_sha256":sha(manifest_bytes),"provenance_sha256":provenance,
         "execution_report_sha256":sha(&reports["built"]),"phase_reports_sha256":report_hashes,
         "source_files":source_hashes,
@@ -233,5 +259,6 @@ pub fn bind(
         "current_named_test_execution_verified":true,"declared_scenario_execution_verified":true,
         "sdk_artifact_phase_execution_verified":true,"sdk_tested_binary_sha256":sdk_binary,
         "scenario_assertions_verified":false,"semantic_parity_claimed":false,
-        "qualification_verified":false,"retirement_authorized":false,"original_evidence_rewritten":false}))
+        "qualification_verified":false,"retirement_authorized":false,"original_evidence_rewritten":false}),
+    )
 }

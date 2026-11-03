@@ -33,17 +33,30 @@ fn sorted_archive_members_round_trip_exact_bytes_in_both_formats() {
                 assert!(file.is_file());
                 assert_eq!(file.compression(), zip::CompressionMethod::Deflated);
                 assert_eq!(file.last_modified(), Some(zip::DateTime::default()));
-                assert_eq!(file.unix_mode().unwrap() & 0o177777, if index == 0 { 0o100755 } else { 0o100644 });
+                assert_eq!(
+                    file.unix_mode().unwrap() & 0o177777,
+                    if index == 0 { 0o100755 } else { 0o100644 }
+                );
             }
         } else {
             let decoder = flate2::read::GzDecoder::new(first.as_slice());
             let mut archive = tar::Archive::new(decoder);
-            let members = archive.entries().unwrap().collect::<std::io::Result<Vec<_>>>().unwrap();
+            let members = archive
+                .entries()
+                .unwrap()
+                .collect::<std::io::Result<Vec<_>>>()
+                .unwrap();
             assert_eq!(members.len(), expected_names.len());
             for (index, file) in members.iter().enumerate() {
-                assert_eq!(file.path().unwrap().to_str().unwrap(), expected_names[index]);
+                assert_eq!(
+                    file.path().unwrap().to_str().unwrap(),
+                    expected_names[index]
+                );
                 assert!(file.header().entry_type().is_file());
-                assert_eq!(file.header().mode().unwrap(), if index == 0 { 0o755 } else { 0o644 });
+                assert_eq!(
+                    file.header().mode().unwrap(),
+                    if index == 0 { 0o755 } else { 0o644 }
+                );
                 assert_eq!(file.header().mtime().unwrap(), 0);
                 assert_eq!(file.header().uid().unwrap(), 0);
                 assert_eq!(file.header().gid().unwrap(), 0);

@@ -71,7 +71,7 @@ async fn env_models() {
 async fn retained_handles() {
     let work = f::workspace();
     let directory = f::directory(&work, "config-reload-handles");
-    let wire = Provider::new(|request, _| async {
+    let wire = Provider::new(|request, _| async move {
         Ok(Reply::json(if request.method == "POST" {
             json!({"cancelled":true})
         } else if request.path.starts_with("/api/jobs/") {

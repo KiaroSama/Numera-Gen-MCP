@@ -63,13 +63,13 @@ pub async fn join<T>(
 
 async fn outcome<T>(operation: impl Future<Output = T>) -> Result<T, Failure> {
     let mut operation = Box::pin(operation);
-    poll_fn(|context| {
-        match catch_unwind(AssertUnwindSafe(|| operation.as_mut().poll(context))) {
+    poll_fn(
+        |context| match catch_unwind(AssertUnwindSafe(|| operation.as_mut().poll(context))) {
             Ok(Poll::Ready(value)) => Poll::Ready(Ok(value)),
             Ok(Poll::Pending) => Poll::Pending,
             Err(error) => Poll::Ready(Err(error)),
-        }
-    })
+        },
+    )
     .await
 }
 
@@ -141,7 +141,11 @@ impl std::ops::Deref for Workspace {
 impl Drop for Workspace {
     fn drop(&mut self) {
         let _ = PENDING.try_with(|pending| {
-            pending.lock().unwrap().workspaces.push(self.1.take().unwrap());
+            pending
+                .lock()
+                .unwrap()
+                .workspaces
+                .push(self.1.take().unwrap());
         });
     }
 }

@@ -8,8 +8,8 @@ use std::{
 const LIMIT: usize = 16 * 1024 * 1024;
 
 pub fn archive(root: &Path, inventory: &[u8]) -> io::Result<Vec<u8>> {
-    let inventory = std::str::from_utf8(inventory)
-        .map_err(|_| fail("Formatting inventory must be UTF-8."))?;
+    let inventory =
+        std::str::from_utf8(inventory).map_err(|_| fail("Formatting inventory must be UTF-8."))?;
     let inventory = inventory
         .strip_suffix('\0')
         .ok_or_else(|| fail("Formatting inventory must be NUL-terminated."))?;
@@ -28,9 +28,13 @@ pub fn archive(root: &Path, inventory: &[u8]) -> io::Result<Vec<u8>> {
         }
         if name.split('/').any(|part| part.starts_with('.'))
             || entries.len() >= 4096
-            || entries.keys().any(|key: &String| key.eq_ignore_ascii_case(name))
+            || entries
+                .keys()
+                .any(|key: &String| key.eq_ignore_ascii_case(name))
         {
-            return Err(fail("Private, duplicate or oversized formatting inventory."));
+            return Err(fail(
+                "Private, duplicate or oversized formatting inventory.",
+            ));
         }
         let bytes = crate::ledger::read(root, name)?;
         std::str::from_utf8(&bytes).map_err(|_| fail("Formatting source must be UTF-8."))?;

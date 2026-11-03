@@ -246,7 +246,10 @@ fn exact_source_native_registration_dry_run_backup_rollback_remove_and_private_l
         value["mcpServers"]["numera-gen-mcp"]["command"],
         json!(fixture.executable)
     );
-    assert_eq!(value["mcpServers"]["numera-gen-mcp"]["args"], json!(["bridge"]));
+    assert_eq!(
+        value["mcpServers"]["numera-gen-mcp"]["args"],
+        json!(["bridge"])
+    );
     assert!(
         fixture
             .run("ClaudeDesktop", &file, false, false)

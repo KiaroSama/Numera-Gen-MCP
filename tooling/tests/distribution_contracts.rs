@@ -64,17 +64,43 @@ fn archive_checksum_identity_and_complete_inventory_precede_staging() {
     assert!(authenticate_archive(&bytes, sidecar.as_bytes(), target, &source, false).is_err());
     for field in ["version", "target", "publisher", "binary_sha256"] {
         let mut changed = entries.clone();
-        let mut manifest: serde_json::Value = serde_json::from_slice(&changed["manifest.json"]).unwrap();
+        let mut manifest: serde_json::Value =
+            serde_json::from_slice(&changed["manifest.json"]).unwrap();
         manifest[field] = json!("unrelated");
-        changed.insert("manifest.json".into(), serde_json::to_vec(&manifest).unwrap());
+        changed.insert(
+            "manifest.json".into(),
+            serde_json::to_vec(&manifest).unwrap(),
+        );
         let bytes = archives::encode(&prefix, &changed, true).unwrap();
-        assert!(authenticate_archive(&bytes, format!("{}  {name}\n", sha(&bytes)).as_bytes(), target, &source, true).is_err(), "{field}");
+        assert!(
+            authenticate_archive(
+                &bytes,
+                format!("{}  {name}\n", sha(&bytes)).as_bytes(),
+                target,
+                &source,
+                true
+            )
+            .is_err(),
+            "{field}"
+        );
     }
     let mut duplicate = entries.clone();
     let text = std::str::from_utf8(&entries["manifest.json"]).unwrap();
-    duplicate.insert("manifest.json".into(), format!("{{\"publisher\":\"KiaroSama\",{}", &text[1..]).into_bytes());
+    duplicate.insert(
+        "manifest.json".into(),
+        format!("{{\"publisher\":\"KiaroSama\",{}", &text[1..]).into_bytes(),
+    );
     let bytes = archives::encode(&prefix, &duplicate, true).unwrap();
-    assert!(authenticate_archive(&bytes, format!("{}  {name}\n", sha(&bytes)).as_bytes(), target, &source, true).is_err());
+    assert!(
+        authenticate_archive(
+            &bytes,
+            format!("{}  {name}\n", sha(&bytes)).as_bytes(),
+            target,
+            &source,
+            true
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -95,7 +121,18 @@ fn actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destin
             root: parent.canonicalize().unwrap(),
             logger: numera_gen_mcp::logging::Logger::new(&parent.join("logs"), "ERROR"),
         };
-        for case in ["valid", "checksum", "source", "publisher", "version", "binary", "private", "unlisted", "duplicate", "existing"] {
+        for case in [
+            "valid",
+            "checksum",
+            "source",
+            "publisher",
+            "version",
+            "binary",
+            "private",
+            "unlisted",
+            "duplicate",
+            "existing",
+        ] {
             let root = parent.join(case);
             let download = root.join(".ci-work/signing-download");
             fs::create_dir_all(&download).unwrap();
@@ -104,63 +141,118 @@ fn actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destin
             fs::write(root.join("native/lib.rs"), b"inert fixture; never compiled").unwrap();
             let mut entries = fixture();
             if matches!(case, "source" | "publisher" | "version" | "binary") {
-                let mut manifest: serde_json::Value = serde_json::from_slice(&entries["manifest.json"]).unwrap();
+                let mut manifest: serde_json::Value =
+                    serde_json::from_slice(&entries["manifest.json"]).unwrap();
                 match case {
                     "source" => manifest["source_sha"] = json!("b".repeat(40)),
                     "publisher" => manifest["publisher"] = json!("unrelated"),
                     "version" => manifest["version"] = json!("0.1.0"),
                     _ => manifest["binary_sha256"] = json!("0".repeat(64)),
                 }
-                entries.insert("manifest.json".into(), serde_json::to_vec(&manifest).unwrap());
+                entries.insert(
+                    "manifest.json".into(),
+                    serde_json::to_vec(&manifest).unwrap(),
+                );
             }
             if case == "unlisted" {
                 entries.insert("docs/extra.txt".into(), b"unlisted".to_vec());
             }
             if case == "duplicate" {
                 let manifest = std::str::from_utf8(&entries["manifest.json"]).unwrap();
-                entries.insert("manifest.json".into(), format!("{{\"publisher\":\"KiaroSama\",{}", &manifest[1..]).into_bytes());
+                entries.insert(
+                    "manifest.json".into(),
+                    format!("{{\"publisher\":\"KiaroSama\",{}", &manifest[1..]).into_bytes(),
+                );
             }
             let mut writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
             for (path, bytes) in &entries {
                 use std::io::Write;
-                writer.start_file(format!("{archive_prefix}/{path}"), zip::write::SimpleFileOptions::default()).unwrap();
+                writer
+                    .start_file(
+                        format!("{archive_prefix}/{path}"),
+                        zip::write::SimpleFileOptions::default(),
+                    )
+                    .unwrap();
                 writer.write_all(bytes).unwrap();
             }
             if case == "private" {
                 use std::io::Write;
-                writer.start_file(format!("{archive_prefix}/secrets.md"), zip::write::SimpleFileOptions::default()).unwrap();
+                writer
+                    .start_file(
+                        format!("{archive_prefix}/secrets.md"),
+                        zip::write::SimpleFileOptions::default(),
+                    )
+                    .unwrap();
                 writer.write_all(b"synthetic forbidden member").unwrap();
             }
             let bytes = writer.finish().unwrap().into_inner();
             fs::write(download.join(&name), &bytes).unwrap();
-            fs::write(download.join(format!("{name}.sha256")), format!("{}  {name}\n", if case == "checksum" { "0".repeat(64) } else { sha(&bytes) })).unwrap();
+            fs::write(
+                download.join(format!("{name}.sha256")),
+                format!(
+                    "{}  {name}\n",
+                    if case == "checksum" {
+                        "0".repeat(64)
+                    } else {
+                        sha(&bytes)
+                    }
+                ),
+            )
+            .unwrap();
             let destination = root.join(format!(".ci-work/prepared/{target}"));
             if case == "existing" {
                 fs::create_dir_all(&destination).unwrap();
-                fs::write(destination.join("retained.txt"), b"unrelated original bytes").unwrap();
+                fs::write(
+                    destination.join("retained.txt"),
+                    b"unrelated original bytes",
+                )
+                .unwrap();
             }
             let mut command = Command::new(env!("CARGO_BIN_EXE_numera-task"));
-            command.env_clear().args(["--root"]).arg(root.canonicalize().unwrap()).args(["stage", target]);
+            command
+                .env_clear()
+                .args(["--root"])
+                .arg(root.canonicalize().unwrap())
+                .args(["stage", target]);
             for key in ["PATH", "SystemRoot", "WINDIR", "LLVM_PROFILE_FILE"] {
                 if let Some(value) = std::env::var_os(key) {
                     command.env(key, value);
                 }
             }
-            command.env("GITHUB_ACTIONS", "true").env("GITHUB_SHA", &source);
-            let outcome = run(&mut command, &owner.root, Bounds::new(5000, 2000).unwrap(), &AtomicBool::new(false), &owner.logger).unwrap();
+            command
+                .env("GITHUB_ACTIONS", "true")
+                .env("GITHUB_SHA", &source);
+            let outcome = run(
+                &mut command,
+                &owner.root,
+                Bounds::new(5000, 2000).unwrap(),
+                &AtomicBool::new(false),
+                &owner.logger,
+            )
+            .unwrap();
             assert!(outcome.reason.is_none(), "{case}");
             assert!(outcome.cleanup_verified, "{case}");
             assert_eq!(outcome.code, if case == "valid" { 0 } else { 1 }, "{case}");
             if case == "valid" {
-                assert_eq!(numera_task::distribution::read_tree(&destination, target, &source).unwrap(), entries);
+                assert_eq!(
+                    numera_task::distribution::read_tree(&destination, target, &source).unwrap(),
+                    entries
+                );
                 let report: serde_json::Value = serde_json::from_slice(&outcome.stdout).unwrap();
                 assert_eq!(report["intermediate_authenticated"], true);
                 assert_eq!(report["signed"], false);
             } else {
                 assert!(outcome.stdout.is_empty(), "{case}");
-                assert!(std::str::from_utf8(&outcome.stderr).unwrap().starts_with("ERROR: "));
+                assert!(
+                    std::str::from_utf8(&outcome.stderr)
+                        .unwrap()
+                        .starts_with("ERROR: ")
+                );
                 if case == "existing" {
-                    assert_eq!(fs::read(destination.join("retained.txt")).unwrap(), b"unrelated original bytes");
+                    assert_eq!(
+                        fs::read(destination.join("retained.txt")).unwrap(),
+                        b"unrelated original bytes"
+                    );
                     assert_eq!(fs::read_dir(&destination).unwrap().count(), 1);
                 } else {
                     assert!(!destination.exists(), "{case} wrote before authentication");

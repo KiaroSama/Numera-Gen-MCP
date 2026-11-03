@@ -76,7 +76,10 @@ fn historical_validation_changes_only_reviewed_dependencies_supervisor_and_child
     }});
     assert_eq!(lock, expected_lock);
     assert_eq!(
-        prepared.files.keys().collect::<std::collections::BTreeSet<_>>(),
+        prepared
+            .files
+            .keys()
+            .collect::<std::collections::BTreeSet<_>>(),
         original.keys().collect::<std::collections::BTreeSet<_>>()
     );
     let after = std::str::from_utf8(&prepared.files["tests/integration/setup.test.ts"]).unwrap();

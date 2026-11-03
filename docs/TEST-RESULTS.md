@@ -1,13 +1,20 @@
 # Test results
 
-## Current 0.3.0 candidate — source status, 2026-11-02
+## Current 0.3.0 candidate — failed qualification, 2026-11-03
 
-The rebranded Numera Gen MCP workspace, Rust tooling and additive image/video/audio/3D contracts
-remain **uncompiled and unexecuted** on the current tree. The isolated
-[preparation run40956557555](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40956557555)
-succeeded for `60be391`, returning the resolved workspace lock and reviewed formatting, not runtime
-qualification. Later source edits still require hosted formatting. Local Rust execution remains
-prohibited; source checks and authored regression tests are not passing runtime tests.
+[Qualification41526803432, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/41526803432/attempts/1)
+failed on exact source `49a6288b14681c75766da2f2d0c185b162aeb6e5`: all six native jobs and runtime
+coverage failed; signing and execution collectors were skipped. Unix task/release compilation is
+not accepted suite execution. SDK test compilation failed on an escaping async borrow, tooling test
+compilation needed an explicit map key type, and format/Clippy gates failed. Both Windows jobs
+verified their bootstrap ZIP hashes but GNU tar rejected ZIP extraction before Rust setup.
+
+The corrective source retains the original assertions, uses the explicit native Windows ZIP-capable
+extractor, repairs compilation/Clippy diagnostics and applies authenticated hosted-format candidates.
+Its replacement hosted verification remains pending. The isolated
+[preparation40956557555](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40956557555)
+only resolved the workspace lock/format for `60be391`; neither preparation nor diagnostic artifacts
+qualify the current tree. No local Rust compiler, formatter, build or test was run.
 
 Pending gates include current 470-case assertion/execution and migrated tooling scenario binding,
 every discovered workspace suite on six native targets, instrumented runtime 85/80 coverage,

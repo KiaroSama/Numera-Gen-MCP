@@ -96,10 +96,12 @@ pub fn preserve_package(
     let license_file = &package["license_file"];
     if !matches!(license, Value::Null | Value::String(_))
         || !matches!(license_file, Value::Null | Value::String(_))
-        || license_file.as_str().is_some_and(|value| value.trim().is_empty())
-        || ![license, license_file].iter().any(|value| {
-            value.as_str().is_some_and(|value| !value.trim().is_empty())
-        })
+        || license_file
+            .as_str()
+            .is_some_and(|value| value.trim().is_empty())
+        || ![license, license_file]
+            .iter()
+            .any(|value| value.as_str().is_some_and(|value| !value.trim().is_empty()))
     {
         return Err(fail("Dependency license declaration missing or invalid."));
     }
@@ -151,12 +153,14 @@ pub fn preserve_package(
         )?)?;
         if archive.is_empty()
             || supplement["crate_sha256"] != sha(&archive)
-            || supplement["source_revision"].as_str().is_none_or(|revision| {
-                revision.len() != 40
-                    || !revision
-                        .bytes()
-                        .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-            })
+            || supplement["source_revision"]
+                .as_str()
+                .is_none_or(|revision| {
+                    revision.len() != 40
+                        || !revision
+                            .bytes()
+                            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                })
             || vcs["git"]["sha1"] != supplement["source_revision"]
             || package["license"] != supplement["license"]
         {

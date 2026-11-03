@@ -28,7 +28,9 @@ all six targets; the original CI archives are published as0.2.0. Owner-host reco
 The source candidate adds `tooling/`, a separate Cargo workspace package producing `numera-task`.
 It reuses native supervision, logging and artifact verification; task-only archive dependencies are
 not production server dependencies. It does not wrap Python or JavaScript. The five original
-PowerShell scripts remain unchanged. The candidate has not yet been compiled or executed.
+PowerShell scripts remain unchanged. Qualification41526803432 compiled the Unix task executable,
+but SDK/tooling test compilation and quality gates failed; Windows failed during bootstrap.
+The corrective working tree still requires its own hosted compilation and execution.
 
 Every task command requires an explicit absolute root and hosted environment. For example, on an
 already prepared hosted runner:
@@ -92,7 +94,7 @@ all six signing jobs, authenticates original report artifacts and unique receipt
 successful job log, and joins their SDK inventories to the authenticated seven-context report.
 It has read-only GitHub permissions and receives no publisher inputs. Its output records signed
 stage execution, not independent semantic approval, retirement authorization or release readiness;
-the collector itself remains uncompiled and unexecuted until hosted qualification. Final archive
+the collector has no successful hosted invocation or qualification. Final archive
 download and cryptographic verification are still separate delivery gates.
 
 The manual `operation=sign-qualified` route consumes an explicitly selected successful qualification
@@ -121,7 +123,8 @@ that package's notices are written. These contracts still need actual hosted dep
 Cargo owns the shared lockfile. The isolated preparation returned the resolved workspace lock and
 reviewed formatting; later edits still need final hosted qualification with `--locked`. The authored
 bootstrap downloads the exact host's published 0.2.0 archive, checks its source-pinned SHA-256, and
-selects only its qualified `numera-dev` binary. That native owner supervises contained toolchain
+selects only its qualified `numera-dev` binary. Windows explicitly selects System32's ZIP-capable
+`tar.exe`, not Git Bash's GNU tar, which rejected ZIPs in qualification41526803432. That native owner supervises contained toolchain
 installation and the first locked task build with wall/idle limits; no second shell supervisor or
 interpreter is introduced. The download has native connection, wall, low-speed and size bounds.
 Missing hosted Rustup/Cargo proxies fail rather than silently installing another bootstrap. This

@@ -197,9 +197,7 @@ pub fn stable(context: &Context) -> io::Result<()> {
     if crate::evidence::verify(context).is_err() {
         failures.push("oracle-evidence".into());
     }
-    if failures.iter().any(|gate| gate == "format")
-        && crate::formatting::retain(context).is_err()
-    {
+    if failures.iter().any(|gate| gate == "format") && crate::formatting::retain(context).is_err() {
         failures.push("format-diagnostics".into());
     }
     finish(failures)

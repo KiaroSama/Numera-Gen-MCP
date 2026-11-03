@@ -376,8 +376,11 @@ pub fn extract(context: &Context, target: &str, intermediate: bool) -> io::Resul
     if !intermediate {
         let manifest = distribution::validate_entries(&entries, target, &context.source_sha()?)?;
         crate::signed_execution::extraction(
-            context, &sha(&entries["manifest.json"]),
-            manifest["binary_sha256"].as_str().ok_or_else(|| fail("Extracted binary identity missing."))?,
+            context,
+            &sha(&entries["manifest.json"]),
+            manifest["binary_sha256"]
+                .as_str()
+                .ok_or_else(|| fail("Extracted binary identity missing."))?,
             &sha(&bytes),
         )?;
     }

@@ -1,6 +1,6 @@
 use numera_task::signing::{
-    codesign_failure, public_identity, validate_authority, validate_password, validate_public_identity,
-    verify_certificate_output,
+    codesign_failure, public_identity, validate_authority, validate_password,
+    validate_public_identity, verify_certificate_output,
 };
 
 #[test]
@@ -14,7 +14,8 @@ fn selected_pfx_output_requires_one_exact_approved_certificate_before_native_imp
     verify_certificate_output(pem.as_bytes()).unwrap();
     let wrapped = pem.replace(
         &STANDARD.encode(certificate),
-        &STANDARD.encode(certificate)
+        &STANDARD
+            .encode(certificate)
             .as_bytes()
             .chunks(64)
             .map(|line| std::str::from_utf8(line).unwrap())
@@ -214,7 +215,11 @@ fn approved_signer_and_private_input_authority_fail_closed() {
     let identity = public_identity().expect("approved source identity");
     let key = include_bytes!("../../docs/signing/publisher-key.der");
     let certificate = include_bytes!("../../docs/signing/publisher-cert.der");
-    let instant = |value: &str| chrono::DateTime::parse_from_rfc3339(value).unwrap().to_utc();
+    let instant = |value: &str| {
+        chrono::DateTime::parse_from_rfc3339(value)
+            .unwrap()
+            .to_utc()
+    };
     for now in [
         "2026-10-17T20:07:22Z",
         "2026-11-02T00:00:00Z",
@@ -222,31 +227,59 @@ fn approved_signer_and_private_input_authority_fail_closed() {
     ] {
         validate_public_identity(&identity, key, certificate, instant(now)).unwrap();
     }
-    for now in ["2026-10-17T20:07:21.999999999Z", "2027-10-17T20:17:22.000000001Z"] {
+    for now in [
+        "2026-10-17T20:07:21.999999999Z",
+        "2027-10-17T20:17:22.000000001Z",
+    ] {
         assert_eq!(
-            validate_public_identity(&identity, key, certificate, instant(now)).unwrap_err().to_string(),
+            validate_public_identity(&identity, key, certificate, instant(now))
+                .unwrap_err()
+                .to_string(),
             "Signer outside validity."
         );
     }
-    for field in ["publisher", "algorithm", "public_key_sha256", "certificate_sha256"] {
+    for field in [
+        "publisher",
+        "algorithm",
+        "public_key_sha256",
+        "certificate_sha256",
+    ] {
         let mut changed = identity.clone();
         changed[field] = json!("unrelated");
-        assert!(validate_public_identity(&changed, key, certificate, instant("2026-11-02T00:00:00Z")).is_err(), "{field}");
+        assert!(
+            validate_public_identity(&changed, key, certificate, instant("2026-11-02T00:00:00Z"))
+                .is_err(),
+            "{field}"
+        );
         changed.as_object_mut().unwrap().remove(field);
-        assert!(validate_public_identity(&changed, key, certificate, instant("2026-11-02T00:00:00Z")).is_err(), "missing {field}");
+        assert!(
+            validate_public_identity(&changed, key, certificate, instant("2026-11-02T00:00:00Z"))
+                .is_err(),
+            "missing {field}"
+        );
     }
     for (key, certificate) in [
         (b"wrong public key".as_slice(), certificate.as_slice()),
         (key.as_slice(), b"wrong public certificate".as_slice()),
     ] {
-        assert!(validate_public_identity(&identity, key, certificate, instant("2026-11-02T00:00:00Z")).is_err());
+        assert!(
+            validate_public_identity(&identity, key, certificate, instant("2026-11-02T00:00:00Z"))
+                .is_err()
+        );
     }
     for field in ["not_before", "not_after"] {
         for value in [json!("malformed"), serde_json::Value::Null] {
             let mut changed = identity.clone();
             changed[field] = value;
             assert_eq!(
-                validate_public_identity(&changed, key, certificate, instant("2026-11-02T00:00:00Z")).unwrap_err().to_string(),
+                validate_public_identity(
+                    &changed,
+                    key,
+                    certificate,
+                    instant("2026-11-02T00:00:00Z")
+                )
+                .unwrap_err()
+                .to_string(),
                 "Invalid signer validity."
             );
         }
@@ -291,7 +324,10 @@ fn approved_signer_and_private_input_authority_fail_closed() {
             let mut changed = valid.clone();
             changed["NUMERA_CI_OPERATION"] = json!(operation);
             changed["GITHUB_REF"] = json!(reference);
-            assert!(validate_authority(&changed).is_err(), "{operation}/{reference}");
+            assert!(
+                validate_authority(&changed).is_err(),
+                "{operation}/{reference}"
+            );
         }
     }
     let mut preparation = valid.clone();

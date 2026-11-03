@@ -13,7 +13,9 @@ use std::{
 
 mod source_rebinding;
 
-pub use source_rebinding::{assertion_range_proposal, current_rebind_map, sdk_assertion_traceability};
+pub use source_rebinding::{
+    assertion_range_proposal, current_rebind_map, sdk_assertion_traceability,
+};
 
 const LIMIT: usize = 16 * 1024 * 1024;
 pub const REFERENCE_SHA256: &str =

@@ -57,11 +57,19 @@ async fn failed_scenario_awaits_late_provider_errors_and_preserves_the_original_
         let task = tokio_util::task::AbortOnDropHandle::new(task);
         let mut socket = host::bounded(1000, receiver).await.unwrap();
         let failure = panic_text(host::bounded(8000, task).await.unwrap_err());
-        assert_eq!(failure.contains("Controlled original scenario failure"), run_fails);
+        assert_eq!(
+            failure.contains("Controlled original scenario failure"),
+            run_fails
+        );
         assert!(failure.contains("Controlled late provider failure"));
-        assert!(finished.is_cancelled(), "handler must finish before the scenario returns");
+        assert!(
+            finished.is_cancelled(),
+            "handler must finish before the scenario returns"
+        );
         let mut bytes = Vec::new();
-        host::bounded(1000, socket.read_to_end(&mut bytes)).await.unwrap();
+        host::bounded(1000, socket.read_to_end(&mut bytes))
+            .await
+            .unwrap();
         assert!(bytes.is_empty());
     }
 }
@@ -90,7 +98,10 @@ async fn timed_out_scenario_releases_held_handlers_before_removing_its_workspace
             async move {
                 enter.release();
                 held.wait().await;
-                assert!(marker.is_file(), "workspace must survive awaited handler cleanup");
+                assert!(
+                    marker.is_file(),
+                    "workspace must survive awaited handler cleanup"
+                );
                 observed.cancel();
                 Ok(super::provider::Reply::json(json!({})))
             }
@@ -114,7 +125,10 @@ async fn timed_out_scenario_releases_held_handlers_before_removing_its_workspace
     let task = tokio_util::task::AbortOnDropHandle::new(task);
     let failure = panic_text(host::bounded(8000, task).await.unwrap_err());
     assert!(failure.contains("Native SDK fixture event deadline exceeded"));
-    assert!(drained.is_cancelled(), "timeout must await the released provider handler");
+    assert!(
+        drained.is_cancelled(),
+        "timeout must await the released provider handler"
+    );
     assert!(!path.lock().unwrap().as_ref().unwrap().exists());
 }
 
@@ -140,7 +154,10 @@ async fn failed_actual_sdk_scenario_reaps_the_child_and_diagnostics_before_works
     let task = tokio_util::task::AbortOnDropHandle::new(task);
     let failure = panic_text(host::bounded(15000, task).await.unwrap_err());
     assert!(failure.contains("Controlled actual SDK scenario failure"));
-    assert!(!failure.contains("cleanup:"), "actual owner cleanup must be verified: {failure}");
+    assert!(
+        !failure.contains("cleanup:"),
+        "actual owner cleanup must be verified: {failure}"
+    );
     let state = state.lock().unwrap();
     let (path, pid, observer) = state.as_ref().unwrap();
     assert!(!path.exists());
@@ -148,7 +165,10 @@ async fn failed_actual_sdk_scenario_reaps_the_child_and_diagnostics_before_works
     {
         let _ = observer;
         assert_eq!(unsafe { libc::kill(*pid as i32, 0) }, -1);
-        assert_eq!(std::io::Error::last_os_error().raw_os_error(), Some(libc::ESRCH));
+        assert_eq!(
+            std::io::Error::last_os_error().raw_os_error(),
+            Some(libc::ESRCH)
+        );
     }
     #[cfg(windows)]
     {
@@ -166,7 +186,10 @@ fn windows_child_handle(pid: u32) -> std::os::windows::io::OwnedHandle {
     }
     // SAFETY: query/synchronize only; retain the original live process before failure cleanup.
     let handle = unsafe { OpenProcess(0x00101000, 0, pid) };
-    assert!(!handle.is_null(), "fixture child must be live before failure");
+    assert!(
+        !handle.is_null(),
+        "fixture child must be live before failure"
+    );
     unsafe { std::os::windows::io::OwnedHandle::from_raw_handle(handle) }
 }
 
