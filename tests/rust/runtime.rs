@@ -27,7 +27,10 @@ fn external_command_paths_preserve_verified_disk_unc_and_unicode_identity() {
     use std::path::{Path, PathBuf};
     for (input, expected) in [
         (r"\\?\C:\owned root\東京\file", r"C:\owned root\東京\file"),
-        (r"\\?\UNC\server\share\owned root", r"\\server\share\owned root"),
+        (
+            r"\\?\UNC\server\share\owned root",
+            r"\\server\share\owned root",
+        ),
         (r"C:\ordinary\file", r"C:\ordinary\file"),
     ] {
         assert_eq!(command_path(Path::new(input)), PathBuf::from(expected));

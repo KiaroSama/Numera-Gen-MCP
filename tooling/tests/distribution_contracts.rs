@@ -243,11 +243,12 @@ fn actual_stage_cli_authenticates_before_writes_and_preserves_an_existing_destin
                 assert_eq!(report["signed"], false);
             } else {
                 assert!(outcome.stdout.is_empty(), "{case}");
-                assert!(
-                    std::str::from_utf8(&outcome.stderr)
-                        .unwrap()
-                        .starts_with("ERROR: ")
-                );
+                let diagnostics = std::str::from_utf8(&outcome.stderr)
+                    .unwrap()
+                    .lines()
+                    .filter(|line| !line.starts_with('{'))
+                    .collect::<Vec<_>>();
+                assert!(matches!(diagnostics.as_slice(), [line] if line.starts_with("ERROR: ")));
                 if case == "existing" {
                     assert_eq!(
                         fs::read(destination.join("retained.txt")).unwrap(),

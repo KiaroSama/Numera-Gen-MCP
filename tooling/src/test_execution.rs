@@ -405,6 +405,8 @@ pub fn execute_harness(
     idle: u64,
 ) -> io::Result<Value> {
     context.hosted()?;
+    remaining(deadline)?;
+    let started = Instant::now();
     let mut list = command();
     let executable = PathBuf::from(list.get_program());
     let source_hash = sha(&crate::ledger::read(&context.root, source)?);
@@ -412,23 +414,26 @@ pub fn execute_harness(
         &executable,
         crate::archives::MAX_BYTES,
     )?);
+    let hashed = Instant::now();
+    let cwd = list.get_current_dir().map(Path::to_path_buf);
     list.args(["--list", "--format=terse", "--color=never"]);
     let listed = context.capture(&mut list, remaining(deadline)?.min(30000), 20000, LIMIT)?;
     let expected = listing(&listed)?;
+    let listed_at = Instant::now();
     let mut test = command();
-    if test.get_program() != executable.as_os_str()
-        || test.get_current_dir() != list.get_current_dir()
-    {
+    if test.get_program() != executable.as_os_str() || test.get_current_dir() != cwd.as_deref() {
         return Err(fail("Harness command identity changed after listing."));
     }
     test.args(["--format=pretty", "--color=never", "--test-threads=2"]);
     let executed = context.outcome(&mut test, remaining(deadline)?, idle, LIMIT)?;
+    let executed_at = Instant::now();
     io::stdout().write_all(format!("Native harness: {source}\n").as_bytes())?;
     io::stdout().write_all(&executed.stdout)?;
     io::stderr().write_all(&executed.stderr)?;
     if executed.code != 0 || executed.reason.is_some() || !executed.cleanup_verified {
         return Err(fail("Owned harness execution failed."));
     }
+    let checking = Instant::now();
     if source_hash != sha(&crate::ledger::read(&context.root, source)?)
         || executable_hash
             != sha(&crate::distribution::read_regular(
@@ -440,7 +445,16 @@ pub fn execute_harness(
             "Harness source or executable changed during execution.",
         ));
     }
+    let checked = Instant::now();
+    remaining(deadline)?;
+    let micros = |duration: Duration| duration.as_micros().min(u64::MAX as u128) as u64;
     let mut report = results(&executed.stdout, &expected)?;
+    report["phase_durations_us"] = json!({
+        "initial_hashes":micros(hashed.duration_since(started)),
+        "listing":micros(listed_at.duration_since(hashed)),
+        "execution":micros(executed_at.duration_since(listed_at)),
+        "final_hashes":micros(checked.duration_since(checking))
+    });
     report["source_sha256"] = json!(source_hash);
     report["executable_sha256"] = json!(executable_hash);
     report["stdout_sha256"] = json!(sha(&executed.stdout));
@@ -448,6 +462,8 @@ pub fn execute_harness(
     report["listing_sha256"] = json!(sha(&listed));
     report["exit_code"] = json!(executed.code);
     report["cleanup_verified"] = json!(executed.cleanup_verified);
+    report["duration_us"] = json!(micros(started.elapsed()));
+    remaining(deadline)?;
     Ok(report)
 }
 

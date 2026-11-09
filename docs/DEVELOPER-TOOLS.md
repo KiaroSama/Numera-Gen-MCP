@@ -34,10 +34,16 @@ Replacement41554639558 compiled the task on both Windows targets, but deep fixtu
 aborted before their suites. Unix suites exposed further runtime and tooling failures.
 Qualification41597832142 passed fixture materialization but failed all seven contexts: Windows
 external C build tools rejected verbatim workspace paths, while Unix media integer validation,
-terminal SDK stack size and quality gates failed. Current corrections retain canonical containment,
-pass equivalent conventional path spelling to child tools and heap-own SDK scenario storage without
-raising stack, worker or time bounds. The corrective working tree still requires its own hosted
-compilation and execution.
+terminal SDK stack size and quality gates failed. Its corrections retained canonical containment,
+passed equivalent conventional path spelling to child tools and moved SDK scenario storage to the heap without
+raising stack, worker or time bounds. Qualification41705129534 on `f9fad53` also failed all seven
+native/coverage contexts. Both macOS targets completed all 135 discovered harnesses and release SDK
+checks but failed formatting. Both Windows targets rejected every harness after listing because
+supervision changed the working-directory spelling before command comparison. Linux and coverage
+exhausted their unchanged aggregate budgets. Current corrections snapshot the original directory,
+use the existing native SHA-256 implementation for tooling and add phase timings; hashing overhead
+remains a source-supported hypothesis, not measured CPU attribution. The corrective working tree still
+requires its own hosted compilation and execution. See [test results](TEST-RESULTS.md).
 
 Every task command requires an explicit absolute root and hosted environment. For example, on an
 already prepared hosted runner:
@@ -50,7 +56,8 @@ already prepared hosted runner:
 | --- | --- |
 | `fixtures`, `evidence-capture`, `evidence-verify` | Materialize independently retained public expected inputs and bind their provenance; never generate expectations from the implementation under test. |
 | `inventory`, `stable`, `coverage`, `coverage-gate` | Check original tooling dispositions and Cargo suite discovery; run workspace gates and enforce production-runtime 85/80 floors. |
-| `ledger`, `case-execution`, `execution-matrix`, `signed-execution-matrix`, `retirement-gate` | Authenticate historical 470-case/50-suite evidence, propose current mappings and bind current exact names per context and across seven hosted contexts. Semantic review and release qualification remain separate; retirement intentionally refuses. |
+| `ledger`, `case-execution`, `execution-matrix`, `signed-execution-matrix` | Authenticate historical 470-case/50-suite evidence, propose current mappings and bind current exact names per context and across seven hosted contexts. Source review, execution and final qualification retain separate evidence boundaries. |
+| `retirement-gate` | Read-only verification of an exact qualified parent, the deletion-only successor and that successor's own complete qualification; never deletes source or grants authority to do so. |
 | `licenses TARGET`, `prepare TARGET`, `stage TARGET` | Preserve actual dependency notices and create bounded allowlisted intermediates/prepared distributions. `prepare` is explicitly unsigned, not a completed app build. |
 | `signing-source TARGET`, `signing-tools TARGET`, `sign TARGET`, `package TARGET`, `signature-acceptance TARGET`, `extract-intermediate TARGET`, `extract-signed TARGET`, `activation TARGET` | Require their actual prerequisites, approved signer and existing protected authority; signature/extraction/isolated activation are independent gates, not authorization to edit a real host. |
 
@@ -58,8 +65,12 @@ already prepared hosted runner:
 compiler-emitted test executable, list its names without running, then execute every harness once
 under the original aggregate wall/idle limits and two-worker ceiling. Exact listed/passed names,
 zero-failure/unfiltered summaries, source/binary/output hashes and owned cleanup are retained in
-`test-execution.json`; compilation alone is not execution or semantic parity. Stable uses no
-nightly-only JSON test flags. Compiler inventory must match every test-enabled target of the selected
+`test-execution.json`; compilation alone is not execution or semantic parity. Per-harness
+`phase_durations_us` separately measures initial source/executable hashing, listing, execution and
+final integrity hashing; `duration_us` includes reporting overhead. Both executable byte checks
+remain required, and a phase that exhausts the aggregate deadline cannot be accepted. Tooling hashes
+use the existing native SHA-256 dependency without changing production request fingerprints.
+Stable uses no nightly-only JSON test flags. Compiler inventory must match every test-enabled target of the selected
 Cargo packages. Harnesses retain their package working directory and explicit contained profile/target
 overrides; unrelated compiler-command environment is not copied. Built, release and extracted SDK
 contexts remain separate checks. Release and extracted SDK phases retain their own exact-name reports
@@ -99,10 +110,12 @@ receipts only after fixture cleanup. They bind the exact signing context, public
 manifest, tested binary, SDK report and extracted archive hashes. `signed-execution-matrix` waits for
 all six signing jobs, authenticates original report artifacts and unique receipt digests in each
 successful job log, and joins their SDK inventories to the authenticated seven-context report.
-It has read-only GitHub permissions and receives no publisher inputs. Its output records signed
-stage execution, not independent semantic approval, retirement authorization or release readiness;
-the collector has no successful hosted invocation or qualification. Final archive
-download and cryptographic verification are still separate delivery gates.
+It has read-only GitHub permissions and receives no publisher inputs. Its signed-stage report stays
+separate from `current-qualification.json`, which requires the complete source-reviewed runtime and
+tooling assertions, seven current execution contexts, coverage floors and six signed contexts at the
+exact source. Neither report grants retirement authority or claims independent review. These
+source-authored collectors still have no successful hosted invocation; current qualification remains
+pending. Final archive download and cryptographic verification remain separate delivery gates.
 
 The manual `operation=sign-qualified` route consumes an explicitly selected successful qualification
 run and attempt after main points to the identical SHA. It skips native/coverage suites, authenticates
@@ -115,6 +128,26 @@ protected environment remains main-only. This source route still requires hosted
 authority to dispatch; adding it does not authorize a merge, rerun or publication. GitHub's step-output
 file is runner-owned command transport, not an application cache; generated application state stays
 workspace-contained.
+
+The optional manual inputs `retirement-parent-run-id` and `retirement-parent-run-attempt` select the
+completed successful qualification of parent Q. Supplying either enables the read-only main-only
+`retirement-verification` job after the current signed collector succeeds; an incomplete input pair
+fails validation. The job cannot run during source preparation and receives no signing inputs.
+`retirement-gate` requires successor R to have Q as its sole parent and delete exactly the 46 mapped
+Python/JavaScript originals, preserving every other tree entry, including all five PowerShell files.
+Bounded Git archives and manifest hashes retain the fixed historical original bytes for comparison;
+no retired generator is executed. R must have its own complete source-bound runtime, tooling, coverage
+and signed qualification. The verifier authenticates R's completed collector job, artifact and original
+log even while the enclosing run is still in progress; Q's enclosing run must already have succeeded.
+This is source-authored behavior awaiting hosted proof. No originals have been deleted, and no
+retirement has been verified by this implementation work.
+
+After a valid root is established, `numera-task` records maintenance startup, safe failure and final
+exit/duration through the shared UTC logger at `.ci-work/native/logs/`. Machine-readable reports stay
+on stdout; lifecycle records and concise errors use stderr and the private file. A file-init failure
+warns and retains stderr logging. Help and argument errors before root establishment do not create a
+log. Actual CLI contracts cover success, failure, file fallback, closed handles and evidence capture's
+tracked dependency selection and no-overwrite behavior; authored contracts are not execution proof.
 
 `acceptance-prepare` compiles the actual SDK acceptance harnesses without running them, for a later
 extracted artifact check. Target arguments use the exact six triples in the workflow. No command

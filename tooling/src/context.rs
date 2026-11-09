@@ -37,7 +37,14 @@ pub fn diagnostic(error: &io::Error) -> String {
     }
 }
 pub fn sha(bytes: &[u8]) -> String {
-    numera_gen_mcp::compat::hash::sha256(bytes)
+    let digest = ring::digest::digest(&ring::digest::SHA256, bytes);
+    let mut result = String::with_capacity(64);
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    for byte in digest.as_ref() {
+        result.push(HEX[(byte >> 4) as usize] as char);
+        result.push(HEX[(byte & 15) as usize] as char);
+    }
+    result
 }
 
 pub struct Context {
@@ -53,6 +60,27 @@ impl Context {
         RuntimePaths::new(&root).map_err(|_| fail("Cannot establish contained task state."))?;
         let logger = Logger::new(&root.join(".ci-work/native/logs"), "INFO");
         Ok(Self { root, logger })
+    }
+    pub fn maintenance<T>(&self, operation: impl FnOnce() -> io::Result<T>) -> io::Result<T> {
+        let started = std::time::Instant::now();
+        self.logger.log(
+            "INFO",
+            "task",
+            "Maintenance operation started.",
+            json!({"pid":std::process::id()}),
+        );
+        let result = operation();
+        if let Err(error) = &result {
+            self.logger.log("ERROR", "task", &diagnostic(error), json!({}));
+        }
+        self.logger.log(
+            "INFO",
+            "task",
+            "Maintenance operation finished.",
+            json!({"exit_code":if result.is_ok() {0} else {1},
+                "duration_ms":started.elapsed().as_millis().min(u64::MAX as u128) as u64}),
+        );
+        result
     }
     pub fn hosted(&self) -> io::Result<()> {
         if std::env::var("GITHUB_ACTIONS").as_deref() != Ok("true") {

@@ -312,7 +312,7 @@ fn archive(
 ) -> io::Result<BTreeMap<String, Vec<u8>>> {
     // A fixed full commit plus explicit public paths; no checkout, shell, network, TS interpreter or
     // working-tree attributes. export-subst/export-ignore changes fail the independently pinned hashes.
-    if ![BASELINE, SOURCE].contains(&revision) {
+    if ![BASELINE, SOURCE, crate::inventory::TOOLING_REVISION].contains(&revision) {
         return Err(fail(
             "Only immutable authenticated ledger source revisions are allowed.",
         ));
@@ -343,6 +343,13 @@ fn archive(
         hashes,
     )
 }
+/// Fixed pre-migration Git objects are comparison inputs, never executable generators.
+pub fn tooling_originals(context: &Context, manifest: &Value) -> io::Result<BTreeMap<String, Vec<u8>>> {
+    context.hosted()?;
+    let hashes = crate::inventory::tooling_hashes(manifest)?;
+    archive(context, crate::inventory::TOOLING_REVISION, &hashes)
+}
+
 fn write_sources(
     context: &Context,
     root: &str,

@@ -3,7 +3,9 @@
 Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated tools -> application
 services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
 transactional receipts. The 0.3.0 source adds `generate_media` and `get_media_output_info` to the ten
-legacy image tools; the new tooling/media/rebrand tree is not yet compiled or qualified.
+legacy image tools. Failed hosted qualification attempts compiled and executed parts of the candidate,
+but did not establish complete qualification. The corrective tooling/media/rebrand working tree still
+requires its own successful hosted compilation, execution and qualification; see [test results](TEST-RESULTS.md).
 The tracked production runtime is Rust. Historical 0.2.0 has reviewed mappings for all 470 frozen
 cases and 50 suites, with exact hosted execution at `f253557` / run `40244894089`, attempt2. All sixteen jobs, six real publisher
 signing/negative checks and signed extracted SDK checks passed; owner-host cutover remains separate.

@@ -79,7 +79,10 @@ async fn native_sdk_thirteen_transport_boundary_scenarios() {
 async fn native_sdk_terminal_rounds_preserve_authoritative_outcomes_and_capacity() {
     let operation = terminal::run();
     let bytes = std::mem::size_of_val(&operation);
-    assert!(bytes <= 16 * 1024, "terminal scenario frame is {bytes} bytes");
+    assert!(
+        bytes <= 16 * 1024,
+        "terminal scenario frame is {bytes} bytes"
+    );
     cleanup::run(operation).await;
 }
 

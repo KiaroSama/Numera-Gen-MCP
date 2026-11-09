@@ -30,10 +30,13 @@ fn collect(
     Ok(())
 }
 
-pub fn tooling_manifest(root: &Path, manifest: &Value, acceptance: bool) -> io::Result<Value> {
+pub const TOOLING_REVISION: &str = "a24dccd5f53cb4ccad57297b1cf8f749f42858eb";
+
+/// Historical identities stay immutable even after the working copies are retired.
+pub fn tooling_hashes(manifest: &Value) -> io::Result<std::collections::BTreeMap<String, String>> {
     if manifest["schema_version"] != 2
         || manifest["feature"] != "003-rust-tooling"
-        || manifest["original_revision"] != "a24dccd5f53cb4ccad57297b1cf8f749f42858eb"
+        || manifest["original_revision"] != TOOLING_REVISION
         || manifest["original_file_count"] != 51
         || manifest["rust_migration_count"] != 46
         || manifest["powershell_retained_count"] != 5
@@ -41,7 +44,7 @@ pub fn tooling_manifest(root: &Path, manifest: &Value, acceptance: bool) -> io::
     {
         return Err(fail("Original tooling migration identity differs."));
     }
-    let mut sources = BTreeSet::new();
+    let mut sources = std::collections::BTreeMap::new();
     for (field, count, powershell) in [("entries", 46, false), ("retained_powershell", 5, true)] {
         let rows = manifest[field]
             .as_array()
@@ -54,8 +57,16 @@ pub fn tooling_manifest(root: &Path, manifest: &Value, acceptance: bool) -> io::
             let extension = Path::new(source)
                 .extension()
                 .and_then(|value| value.to_str());
-            if !(source.starts_with("scripts/") || source.starts_with("tests/tooling/"))
-                || !sources.insert(source.to_owned())
+            let digest = row["source_sha256"]
+                .as_str()
+                .filter(|digest| digest.len() == 64 && digest.bytes().all(|byte|
+                    byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)))
+                .ok_or_else(|| fail("Original tooling source hash is invalid."))?;
+            if source.len() > 512
+                || source.bytes().any(|byte| byte == b'\\' || byte == b':' || byte.is_ascii_control())
+                || source.split('/').any(|part| matches!(part, "" | "." | ".."))
+                || !(source.starts_with("scripts/") || source.starts_with("tests/tooling/"))
+                || sources.insert(source.to_owned(), digest.to_owned()).is_some()
                 || (if powershell {
                     extension != Some("ps1")
                 } else {
@@ -64,7 +75,30 @@ pub fn tooling_manifest(root: &Path, manifest: &Value, acceptance: bool) -> io::
             {
                 return Err(fail("Original tooling source is invalid or duplicated."));
             }
-            if row["source_sha256"] != crate::context::sha(&crate::ledger::read(root, source)?) {
+        }
+    }
+    Ok(sources)
+}
+
+pub fn tooling_manifest(root: &Path, manifest: &Value, acceptance: bool) -> io::Result<Value> {
+    let hashes = tooling_hashes(manifest)?;
+    let mut present = 0;
+    for row in manifest["entries"].as_array().unwrap() {
+        match fs::symlink_metadata(root.join(row["source"].as_str().unwrap())) {
+            Ok(_) => present += 1,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => (),
+            Err(error) => return Err(error),
+        }
+    }
+    if !matches!(present, 0 | 46) {
+        return Err(fail("Tooling originals must be entirely retained or entirely retired."));
+    }
+    for (field, powershell) in [("entries", false), ("retained_powershell", true)] {
+        for row in manifest[field].as_array().unwrap() {
+            let source = row["source"].as_str().unwrap();
+            if (powershell || present == 46)
+                && hashes[source] != crate::context::sha(&crate::ledger::read(root, source)?)
+            {
                 return Err(fail("Retained original tooling bytes differ."));
             }
             if powershell {
@@ -101,8 +135,7 @@ pub fn tooling_manifest(root: &Path, manifest: &Value, acceptance: bool) -> io::
             }
         }
     }
-    // A source map, file count or hand-set status cannot authorize retirement. The final hosted
-    // execution/assertion binder is a separate unfinished gate, not a boolean in this document.
+    // The pure source map never authenticates qualification or authorizes a source transition.
     if acceptance {
         return Err(fail(
             "Current tooling qualification is not yet bound to exact hosted execution.",
@@ -133,9 +166,15 @@ pub fn tooling_inventory(manifest: &Value, tracked: &str) -> io::Result<()> {
                     .is_some_and(|ext| matches!(ext, "py" | "mjs" | "ps1"))
         })
         .collect::<BTreeSet<_>>();
-    if expected != actual {
+    let retained = manifest["retained_powershell"]
+        .as_array()
+        .ok_or_else(|| fail("Retained PowerShell inventory missing."))?
+        .iter()
+        .map(|row| row["source"].as_str().ok_or_else(|| fail("Retained source identity missing.")))
+        .collect::<io::Result<BTreeSet<_>>>()?;
+    if expected != actual && retained != actual {
         return Err(fail(
-            "Tracked tooling inventory differs from explicit original dispositions.",
+            "Tracked tooling inventory differs from retained or exactly retired dispositions.",
         ));
     }
     Ok(())
@@ -155,7 +194,11 @@ pub fn check(context: &Context, retired: bool) -> io::Result<()> {
         &context.root,
         "docs/testing/tooling-migration.json",
     )?)?;
-    tooling_manifest(&context.root, &manifest, retired)?;
+    tooling_manifest(&context.root, &manifest, false)?;
+    let originals = crate::ledger_inputs::tooling_originals(context, &manifest)?;
+    if originals.len() != 51 {
+        return Err(fail("Authenticated historical tooling inventory is incomplete."));
+    }
     let bytes = context.run(
         context.command("git").args(["ls-files", "-z"]),
         10000,
@@ -234,6 +277,9 @@ pub fn check(context: &Context, retired: bool) -> io::Result<()> {
     for name in rust_files {
         validate_source(&name, &fs::read(context.root.join(&name))?)?;
     }
+    if retired {
+        crate::retirement::check(context)?;
+    }
     println!(
         "{}",
         serde_json::json!({"component":"native-inventory","suites":actual.len(),"utf8_files":checked,"interpreted_retirement_required":retired})
@@ -241,16 +287,12 @@ pub fn check(context: &Context, retired: bool) -> io::Result<()> {
     Ok(())
 }
 
-pub fn coverage(context: &Context) -> io::Result<()> {
-    let report: Value = serde_json::from_slice(&fs::read(
-        context.relative(".ci-work/native/coverage.json")?,
-    )?)
-    .map_err(|_| fail("Invalid coverage evidence."))?;
+pub fn coverage_metrics(report: &Value) -> io::Result<Vec<Value>> {
+    let mut metrics = Vec::new();
     let data = report["data"]
         .as_array()
         .filter(|v| !v.is_empty())
         .ok_or_else(|| fail("Empty coverage evidence."))?;
-    let mut failed = false;
     for (metric, floor) in [("regions", 85.0), ("branches", 80.0)] {
         let mut count = 0u64;
         let mut covered = 0u64;
@@ -278,15 +320,44 @@ pub fn coverage(context: &Context) -> io::Result<()> {
         } else {
             covered as f64 / count as f64 * 100.0
         };
-        println!(
-            "{}",
-            serde_json::json!({"metric":metric,"count":count,"covered":covered,"percent":percent,"floor":floor})
+        metrics.push(
+            serde_json::json!({"metric":metric,"count":count,"covered":covered,"percent":percent,"floor":floor}),
         );
-        failed |= count == 0 || percent < floor;
     }
-    if failed {
-        Err(fail("Native coverage gates failed."))
-    } else {
-        Ok(())
+    Ok(metrics)
+}
+
+pub fn verify_coverage_metrics(metrics: &[Value]) -> io::Result<()> {
+    if metrics.len() != 2 {
+        return Err(fail("Native coverage metric inventory differs."));
     }
+    for (metric, (name, floor)) in metrics.iter().zip([("regions", 85.0), ("branches", 80.0)]) {
+        let valid = metric["count"]
+            .as_u64()
+            .filter(|count| *count > 0)
+            .zip(metric["covered"].as_u64())
+            .is_some_and(|(count, covered)| {
+                let percent = covered as f64 / count as f64 * 100.0;
+                covered <= count
+                    && percent >= floor
+                    && metric["percent"].as_f64() == Some(percent)
+                    && metric["floor"].as_f64() == Some(floor)
+            });
+        if metric["metric"] != name || !valid {
+            return Err(fail("Native coverage gates failed."));
+        }
+    }
+    Ok(())
+}
+
+pub fn coverage(context: &Context) -> io::Result<()> {
+    let report: Value = serde_json::from_slice(&fs::read(
+        context.relative(".ci-work/native/coverage.json")?,
+    )?)
+    .map_err(|_| fail("Invalid coverage evidence."))?;
+    let metrics = coverage_metrics(&report)?;
+    for metric in &metrics {
+        println!("{metric}");
+    }
+    verify_coverage_metrics(&metrics)
 }

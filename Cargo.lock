@@ -1142,6 +1142,7 @@ dependencies = [
  "flate2",
  "numera-gen-mcp",
  "reqwest",
+ "ring",
  "serde",
  "serde_json",
  "sha2",

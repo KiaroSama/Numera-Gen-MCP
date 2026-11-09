@@ -6,12 +6,13 @@ The project has an approved RSA-3072 self-signed code-signing identity. Its publ
 [signing/publisher.json](signing/publisher.json), [publisher-cert.der](signing/publisher-cert.der) and
 [publisher-key.der](signing/publisher-key.der). These are public files, not signing credentials.
 
-## Current delivery status
+## Historical 0.2.0 delivery evidence
 
 All six targets passed real publisher signing, unsigned/tamper/wrong-signer rejection and signed
 package/extracted SDK verification at `f2535577c2e3145da03e2d5c123d7de061656860`,
 [run40244894089](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40244894089), attempt2.
-All sixteen jobs succeeded. Both macOS architectures qualified the memory-only signing route below.
+All sixteen jobs succeeded. Both macOS architectures qualified the historical memory-only Python
+signing helper, not the current Rust implementation described below.
 Signed Install/Update/Register/Remove passed all six targets; activation independently requires native
 Windows/macOS signatures as well as the pinned manifest. Both Windows locked-member rollback controls passed.
 The published Windows x64 archive also passed independent pinned Authenticode and manifest verification
@@ -19,13 +20,17 @@ plus isolated ten-tool SDK readiness on the current host, without provider acces
 [Release0.2.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.2.0) contains only original
 verified CI archives. Actual owner-host cutover is separate; the working runtime is retained.
 Unsigned intermediate CI archives remain internal test artifacts, never completed distributions.
+
+## Current 0.3.0 candidate
+
 The current candidate's existing-key signing route remains manual and `main`-only. It requires either
 successful native, coverage and execution-matrix jobs in the same qualification run, or explicit
 `sign-qualified` promotion of an original successful run/attempt at the identical SHA. Promotion
 skips those already executed suites; it authenticates their original matrix, jobs and intermediate
 bytes before signing. Source preparation cannot enter the protected environment or receive its inputs.
-These source-authored guards are not evidence that 0.3.0 has been compiled, qualified, signed or published,
-and do not independently authorize a signing dispatch.
+Failed hosted attempts compiled and executed parts of 0.3.0, but the corrective working tree still
+requires complete hosted qualification. These source-authored guards are not evidence of successful
+qualification, signing or publication, and do not independently authorize a signing dispatch.
 
 ## What the signature must prove
 
@@ -104,9 +109,10 @@ explicitly selected inputs and private temporary-storage cleanup. Build/test job
 key. No untrusted PR code receives signing secrets. Missing custody/verifier/protection blocks final
 artifacts and Release, while independent source/test work may continue.
 
-The manual workflow waits for all unprivileged checks, then enters the branch-restricted signing
-environment without a separate deployment review, as requested by the owner. Its exact branch
-restriction is migration-only; a future branch needs a fresh owner decision. Only the existing encrypted publisher PFX and its password are selected inputs.
+The manual workflow requires successful unprivileged qualification, then enters the branch-restricted
+signing environment without a separate deployment review, as requested by the owner. The current
+candidate requires a `main`-only restriction, verified before signing; another branch needs a fresh
+owner decision. Only the existing encrypted publisher PFX and its password are selected inputs.
 The current Rust signing step verifies the certificate pin before native import and writes exclusive,
 owner-only temporary inputs. OpenSSL reads the password through `-passin file:PATH`; osslsigncode uses
 `-readpass PATH`. Only the protected filename enters arguments, not the password or an inherited secret

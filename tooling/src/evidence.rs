@@ -35,6 +35,7 @@ pub(crate) fn dependencies(context: &Context) -> io::Result<BTreeMap<String, Str
                 "docs/testing/tooling-migration.json",
                 "docs/testing/sdk-tooling-migration.json",
                 crate::source_review::REVIEW_FILE,
+                crate::tooling_review::REVIEW_FILE,
                 "docs/testing/native-parity.json",
             ]
             .contains(&name)
@@ -257,7 +258,7 @@ pub fn verify_platform_bundle(
     }
     Ok(manifest)
 }
-pub fn capture(context: &Context) -> io::Result<()> {
+fn checkout_source(context: &Context) -> io::Result<String> {
     context.hosted()?;
     let source = context.source_sha()?;
     let actual = context.capture(
@@ -273,6 +274,10 @@ pub fn capture(context: &Context) -> io::Result<()> {
     {
         return Err(fail("Evidence checkout differs from hosted SHA."));
     }
+    Ok(source)
+}
+pub fn capture(context: &Context) -> io::Result<()> {
+    let source = checkout_source(context)?;
     let bytes = bundle(
         &source,
         &dependencies(context)?,
@@ -288,6 +293,7 @@ pub struct Snapshot {
     pub dependencies: BTreeMap<String, String>,
 }
 pub fn snapshot(context: &Context) -> io::Result<Snapshot> {
+    let source = checkout_source(context)?;
     let bytes = read_regular(
         &context.relative(".ci-work/native/oracle-evidence.zip")?,
         (INPUTS.len() + 1) * LIMIT,
@@ -295,7 +301,7 @@ pub fn snapshot(context: &Context) -> io::Result<Snapshot> {
     let dependencies = dependencies(context)?;
     verify_bundle(
         &bytes,
-        &context.source_sha()?,
+        &source,
         &dependencies,
         &materialization(context)?,
         &inputs(context)?,

@@ -358,8 +358,12 @@ fn actual_promotion_stage_and_sign_refuse_changed_original_bytes_before_private_
                     _ => "Prepared signing tree is not the original executed intermediate.",
                 };
                 assert_eq!(
-                    std::str::from_utf8(&signed.stderr).unwrap().trim(),
-                    format!("ERROR: {expected}")
+                    std::str::from_utf8(&signed.stderr)
+                        .unwrap()
+                        .lines()
+                        .filter(|line| !line.starts_with('{'))
+                        .collect::<Vec<_>>(),
+                    vec![format!("ERROR: {expected}")]
                 );
             } else {
                 assert_eq!(staged.code, 1, "{case}");

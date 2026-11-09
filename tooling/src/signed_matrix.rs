@@ -285,6 +285,24 @@ pub fn check(context: &Context) -> io::Result<()> {
             "Signed matrix dependencies changed during collection.",
         ));
     }
+    let qualification = crate::final_qualification::bind(
+        &original.execution,
+        &root,
+        &records,
+        &sha(&ledger::read(&context.root, crate::source_review::REVIEW_FILE)?),
+        &sha(&ledger::read(&context.root, crate::tooling_review::REVIEW_FILE)?),
+    )?;
+    let qualification_bytes = serde_json::to_vec_pretty(&qualification)
+        .map_err(|_| fail("Cannot encode current qualification."))?;
+    context.write_new(
+        ".ci-work/native/current-qualification.json",
+        &qualification_bytes,
+    )?;
+    println!(
+        "{}",
+        json!({"component":"native-current-qualification","identity":root,
+            "report_sha256":sha(&qualification_bytes),"qualification_verified":true}),
+    );
     let report = json!({"schema_version":1,"component":"native-signed-six-context-execution",
         "source_sha":root["source_sha"],"run_id":run,"run_attempt":attempt,"contexts":records,
         "evidence":evidence_records,"execution_matrix_artifact":original.matrix_artifact,

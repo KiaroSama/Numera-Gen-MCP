@@ -19,6 +19,14 @@ on:
         description: Exact original successful attempt, only for sign-qualified
         type: string
         required: false
+      retirement-parent-run-id:
+        description: Completed signed qualification run for the exact retirement parent
+        type: string
+        required: false
+      retirement-parent-run-attempt:
+        description: Exact successful signed qualification attempt for the retirement parent
+        type: string
+        required: false
 permissions:
   contents: read
 env:
@@ -406,10 +414,45 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: '"$NUMERA_BOOTSTRAP_OWNER" bounded 900000 60000 --exec ./target/debug/numera-task --root "$GITHUB_WORKSPACE" signed-execution-matrix'
-      - name: Preserve authenticated signed execution without semantic promotion
+      - name: Preserve authenticated signed execution and separate final qualification
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: native-signed-execution-matrix
-          path: .ci-work/native/signed-execution-matrix.json
+          path: |
+            .ci-work/native/signed-execution-matrix.json
+            .ci-work/native/current-qualification.json
           if-no-files-found: error
           retention-days: 7
+  retirement-verification:
+    if: >-
+      !cancelled() && needs.signed-execution-matrix.result == 'success' &&
+      github.repository == 'KiaroSama/Numera-Gen-MCP' &&
+      github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' &&
+      (inputs.operation == 'qualify' || inputs.operation == 'sign-qualified') &&
+      (inputs.retirement-parent-run-id != '' || inputs.retirement-parent-run-attempt != '')
+    needs: [signed-execution-matrix]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    timeout-minutes: 50
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bootstrap the read-only retirement verifier
+        uses: ./.github/actions/native-bootstrap
+        timeout-minutes: 30
+        with:
+          target: x86_64-unknown-linux-gnu
+      - name: Authenticate parent and current qualification without deleting source
+        timeout-minutes: 16
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERA_RETIREMENT_RUN_ID: ${{ inputs.retirement-parent-run-id }}
+          NUMERA_RETIREMENT_RUN_ATTEMPT: ${{ inputs.retirement-parent-run-attempt }}
+        run: '"$NUMERA_BOOTSTRAP_OWNER" bounded 900000 60000 --exec ./target/debug/numera-task --root "$GITHUB_WORKSPACE" retirement-gate'

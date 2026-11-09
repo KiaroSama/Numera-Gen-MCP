@@ -44,7 +44,8 @@ fn harness(path: &str) -> io::Result<&str> {
 fn platforms(mapping: &str) -> &'static [&'static str] {
     match mapping {
         "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence"
-        | "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence" => {
+        | "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence"
+        | "tests/rust/sdk_acceptance/http.rs::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children" => {
             &["linux", "darwin"]
         }
         "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status"
@@ -69,6 +70,26 @@ pub fn bind(
     sources: &BTreeSet<String>,
     reports: &BTreeMap<String, Vec<u8>>,
 ) -> io::Result<Value> {
+    let manifest = ledger::parse(manifest_bytes)?;
+    let originals = inventory::tooling_hashes(&manifest)?
+        .keys()
+        .map(|path| Ok((path.clone(), ledger::read(root, path)?)))
+        .collect::<io::Result<BTreeMap<_, _>>>()?;
+    bind_with_originals(root, manifest_bytes, identity, provenance, dependencies, sources, reports, &originals)
+}
+
+/// Original blobs are separately hash-authenticated historical inputs, not current dependencies.
+#[expect(clippy::too_many_arguments, reason = "Preserve the existing evidence boundary and add only immutable original bytes.")]
+pub fn bind_with_originals(
+    root: &Path,
+    manifest_bytes: &[u8],
+    identity: &Value,
+    provenance: &str,
+    dependencies: &BTreeMap<String, String>,
+    sources: &BTreeSet<String>,
+    reports: &BTreeMap<String, Vec<u8>>,
+    originals: &BTreeMap<String, Vec<u8>>,
+) -> io::Result<Value> {
     if identity["phase"] != "built"
         || !sources.contains("native/lib.rs")
         || !sources.contains("tooling/src/lib.rs")
@@ -84,6 +105,12 @@ pub fn bind(
     }
     let manifest = ledger::parse(manifest_bytes)?;
     inventory::tooling_manifest(root, &manifest, false)?;
+    let original_hashes = inventory::tooling_hashes(&manifest)?;
+    if originals.len() != original_hashes.len()
+        || originals.iter().any(|(path, bytes)| original_hashes.get(path) != Some(&sha(bytes)))
+    {
+        return Err(fail("Historical tooling originals differ from the fixed manifest hashes."));
+    }
     if manifest["sdk_scenario_manifest"] != "docs/testing/sdk-tooling-migration.json" {
         return Err(fail("Tooling SDK scenario manifest identity differs."));
     }
@@ -131,7 +158,10 @@ pub fn bind(
     ]);
     for field in ["entries", "retained_powershell"] {
         for row in manifest[field].as_array().unwrap() {
-            required.insert(row["source"].as_str().unwrap());
+            let path = row["source"].as_str().unwrap();
+            if field == "retained_powershell" || root.join(path).try_exists()? {
+                required.insert(path);
+            }
             if field == "entries" {
                 for field in ["rust", "tests"] {
                     required.extend(paths(row, field)?);
@@ -253,7 +283,7 @@ pub fn bind(
         json!({"schema_version":1,"component":"native-tooling-harness-execution",
         "identity":identity,"manifest_sha256":sha(manifest_bytes),"provenance_sha256":provenance,
         "execution_report_sha256":sha(&reports["built"]),"phase_reports_sha256":report_hashes,
-        "source_files":source_hashes,
+        "source_files":source_hashes,"historical_original_files":original_hashes,
         "mapped_python_js":46,"retained_powershell":manifest["retained_powershell"],
         "entries":entries,"harnesses":harnesses,"current_named_harness_execution_verified":true,
         "current_named_test_execution_verified":true,"declared_scenario_execution_verified":true,

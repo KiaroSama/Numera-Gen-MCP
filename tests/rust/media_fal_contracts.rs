@@ -125,7 +125,14 @@ fn authoritative_integer_round_trips_keep_native_bounds_without_numeric_coercion
         .to_serde()
         .unwrap();
     assert!(
-        fal::prepare("fal-ai/stable-audio", "text-to-audio", Some("x"), &[], &parameters).is_ok()
+        fal::prepare(
+            "fal-ai/stable-audio",
+            "text-to-audio",
+            Some("x"),
+            &[],
+            &parameters
+        )
+        .is_ok()
     );
 }
 

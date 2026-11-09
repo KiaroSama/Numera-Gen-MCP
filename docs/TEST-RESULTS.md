@@ -30,6 +30,36 @@ locations also failed. The current corrections keep canonical containment intern
 external-tool path spelling, reuse authoritative integer semantics and heap-own SDK scenario frames.
 Focused regressions were authored before these repairs; their execution and the corrected tree's
 qualification remain pending. No stack, timeout, worker or coverage ceiling was raised.
+
+[Qualification41705129534, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/41705129534/attempts/1)
+on `f9fad53ca2b8ed908714f4558cea15d37fd87391` also failed all seven native/coverage jobs. Both
+macOS targets completed all 135 discovered harnesses and release SDK checks, but failed formatting.
+Both Windows targets rejected every harness after listing: supervision normalized the listing
+command's working-directory spelling before the runner compared it with a fresh command. Linux and
+coverage exhausted their unchanged aggregate budgets. Large debug executable hashing is a
+source-supported overhead hypothesis, not a measured CPU attribution. The corrective source snapshots
+the original directory before supervision, uses the existing native SHA-256 implementation only for
+tooling, retains both integrity checks and adds phase timings. Maintenance lifecycle and actual
+evidence-capture/no-overwrite regressions are also authored; none is a corrected hosted result yet.
+Seven authenticated formatting differences were applied without running a local formatter.
+
+Current T027-T029 corrections and contracts are source-authored, not executed results. Leaf SDK
+stdio/HTTP children now reuse the existing Unix spawn mode that keeps them in the outer harness's
+process group; Windows ownership remains unchanged, and an abrupt-parent cleanup regression awaits
+hosted execution. Evidence capture and snapshot/verify share the bounded actual-HEAD check; the
+isolated CLI contract commits only excluded documentation and requires refusal with unchanged archive
+bytes. The retirement path authenticates fixed historical originals through bounded Git archives,
+preserves all five PowerShell files, requires an exact 46-path deletion-only successor of a qualified
+parent, and authenticates that successor's own full qualification through a read-only main collector.
+No originals were deleted, no retirement was verified, and ancestor qualification cannot qualify a
+successor. These authored regression cases have no observed RED/GREEN run under the local Rust ban.
+
+Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and ZIP9.5.0. RMCP3.9.0 addresses the
+upstream unbounded non-SSE Streamable HTTP client response advisory; this is a dependency update,
+not a demonstrated production exploit or a successful application test. The existing lockfile still
+contains the previous versions. Authentic hosted resolution, current crate notices, compatibility and
+all qualification gates remain pending. ICU2.3.1 retains its documented fingerprint-compatibility hold.
+
 The isolated
 [preparation40956557555](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40956557555)
 only resolved the workspace lock/format for `60be391`; neither preparation nor diagnostic artifacts
@@ -45,8 +75,9 @@ The authored evidence path now joins exact release/extracted-intermediate SDK na
 tested binary, then separately collects all six signed signature/extraction/activation/SDK receipts.
 Receipt digests, successful original job logs and source/run/attempt provenance are load-bearing;
 source or synthetic validator checks do not establish that those stages ran. The final signed
-collector has no successful hosted invocation or qualification, with semantic qualification and
-retirement explicitly unapproved. See [developer tooling](DEVELOPER-TOOLS.md).
+collector has no successful hosted invocation. Its separate current-qualification binder and optional
+retirement verifier are source-authored only; neither current qualification nor retirement is
+verified. See [developer tooling](DEVELOPER-TOOLS.md).
 
 ## Historical native 0.2.0 qualification
 

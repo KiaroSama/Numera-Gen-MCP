@@ -51,7 +51,9 @@ fn child_cargo_paths_keep_physical_ownership_without_verbatim_windows_arguments(
     let command = context.command("cargo");
     let cwd = command.get_current_dir().unwrap();
     assert_eq!(cwd.canonicalize().unwrap(), context.root);
-    let environment = command.get_envs().collect::<std::collections::BTreeMap<_, _>>();
+    let environment = command
+        .get_envs()
+        .collect::<std::collections::BTreeMap<_, _>>();
     for (key, suffix) in [
         ("CARGO_HOME", ".ci-cache/cargo"),
         ("RUSTUP_HOME", ".ci-cache/rustup"),
@@ -69,6 +71,33 @@ fn child_cargo_paths_keep_physical_ownership_without_verbatim_windows_arguments(
     assert!(!cwd.to_string_lossy().starts_with(r"\\?\"));
 }
 
+#[test]
+fn tooling_native_sha256_preserves_independent_vectors_and_runtime_hash_bytes() {
+    for (bytes, expected) in [
+        (
+            b"".as_slice(),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ),
+        (
+            b"abc".as_slice(),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+        ),
+        (
+            b"hello world".as_slice(),
+            "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+        ),
+    ] {
+        assert_eq!(numera_task::context::sha(bytes), expected);
+    }
+    for size in [55, 56, 63, 64, 65, 127, 128, 129, 65536] {
+        let bytes = (0..size).map(|n| (n % 256) as u8).collect::<Vec<_>>();
+        assert_eq!(
+            numera_task::context::sha(&bytes),
+            numera_gen_mcp::compat::hash::sha256(&bytes)
+        );
+    }
+}
+
 fn coverage(regions: (u64, u64), branches: (u64, u64)) -> Value {
     json!({"data":[{"totals":{"regions":{"count":regions.0,"covered":regions.1},"branches":{"count":branches.0,"covered":branches.1}}}]})
 }
@@ -78,6 +107,16 @@ fn runtime_coverage_requires_both_eighty_five_region_and_eighty_branch_floors() 
     let fixture = Fixture::new();
     let context = fixture.context();
     fixture.report(&coverage((100, 85), (100, 80)));
+    let metrics = inventory::coverage_metrics(&coverage((100, 85), (100, 80))).unwrap();
+    assert_eq!(metrics.len(), 2);
+    assert_eq!(
+        metrics[0],
+        json!({"metric":"regions","count":100,"covered":85,"percent":85.0,"floor":85.0})
+    );
+    assert_eq!(
+        metrics[1],
+        json!({"metric":"branches","count":100,"covered":80,"percent":80.0,"floor":80.0})
+    );
     inventory::coverage(&context).unwrap();
     for report in [
         coverage((100, 84), (100, 80)),
@@ -265,6 +304,11 @@ fn original_tooling_manifest_accounts_for_every_file_without_promoting_source_ma
             .is_err()
     );
     assert!(inventory::tooling_inventory(&manifest, tracked.split_once('\0').unwrap().1).is_err());
+    // Retired originals remain historical input; current tracking contains exactly the five originals.
+    let retired = manifest["retained_powershell"].as_array().unwrap().iter()
+        .map(|row| row["source"].as_str().unwrap()).collect::<Vec<_>>().join("\0") + "\0";
+    inventory::tooling_inventory(&manifest, &retired).unwrap();
+    assert!(inventory::tooling_inventory(&manifest, &(retired + "scripts/unmapped.py\0")).is_err());
     // An ignored retired source helper is not part of git ls-files and must not enter the inventory.
     inventory::tooling_inventory(&manifest, &(tracked.clone() + "docs/example.md\0")).unwrap();
     for mutation in [
@@ -387,7 +431,26 @@ fn actual_task_cli_reports_help_invalid_input_and_unauthorized_signing_without_p
             assert!(stderr.is_empty());
         } else {
             assert!(stdout.is_empty());
-            assert_eq!(stderr.trim(), format!("ERROR: {expected}"));
+            let diagnostics = stderr
+                .lines()
+                .filter(|line| !line.starts_with('{'))
+                .collect::<Vec<_>>();
+            assert_eq!(diagnostics, vec![format!("ERROR: {expected}")]);
+            let events = stderr
+                .lines()
+                .filter(|line| line.starts_with('{'))
+                .map(|line| serde_json::from_str::<Value>(line).unwrap())
+                .collect::<Vec<_>>();
+            let initialized = !matches!(
+                expected,
+                "Task root must be absolute." | "Explicit owning --root is required."
+            );
+            assert_eq!(events.len(), if initialized { 3 } else { 0 });
+            if initialized {
+                assert_eq!(events[1]["level"], "ERROR");
+                assert_eq!(events[1]["message"], expected);
+                assert_eq!(events[2]["exit_code"], expected_code);
+            }
         }
         for private in [
             root_text,

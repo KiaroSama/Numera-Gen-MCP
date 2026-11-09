@@ -168,7 +168,9 @@ pub fn run(
     };
     let command_cwd = crate::runtime_paths::command_path(&cwd);
     if command_cwd.canonicalize()? != cwd {
-        return Err(io::Error::other("External child directory identity differs."));
+        return Err(io::Error::other(
+            "External child directory identity differs.",
+        ));
     }
     command
         .current_dir(command_cwd)

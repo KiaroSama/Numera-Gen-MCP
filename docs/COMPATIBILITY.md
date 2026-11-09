@@ -3,7 +3,7 @@
 ## Numera Gen MCP 0.3.0 rebrand boundary
 
 The current source uses product **Numera Gen MCP**, executable `numera-gen-mcp`, Rust crate
-`numera_gen_mcp`, host entry `numera-gen` and repository `KiaroSama/Numera-Gen-MCP`. It is a new
+`numera_gen_mcp`, host entry `numera-gen-mcp` and repository `KiaroSama/Numera-Gen-MCP`. It is a new
 candidate: historical 0.2.0 CI, signatures and downloads do not qualify 0.3.0 until its own hosted
 checks pass. Released 0.2.0 archive names, embedded executable/product metadata, signed manifests,
 certificate/key bytes and source hashes remain unchanged.
@@ -11,7 +11,7 @@ certificate/key bytes and source hashes remain unchanged.
 Existing `NUMERA_*` keys, adjacent `.env`/`config.local.json`, Windows `Numera/ImageGen` and Unix
 `numera-image-gen` per-user roots remain compatibility addresses; private files are not relocated.
 Signed old installations retain their distribution-owned executable names. Current registration
-writes only `numera-gen`; it never silently renames/deletes an existing `numera-image-gen` entry.
+writes only `numera-gen-mcp`; it never silently renames/deletes an existing `numera-image-gen` entry.
 Back up and explicitly migrate the selected entry before reconnecting; do not run duplicate entries
 against one receipt/state directory. Legacy `numera-image://outputs/` addresses remain readable.
 Old image request fingerprints, original output identifiers/bytes and unknown-outcome receipts are

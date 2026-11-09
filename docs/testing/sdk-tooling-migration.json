@@ -4,7 +4,7 @@
   "task": "T011",
   "status": "authored_not_compiled_or_executed",
   "test_target": "tests/rust/sdk_acceptance.rs",
-  "transport": "rmcp 3.8.0 independent client over Owned child pipes or actual streamable HTTP",
+  "transport": "rmcp 3.9.0 independent client over Owned child pipes or actual streamable HTTP",
   "source_state": "Original scripts retained unchanged until qualification. Feature004 adapts the current catalog to twelve tools and adds a resource URI alias; all ten legacy tools and old image URI assertions remain.",
   "dependencies": {
     "rmcp": ["client", "transport-async-rw", "transport-streamable-http-client-reqwest"],
@@ -24,7 +24,7 @@
       "source_sha256": "17eb11e22efc3382a1f17a32d8c645471d5ec52744f7119600dc47d77364b759",
       "export": "top-level HTTP interoperability",
       "scenarios": ["two real HTTP SDK sessions", "original ten tools retained in the twelve-tool catalog; legacy resource template plus current media alias; health/model validation", "missing bearer401/wrong bearer401/foreign origin403", "config/stderr token privacy and zero stdout", "SDK session close then graceful POSIX HTTP exit"],
-      "rust_tests": ["native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit"],
+      "rust_tests": ["native_http_two_real_sdk_sessions_auth_origin_privacy_and_graceful_exit", "http::containment::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children"],
       "modules": ["tests/rust/sdk_acceptance/http.rs"]
     },
     {
@@ -112,8 +112,8 @@
       "source_sha256": "34c7d256faf389efcc2544c67465a01672c3b8c0e5d0ea84a58376a31f4eb27f",
       "export": ["provider", "json", "call", "job", "pair", "close", "ownedScenario"],
       "scenarios": ["bounded provider requests/drained late errors", "actual owned process and independent SDK", "allowlisted env/contained temp", "two sequential handshakes/readiness unique runIDs", "per-call/per-host/per-scenario bounds and cleanup"],
-      "rust_tests": ["all sdk_acceptance tests", "contracts::late_provider_handler_error_fails_even_when_scenario_body_already_passed", "contracts::cancelling_provider_finish_aborts_its_owner_and_drops_pending_handlers", "cleanup_contracts::failed_scenario_awaits_late_provider_errors_and_preserves_the_original_failure", "cleanup_contracts::timed_out_scenario_releases_held_handlers_before_removing_its_workspace", "cleanup_contracts::failed_actual_sdk_scenario_reaps_the_child_and_diagnostics_before_workspace_cleanup"],
-      "modules": ["tests/rust/sdk_acceptance/host.rs", "tests/rust/sdk_acceptance/provider.rs", "tests/rust/sdk_acceptance/cleanup.rs", "tests/rust/sdk_acceptance/cleanup_contracts.rs"]
+      "rust_tests": ["all sdk_acceptance tests", "contracts::late_provider_handler_error_fails_even_when_scenario_body_already_passed", "contracts::cancelling_provider_finish_aborts_its_owner_and_drops_pending_handlers", "cleanup_contracts::failed_scenario_awaits_late_provider_errors_and_preserves_the_original_failure", "cleanup_contracts::timed_out_scenario_releases_held_handlers_before_removing_its_workspace", "cleanup_contracts::failed_actual_sdk_scenario_reaps_the_child_and_diagnostics_before_workspace_cleanup", "http::containment::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children"],
+      "modules": ["tests/rust/sdk_acceptance/host.rs", "tests/rust/sdk_acceptance/provider.rs", "tests/rust/sdk_acceptance/cleanup.rs", "tests/rust/sdk_acceptance/cleanup_contracts.rs", "tests/rust/sdk_acceptance/http.rs"]
     },
     {
       "source": "tests/tooling/native_host_fixture_contracts.mjs",

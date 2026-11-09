@@ -208,8 +208,12 @@ impl Host {
         era: Era,
         pre_cancel: bool,
     ) -> Result<Self> {
-        let mut child = Owned::spawn(&mut command(&launch, workspace))
-            .map_err(|_| "Cannot start isolated native SDK child")?;
+        // Leaf bridges inherit the harness group so abrupt outer cancellation contains them.
+        #[cfg(unix)]
+        let child = Owned::spawn_direct(&mut command(&launch, workspace));
+        #[cfg(windows)]
+        let child = Owned::spawn(&mut command(&launch, workspace));
+        let mut child = child.map_err(|_| "Cannot start isolated native SDK child")?;
         let pid = child.id();
         assert!(pid > 0 && pid != std::process::id());
         let pipes = child.pipes().map_err(|_| "Native SDK pipes missing")?;
@@ -402,9 +406,7 @@ impl Drop for Host {
         if let Some(mut child) = self.child.take()
             && child.stop(Instant::now() + Duration::from_secs(2)).is_err()
         {
-            super::cleanup::defer(async {
-                Err("Owned native child cleanup unverified".into())
-            });
+            super::cleanup::defer(async { Err("Owned native child cleanup unverified".into()) });
         }
         if let Some(task) = self.diagnostics.take() {
             let task = tokio_util::task::AbortOnDropHandle::new(task);

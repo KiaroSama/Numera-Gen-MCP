@@ -16,6 +16,7 @@ struct Fixture {
     sources: BTreeSet<String>,
     report: Value,
     artifact_reports: BTreeMap<String, Value>,
+    originals: BTreeMap<String, Vec<u8>>,
 }
 impl Fixture {
     fn new(target: &str) -> Self {
@@ -25,6 +26,11 @@ impl Fixture {
             .to_owned();
         let manifest = fs::read(root.join(tooling_execution::MANIFEST_FILE)).unwrap();
         let parsed: Value = serde_json::from_slice(&manifest).unwrap();
+        let context = numera_task::context::Context {
+            root: root.canonicalize().unwrap(),
+            logger: numera_gen_mcp::logging::Logger::new(&root.join(".ci-work/tooling-tests/logs"), "ERROR"),
+        };
+        let originals = numera_task::ledger_inputs::tooling_originals(&context, &parsed).unwrap();
         let mut files = BTreeSet::from([
             tooling_execution::MANIFEST_FILE.to_owned(),
             "native/devtools/mod.rs".into(),
@@ -38,7 +44,10 @@ impl Fixture {
         let mut names = BTreeMap::<String, BTreeSet<String>>::new();
         for field in ["entries", "retained_powershell"] {
             for row in parsed[field].as_array().unwrap() {
-                files.insert(row["source"].as_str().unwrap().to_owned());
+                let path = row["source"].as_str().unwrap();
+                if root.join(path).try_exists().unwrap() {
+                    files.insert(path.to_owned());
+                }
                 if field == "entries" {
                     for mapping in row["named_tests"].as_array().unwrap() {
                         let (file, symbol) = mapping.as_str().unwrap().split_once("::").unwrap();
@@ -50,6 +59,7 @@ impl Fixture {
                             file
                         };
                         let applicable = match symbol {
+                            "abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children" => !target.contains("windows"),
                             "actual_developer_cli_preserves_full_windows_child_exit_status"
                             | "unsigned_update_is_rejected_before_replacing_a_locked_installation" => {
                                 target.contains("windows")
@@ -148,6 +158,7 @@ impl Fixture {
             sources,
             report,
             artifact_reports,
+            originals,
         }
     }
     fn bind(&self) -> std::io::Result<Value> {
@@ -157,7 +168,7 @@ impl Fixture {
             .map(|(phase, report)| (phase.clone(), serde_json::to_vec(report).unwrap()))
             .collect::<BTreeMap<_, _>>();
         reports.insert("built".into(), serde_json::to_vec(&self.report).unwrap());
-        tooling_execution::bind(
+        tooling_execution::bind_with_originals(
             &self.root,
             &self.manifest,
             &self.identity,
@@ -165,6 +176,7 @@ impl Fixture {
             &self.dependencies,
             &self.sources,
             &reports,
+            &self.originals,
         )
     }
 }
@@ -178,6 +190,34 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
     ] {
         let fixture = Fixture::new(target);
         let result = fixture.bind().unwrap();
+        let manifest = serde_json::from_slice(&fixture.manifest).unwrap();
+        let review = serde_json::from_slice(
+            &fs::read(fixture.root.join(numera_task::tooling_review::REVIEW_FILE)).unwrap(),
+        )
+        .unwrap();
+        let reviewed = numera_task::tooling_review::bind_execution(
+            &fixture.root,
+            &manifest,
+            &review,
+            &result,
+        )
+        .unwrap();
+        assert_eq!(
+            reviewed["current_tooling_assertions_and_execution_verified"],
+            true
+        );
+        assert_eq!(reviewed["qualification_verified"], false);
+        let mut missing = result.clone();
+        missing["entries"].as_array_mut().unwrap().pop();
+        assert!(
+            numera_task::tooling_review::bind_execution(
+                &fixture.root,
+                &manifest,
+                &review,
+                &missing,
+            )
+            .is_err()
+        );
         assert_eq!(result["mapped_python_js"], 46);
         assert_eq!(result["retained_powershell"].as_array().unwrap().len(), 5);
         assert_eq!(result["entries"].as_array().unwrap().len(), 46);
@@ -202,6 +242,11 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
             .unwrap();
         assert_eq!(unix["applicable"], !target.contains("windows"));
         let unix_mapping = "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence";
+        let abrupt = "tests/rust/sdk_acceptance/http.rs::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children";
+        if let Some(execution) = bounded["named_execution"].get(abrupt) {
+            if target.contains("windows") { assert_eq!(execution["applicable"], false); }
+            else { assert!(execution["exact_test_name"].as_str().unwrap().ends_with("::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children")); }
+        }
         let wide_exit = "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status";
         if target.contains("windows") {
             assert_eq!(
@@ -342,6 +387,36 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
 }
 
 #[test]
+fn retired_tree_binds_original_blobs_without_claiming_deleted_paths_as_current_dependencies() {
+    let mut fixture = Fixture::new("x86_64-unknown-linux-gnu");
+    let removed = fixture.originals.keys().filter(|path| !path.ends_with(".ps1")).cloned().collect::<BTreeSet<_>>();
+    assert_eq!(removed.len(), 46);
+    let directory = fixture.root.join(".ci-work/tooling-tests").join(format!("retired-bind-{}", uuid::Uuid::new_v4()));
+    fs::create_dir_all(&directory).unwrap();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        for path in fixture.dependencies.keys().filter(|path| !removed.contains(*path)) {
+            let target = directory.join(path);
+            fs::create_dir_all(target.parent().unwrap()).unwrap();
+            fs::write(target, fs::read(fixture.root.join(path)).unwrap()).unwrap();
+        }
+        fixture.root = directory.canonicalize().unwrap();
+        fixture.dependencies.retain(|path, _| !removed.contains(path));
+        assert!(removed.iter().all(|path| !fixture.root.join(path).exists()));
+        let report = fixture.bind().unwrap();
+        assert!(removed.iter().all(|path| report["source_files"].get(path).is_none()));
+        assert_eq!(report["historical_original_files"].as_object().unwrap().len(), 51);
+        assert_eq!(report["retirement_authorized"], false);
+        let path = removed.first().unwrap();
+        let bytes = fixture.originals.remove(path).unwrap();
+        assert!(fixture.bind().is_err(), "missing historical original");
+        fixture.originals.insert(path.clone(), [bytes, vec![b' ']].concat());
+        assert!(fixture.bind().is_err(), "mutated historical original");
+    }));
+    fs::remove_dir_all(&directory).unwrap();
+    result.unwrap();
+}
+
+#[test]
 fn sdk_tooling_bindings_require_both_authenticated_artifact_phases_and_exact_names() {
     let original = Fixture::new("x86_64-unknown-linux-gnu");
     let source = "scripts/native-extract-check.py";
@@ -459,9 +534,7 @@ fn stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected() {
                 fixture.manifest.push(b' ');
             }
             "original" => {
-                fixture
-                    .dependencies
-                    .insert("scripts/bounded.mjs".into(), "0".repeat(64));
+                fixture.originals.get_mut("scripts/bounded.mjs").unwrap().push(b' ');
             }
             "replacement" => {
                 fixture

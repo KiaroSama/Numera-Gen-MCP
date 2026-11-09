@@ -432,6 +432,15 @@ pub fn check(context: &Context) -> io::Result<()> {
     }
     let review = ledger::parse(&review_bytes)?;
     let tooling_manifest = ledger::read(&context.root, crate::tooling_execution::MANIFEST_FILE)?;
+    let tooling_review_bytes = ledger::read(&context.root, crate::tooling_review::REVIEW_FILE)?;
+    if dependencies.get(crate::tooling_review::REVIEW_FILE) != Some(&sha(&tooling_review_bytes)) {
+        return Err(fail(
+            "Tooling assertion review is outside execution provenance.",
+        ));
+    }
+    let tooling_review = ledger::parse(&tooling_review_bytes)?;
+    let tooling_dispositions = ledger::parse(&tooling_manifest)?;
+    let tooling_originals = crate::ledger_inputs::tooling_originals(context, &tooling_dispositions)?;
     let reviewed_files = expected_rebind["current_source_files"]
         .as_object()
         .ok_or_else(|| fail("Reviewed source inventory missing."))?
@@ -563,7 +572,7 @@ pub fn check(context: &Context) -> io::Result<()> {
             &reconstructed,
         )?;
         let tooling_execution = if phase == "built" {
-            crate::tooling_execution::bind(
+            crate::tooling_execution::bind_with_originals(
                 &context.root,
                 &tooling_manifest,
                 &identity,
@@ -571,6 +580,7 @@ pub fn check(context: &Context) -> io::Result<()> {
                 &dependencies,
                 &sources,
                 &reports,
+                &tooling_originals,
             )?
         } else {
             json!({"applicable":false,"not_run_reason":"Coverage selects the runtime package, not tooling"})
@@ -596,9 +606,35 @@ pub fn check(context: &Context) -> io::Result<()> {
             &format!("repos/{REPOSITORY}/actions/jobs/{job_id}/logs"),
         )?;
         verify_job(found[0], &logs, &identity, &sha(case_bytes))?;
+        let reviewed_tooling = if phase == "built" {
+            crate::tooling_review::bind_execution(
+                &context.root,
+                &tooling_dispositions,
+                &tooling_review,
+                &tooling_execution,
+            )?
+        } else {
+            json!({"applicable":false,"not_run_reason":"Coverage selects runtime assertions only"})
+        };
+        let coverage_evidence = if phase == "coverage" {
+            let (entries, artifact) = artifact(
+                context,
+                &artifacts,
+                &identity,
+                "native-coverage",
+                &BTreeSet::from(["coverage.json".into()]),
+            )?;
+            let bytes = &entries["coverage.json"];
+            let metrics = crate::inventory::coverage_metrics(&ledger::parse(bytes)?)?;
+            crate::inventory::verify_coverage_metrics(&metrics)?;
+            json!({"artifact":artifact,"report_sha256":sha(bytes),"metrics":metrics})
+        } else {
+            Value::Null
+        };
         records.insert(label, json!({"execution_artifact_id":id,"execution_artifact_sha256":sha(&raw),
             "oracle_artifact":oracle_artifact,"job_id":job_id,"log_sha256":sha(&logs),"case_report_sha256":sha(case_bytes),
-            "reviewed_named_execution":reviewed,"tooling_harness_execution":tooling_execution}));
+            "reviewed_named_execution":reviewed,"tooling_harness_execution":tooling_execution,
+            "reviewed_tooling_execution":reviewed_tooling,"coverage_evidence":coverage_evidence}));
         identities.insert(label.to_owned(), identity);
     }
     verify_contexts(&identities)?;
@@ -611,6 +647,7 @@ pub fn check(context: &Context) -> io::Result<()> {
         "run_id":run_id,"run_attempt":attempt,"baseline":BASELINE,"historical_source_sha":SOURCE,
         "contexts":records,"cases":470,"suites":50,"current_named_execution_verified":true,
         "source_review_sha256":sha(&review_bytes),"current_assertion_review_verified":true,
+        "tooling_source_review_sha256":sha(&tooling_review_bytes),
         "semantic_parity_claimed":false,"qualification_verified":false,"original_evidence_rewritten":false});
     let bytes =
         serde_json::to_vec_pretty(&report).map_err(|_| fail("Cannot encode matrix evidence."))?;
