@@ -375,14 +375,12 @@ pub fn harness_command(
         context.root.clone()
     });
     // Only instrumentation, its contained target and qualified identity test tools cross this boundary.
-    for (key, value) in compile
-        .get_envs()
-        .filter(|(key, _)| {
-            *key == "LLVM_PROFILE_FILE" || *key == "CARGO_TARGET_DIR"
-                || *key == "NUMERA_IDENTITY_TEST_LIBCRYPTO"
-                || *key == "NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256"
-        })
-    {
+    for (key, value) in compile.get_envs().filter(|(key, _)| {
+        *key == "LLVM_PROFILE_FILE"
+            || *key == "CARGO_TARGET_DIR"
+            || *key == "NUMERA_IDENTITY_TEST_LIBCRYPTO"
+            || *key == "NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256"
+    }) {
         match value {
             Some(value) => {
                 command.env(key, value);

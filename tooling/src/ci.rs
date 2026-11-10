@@ -171,10 +171,13 @@ pub fn stable(context: &Context) -> io::Result<()> {
     ]);
     #[cfg(windows)]
     {
-        tests.env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO").env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256");
+        tests
+            .env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO")
+            .env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256");
         match crate::identity_tools::prepare(context) {
             Ok((path, digest)) => {
-                tests.env("NUMERA_IDENTITY_TEST_LIBCRYPTO", path)
+                tests
+                    .env("NUMERA_IDENTITY_TEST_LIBCRYPTO", path)
                     .env("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256", digest);
             }
             Err(_) => failures.push("identity-test-tools".into()),
@@ -218,7 +221,11 @@ pub fn stable(context: &Context) -> io::Result<()> {
     if crate::evidence::verify(context).is_err() {
         failures.push("oracle-evidence".into());
     }
-    if failures.iter().any(|gate| matches!(gate.as_str(), "format" | "standalone-format")) && crate::formatting::retain(context).is_err() {
+    if failures
+        .iter()
+        .any(|gate| matches!(gate.as_str(), "format" | "standalone-format"))
+        && crate::formatting::retain(context).is_err()
+    {
         failures.push("format-diagnostics".into());
     }
     finish(failures)
@@ -331,6 +338,7 @@ pub fn coverage(context: &Context) -> io::Result<()> {
             "-p",
             "numera-gen-mcp",
             "--json",
+            "--summary-only",
             "--output-path",
             ".ci-work/native/coverage.json",
         ]),

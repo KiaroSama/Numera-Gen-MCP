@@ -5,7 +5,7 @@ use numera_gen_mcp::{
     compat::value::{Value, json},
     config::Config,
     files::images::{decode_base64, inspect},
-    jobs::Store,
+    jobs::{NativePersistence, Persistence, Store},
     logging::Logger,
     runtime_paths::RuntimePaths,
     services::{generation::Generation, jobs},
@@ -13,8 +13,13 @@ use numera_gen_mcp::{
 use std::{
     cell::Cell,
     collections::HashMap,
+    fs::File,
+    io,
     path::Path,
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU64, AtomicUsize, Ordering},
+    },
     time::{Duration, Instant},
 };
 use tokio::{
@@ -24,7 +29,75 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-fn generation(root: &Path, origin: &str) -> Generation {
+struct PersistenceObservation {
+    started: Instant,
+    file_us: [AtomicU64; 8],
+    receipt_updates: AtomicUsize,
+    after_unlink_updates: AtomicUsize,
+    last_update_us: AtomicU64,
+}
+
+impl PersistenceObservation {
+    fn new(started: Instant) -> Self {
+        Self {
+            started,
+            file_us: std::array::from_fn(|_| AtomicU64::new(u64::MAX)),
+            receipt_updates: AtomicUsize::new(0),
+            after_unlink_updates: AtomicUsize::new(0),
+            last_update_us: AtomicU64::new(u64::MAX),
+        }
+    }
+
+    fn stamp(&self, index: usize) {
+        self.file_us[index].store(self.started.elapsed().as_micros() as u64, Ordering::Relaxed);
+    }
+}
+
+struct ObservedPersistence(Arc<PersistenceObservation>);
+
+impl Persistence for ObservedPersistence {
+    fn before_receipt_update(&self) -> numera_gen_mcp::error::Result<()> {
+        NativePersistence.before_receipt_update()?;
+        self.0.receipt_updates.fetch_add(1, Ordering::Relaxed);
+        if self.0.file_us[7].load(Ordering::Relaxed) != u64::MAX {
+            self.0.after_unlink_updates.fetch_add(1, Ordering::Relaxed);
+        }
+        self.0
+            .last_update_us
+            .store(self.0.started.elapsed().as_micros() as u64, Ordering::Relaxed);
+        Ok(())
+    }
+
+    fn write(&self, file: &mut File, bytes: &[u8]) -> io::Result<()> {
+        self.0.stamp(0);
+        NativePersistence.write(file, bytes)?;
+        self.0.stamp(1);
+        Ok(())
+    }
+
+    fn sync(&self, file: &File) -> io::Result<()> {
+        self.0.stamp(2);
+        NativePersistence.sync(file)?;
+        self.0.stamp(3);
+        Ok(())
+    }
+
+    fn link(&self, original: &Path, target: &Path) -> io::Result<()> {
+        self.0.stamp(4);
+        NativePersistence.link(original, target)?;
+        self.0.stamp(5);
+        Ok(())
+    }
+
+    fn unlink(&self, path: &Path) -> io::Result<()> {
+        self.0.stamp(6);
+        NativePersistence.unlink(path)?;
+        self.0.stamp(7);
+        Ok(())
+    }
+}
+
+fn generation(root: &Path, origin: &str, observation: Arc<PersistenceObservation>) -> Generation {
     let config = Config::parse(
         &json!({
             "schemaVersion":1,"defaultConnection":"local",
@@ -50,7 +123,10 @@ fn generation(root: &Path, origin: &str) -> Generation {
     assert_eq!(connection["maxConcurrentRequests"], 2);
     Generation {
         config: Arc::new(config),
-        store: Arc::new(Mutex::new(Store::open(&root.join("state")).unwrap())),
+        store: Arc::new(Mutex::new(
+            Store::open_with_persistence(&root.join("state"), ObservedPersistence(observation))
+                .unwrap(),
+        )),
         logger: Arc::new(Logger::new(&root.join("logs"), "ERROR")),
         runtime: RuntimePaths::new(root).unwrap(),
         env: HashMap::new().into(),
@@ -154,13 +230,25 @@ async fn waiter_case(workspace: &Workspace) {
     let posts_seen = Cell::new(0);
     let polls_seen = Cell::new(0);
     let started = Instant::now();
+    let server_us: [Cell<Option<u128>>; 8] = std::array::from_fn(|_| Cell::new(None));
+    let client_us: [Cell<Option<u128>>; 6] = std::array::from_fn(|_| Cell::new(None));
+    let mark_server = |index: usize, label: &'static str| {
+        server_stage.set(label);
+        server_us[index].set(Some(started.elapsed().as_micros()));
+    };
+    let mark_client = |index: usize, label: &'static str| {
+        client_stage.set(label);
+        client_us[index].set(Some(started.elapsed().as_micros()));
+    };
+    let observation = Arc::new(PersistenceObservation::new(started));
     let completed = json!({"id":"owned","status":"completed","output":[{
         "type":"image_generation_call","status":"completed","result":STANDARD.encode(&bytes)
     }]});
     let scenario = async {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let origin = format!("http://{}", listener.local_addr().unwrap());
-        let generation = generation(&workspace.0, &origin);
+        let generation = generation(&workspace.0, &origin, observation.clone());
+        mark_server(0, "setup_done");
         let signal = CancellationToken::new();
         let (ready, mut waiting) = oneshot::channel::<()>();
         let (release, held) = oneshot::channel::<()>();
@@ -173,14 +261,14 @@ async fn waiter_case(workspace: &Workspace) {
             assert_eq!((method.as_str(), path.as_str()), ("POST", "/v1/responses"));
             posts += 1;
             posts_seen.set(posts);
-            server_stage.set("post_received");
+            mark_server(1, "post_received");
             reply(
                 &mut submission,
                 &json!({"id":"owned","status":"in_progress"}),
             )
             .await;
             drop(submission);
-            server_stage.set("post_replied");
+            mark_server(2, "post_replied");
             let (mut first, _) = listener.accept().await.unwrap();
             let (method, path) = request(&mut first).await;
             assert_eq!(
@@ -189,7 +277,7 @@ async fn waiter_case(workspace: &Workspace) {
             );
             polls += 1;
             polls_seen.set(polls);
-            server_stage.set("first_get_held");
+            mark_server(3, "first_get_held");
             ready
                 .send(())
                 .expect("original waiter ended before its first GET was held");
@@ -201,15 +289,15 @@ async fn waiter_case(workspace: &Workspace) {
             );
             polls += 1;
             polls_seen.set(polls);
-            server_stage.set("second_get_received");
+            mark_server(4, "second_get_received");
             reply(&mut second, &completed).await;
             drop(second);
-            server_stage.set("second_get_replied");
+            mark_server(5, "second_get_replied");
             held.await
                 .expect("refresher must release the held original waiter");
-            server_stage.set("held_released");
+            mark_server(6, "held_released");
             reply(&mut first, &completed).await;
-            server_stage.set("first_get_replied");
+            mark_server(7, "first_get_replied");
             (posts, polls)
         };
         let client = async {
@@ -219,23 +307,23 @@ async fn waiter_case(workspace: &Workspace) {
                 &signal,
             );
             tokio::pin!(original);
-            client_stage.set("waiting_ready");
+            mark_client(0, "waiting_ready");
             tokio::select! {
                 ready = &mut waiting => ready.expect("fixture ended before its held first GET"),
                 outcome = original.as_mut() => {
                     panic!("original generation ended before held-poll readiness: {:?}", outcome.map(|receipt| receipt.status().to_owned()));
                 }
             }
-            client_stage.set("refresher_waiting");
+            mark_client(1, "refresher_waiting");
             let recovered = jobs::get(&generation, "responses-race", true, &signal, None).await;
-            client_stage.set("refresher_returned");
+            mark_client(2, "refresher_returned");
             // Settle the original even when recovery returns an error, before asserting it.
             release
                 .send(())
                 .expect("held original socket must still be owned");
-            client_stage.set("release_sent");
+            mark_client(3, "release_sent");
             original.as_mut().await.unwrap();
-            client_stage.set("original_settled");
+            mark_client(4, "original_settled");
             let recovered = recovered.unwrap();
             assert_eq!(recovered.status(), "completed");
             let stored = generation
@@ -259,22 +347,57 @@ async fn waiter_case(workspace: &Workspace) {
                 std::fs::read(stored.value["outputs"][0]["path"].as_str().unwrap()).unwrap(),
                 bytes
             );
+            mark_client(5, "assertions_done");
         };
         let ((posts, polls), ()) = tokio::join!(server, client);
         assert_eq!(posts, 1);
         assert_eq!(polls, 2);
     };
     // Keep the source's three-second scenario bound, not the provider's default timeout.
-    let result = tokio::time::timeout(Duration::from_secs(3), scenario).await;
+    let (result, resolved_us) = {
+        let deadline = tokio::time::timeout(Duration::from_secs(3), scenario);
+        tokio::pin!(deadline);
+        let result = deadline.as_mut().await;
+        // Sample before the unchanged scenario drop can close its SQLite connection.
+        (result, started.elapsed().as_micros())
+    };
+    let file_us: [Option<u64>; 8] = std::array::from_fn(|index| {
+        let value = observation.file_us[index].load(Ordering::Relaxed);
+        (value != u64::MAX).then_some(value)
+    });
     if result.is_err() {
         eprintln!(
-            "Responses waiter timeout: server_stage={} client_stage={} posts={} polls={} elapsed_ms={}",
+            "Responses waiter timeout: server_stage={} client_stage={} posts={} polls={} resolved_us={} elapsed_ms={}",
             server_stage.get(),
             client_stage.get(),
             posts_seen.get(),
             polls_seen.get(),
+            resolved_us,
             started.elapsed().as_millis()
+        );
+        eprintln!(
+            "Responses waiter server_us [setup_done,post_received,post_replied,first_get_held,second_get_received,second_get_replied,held_released,first_get_replied]={:?}",
+            server_us.each_ref().map(|value| value.get())
+        );
+        eprintln!(
+            "Responses waiter client_us [waiting_ready,refresher_waiting,refresher_returned,release_sent,original_settled,assertions_done]={:?}",
+            client_us.each_ref().map(|value| value.get())
+        );
+        eprintln!(
+            "Responses waiter file_us [write_begin,write_end,sync_begin,sync_end,link_begin,link_end,unlink_begin,unlink_end]={file_us:?}"
+        );
+        // Entries are not commit acknowledgements; directory sync and SQL still follow unlink.
+        let last_update = observation.last_update_us.load(Ordering::Relaxed);
+        eprintln!(
+            "Responses waiter receipt_update_entries={} after_unlink_entries={} last_update_us={:?}",
+            observation.receipt_updates.load(Ordering::Relaxed),
+            observation.after_unlink_updates.load(Ordering::Relaxed),
+            (last_update != u64::MAX).then_some(last_update)
         );
     }
     result.expect("exact source Responses waiter scenario exceeded three seconds");
+    // Exercise the observation on this same real publication, without a timing threshold.
+    assert!(file_us.iter().all(Option::is_some));
+    assert!(file_us.windows(2).all(|pair| pair[0] <= pair[1]));
+    assert!(observation.after_unlink_updates.load(Ordering::Relaxed) >= 2);
 }

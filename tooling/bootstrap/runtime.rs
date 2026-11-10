@@ -28,9 +28,14 @@ fn read_bound(mut stream: impl Read, limit: usize, exceeded: &AtomicBool) -> io:
     loop {
         let count = match stream.read(&mut chunk) {
             Ok(count) => count,
-            Err(error) => { exceeded.store(true, Ordering::Release); return Err(error); }
+            Err(error) => {
+                exceeded.store(true, Ordering::Release);
+                return Err(error);
+            }
         };
-        if count == 0 { return Ok(result); }
+        if count == 0 {
+            return Ok(result);
+        }
         if count > limit.saturating_sub(result.len()) {
             exceeded.store(true, Ordering::Release);
         } else if !exceeded.load(Ordering::Acquire) {
@@ -43,36 +48,64 @@ impl Config {
     pub fn command(&self, program: impl AsRef<std::ffi::OsStr>) -> Command {
         let root = command_path(&self.root);
         let mut command = Command::new(program);
-        command.current_dir(&root).stdin(Stdio::null())
+        command
+            .current_dir(&root)
+            .stdin(Stdio::null())
             .env("CARGO_HOME", root.join(".ci-cache/cargo"))
             .env("RUSTUP_HOME", root.join(".ci-cache/rustup"))
             .env("CARGO_TARGET_DIR", root.join("target"))
             .env("TEMP", root.join(".ci-work/temp"))
             .env("TMP", root.join(".ci-work/temp"))
             .env("TMPDIR", root.join(".ci-work/temp"))
-            .env("CARGO_BUILD_JOBS", "2").env("RUST_TEST_THREADS", "2")
-            .env("NUMERA_TEST_WORKERS", "2").env("CARGO_TERM_COLOR", "never")
+            .env("CARGO_BUILD_JOBS", "2")
+            .env("RUST_TEST_THREADS", "2")
+            .env("NUMERA_TEST_WORKERS", "2")
+            .env("CARGO_TERM_COLOR", "never")
             .env("RUSTUP_DIST_SERVER", "https://static.rust-lang.org")
             .env("RUSTUP_UPDATE_ROOT", "https://static.rust-lang.org/rustup")
-            .env("RUSTUP_TERM_COLOR", "never").env_remove("RUSTUP_TOOLCHAIN");
+            .env("RUSTUP_TERM_COLOR", "never")
+            .env_remove("RUSTUP_TOOLCHAIN");
         for (key, _) in std::env::vars_os() {
-            if key.to_str().is_some_and(|key| key.starts_with("NUMERA_SIGNING_") || key.starts_with("GIT_")) {
+            if key
+                .to_str()
+                .is_some_and(|key| key.starts_with("NUMERA_SIGNING_") || key.starts_with("GIT_"))
+            {
                 command.env_remove(key);
             }
         }
-        command.env("GIT_NO_LAZY_FETCH", "1").env("GIT_TERMINAL_PROMPT", "0");
+        command
+            .env("GIT_NO_LAZY_FETCH", "1")
+            .env("GIT_TERMINAL_PROMPT", "0");
         command
     }
     pub fn child(&self, program: &str, args: &[&str]) -> io::Result<()> {
         // The authenticated outer numera-dev owns all descendants; never create another group.
-        let status = self.command(program).args(args).stdout(Stdio::inherit()).stderr(Stdio::inherit()).status()?;
-        if !status.success() { return Err(fail("Required bootstrap child failed.")); }
+        let status = self
+            .command(program)
+            .args(args)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status()?;
+        if !status.success() {
+            return Err(fail("Required bootstrap child failed."));
+        }
         Ok(())
     }
     pub fn capture(&self, program: &str, args: &[&str], limit: usize) -> io::Result<Vec<u8>> {
-        let mut child = self.command(program).args(args).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
-        let stdout = child.stdout.take().ok_or_else(|| fail("Bootstrap stdout is unavailable."))?;
-        let stderr = child.stderr.take().ok_or_else(|| fail("Bootstrap stderr is unavailable."))?;
+        let mut child = self
+            .command(program)
+            .args(args)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| fail("Bootstrap stdout is unavailable."))?;
+        let stderr = child
+            .stderr
+            .take()
+            .ok_or_else(|| fail("Bootstrap stderr is unavailable."))?;
         let exceeded = AtomicBool::new(false);
         let result = std::thread::scope(|scope| {
             let flag = &exceeded;
@@ -88,7 +121,8 @@ impl Config {
                     Ok(None) => std::thread::park_timeout(Duration::from_millis(10)),
                     Err(error) => {
                         // Scoped readers must not join before the direct writer has been reaped.
-                        let _ = child.kill(); let _ = child.wait();
+                        let _ = child.kill();
+                        let _ = child.wait();
                         break Err(error);
                     }
                 }
@@ -97,33 +131,51 @@ impl Config {
             let diagnostic = diagnostic.join();
             let status = status?;
             let output = output.map_err(|_| fail("Bootstrap output owner failed."))??;
-            let diagnostic = diagnostic.map_err(|_| fail("Bootstrap diagnostic owner failed."))??;
+            let diagnostic =
+                diagnostic.map_err(|_| fail("Bootstrap diagnostic owner failed."))??;
             if exceeded.load(Ordering::Acquire) || diagnostic.len() > 65536 || !status.success() {
-                return Err(fail("Required bootstrap capture failed; private output withheld."));
+                return Err(fail(
+                    "Required bootstrap capture failed; private output withheld.",
+                ));
             }
             Ok(output)
         });
-        if result.is_err() { let _ = child.kill(); let _ = child.wait(); }
+        if result.is_err() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
         result
     }
     pub fn git(&self, args: &[&str], limit: usize) -> io::Result<Vec<u8>> {
-        let mut all = vec!["--no-pager", "--no-replace-objects", "--literal-pathspecs", "-c", "core.fsmonitor=false"];
+        let mut all = vec![
+            "--no-pager",
+            "--no-replace-objects",
+            "--literal-pathspecs",
+            "-c",
+            "core.fsmonitor=false",
+        ];
         all.extend_from_slice(args);
         self.capture("git", &all, limit)
     }
     pub fn contained(&self, relative: &str) -> io::Result<PathBuf> {
-        if relative.split('/').any(|part| matches!(part, "" | "." | "..")) || relative.chars().any(|ch| matches!(ch, '\\' | ':')) {
+        if relative
+            .split('/')
+            .any(|part| matches!(part, "" | "." | ".."))
+            || relative.chars().any(|ch| matches!(ch, '\\' | ':'))
+        {
             return Err(fail("Unsafe bootstrap path."));
         }
         let path = self.root.join(relative);
         let mut ancestor = Some(path.as_path());
         while let Some(current) = ancestor {
-            if let Ok(info) = fs::symlink_metadata(current) {
-                if info.is_symlink() || !current.canonicalize()?.starts_with(&self.root) {
-                    return Err(fail("Bootstrap path escapes its owning workspace."));
-                }
+            if let Ok(info) = fs::symlink_metadata(current)
+                && (info.is_symlink() || !current.canonicalize()?.starts_with(&self.root))
+            {
+                return Err(fail("Bootstrap path escapes its owning workspace."));
             }
-            if current == self.root { break; }
+            if current == self.root {
+                break;
+            }
             ancestor = current.parent();
         }
         Ok(path)
@@ -133,14 +185,19 @@ impl Config {
         let mut options = OpenOptions::new();
         options.write(true).create_new(true);
         #[cfg(unix)]
-        { use std::os::unix::fs::OpenOptionsExt; options.mode(0o600); }
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
         let mut file = options.open(path)?;
         file.write_all(bytes)?;
         file.sync_all()
     }
     pub fn hash(&self, path: &Path) -> io::Result<String> {
         let path = command_path(path);
-        let path = path.to_str().ok_or_else(|| fail("Hash input path must be Unicode."))?;
+        let path = path
+            .to_str()
+            .ok_or_else(|| fail("Hash input path must be Unicode."))?;
         let output = if cfg!(target_os = "macos") {
             self.capture("shasum", &["-a", "256", path], 4096)?
         } else {
@@ -150,7 +207,19 @@ impl Config {
     }
     pub fn toolchain(&self) -> io::Result<()> {
         if self.coverage {
-            self.child("rustup", &["toolchain", "install", "nightly-2026-10-10", "--profile", "minimal", "--component", "llvm-tools-preview", "--no-self-update"])?;
+            self.child(
+                "rustup",
+                &[
+                    "toolchain",
+                    "install",
+                    "nightly-2026-10-10",
+                    "--profile",
+                    "minimal",
+                    "--component",
+                    "llvm-tools-preview",
+                    "--no-self-update",
+                ],
+            )?;
         }
         Ok(())
     }
@@ -158,8 +227,13 @@ impl Config {
         self.child("cargo", &["+1.99.1", "--version"])
     }
     pub fn build_task(&self) -> io::Result<()> {
-        if !self.build { return Err(fail("Preparation cannot compile the unresolved workspace.")); }
-        self.child("cargo", &["+1.99.1", "build", "--locked", "-p", "numera-task"])
+        if !self.build {
+            return Err(fail("Preparation cannot compile the unresolved workspace."));
+        }
+        self.child(
+            "cargo",
+            &["+1.99.1", "build", "--locked", "-p", "numera-task"],
+        )
     }
 }
 
@@ -172,17 +246,30 @@ mod tests {
         struct Failed;
         impl Read for Failed {
             fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
-                Err(io::Error::new(io::ErrorKind::BrokenPipe, "synthetic private detail"))
+                Err(io::Error::new(
+                    io::ErrorKind::BrokenPipe,
+                    "synthetic private detail",
+                ))
             }
         }
         let failed = AtomicBool::new(false);
-        assert_eq!(read_bound(Failed, 16, &failed).unwrap_err().kind(), io::ErrorKind::BrokenPipe);
+        assert_eq!(
+            read_bound(Failed, 16, &failed).unwrap_err().kind(),
+            io::ErrorKind::BrokenPipe
+        );
         assert!(failed.load(Ordering::Acquire));
         let exceeded = AtomicBool::new(false);
-        assert!(read_bound(io::Cursor::new(b"bounded-output"), 4, &exceeded).unwrap().is_empty());
+        assert!(
+            read_bound(io::Cursor::new(b"bounded-output"), 4, &exceeded)
+                .unwrap()
+                .is_empty()
+        );
         assert!(exceeded.load(Ordering::Acquire));
         let ordinary = AtomicBool::new(false);
-        assert_eq!(read_bound(io::Cursor::new(b"small"), 5, &ordinary).unwrap(), b"small");
+        assert_eq!(
+            read_bound(io::Cursor::new(b"small"), 5, &ordinary).unwrap(),
+            b"small"
+        );
         assert!(!ordinary.load(Ordering::Acquire));
     }
 }

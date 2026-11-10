@@ -46,7 +46,15 @@ fn retirement_requires_one_qualified_parent_and_exactly_the_original_51_deletion
     let (original, retired) = trees(&manifest);
     let q = "a".repeat(40);
     let r = "b".repeat(40);
-    retirement::verify_transition(&manifest, &q, &r, &[q.clone()], &original, &retired).unwrap();
+    retirement::verify_transition(
+        &manifest,
+        &q,
+        &r,
+        std::slice::from_ref(&q),
+        &original,
+        &retired,
+    )
+    .unwrap();
     for mutation in [
         "parent",
         "merge",
@@ -93,7 +101,10 @@ fn retirement_requires_one_qualified_parent_and_exactly_the_original_51_deletion
                 );
             }
             "powershell" => {
-                let path = manifest["entries"].as_array().unwrap().iter()
+                let path = manifest["entries"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
                     .find_map(|row| row["source"].as_str().filter(|path| path.ends_with(".ps1")))
                     .unwrap();
                 retired.insert(path.into(), original[path].clone());
@@ -154,7 +165,10 @@ fn retired_inventory_preserves_historical_blobs_and_refuses_a_partial_working_co
             std::fs::write(destination, bytes).unwrap();
         }
         inventory::tooling_manifest(&directory, &manifest, false).unwrap();
-        let path = originals.keys().find(|path| path.ends_with(".ps1")).unwrap();
+        let path = originals
+            .keys()
+            .find(|path| path.ends_with(".ps1"))
+            .unwrap();
         std::fs::write(directory.join(path), b"changed original").unwrap();
         assert!(inventory::tooling_manifest(&directory, &manifest, false).is_err());
     });
@@ -406,17 +420,26 @@ fn retirement_workflow_id_comes_from_the_canonical_workflow_not_the_run_under_re
 }
 
 #[test]
-fn historical_tooling_inventory_has_exactly_51_migrated_paths_including_five_powershell_hashes()
-{
+fn historical_tooling_inventory_has_exactly_51_migrated_paths_including_five_powershell_hashes() {
     let original = manifest();
     let hashes = inventory::tooling_hashes(&original).unwrap();
     assert_eq!(hashes.len(), 51);
-    assert_eq!(hashes.keys().filter(|path| path.ends_with(".ps1")).count(), 5);
+    assert_eq!(
+        hashes.keys().filter(|path| path.ends_with(".ps1")).count(),
+        5
+    );
     assert_eq!(original["schema_version"], 3);
     assert_eq!(original["rust_migration_count"], 51);
     assert_eq!(original["powershell_retained_count"], 0);
     assert!(original.get("retained_powershell").is_none());
-    for mutation in ["revision", "hash", "duplicate", "escape", "powershell", "legacy-field"] {
+    for mutation in [
+        "revision",
+        "hash",
+        "duplicate",
+        "escape",
+        "powershell",
+        "legacy-field",
+    ] {
         let mut changed = original.clone();
         match mutation {
             "revision" => changed["original_revision"] = json!("a".repeat(40)),
@@ -424,8 +447,12 @@ fn historical_tooling_inventory_has_exactly_51_migrated_paths_including_five_pow
             "duplicate" => changed["entries"][1] = changed["entries"][0].clone(),
             "escape" => changed["entries"][0]["source"] = json!("scripts/../outside.py"),
             "powershell" => {
-                let row = changed["entries"].as_array_mut().unwrap().iter_mut()
-                    .find(|row| row["source"].as_str().unwrap().ends_with(".ps1")).unwrap();
+                let row = changed["entries"]
+                    .as_array_mut()
+                    .unwrap()
+                    .iter_mut()
+                    .find(|row| row["source"].as_str().unwrap().ends_with(".ps1"))
+                    .unwrap();
                 row["source"] = json!("scripts/extra.py");
             }
             "legacy-field" => changed["retained_powershell"] = Value::Null,

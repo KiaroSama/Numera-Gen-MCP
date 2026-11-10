@@ -29,7 +29,9 @@ fn archive(member: &str, bytes: &[u8], linked: bool, duplicate: bool) -> Vec<u8>
         writer.start_file(&other, options).unwrap();
         writer.write_all(bytes).unwrap();
     }
-    writer.start_file("unused/never-extracted.txt", options).unwrap();
+    writer
+        .start_file("unused/never-extracted.txt", options)
+        .unwrap();
     writer.write_all(b"unrelated archive member").unwrap();
     let mut result = writer.finish().unwrap().into_inner();
     if duplicate {
@@ -41,7 +43,10 @@ fn archive(member: &str, bytes: &[u8], linked: bool, duplicate: bool) -> Vec<u8>
                 replaced += 1;
             }
         }
-        assert_eq!(replaced, 2, "both ZIP headers must contain the duplicate name");
+        assert_eq!(
+            replaced, 2,
+            "both ZIP headers must contain the duplicate name"
+        );
     }
     result
 }
@@ -55,7 +60,8 @@ fn identity_library_selection_returns_only_exact_native_regular_bytes() {
         let bytes = image(machine);
         let zip = archive(member, &bytes, false, false);
         assert_eq!(
-            identity_tools::select_member(&zip, member, bytes.len(), &sha(&bytes), machine).unwrap(),
+            identity_tools::select_member(&zip, member, bytes.len(), &sha(&bytes), machine)
+                .unwrap(),
             bytes
         );
     }
@@ -65,34 +71,59 @@ fn identity_library_selection_returns_only_exact_native_regular_bytes() {
 fn identity_library_selection_rejects_size_digest_architecture_duplicate_and_link_changes() {
     let bytes = image(0x8664);
     let zip = archive(MEMBER, &bytes, false, false);
-    for (size, digest, machine) in [
-        (bytes.len() - 1, sha(&bytes), 0x8664),
-        (bytes.len() + 1, sha(&bytes), 0x8664),
-        (bytes.len(), "0".repeat(64), 0x8664),
-        (bytes.len(), sha(&bytes), 0xaa64),
+    for (case, size, digest, machine) in [
+        ("smaller-size", bytes.len() - 1, sha(&bytes), 0x8664),
+        ("larger-size", bytes.len() + 1, sha(&bytes), 0x8664),
+        ("digest", bytes.len(), "0".repeat(64), 0x8664),
+        ("architecture", bytes.len(), sha(&bytes), 0xaa64),
     ] {
-        assert!(identity_tools::select_member(&zip, MEMBER, size, &digest, machine).is_err());
+        assert!(
+            identity_tools::select_member(&zip, MEMBER, size, &digest, machine).is_err(),
+            "{case}"
+        );
     }
-    for zip in [
-        archive(MEMBER, &bytes, true, false),
-        archive(MEMBER, &bytes, false, true),
-        archive("wrong/bin/libcrypto-3-x64.dll", &bytes, false, false),
-        zip[..zip.len() / 2].to_vec(),
+    let duplicate = archive(MEMBER, &bytes, false, true);
+    let metadata = zip::ZipArchive::new(Cursor::new(&duplicate)).unwrap();
+    assert!(metadata.has_duplicate_names());
+    assert_eq!(metadata.len(), 2, "indexed names collapse three raw entries");
+    drop(metadata);
+    for (case, zip) in [
+        ("linked", archive(MEMBER, &bytes, true, false)),
+        ("duplicate", duplicate),
+        (
+            "missing",
+            archive("wrong/bin/libcrypto-3-x64.dll", &bytes, false, false),
+        ),
+        ("truncated", zip[..zip.len() / 2].to_vec()),
     ] {
-        assert!(identity_tools::select_member(&zip, MEMBER, bytes.len(), &sha(&bytes), 0x8664).is_err());
+        assert!(
+            identity_tools::select_member(&zip, MEMBER, bytes.len(), &sha(&bytes), 0x8664).is_err(),
+            "{case}"
+        );
     }
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for name in [MEMBER.to_owned(), MEMBER.to_ascii_uppercase()] {
-        writer.start_file(name, zip::write::SimpleFileOptions::default()).unwrap();
+        writer
+            .start_file(name, zip::write::SimpleFileOptions::default())
+            .unwrap();
         writer.write_all(&bytes).unwrap();
     }
     let alias = writer.finish().unwrap().into_inner();
-    assert!(identity_tools::select_member(&alias, MEMBER, bytes.len(), &sha(&bytes), 0x8664).is_err());
+    assert!(
+        identity_tools::select_member(&alias, MEMBER, bytes.len(), &sha(&bytes), 0x8664).is_err()
+    );
     let mut wrong = bytes.clone();
     wrong[86..88].fill(0);
-    assert!(identity_tools::select_member(
-        &archive(MEMBER, &wrong, false, false), MEMBER, wrong.len(), &sha(&wrong), 0x8664
-    ).is_err());
+    assert!(
+        identity_tools::select_member(
+            &archive(MEMBER, &wrong, false, false),
+            MEMBER,
+            wrong.len(),
+            &sha(&wrong),
+            0x8664
+        )
+        .is_err()
+    );
 }
 
 #[tokio::test]
@@ -111,6 +142,9 @@ async fn identity_download_rejects_other_paths_origins_ports_and_credentials_bef
         "https://user:password@download.firedaemon.com/FireDaemon-OpenSSL/openssl-3.5.9.zip",
     ] {
         let error = bounded_get(url, limits).await.unwrap_err();
-        assert_eq!(error.to_string(), "Official download destination is not allowlisted.");
+        assert_eq!(
+            error.to_string(),
+            "Official download destination is not allowlisted."
+        );
     }
 }

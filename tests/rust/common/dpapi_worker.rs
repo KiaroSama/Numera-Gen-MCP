@@ -157,11 +157,23 @@ pub fn run(mode: &str) -> io::Result<i32> {
         println!("DPAPI_PARENT_SECURITY_READY");
         private_files::create_directory(parent)?;
         println!("DPAPI_PARENT_CREATED");
-        protect_secret::protect_with(&file, false, || Ok(private_files::Secret("non-secret-DPAPI-fixture-日本語".as_bytes().to_vec())))?;
+        protect_secret::protect_with(&file, false, || {
+            Ok(private_files::Secret(
+                "non-secret-DPAPI-fixture-日本語".as_bytes().to_vec(),
+            ))
+        })?;
         let acl = private_files::inspect_private(&file, false)?;
-        if !acl.owner_current_user || !acl.owner_only || !acl.protected { return Err(io::Error::other("Fixture ACL is not current-user only.")); }
+        if !acl.owner_current_user || !acl.owner_only || !acl.protected {
+            return Err(io::Error::other("Fixture ACL is not current-user only."));
+        }
         let plaintext = private_files::read_private(&file, 1048576)?;
-        if plaintext.0.windows(b"non-secret-DPAPI-fixture".len()).any(|bytes| bytes == b"non-secret-DPAPI-fixture") { return Err(io::Error::other("Synthetic ciphertext exposed plaintext.")); }
+        if plaintext
+            .0
+            .windows(b"non-secret-DPAPI-fixture".len())
+            .any(|bytes| bytes == b"non-secret-DPAPI-fixture")
+        {
+            return Err(io::Error::other("Synthetic ciphertext exposed plaintext."));
+        }
         println!("ACL_VERIFIED");
         return Ok(0);
     }
@@ -173,10 +185,15 @@ pub fn run(mode: &str) -> io::Result<i32> {
         command.args(["bounded", "15000", "8000", "--exec"]);
         let file = std::env::var_os("NUMERA_FIXTURE_DPAPI").unwrap();
         if std::env::var("NUMERA_FIXTURE_DPAPI_WRAPPER").unwrap() == "1" {
-            command.arg(std::env::current_exe()?).args(["--exact", "windows::dpapi_script_worker", "--nocapture"])
+            command
+                .arg(std::env::current_exe()?)
+                .args(["--exact", "windows::dpapi_script_worker", "--nocapture"])
                 .env("NUMERA_FIXTURE_DPAPI_MODE", "protect");
         } else {
-            command.arg(env!("CARGO_BIN_EXE_numera-dev")).args(["protect-secret", "--path"]).arg(file);
+            command
+                .arg(env!("CARGO_BIN_EXE_numera-dev"))
+                .args(["protect-secret", "--path"])
+                .arg(file);
         }
         command
     };

@@ -54,9 +54,14 @@ fn platforms(mapping: &str) -> &'static [&'static str] {
         | "tests/rust/dpapi_acceptance.rs::exact_source_windows_dpapi_script_acl_native_roundtrip_corrupt_and_no_overwrite"
         | "tests/rust/identity_contracts.rs::disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_binding"
         | "tests/rust/devtool_credentials.rs::native_protection_cli_whatif_preserves_outside_destination_and_existing_file_without_input"
-        | "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_preserves_exact_consumer_shape_and_refuses_overwrite" => &["win32"],
+        | "tests/rust/devtool_credentials.rs::private_files_accept_rooted_disk_spellings_without_weakening_rejections"
+        | "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_preserves_exact_consumer_shape_and_refuses_overwrite" => {
+            &["win32"]
+        }
         "tests/rust/identity_contracts.rs::identity_custody_refuses_unsupported_hosts_without_creating_files"
-        | "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts" => &["linux", "darwin"],
+        | "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts" => {
+            &["linux", "darwin"]
+        }
         "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
             &["win32", "darwin"]
         }

@@ -306,7 +306,12 @@ fn original_tooling_manifest_accounts_for_every_file_without_promoting_source_ma
     assert!(inventory::tooling_inventory(&manifest, tracked.split_once('\0').unwrap().1).is_err());
     // All 51 retired originals remain historical inputs, not current executable source.
     inventory::tooling_inventory(&manifest, "").unwrap();
-    for path in ["scripts/unmapped.py", "scripts/leftover.ps1", "native/extra.cmd", "tooling/extra.bat"] {
+    for path in [
+        "scripts/unmapped.py",
+        "scripts/leftover.ps1",
+        "native/extra.cmd",
+        "tooling/extra.bat",
+    ] {
         assert!(inventory::tooling_inventory(&manifest, &format!("{path}\0")).is_err());
     }
     // An ignored retired source helper is not part of git ls-files and must not enter the inventory.
@@ -494,6 +499,35 @@ fn successful_diagnostics_never_clear_required_format_or_other_gate_failures() {
             "Required native gates failed; retained coverage or artifacts do not override execution failures."
         );
     }
+}
+
+#[test]
+fn coverage_report_keeps_summary_totals_scope_and_existing_wall_idle_bounds() {
+    let project = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let source = fs::read_to_string(project.join("tooling/src/ci.rs")).unwrap();
+    let (before, after) = source.split_once("\"coverage-report\"").unwrap();
+    let command = before.rsplit_once("required(").unwrap().1;
+    let bounds = after.split_once(");").unwrap().0;
+    let actual = format!("{command}\"coverage-report\"{bounds}")
+        .split_whitespace()
+        .collect::<String>();
+    assert_eq!(
+        actual,
+        concat!(
+            "context,&mutcommand(&[\"+nightly-2026-10-10\",\"llvm-cov\",\"report\",",
+            "\"--branch\",\"-p\",\"numera-gen-mcp\",\"--json\",\"--summary-only\",",
+            "\"--output-path\",\".ci-work/native/coverage.json\",]),",
+            "\"coverage-report\",60000,30000,&mutfailures,"
+        )
+    );
+    let summary = coverage((100, 85), (100, 80));
+    let mut detailed = summary.clone();
+    detailed["data"][0]["functions"] = json!([]);
+    detailed["data"][0]["files"] = json!([]);
+    assert_eq!(
+        inventory::coverage_metrics(&summary).unwrap(),
+        inventory::coverage_metrics(&detailed).unwrap()
+    );
 }
 
 #[test]

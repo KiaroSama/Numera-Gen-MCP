@@ -1,6 +1,26 @@
 # Test results
 
-## Current 0.3.0 candidate — failed qualification, 2026-11-03
+## Current 0.3.0 candidate — failed qualification, 2026-11-10
+
+[Qualification42765943268, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42765943268/attempts/1)
+on `120da578a9a2c35fabcceb1c8b4ebf6ccb7b609e` failed all seven native/coverage contexts.
+Both Windows targets compiled the task runner, then the native DPAPI fixture failed before suite
+execution. Unix execution exposed a credentials CLI fixture that creates its own forbidden runtime
+directory, a duplicate-name ZIP acceptance gap and signing fixtures containing literal parent-path
+components. Linux ARM also exceeded the existing three-second Responses waiter deadline after the
+second response was sent; its exact delay remains unproven, so neither a deadlock nor a one-off flake
+is claimed. Formatting and Clippy gates failed independently.
+
+The coverage job executed all 111 discovered harnesses, including 20 passing SDK tests, with the
+credentials fixture failure retained. Its later coverage-report child exceeded the unchanged
+30-second output-idle bound; no coverage JSON or measured floor result was produced. This was not
+aggregate-budget exhaustion. Corrections isolate test-owned state, preserve strict private-path
+checks, reject duplicate ZIP names and request summary-only coverage JSON without excluding runtime
+code or changing the 85/80 floors. Authenticated hosted formatting candidates are integrated.
+The waiter test now records fixed monotonic stage and real persistence-operation timestamps on
+failure, without changing its deadline, native storage operations or original assertions.
+These corrections remain unqualified until their own complete hosted run; no original source,
+working runtime or branch has been retired.
 
 [Qualification41526803432, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/41526803432/attempts/1)
 failed on exact source `49a6288b14681c75766da2f2d0c185b162aeb6e5`: all six native jobs and runtime

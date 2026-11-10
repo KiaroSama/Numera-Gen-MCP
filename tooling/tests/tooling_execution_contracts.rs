@@ -69,16 +69,25 @@ impl Fixture {
                     | "exact_source_windows_dpapi_script_acl_native_roundtrip_corrupt_and_no_overwrite"
                     | "disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_binding"
                     | "native_protection_cli_whatif_preserves_outside_destination_and_existing_file_without_input"
-                    | "native_dpapi_fixture_preserves_exact_consumer_shape_and_refuses_overwrite" => target.contains("windows"),
+                    | "private_files_accept_rooted_disk_spellings_without_weakening_rejections"
+                    | "native_dpapi_fixture_preserves_exact_consumer_shape_and_refuses_overwrite" => {
+                        target.contains("windows")
+                    }
                     "identity_custody_refuses_unsupported_hosts_without_creating_files"
-                    | "native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts" => !target.contains("windows"),
+                    | "native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts" => {
+                        !target.contains("windows")
+                    }
                     "approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
                         target.contains("windows") || target.contains("apple")
                     }
                     _ => file != "native/devtools/process_unix.rs" || !target.contains("windows"),
                 };
                 if applicable {
-                    let actual = if file == "tests/rust/dpapi_acceptance.rs" { format!("windows::{symbol}") } else { symbol.into() };
+                    let actual = if file == "tests/rust/dpapi_acceptance.rs" {
+                        format!("windows::{symbol}")
+                    } else {
+                        symbol.into()
+                    };
                     names.entry(harness.into()).or_default().insert(actual);
                 }
             }
@@ -227,26 +236,47 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
         assert_eq!(result["qualification_verified"], false);
         assert_eq!(result["retirement_authorized"], false);
         let dpapi = "tests/rust/dpapi_acceptance.rs";
-        let protection = result["entries"].as_array().unwrap().iter()
-            .find(|entry| entry["source"] == "scripts/protect-secret.ps1").unwrap();
-        let test = protection["tests"].as_array().unwrap().iter()
-            .find(|test| test["source"] == dpapi).unwrap();
+        let protection = result["entries"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["source"] == "scripts/protect-secret.ps1")
+            .unwrap();
+        let test = protection["tests"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|test| test["source"] == dpapi)
+            .unwrap();
         assert_eq!(test["applicable"], target.contains("windows"));
         let mut empty = fixture.clone();
         let harness = &mut empty.report["harnesses"][dpapi];
-        harness["passed"] = json!([]); harness["count"] = json!(0);
-        harness["summary"] = json!("test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s");
+        harness["passed"] = json!([]);
+        harness["count"] = json!(0);
+        harness["summary"] = json!(
+            "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+        );
         assert_eq!(empty.bind().is_ok(), !target.contains("windows"));
-        empty.report["harnesses"].as_object_mut().unwrap().remove(dpapi);
+        empty.report["harnesses"]
+            .as_object_mut()
+            .unwrap()
+            .remove(dpapi);
         assert!(empty.bind().is_err());
         if target.contains("windows") {
-            let mapping = format!("{dpapi}::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants");
-            assert_eq!(protection["named_execution"][&mapping]["exact_test_name"],
-                "windows::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants");
+            let mapping = format!(
+                "{dpapi}::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants"
+            );
+            assert_eq!(
+                protection["named_execution"][&mapping]["exact_test_name"],
+                "windows::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants"
+            );
             let mut unrelated = fixture.clone();
             let harness = &mut unrelated.report["harnesses"][dpapi];
-            harness["passed"] = json!(["windows::unrelated_passing_test"]); harness["count"] = json!(1);
-            harness["summary"] = json!("test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s");
+            harness["passed"] = json!(["windows::unrelated_passing_test"]);
+            harness["count"] = json!(1);
+            harness["summary"] = json!(
+                "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+            );
             assert!(unrelated.bind().is_err());
         }
         let bounded = result["entries"]

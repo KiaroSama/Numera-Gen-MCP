@@ -74,7 +74,9 @@ pub fn archive(root: &Path, inventory: &[u8]) -> io::Result<Vec<u8>> {
 pub fn bootstrap_command(context: &Context, check: bool) -> Command {
     let mut command = context.command("rustup");
     command.args(["run", "1.99.1", "rustfmt"]);
-    if check { command.arg("--check"); }
+    if check {
+        command.arg("--check");
+    }
     command.args(["--edition", "2024", "tooling/bootstrap/main.rs"]);
     command
 }

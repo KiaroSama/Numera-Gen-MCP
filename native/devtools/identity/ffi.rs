@@ -1,5 +1,11 @@
 use super::super::failure;
-use std::{ffi::{c_char, c_int, c_long, c_void}, fs::{File, OpenOptions}, io::{self, Read}, os::windows::{ffi::OsStrExt, fs::OpenOptionsExt}, path::Path};
+use std::{
+    ffi::{c_char, c_int, c_long, c_void},
+    fs::{File, OpenOptions},
+    io::{self, Read},
+    os::windows::{ffi::OsStrExt, fs::OpenOptionsExt},
+    path::Path,
+};
 
 pub type Ref = *mut c_void;
 type U8 = *const u8;
@@ -58,16 +64,22 @@ unsafe extern "system" {
 fn initialize(module: Ref) -> io::Result<()> {
     let init = unsafe { GetProcAddress(module, c"OPENSSL_init_crypto".as_ptr()) };
     let version = unsafe { GetProcAddress(module, c"OPENSSL_version_major".as_ptr()) };
-    if init.is_null() || version.is_null() { return Err(failure()); }
+    if init.is_null() || version.is_null() {
+        return Err(failure());
+    }
     // SAFETY: exact stable OpenSSL 3 ABI; these loader-only functions are not stored in Api.
     let init = unsafe { std::mem::transmute::<Ref, unsafe extern "C" fn(u64, Ref) -> c_int>(init) };
     let version = unsafe { std::mem::transmute::<Ref, unsafe extern "C" fn() -> u32>(version) };
     // Pin for process lifetime: cleanup forbids reinitialization and exit callbacks need live code.
     // Windows cannot remove this qualified DLL until process exit; no private key object is pinned.
     let mut pinned = std::ptr::null_mut();
-    if unsafe { GetModuleHandleExW(5, init as *const () as *const u16, &mut pinned) } == 0 { return Err(failure()); }
+    if unsafe { GetModuleHandleExW(5, init as *const () as *const u16, &mut pinned) } == 0 {
+        return Err(failure());
+    }
     // Must precede every cryptographic call: ignore environment-selected config/providers.
-    if unsafe { init(0x80, std::ptr::null_mut()) } != 1 || unsafe { version() } != 3 { return Err(failure()); }
+    if unsafe { init(0x80, std::ptr::null_mut()) } != 1 || unsafe { version() } != 3 {
+        return Err(failure());
+    }
     Ok(())
 }
 
@@ -126,8 +138,15 @@ pub use declarations::Api;
 #[repr(C)]
 #[derive(Default)]
 pub struct Tm {
-    pub sec: c_int, pub min: c_int, pub hour: c_int, pub day: c_int,
-    pub month: c_int, pub year: c_int, pub weekday: c_int, pub yearday: c_int, pub dst: c_int,
+    pub sec: c_int,
+    pub min: c_int,
+    pub hour: c_int,
+    pub day: c_int,
+    pub month: c_int,
+    pub year: c_int,
+    pub weekday: c_int,
+    pub yearday: c_int,
+    pub dst: c_int,
 }
 
 pub struct Owned<'a> {
@@ -137,14 +156,26 @@ pub struct Owned<'a> {
 }
 impl<'a> Owned<'a> {
     pub fn take(_api: &'a Api, value: Ref, free: unsafe extern "C" fn(Ref)) -> Self {
-        Self { value, free, _api: std::marker::PhantomData }
+        Self {
+            value,
+            free,
+            _api: std::marker::PhantomData,
+        }
     }
     pub fn new(api: &'a Api, value: Ref, free: unsafe extern "C" fn(Ref)) -> io::Result<Self> {
         let owned = Self::take(api, value, free);
-        if value.is_null() { return Err(failure()); }
+        if value.is_null() {
+            return Err(failure());
+        }
         Ok(owned)
     }
 }
 impl Drop for Owned<'_> {
-    fn drop(&mut self) { if !self.value.is_null() { unsafe { (self.free)(self.value); } } }
+    fn drop(&mut self) {
+        if !self.value.is_null() {
+            unsafe {
+                (self.free)(self.value);
+            }
+        }
+    }
 }

@@ -24,23 +24,56 @@ fn execute() -> io::Result<i32> {
         return Ok(0);
     }
     if args.first().is_some_and(|arg| arg == "protect-secret") {
-        let values = args[1..].iter().map(|value| value.to_str().map(str::to_owned)
-            .ok_or_else(|| io::Error::other("Protection options must be valid Unicode."))).collect::<io::Result<Vec<_>>>()?;
+        let values = args[1..]
+            .iter()
+            .map(|value| {
+                value
+                    .to_str()
+                    .map(str::to_owned)
+                    .ok_or_else(|| io::Error::other("Protection options must be valid Unicode."))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
         numera_gen_mcp::devtools::protect_secret::execute(&values)?;
         return Ok(0);
     }
     if args.first().is_some_and(|arg| arg == "identity") {
-        let mut values = args[1..].iter().map(|value| value.to_str().map(str::to_owned)
-            .ok_or_else(|| io::Error::other("Identity options must be valid Unicode."))).collect::<io::Result<Vec<_>>>()?;
-        let roots = values.iter().enumerate().filter(|(_, value)| value.as_str() == "--root").map(|(index, _)| index).collect::<Vec<_>>();
-        if roots.len() != 1 { return Err(io::Error::other("Exactly one explicit identity root is required.")); }
+        let mut values = args[1..]
+            .iter()
+            .map(|value| {
+                value
+                    .to_str()
+                    .map(str::to_owned)
+                    .ok_or_else(|| io::Error::other("Identity options must be valid Unicode."))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
+        let roots = values
+            .iter()
+            .enumerate()
+            .filter(|(_, value)| value.as_str() == "--root")
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        if roots.len() != 1 {
+            return Err(io::Error::other(
+                "Exactly one explicit identity root is required.",
+            ));
+        }
         let index = roots[0];
-        let root = std::path::PathBuf::from(values.get(index + 1).filter(|value| !value.starts_with("--"))
-            .ok_or_else(|| io::Error::other("Explicit identity root is required."))?);
-        if !root.is_absolute() { return Err(io::Error::other("Identity root must be absolute.")); }
+        let root = std::path::PathBuf::from(
+            values
+                .get(index + 1)
+                .filter(|value| !value.starts_with("--"))
+                .ok_or_else(|| io::Error::other("Explicit identity root is required."))?,
+        );
+        if !root.is_absolute() {
+            return Err(io::Error::other("Identity root must be absolute."));
+        }
         values.drain(index..index + 2);
         numera_gen_mcp::devtools::private_files::verify_ancestors(&root)?;
-        if !root.is_dir() { return Err(io::Error::other("Existing identity root directory required.")); }
+        if !root.is_dir() {
+            return Err(io::Error::other(
+                "Existing identity root directory required.",
+            ));
+        }
         let options = numera_gen_mcp::devtools::identity::Options::parse(&values)?;
         let metadata_only = options.action == "inspect" || options.dry_run;
         let report = if metadata_only {

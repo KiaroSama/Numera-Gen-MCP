@@ -23,9 +23,16 @@ fn committed_tooling_review_binds_all_originals_scenarios_and_current_sources_wi
     let (root, manifest, review) = inputs();
     let checked = tooling_review::verify(&root, &manifest, &review).unwrap();
     assert_eq!(checked["files"], 51);
-    let scenarios = manifest["entries"].as_array().unwrap().iter()
-        .map(|entry| entry["scenarios"].as_array().unwrap().len()).sum::<usize>();
-    assert!(scenarios > 92, "the original 92 scenarios and real PowerShell coverage remain required");
+    let scenarios = manifest["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| entry["scenarios"].as_array().unwrap().len())
+        .sum::<usize>();
+    assert!(
+        scenarios > 92,
+        "the original 92 scenarios and real PowerShell coverage remain required"
+    );
     assert_eq!(checked["scenarios"], scenarios);
     assert_eq!(checked["source_assertion_review_verified"], true);
     for field in [
@@ -97,7 +104,14 @@ fn tooling_review_never_promotes_missing_or_self_declared_execution() {
         "retirement_authorized":false,"original_evidence_rewritten":false
     });
     tooling_review::bind_execution(&root, &manifest, &review, &execution).unwrap();
-    for mutation in ["missing", "self-declared", "count", "legacy-count", "legacy-field", "missing-powershell"] {
+    for mutation in [
+        "missing",
+        "self-declared",
+        "count",
+        "legacy-count",
+        "legacy-field",
+        "missing-powershell",
+    ] {
         let mut changed = execution.clone();
         match mutation {
             "missing" => changed = json!({}),
@@ -105,10 +119,15 @@ fn tooling_review_never_promotes_missing_or_self_declared_execution() {
             "count" => changed["mapped_files"] = json!(46),
             "legacy-count" => changed["mapped_python_js"] = json!(51),
             "legacy-field" => changed["retained_powershell"] = json!([]),
-            "missing-powershell" => changed["entries"].as_array_mut().unwrap()
+            "missing-powershell" => changed["entries"]
+                .as_array_mut()
+                .unwrap()
                 .retain(|entry| !entry["source"].as_str().unwrap().ends_with(".ps1")),
             _ => unreachable!(),
         }
-        assert!(tooling_review::bind_execution(&root, &manifest, &review, &changed).is_err(), "{mutation}");
+        assert!(
+            tooling_review::bind_execution(&root, &manifest, &review, &changed).is_err(),
+            "{mutation}"
+        );
     }
 }

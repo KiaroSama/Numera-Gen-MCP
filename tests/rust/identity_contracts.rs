@@ -34,7 +34,13 @@ fn crypto_library_architecture_is_verified_before_native_loading() {
         bytes[86..88].copy_from_slice(&0x2000u16.to_le_bytes());
         bytes[88..90].copy_from_slice(&0x20bu16.to_le_bytes());
         identity::validate_library_image(&bytes, machine).unwrap();
-        assert!(identity::validate_library_image(&bytes, if machine == 0xaa64 { 0x8664 } else { 0xaa64 }).is_err());
+        assert!(
+            identity::validate_library_image(
+                &bytes,
+                if machine == 0xaa64 { 0x8664 } else { 0xaa64 }
+            )
+            .is_err()
+        );
         assert!(identity::validate_library_image(&bytes[..70], machine).is_err());
         bytes[86] = 0;
         bytes[87] = 0;
@@ -79,7 +85,8 @@ fn disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_b
     assert_eq!(inspected["registry_owner_only"], true);
     assert_eq!(inspected["private_identity_exists"], false);
     assert_eq!(fs::read(&registry).unwrap(), original);
-    let dry = identity::execute(&root, &["create".into(), "--dry-run".into()], Some(&logger)).unwrap();
+    let dry =
+        identity::execute(&root, &["create".into(), "--dry-run".into()], Some(&logger)).unwrap();
     assert_eq!(dry["dry_run"], true);
     assert_eq!(fs::read(&registry).unwrap(), original);
     assert!(!root.join(".runtime/signing").exists());
@@ -91,21 +98,37 @@ fn disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_b
     assert_eq!(created["remote_secret_changed"], false);
     let appended = private_files::read_private(&registry, 1048576).unwrap();
     assert!(appended.0.starts_with(original));
-    let password = private_files::read_private(
-        &root.join(".runtime/signing/publisher-password.txt"), 4095,
-    ).unwrap();
+    let password =
+        private_files::read_private(&root.join(".runtime/signing/publisher-password.txt"), 4095)
+            .unwrap();
     assert_eq!(password.0.len(), 64);
-    let pfx = private_files::read_private(&root.join(".runtime/signing/publisher.pfx"), 32768).unwrap();
+    let pfx =
+        private_files::read_private(&root.join(".runtime/signing/publisher.pfx"), 32768).unwrap();
     assert!(!pfx.0.is_empty());
     der::assert_pfx_parameters(&pfx.0);
     let checked = identity::execute(&root, &qualified_arguments("check"), Some(&logger)).unwrap();
-    for name in ["identity_recovered", "public_binding", "unicode_roundtrip", "tamper_rejected", "wrong_signer_rejected", "local_recovery_verified"] {
+    for name in [
+        "identity_recovered",
+        "public_binding",
+        "unicode_roundtrip",
+        "tamper_rejected",
+        "wrong_signer_rejected",
+        "local_recovery_verified",
+    ] {
         assert_eq!(checked[name], true, "{name}");
     }
     assert_eq!(checked["artifact_signed"], false);
     assert!(identity::execute(&root, &create, Some(&logger)).is_err());
-    assert_eq!(private_files::read_private(&registry, 1048576).unwrap().0, appended.0);
-    assert_eq!(private_files::read_private(&root.join(".runtime/signing/publisher.pfx"), 32768).unwrap().0, pfx.0);
+    assert_eq!(
+        private_files::read_private(&registry, 1048576).unwrap().0,
+        appended.0
+    );
+    assert_eq!(
+        private_files::read_private(&root.join(".runtime/signing/publisher.pfx"), 32768)
+            .unwrap()
+            .0,
+        pfx.0
+    );
     let metadata = root.join("docs/signing/publisher.json");
     let bytes = fs::read(&metadata).unwrap();
     let mut wrong: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -120,11 +143,15 @@ fn disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_b
     let mut write = qualified_arguments("check");
     write.push("--write-fixtures".into());
     identity::execute(&root, &write, Some(&logger)).unwrap();
-    let fixture_path = root.join("tests/fixtures/native-signing/approved/x86_64-pc-windows-msvc.json");
+    let fixture_path =
+        root.join("tests/fixtures/native-signing/approved/x86_64-pc-windows-msvc.json");
     let fixture = fs::read(&fixture_path).unwrap();
     let value: serde_json::Value = serde_json::from_slice(&fixture).unwrap();
     assert_eq!(value["version"], "0.1.0");
-    assert_eq!(value["source_sha"], "fc7da25c3b470199949b1b4c67127d77afa0c34a");
+    assert_eq!(
+        value["source_sha"],
+        "fc7da25c3b470199949b1b4c67127d77afa0c34a"
+    );
     assert_eq!(value["files"][0]["path"], "bin/numera-image-gen-mcp.exe");
     assert!(identity::execute(&root, &write, Some(&logger)).is_err());
     assert_eq!(fs::read(&fixture_path).unwrap(), fixture);
@@ -138,6 +165,8 @@ fn disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_b
 fn contains_private_output(directory: &Path, password: &[u8]) -> bool {
     fs::read_dir(directory).unwrap().any(|entry| {
         let bytes = fs::read(entry.unwrap().path()).unwrap();
-        bytes.windows(password.len()).any(|window| window == password)
+        bytes
+            .windows(password.len())
+            .any(|window| window == password)
     })
 }

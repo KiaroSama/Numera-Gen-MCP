@@ -19,7 +19,7 @@ impl Fixture {
             .join("../.ci-work/tooling-tests")
             .join(format!("private signing {}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&root).unwrap();
-        Self(root)
+        Self(root.canonicalize().unwrap())
     }
 }
 impl Drop for Fixture {

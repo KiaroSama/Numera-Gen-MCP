@@ -1,13 +1,13 @@
 pub mod artifact;
 mod capture;
 pub mod identity;
-pub mod private_files;
-pub mod protect_secret;
 mod installation;
+pub mod private_files;
 #[cfg(unix)]
 mod process_unix;
 #[cfg(windows)]
 mod process_windows;
+pub mod protect_secret;
 pub mod setup;
 #[cfg(target_os = "macos")]
 mod signature_macos;

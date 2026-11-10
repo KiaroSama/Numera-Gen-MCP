@@ -521,18 +521,31 @@ mod windows {
         let security = private_files::inspect_private(&parent, true).unwrap();
         assert!(security.owner_current_user && security.owner_only && security.protected);
         private_files::write_new(&file, b"unchanged").unwrap();
-        assert!(protect_secret::protect_with(&file, false, || panic!("existing file read secret")).is_err());
+        assert!(
+            protect_secret::protect_with(&file, false, || panic!("existing file read secret"))
+                .is_err()
+        );
         assert_eq!(fs::read(&file).unwrap(), b"unchanged");
         assert!(private_files::write_new(&file, b"replacement").is_err());
         let hard = parent.join("hard.txt");
         fs::hard_link(&file, &hard).unwrap();
         assert!(private_files::read_private(&file, 1024).is_err());
         fs::remove_file(hard).unwrap();
-        assert_eq!(private_files::read_private(&file, 1024).unwrap().0, b"unchanged");
+        assert_eq!(
+            private_files::read_private(&file, 1024).unwrap().0,
+            b"unchanged"
+        );
         let registry = private_files::open_registry(&file, 1024).unwrap();
         assert!(registry.owner_current_user && registry.owner_only && registry.protected);
         assert!(!registry.original_sddl.is_empty());
-        assert!(OpenOptions::new().read(true).write(true).open(&file).is_err(), "exclusive registry handle");
+        assert!(
+            OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&file)
+                .is_err(),
+            "exclusive registry handle"
+        );
         private_files::restrict_registry(&registry).unwrap();
         drop(registry);
         assert_eq!(fs::read(&file).unwrap(), b"unchanged");
