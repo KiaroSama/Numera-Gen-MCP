@@ -2,6 +2,26 @@
 
 ## Current 0.3.0 candidate — failed qualification, 2026-11-10
 
+[Qualification42780429240, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42780429240/attempts/1)
+on `d5975ceb7dbc055d61a7da842e2f04c9b2d4171d` completed with all seven native/coverage jobs
+failed and five downstream jobs skipped. All seven original logs were retained and inspected.
+Both macOS targets passed 146 harness summaries and failed only two formatting hunks. Both Linux
+targets passed 144 summaries, then failed release-SDK acceptance before its harness report; the
+strict single-link artifact reader is incompatible with legitimate Cargo-linked release outputs,
+although the failed binaries' actual link counts were not captured. Both Windows targets still
+failed DPAPI fixture preparation before suites: Rust treats a bare verbatim drive prefix as
+absolute, so the previous absolute-path guard did not defer metadata inspection until RootDir.
+The exact failing Windows OS call remains unrecorded.
+
+Coverage passed 111 harness summaries but report generation again exceeded the 30-second idle
+bound, despite summary-only output. No coverage JSON or passing floor measurement was produced;
+the early branch warning does not identify which internal phase stalled. The corrective batch
+preserves the 60-second wall/30-second idle bounds and 85/80 floors, adds one verbose level for
+real LLVM merge/export markers, corrects the explicit Windows component handling, and separates
+trusted compiler-output reads from strict package/private artifact reads. The two formatting
+hunks are copied from authenticated hosted output, not inferred locally. These changes require
+a new complete hosted qualification; original sources and the working installation remain intact.
+
 [Qualification42765943268, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42765943268/attempts/1)
 on `120da578a9a2c35fabcceb1c8b4ebf6ccb7b609e` failed all seven native/coverage contexts.
 Both Windows targets compiled the task runner, then the native DPAPI fixture failed before suite

@@ -233,6 +233,22 @@ fn diagnostics_expose_only_explicit_safe_messages_not_os_or_private_child_text()
     assert!(result.contains("PermissionDenied"));
     assert!(!result.contains("synthetic-password"));
     assert!(!result.contains("/private/path"));
+    let project = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let source = fs::read_to_string(project.join("tooling/src/ci.rs")).unwrap();
+    let gate = source
+        .split_once("if let Err(error) = crate::acceptance::sdk")
+        .unwrap()
+        .1
+        .split_once("if crate::evidence::verify(context)")
+        .unwrap()
+        .0;
+    let gate = gate.split_whitespace().collect::<String>();
+    assert!(gate.contains("context.logger.log(\"ERROR\",\"release-sdk\","));
+    assert!(gate.contains("\"phase\":\"release-sdk\""));
+    assert!(gate.contains("crate::context::diagnostic(&error)"));
+    assert!(gate.contains("failures.push(\"release-sdk\".into())"));
+    assert!(!gate.contains("error.to_string()"));
+    assert!(!gate.contains("format!"));
 }
 
 #[test]
@@ -515,7 +531,8 @@ fn coverage_report_keeps_summary_totals_scope_and_existing_wall_idle_bounds() {
         actual,
         concat!(
             "context,&mutcommand(&[\"+nightly-2026-10-10\",\"llvm-cov\",\"report\",",
-            "\"--branch\",\"-p\",\"numera-gen-mcp\",\"--json\",\"--summary-only\",",
+            "\"--verbose\",\"--branch\",\"-p\",\"numera-gen-mcp\",",
+            "\"--json\",\"--summary-only\",",
             "\"--output-path\",\".ci-work/native/coverage.json\",]),",
             "\"coverage-report\",60000,30000,&mutfailures,"
         )

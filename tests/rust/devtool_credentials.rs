@@ -93,6 +93,25 @@ fn native_private_commands_reject_invalid_arguments_before_input_or_custody_muta
 #[test]
 fn private_files_accept_rooted_disk_spellings_without_weakening_rejections() {
     use numera_gen_mcp::{devtools::private_files, runtime_paths::command_path};
+    use std::path::Component;
+    for (spelling, followed_by_root) in [
+        (r"C:\", true),
+        (r"\\?\C:\", true),
+        (r"\\server\share", true),
+        (r"\\?\UNC\server\share", false),
+    ] {
+        let root = Path::new(spelling);
+        let mut components = root.components();
+        assert!(matches!(components.next(), Some(Component::Prefix(_))));
+        assert_eq!(
+            matches!(components.next(), Some(Component::RootDir)),
+            followed_by_root
+        );
+        assert!(components.next().is_none());
+        assert!(root.parent().is_none());
+    }
+    // Rust considers this incomplete filesystem spelling absolute; it still needs its RootDir.
+    assert!(Path::new(r"\\?\C:").is_absolute());
     let workspace = Workspace::new();
     let canonical = workspace.0.canonicalize().unwrap();
     let ordinary = command_path(&canonical);

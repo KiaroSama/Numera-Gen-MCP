@@ -215,7 +215,15 @@ pub fn stable(context: &Context) -> io::Result<()> {
     } else {
         "target/release/numera-gen-mcp"
     })?;
-    if crate::acceptance::sdk(context, &executable, "release").is_err() {
+    if let Err(error) = crate::acceptance::sdk(context, &executable, "release") {
+        context.logger.log(
+            "ERROR",
+            "release-sdk",
+            "Required release SDK phase failed; qualification remains blocked.",
+            numera_gen_mcp::compat::value::json!({
+                "phase":"release-sdk","diagnostic":crate::context::diagnostic(&error)
+            }),
+        );
         failures.push("release-sdk".into());
     }
     if crate::evidence::verify(context).is_err() {
@@ -334,6 +342,7 @@ pub fn coverage(context: &Context) -> io::Result<()> {
             "+nightly-2026-10-10",
             "llvm-cov",
             "report",
+            "--verbose",
             "--branch",
             "-p",
             "numera-gen-mcp",

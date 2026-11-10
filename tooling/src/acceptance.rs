@@ -262,11 +262,27 @@ pub fn sdk(context: &Context, executable: &Path, phase: &str) -> io::Result<()> 
     if !["release", "extracted-intermediate", "extracted-signed"].contains(&phase) {
         return Err(fail("Unsupported SDK execution phase."));
     }
+    if phase == "release"
+        && executable
+            != numera_gen_mcp::devtools::cargo_output::path(
+                &context.root,
+                numera_gen_mcp::devtools::cargo_output::Binary::Server,
+            )
+    {
+        return Err(fail("Release SDK requires the fixed first-party Cargo output."));
+    }
     let executable = executable.canonicalize()?;
     if !executable.starts_with(&context.root) {
         return Err(fail("Tested SDK binary escapes the workspace."));
     }
-    let tested_hash = sha(&read_regular(&executable, MAX_BYTES)?);
+    let binary_bytes = || {
+        if phase == "release" {
+            crate::cargo_output::read(context, "numera-gen-mcp")
+        } else {
+            read_regular(&executable, MAX_BYTES)
+        }
+    };
+    let tested_hash = sha(&binary_bytes()?);
     let provenance = crate::evidence::snapshot(context)?;
     let mut harnesses = BTreeMap::new();
     let mut failures = Vec::new();
@@ -305,7 +321,7 @@ pub fn sdk(context: &Context, executable: &Path, phase: &str) -> io::Result<()> 
             }
         }
     }
-    if tested_hash != sha(&read_regular(&executable, MAX_BYTES)?) {
+    if tested_hash != sha(&binary_bytes()?) {
         failures.push("tested-binary-changed".into());
     }
     if crate::evidence::snapshot(context)? != provenance {

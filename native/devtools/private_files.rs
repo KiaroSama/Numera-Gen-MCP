@@ -36,9 +36,15 @@ pub fn verify_ancestors(path: &Path) -> io::Result<()> {
     }
     let mut current = std::path::PathBuf::new();
     let count = path.components().count();
-    for (index, part) in path.components().enumerate() {
+    let mut components = path.components().enumerate().peekable();
+    while let Some((index, part)) = components.next() {
         current.push(part.as_os_str());
-        // A Windows volume prefix is not a filesystem ancestor until its root is joined.
+        // Bare verbatim disk prefixes pass is_absolute; inspect after joining their RootDir.
+        if matches!(part, Component::Prefix(_))
+            && matches!(components.peek(), Some((_, Component::RootDir)))
+        {
+            continue;
+        }
         if !current.is_absolute() {
             continue;
         }

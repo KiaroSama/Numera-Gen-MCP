@@ -85,7 +85,11 @@ fn identity_library_selection_rejects_size_digest_architecture_duplicate_and_lin
     let duplicate = archive(MEMBER, &bytes, false, true);
     let metadata = zip::ZipArchive::new(Cursor::new(&duplicate)).unwrap();
     assert!(metadata.has_duplicate_names());
-    assert_eq!(metadata.len(), 2, "indexed names collapse three raw entries");
+    assert_eq!(
+        metadata.len(),
+        2,
+        "indexed names collapse three raw entries"
+    );
     drop(metadata);
     for (case, zip) in [
         ("linked", archive(MEMBER, &bytes, true, false)),

@@ -441,10 +441,7 @@ pub fn prepare(context: &Context, target: &str, intermediate: bool) -> io::Resul
     for name in ["numera-gen-mcp", "numera-dev"] {
         entries.insert(
             format!("bin/{name}{suffix}"),
-            read_regular(
-                &context.root.join(format!("target/release/{name}{suffix}")),
-                MAX_BYTES,
-            )?,
+            crate::cargo_output::read(context, name)?,
         );
     }
     for name in ASSETS {

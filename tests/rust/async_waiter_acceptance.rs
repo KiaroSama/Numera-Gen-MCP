@@ -62,9 +62,10 @@ impl Persistence for ObservedPersistence {
         if self.0.file_us[7].load(Ordering::Relaxed) != u64::MAX {
             self.0.after_unlink_updates.fetch_add(1, Ordering::Relaxed);
         }
-        self.0
-            .last_update_us
-            .store(self.0.started.elapsed().as_micros() as u64, Ordering::Relaxed);
+        self.0.last_update_us.store(
+            self.0.started.elapsed().as_micros() as u64,
+            Ordering::Relaxed,
+        );
         Ok(())
     }
 

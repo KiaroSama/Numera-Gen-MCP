@@ -1,5 +1,6 @@
 pub mod acceptance;
 pub mod archives;
+pub mod cargo_output;
 pub mod ci;
 pub mod context;
 pub mod coverage_environment;

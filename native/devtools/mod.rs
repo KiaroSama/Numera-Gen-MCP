@@ -1,4 +1,5 @@
 pub mod artifact;
+pub mod cargo_output;
 mod capture;
 pub mod identity;
 mod installation;
