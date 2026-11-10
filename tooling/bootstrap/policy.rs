@@ -1,5 +1,8 @@
 use std::{env, io, path::PathBuf};
 
+#[path = "events.rs"]
+mod events;
+
 pub fn fail(message: &'static str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }
@@ -114,10 +117,10 @@ impl Config {
     pub fn load() -> io::Result<Self> {
         if required("GITHUB_ACTIONS")? != "true"
             || required("GITHUB_REPOSITORY")? != "KiaroSama/Numera-Gen-MCP"
-            || required("GITHUB_EVENT_NAME")? != "workflow_dispatch"
+            || !matches!(required("GITHUB_EVENT_NAME")?.as_str(), "workflow_dispatch" | "push" | "pull_request")
         {
             return Err(fail(
-                "Bootstrap is restricted to the selected manual hosted repository.",
+                "Bootstrap is restricted to the selected hosted repository and CI events.",
             ));
         }
         let target = required("BOOTSTRAP_TARGET")?;
@@ -130,6 +133,11 @@ impl Config {
             &required("GITHUB_JOB")?,
             &required("NUMERA_CI_OPERATION")?,
         )?;
+        if required("GITHUB_EVENT_NAME")? != "workflow_dispatch"
+            && required("NUMERA_CI_OPERATION")? != "qualify"
+        {
+            return Err(fail("Automatic CI cannot prepare or sign a release."));
+        }
         let raw = PathBuf::from(required("GITHUB_WORKSPACE")?);
         if !raw.is_absolute()
             || raw
@@ -151,8 +159,8 @@ impl Config {
             return Err(fail("Bootstrap requires an exact source revision."));
         }
         let reference = required("GITHUB_REF")?;
-        if !reference.starts_with("refs/heads/") {
-            return Err(fail("Bootstrap requires an explicit branch reference."));
+        if !events::valid_reference(&required("GITHUB_EVENT_NAME")?, &reference) {
+            return Err(fail("Bootstrap requires a matching branch or pull-request reference."));
         }
         let number = |key| {
             let value = required(key)?;

@@ -186,7 +186,7 @@ fn execution_identity_requires_exact_manual_repository_source_positive_run_attem
     assert_eq!(value["phase"], "built");
     for (key, wrong) in [
         ("GITHUB_REPOSITORY", "other/project"),
-        ("GITHUB_EVENT_NAME", "push"),
+        ("GITHUB_EVENT_NAME", "pull_request_target"),
         ("GITHUB_SHA", "bad"),
         ("GITHUB_REF", "refs/tags/v0.3.0"),
         ("GITHUB_RUN_ID", "0"),
@@ -205,6 +205,17 @@ fn execution_identity_requires_exact_manual_repository_source_positive_run_attem
     assert!(execution_identity(&environment, "unknown", actual).is_err());
     assert!(execution_identity(&environment, "coverage", actual).is_err());
     assert!(execution_identity(&environment, "built", "unsupported").is_err());
+    for (event, reference) in [("push", "refs/heads/topic"), ("pull_request", "refs/pull/22/merge")] {
+        let mut automatic = environment.clone();
+        automatic["GITHUB_EVENT_NAME"] = json!(event);
+        automatic["GITHUB_REF"] = json!(reference);
+        assert_eq!(execution_identity(&automatic, "built", actual).unwrap()["event"], event);
+        automatic["GITHUB_JOB"] = json!("signing");
+        assert!(execution_identity(&automatic, "extracted-signed", actual).is_err());
+    }
+    for reference in ["refs/pull/0/merge", "refs/pull/22/head", "refs/heads/main", "refs/pull/22/merge extra"] {
+        assert!(!numera_task::hosted_events::valid_reference("pull_request", reference));
+    }
     let mut coverage = environment.clone();
     coverage["GITHUB_JOB"] = json!("native-coverage");
     assert!(execution_identity(&coverage, "coverage", "x86_64-unknown-linux-gnu").is_ok());

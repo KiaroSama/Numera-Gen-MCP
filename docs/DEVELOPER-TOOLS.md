@@ -28,8 +28,8 @@ all six targets; the original CI archives are published as0.2.0. Owner-host reco
 The source candidate adds `tooling/`, a separate Cargo workspace package producing `numera-task`.
 It reuses native supervision, logging and artifact verification; task-only archive dependencies are
 not production server dependencies. Current scope replaces all 51 original first-party executable
-files, including the five PowerShell helpers, with Rust; originals remain until mapped qualification
-permits their exact deletion-only transition. Native third-party libraries and fixed OS/toolchain
+files, including the five PowerShell helpers, with Rust; originals are now retired from the working tree.
+Their original hashes and scenario mappings remain in the migration inventory. Native third-party libraries and fixed OS/toolchain
 commands remain allowed. Historical source text used only as comparison data is not executed.
 Qualification41526803432 compiled the Unix task executable,
 but SDK/tooling test compilation and quality gates failed; Windows failed during bootstrap.
@@ -75,7 +75,7 @@ final integrity hashing; `duration_us` includes reporting overhead. Both executa
 remain required, and a phase that exhausts the aggregate deadline cannot be accepted. Tooling hashes
 use the existing native SHA-256 dependency without changing production request fingerprints.
 On Linux, the coverage report has an opt-in numeric observer inside the same owned process group.
-Its outer 60-second wall and 30-second output-idle limits remain authoritative; diagnostic activity
+Its outer 300-second wall and 180-second output-idle limits remain authoritative; diagnostic activity
 never resets those clocks. Report stdout/stderr go directly to the original capture, preserving the
 output ceiling. A separate sampler receives one nonblocking control signal near the original limit;
 missed, blocked, raced or incomplete observations remain unavailable. After owned cleanup, the task
@@ -83,7 +83,8 @@ validates the nonce-bound, size-limited receipt before logging numeric process/r
 The receipt contains no command lines, environment, raw paths, wait symbols or stacks. Sample timing
 and age do not prove the internal LLVM phase, a deadlock or a performance fix. The original report
 exit, all selected objects and the 85/80 coverage floors remain required; diagnostics cannot qualify
-an absent coverage report. This observer is source-authored and still requires hosted verification.
+an absent coverage report. The reporting budget accounts for all 115 instrumented objects; test
+deadlines, the two-worker limit and the 85/80 coverage floors are unchanged.
 
 Stable uses no nightly-only JSON test flags. Compiler inventory must match every test-enabled target of the selected
 Cargo packages. Harnesses retain their package working directory and explicit contained profile/target

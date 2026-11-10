@@ -18,7 +18,7 @@ must be produced through the real native protection contract in hosted CI.
 ## Historical maintained-source validation
 
 The released native runtime at `f2535577c2e3145da03e2d5c123d7de061656860` used a separate maintained
-validation tree. The retained `scripts/native-validation.py` documents that historical procedure;
+validation tree. The historical `scripts/native-validation.py` documents that procedure in Git history;
 it is not a new supported Rust maintenance command. Exactly **four paths** changed from the baseline:
 
 - `package.json` and `package-lock.json`: Zod `4.6.5` to `4.6.7` and Undici `8.11.2` to `8.12.3`,
@@ -51,9 +51,11 @@ executes the archived JavaScript. The receipt explicitly reports `interpreted_ex
 The hosted-only `numera-task --root ABSOLUTE_ROOT ledger` command checks historical identities and
 emits current Rust mapping proposals. Its source report deliberately keeps `acceptance_verified=false`:
 current assertion ranges/reviews and exact named executions remain separate required work.
-The 46-file Python/JavaScript disposition manifest and five unchanged PowerShell files are tracked
-in [the tooling migration inventory](tooling-migration.json). Counts and existing test files do not
-qualify retirement; `retirement-gate` refuses until genuine current qualification is bound.
+All 51 Python/JavaScript/PowerShell dispositions are tracked in
+[the tooling migration inventory](tooling-migration.json). Their working-tree originals have been
+removed. The frozen historical source remains data; it is never executed. The optional signed
+release retirement verifier remains a separate historical qualification protocol. Removing replaced
+source in a PR does not claim that signed release verification has passed.
 
 ## Current assertion review
 

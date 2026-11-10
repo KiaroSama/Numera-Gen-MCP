@@ -362,8 +362,8 @@ pub fn coverage(context: &Context) -> io::Result<()> {
         .env("LLVM_COV_FLAGS", "-num-threads=2")
         .env("LLVM_PROFDATA_FLAGS", "-num-threads=2"),
         "coverage-report",
-        60000,
-        30000,
+        300000,
+        180000,
         &mut failures,
     );
     if crate::inventory::coverage(context).is_err() {

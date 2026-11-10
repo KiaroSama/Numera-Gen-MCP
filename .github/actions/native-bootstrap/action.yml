@@ -15,7 +15,8 @@ runs:
   steps:
     - name: Refuse any unsupported seed identity or preparation privilege
       if: >-
-        github.repository != 'KiaroSama/Numera-Gen-MCP' || github.event_name != 'workflow_dispatch' ||
+        github.repository != 'KiaroSama/Numera-Gen-MCP' ||
+        (github.event_name != 'workflow_dispatch' && github.event_name != 'push' && github.event_name != 'pull_request') ||
         fromJSON('{"Windows-X64":"x86_64-pc-windows-msvc","Windows-ARM64":"aarch64-pc-windows-msvc","Linux-X64":"x86_64-unknown-linux-gnu","Linux-ARM64":"aarch64-unknown-linux-gnu","macOS-X64":"x86_64-apple-darwin","macOS-ARM64":"aarch64-apple-darwin"}')[format('{0}-{1}', runner.os, runner.arch)] != inputs.target ||
         (inputs.coverage != 'true' && inputs.coverage != 'false') ||
         (inputs.build-task != 'true' && inputs.build-task != 'false') ||

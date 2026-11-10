@@ -14,6 +14,8 @@ pub mod fetch;
 pub mod final_qualification;
 pub mod fixtures;
 pub mod formatting;
+#[path = "../bootstrap/events.rs"]
+pub mod hosted_events;
 pub mod identity_tools;
 pub mod inventory;
 pub mod ledger;

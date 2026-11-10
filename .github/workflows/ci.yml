@@ -1,5 +1,7 @@
 name: CI
 on:
+  push:
+  pull_request:
   workflow_dispatch:
     inputs:
       operation:
@@ -29,6 +31,9 @@ on:
         required: false
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.head_ref || github.ref_name }}-${{ inputs.operation || 'qualify' }}
+  cancel-in-progress: true
 env:
   NUMERA_TEST_WORKERS: "2"
   CARGO_BUILD_JOBS: "2"
@@ -41,7 +46,7 @@ env:
   TMP: ${{ github.workspace }}/.ci-work/temp
   TMPDIR: ${{ github.workspace }}/.ci-work/temp
   NUMERA_BUILD_SHA: ${{ github.sha }}
-  NUMERA_CI_OPERATION: ${{ inputs.operation }}
+  NUMERA_CI_OPERATION: ${{ inputs.operation || 'qualify' }}
   NUMERA_QUALIFICATION_RUN_ID: ${{ inputs.qualification-run-id }}
   NUMERA_QUALIFICATION_RUN_ATTEMPT: ${{ inputs.qualification-run-attempt }}
 jobs:
@@ -86,11 +91,11 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   native:
-    if: inputs.operation == 'qualify'
+    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'qualify'
     name: native-${{ matrix.target }}
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 6
       matrix:
         include:
           - os: windows-latest
@@ -174,7 +179,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   native-coverage:
-    if: inputs.operation == 'qualify'
+    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'qualify'
     runs-on: ubuntu-latest
     timeout-minutes: 50
     defaults:

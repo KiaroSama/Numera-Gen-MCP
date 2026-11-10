@@ -5,13 +5,15 @@
 The current source adopts Numera Gen MCP and `numera-gen-mcp`, adds explicit per-model media kinds
 and transformation modes, and authors fal queue orchestration for image, video, audio and 3D outputs.
 The ten legacy image tools remain alongside `generate_media` and `get_media_output_info`.
-All 51 original first-party Python/JavaScript/PowerShell executables are being replaced by Rust;
-originals remain until mapped behavior and the exact retirement successor qualify. Native protection,
+All 51 original first-party Python/JavaScript/PowerShell executables are replaced by Rust;
+their hashes, scenario maps and immutable expected data remain available. Native protection,
 identity/custody maintenance and synthetic DPAPI fixtures replace active PowerShell callers. A small
 standard-library Rust bootstrap owns substantive preparation logic; native libraries and fixed OS
 commands remain permitted, with only a documented minimal pre-Rust seed.
 
-The current corrective tree remains uncompiled and unexecuted; earlier qualification failures are
+Pushes and pull requests now require six-target native tests and release builds. LLVM reporting has
+a bounded 300-second wall / 180-second output-idle budget without reducing coverage floors or tests.
+The current PR requires its own successful CI; earlier qualification failures are
 recorded in [test results](docs/TEST-RESULTS.md). Source-authored corrections keep leaf SDK children
 within outer POSIX harness containment, reject stale evidence after checkout HEAD changes, and add
 read-only qualification of an exact 51-file retirement successor without deleting originals.

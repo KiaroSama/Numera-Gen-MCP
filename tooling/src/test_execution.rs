@@ -286,15 +286,14 @@ pub fn execution_identity(environment: &Value, phase: &str, target: &str) -> io:
     let source = environment["GITHUB_SHA"].as_str().unwrap_or("");
     let reference = environment["GITHUB_REF"].as_str().unwrap_or("");
     if environment["GITHUB_REPOSITORY"] != "KiaroSama/Numera-Gen-MCP"
-        || environment["GITHUB_EVENT_NAME"] != "workflow_dispatch"
+        || !crate::hosted_events::valid_reference(
+            environment["GITHUB_EVENT_NAME"].as_str().unwrap_or(""), reference)
+        || (phase == "extracted-signed" && environment["GITHUB_EVENT_NAME"] != "workflow_dispatch")
         || environment["GITHUB_JOB"] != job
         || source.len() != 40
         || !source
             .bytes()
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-        || reference
-            .strip_prefix("refs/heads/")
-            .is_none_or(|name| name.is_empty() || name.chars().any(char::is_whitespace))
     {
         return Err(fail(
             "Exact execution repository, event, source, branch or job differs.",
@@ -319,7 +318,7 @@ pub fn execution_identity(environment: &Value, phase: &str, target: &str) -> io:
     };
     Ok(
         json!({"source_sha":source,"repository":environment["GITHUB_REPOSITORY"],"reference":reference,
-        "event":"workflow_dispatch","job":job,"run_id":number("GITHUB_RUN_ID")?,
+        "event":environment["GITHUB_EVENT_NAME"],"job":job,"run_id":number("GITHUB_RUN_ID")?,
         "run_attempt":number("GITHUB_RUN_ATTEMPT")?,"target":target,"platform":platform,"phase":phase}),
     )
 }

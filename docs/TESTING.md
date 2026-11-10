@@ -1,5 +1,16 @@
 # Testing
 
+## Current Rust workspace
+
+Push and pull-request CI runs formatting, strict Clippy, every discovered Rust workspace harness,
+release builds and actual stdio/HTTP SDK checks on Windows, Linux and macOS (x64 and ARM64).
+The original 50 suites / 470 cases and unit/integration/contract categories remain in the immutable
+parity inventory. None is dropped to accommodate Rust. All 51 former executable tooling files are
+replaced by Rust seams and scenario tests. Production coverage still requires 85% regions and
+80% branches; only LLVM report generation receives 300s wall / 180s idle for its 115 objects.
+Manual qualification retains the authenticated execution collector; protected signing is separate.
+See [the migration record](RUST-MIGRATION.md) and [latest results](TEST-RESULTS.md).
+
 ## Native Rust migration — baseline acceptance
 
 At `f253557` / run `40244894089`, attempt2, all sixteen jobs and103 harnesses per native/coverage context

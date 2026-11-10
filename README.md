@@ -12,6 +12,7 @@
 [![MCP stdio](https://img.shields.io/badge/MCP-stdio-7651a8)](docs/ARCHITECTURE.md)
 [![Windows target](https://img.shields.io/badge/target-Windows_11-0078d4)](docs/WINDOWS-WSL.md)
 [![Linux CI](https://img.shields.io/badge/CI_matrix-Linux-555)](.github/workflows/ci.yml)
+[![macOS CI](https://img.shields.io/badge/CI_matrix-macOS-555)](.github/workflows/ci.yml)
 [![JSON Schema](https://img.shields.io/badge/config-JSON_Schema-3068b7)](schemas/config.schema.json)
 [![PNG JPEG WebP](https://img.shields.io/badge/images-PNG_JPEG_WebP-99cc00)](native/files/images.rs)
 [![SQLite receipts](https://img.shields.io/badge/receipts-SQLite-003b57)](native/jobs/store.rs)
@@ -30,6 +31,12 @@ retries, hidden uploads, prompt enhancement or automatic provider/model fallback
 Rust-only maintained tooling are authored in the current source. They have not yet passed the final
 hosted build, six-target acceptance or signature gates. Do not treat this source tree as a qualified
 new release. The published signed 0.2.0 below remains an image-only historical release.
+
+The runtime, developer utility, CI driver and maintained tests are Rust. All 51 replaced
+Python/JavaScript/PowerShell source files have been removed; historical oracle archives remain
+immutable test data. CI runs automatically for pushes and pull requests and requires tests,
+Clippy, formatting, a release build and extracted-binary checks on Windows, Linux and macOS,
+each on x64 and ARM64. [Rust migration](docs/RUST-MIGRATION.md) records scope and branch dispositions.
 
 **Native 0.2.0 is available:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
 mappings and applicable execution at `f2535577c2e3145da03e2d5c123d7de061656860`.

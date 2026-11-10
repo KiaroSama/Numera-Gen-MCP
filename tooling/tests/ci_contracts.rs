@@ -536,7 +536,7 @@ fn coverage_report_keeps_summary_totals_scope_and_existing_wall_idle_bounds() {
             "\"--output-path\",\".ci-work/native/coverage.json\",])",
             ".env(\"LLVM_COV_FLAGS\",\"-num-threads=2\")",
             ".env(\"LLVM_PROFDATA_FLAGS\",\"-num-threads=2\"),",
-            "\"coverage-report\",60000,30000,&mutfailures,"
+            "\"coverage-report\",300000,180000,&mutfailures,"
         )
     );
     let summary = coverage((100, 85), (100, 80));
