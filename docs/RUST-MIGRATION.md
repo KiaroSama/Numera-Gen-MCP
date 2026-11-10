@@ -38,6 +38,7 @@ Only `main` and `rewrite/rust-ci-completion` remain. `main` is not merged.
 Latest upstream review and the reasons for applying or declining each change are
 recorded in [references](REFERENCES.md). Current execution results belong in [test results](TEST-RESULTS.md).
 
-Repository topics and the About description are managed separately in GitHub settings. Use `rust`
-and `cross-platform` in place of `typescript`, preserving other topics, and describe the native Rust
-image/video/audio/3D MCP server. Source changes do not automatically alter repository metadata.
+Repository topics and the About description were updated separately through GitHub settings and
+verified through the repository API. Topics now include `rust` and `cross-platform`; `typescript`
+was removed and other topics were preserved. About describes the native Rust image/video/audio/3D
+MCP server. These metadata changes do not require merging this PR.

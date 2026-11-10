@@ -14,10 +14,17 @@ fn ready_sampler_that_stops_reading_is_killed_at_its_hard_deadline_and_reaped() 
         }
         return;
     }
-    for bytes in [b"".as_slice(),b"relative/lib",b"/absolute/not-lib",b"/path/lib\nprivate",b"/path/lib\0private",&[0xff]] {
+    for bytes in [
+        b"".as_slice(),
+        b"relative/lib",
+        b"/absolute/not-lib",
+        b"/path/lib\nprivate",
+        b"/path/lib\0private",
+        &[0xff],
+    ] {
         assert!(tool_names(bytes).is_none());
     }
-    let lib=std::env::current_dir().unwrap().join("lib");
+    let lib = std::env::current_dir().unwrap().join("lib");
     assert!(tool_names(lib.to_str().unwrap().as_bytes()).is_some());
     let mut command = Command::new(std::env::current_exe().unwrap());
     command

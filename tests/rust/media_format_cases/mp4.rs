@@ -120,11 +120,21 @@ pub fn positive() {
     let mut two = payload(&original, &jpeg.repeat(2));
     two = replace(&two, b"stsz", &full(b"stsz", &[jpeg.len() as u32, 2]));
     two = replace(&two, b"stts", &full(b"stts", &[1, 2, 500]));
-    two = replace(&two, b"stco", &full(b"stco", &[2, 32, 32 + jpeg.len() as u32]));
+    two = replace(
+        &two,
+        b"stco",
+        &full(b"stco", &[2, 32, 32 + jpeg.len() as u32]),
+    );
     two = replace(&two, b"stsc", &full(b"stsc", &[2, 1, 1, 1, 2, 1, 1]));
     assert_eq!(valid(Kind::Video, &two)["sample_count"], 2);
-    invalid(Kind::Video, &replace(&two, b"stco", &full(b"stco", &[2,32,32])));
-    invalid(Kind::Video, &replace(&two, b"stco", &full(b"stco", &[1,32])));
+    invalid(
+        Kind::Video,
+        &replace(&two, b"stco", &full(b"stco", &[2, 32, 32])),
+    );
+    invalid(
+        Kind::Video,
+        &replace(&two, b"stco", &full(b"stco", &[1, 32])),
+    );
     assert!(numera_gen_mcp::media::inspect(Kind::Video, &two, two.len(), 4).is_err());
     let mut bytes = video(b"mjpg", None, jpeg);
     bytes = replace(&bytes, b"stsz", &full(b"stsz", &[jpeg.len() as u32, 1]));

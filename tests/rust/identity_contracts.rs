@@ -21,9 +21,20 @@ fn identity_options_refuse_implicit_creation_unknown_flags_and_unqualified_crypt
         assert!(identity::Options::parse(&args).is_err());
     }
     assert!(identity::Options::parse(&["inspect".into()]).is_ok());
-    let library = std::env::temp_dir().join("not-loaded-identity.dll").to_string_lossy().into_owned();
+    let library = std::env::temp_dir()
+        .join("not-loaded-identity.dll")
+        .to_string_lossy()
+        .into_owned();
     let hash = "a".repeat(64);
-    let qualified = |action: &str| vec![action.into(), "--libcrypto".into(), library.clone(), "--libcrypto-sha256".into(), hash.clone()];
+    let qualified = |action: &str| {
+        vec![
+            action.into(),
+            "--libcrypto".into(),
+            library.clone(),
+            "--libcrypto-sha256".into(),
+            hash.clone(),
+        ]
+    };
     let mut create = qualified("create");
     create.push("--confirm-create".into());
     assert!(identity::Options::parse(&create).unwrap().confirm_create);
@@ -32,10 +43,16 @@ fn identity_options_refuse_implicit_creation_unknown_flags_and_unqualified_crypt
     let mut fixtures = check.clone();
     fixtures.push("--write-fixtures".into());
     assert!(identity::Options::parse(&fixtures).unwrap().write_fixtures);
-    assert!(identity::Options::parse(&["create".into(), "--dry-run".into()]).unwrap().dry_run);
+    assert!(
+        identity::Options::parse(&["create".into(), "--dry-run".into()])
+            .unwrap()
+            .dry_run
+    );
     for flag in ["--confirm-create", "--dry-run", "--write-fixtures"] {
         assert!(identity::Options::parse(&["inspect".into(), flag.into()]).is_err());
-        assert!(identity::Options::parse(&["create".into(), "--dry-run".into(), flag.into()]).is_err());
+        assert!(
+            identity::Options::parse(&["create".into(), "--dry-run".into(), flag.into()]).is_err()
+        );
         let mut invalid = check.clone();
         invalid.extend([flag.into(), flag.into()]);
         assert!(identity::Options::parse(&invalid).is_err());
@@ -43,7 +60,14 @@ fn identity_options_refuse_implicit_creation_unknown_flags_and_unqualified_crypt
     for flag in ["--libcrypto", "--libcrypto-sha256"] {
         assert!(identity::Options::parse(&["check".into(), flag.into()]).is_err());
         let mut invalid = check.clone();
-        invalid.extend([flag.into(), if flag == "--libcrypto" {library.clone()} else {hash.clone()}]);
+        invalid.extend([
+            flag.into(),
+            if flag == "--libcrypto" {
+                library.clone()
+            } else {
+                hash.clone()
+            },
+        ]);
         assert!(identity::Options::parse(&invalid).is_err());
     }
     for digest in ["".into(), "f".repeat(63), "A".repeat(64), "g".repeat(64)] {
@@ -51,7 +75,11 @@ fn identity_options_refuse_implicit_creation_unknown_flags_and_unqualified_crypt
         *invalid.last_mut().unwrap() = digest;
         assert!(identity::Options::parse(&invalid).is_err());
     }
-    for mut invalid in [qualified("inspect"), qualified("create"), qualified("unknown")] {
+    for mut invalid in [
+        qualified("inspect"),
+        qualified("create"),
+        qualified("unknown"),
+    ] {
         invalid.push("--write-fixtures".into());
         assert!(identity::Options::parse(&invalid).is_err());
     }
@@ -76,12 +104,17 @@ fn crypto_library_architecture_is_verified_before_native_loading() {
             .is_err()
         );
         assert!(identity::validate_library_image(&bytes[..70], machine).is_err());
-        for (offset, changed) in [(0, b"NO".as_slice()), (60, &u32::MAX.to_le_bytes()), (64, b"NOPE".as_slice()), (88, &[0u8,0][..])] {
+        for (offset, changed) in [
+            (0, b"NO".as_slice()),
+            (60, &u32::MAX.to_le_bytes()),
+            (64, b"NOPE".as_slice()),
+            (88, &[0u8, 0][..]),
+        ] {
             let mut malformed = bytes.clone();
-            malformed[offset..offset+changed.len()].copy_from_slice(changed);
-            assert!(identity::validate_library_image(&malformed,machine).is_err());
+            malformed[offset..offset + changed.len()].copy_from_slice(changed);
+            assert!(identity::validate_library_image(&malformed, machine).is_err());
         }
-        assert!(identity::validate_library_image(&bytes,0x14c).is_err());
+        assert!(identity::validate_library_image(&bytes, 0x14c).is_err());
         bytes[86] = 0;
         bytes[87] = 0;
         assert!(identity::validate_library_image(&bytes, machine).is_err());
@@ -94,15 +127,32 @@ fn identity_custody_refuses_unsupported_hosts_without_creating_files() {
     let work = common::Workspace::new();
     let logger = Logger::new(&work.0.join("logs"), "ERROR");
     assert!(identity::execute(&work.0, &["inspect".into()], Some(&logger)).is_err());
-    assert!(identity::execute(&work.0, &["create".into(),"--dry-run".into()], Some(&logger)).is_err());
-    assert!(identity::execute(std::path::Path::new("relative"), &["inspect".into()], None).is_err());
+    assert!(
+        identity::execute(
+            &work.0,
+            &["create".into(), "--dry-run".into()],
+            Some(&logger)
+        )
+        .is_err()
+    );
+    assert!(
+        identity::execute(std::path::Path::new("relative"), &["inspect".into()], None).is_err()
+    );
     assert!(identity::execute(&work.0.join("missing"), &["inspect".into()], None).is_err());
     let library = work.0.join("not-loaded.dll").to_string_lossy().into_owned();
-    for action in ["create","check"] {
-        let mut args = vec![action.into(),"--libcrypto".into(),library.clone(),"--libcrypto-sha256".into(),"a".repeat(64)];
-        if action=="create" { args.push("--confirm-create".into()); }
-        assert!(identity::execute(&work.0,&args,None).is_err());
-        assert!(identity::execute(&work.0,&args,Some(&logger)).is_err());
+    for action in ["create", "check"] {
+        let mut args = vec![
+            action.into(),
+            "--libcrypto".into(),
+            library.clone(),
+            "--libcrypto-sha256".into(),
+            "a".repeat(64),
+        ];
+        if action == "create" {
+            args.push("--confirm-create".into());
+        }
+        assert!(identity::execute(&work.0, &args, None).is_err());
+        assert!(identity::execute(&work.0, &args, Some(&logger)).is_err());
     }
     assert!(!work.0.join(".runtime/signing").exists());
     assert!(!work.0.join("docs/signing").exists());

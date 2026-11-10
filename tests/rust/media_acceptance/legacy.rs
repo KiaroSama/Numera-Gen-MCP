@@ -1,4 +1,8 @@
-use super::{fixtures as f, host, provider::{Provider, Reply}, support as s};
+use super::{
+    fixtures as f, host,
+    provider::{Provider, Reply},
+    support as s,
+};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde_json::json;
 

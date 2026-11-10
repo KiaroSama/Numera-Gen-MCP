@@ -10,10 +10,10 @@ mod fixtures;
 #[allow(dead_code)]
 #[path = "sdk_acceptance/host.rs"]
 mod host;
-#[path = "media_acceptance/lifecycle.rs"]
-mod lifecycle;
 #[path = "media_acceptance/legacy.rs"]
 mod legacy;
+#[path = "media_acceptance/lifecycle.rs"]
+mod lifecycle;
 #[path = "../fixtures/media/bytes.rs"]
 mod media_bytes;
 #[path = "media_acceptance/modes.rs"]
