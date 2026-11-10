@@ -1,70 +1,49 @@
 # Requirement-to-test matrix
 
-| Area                                                       | Assertions / evidence                                           |
-| ---------------------------------------------------------- | --------------------------------------------------------------- |
-| Config/precedence/isolation/origin/no-auth                 | tests/unit/config.test.ts                                       |
-| URL prefix/origin/traversal/query                          | tests/unit/foundation.test.ts, tests/contract/discovery.test.ts |
-| Catalog pagination/cache/partial/gateway differences       | tests/contract/discovery.test.ts                                |
-| Capabilities/defaults/conflicts/unknown/unsupported        | tests/unit/config.test.ts                                       |
-| Adapter native wire mapping/prompt/model fidelity          | tests/contract/adapters.test.ts                                 |
-| Editing multipart/JSON/reference/native shapes             | tests/contract/adapters.test.ts, tests/contract/comfyui.test.ts |
-| Gateway Antigravity text-only regression                   | tests/contract/adapters.test.ts, pinned source references       |
-| Responses/native/binary/SSE final/error/preview            | tests/contract/streams.test.ts                                  |
-| PNG/JPEG/WebP/bytes/pixels/alpha/masks/paths               | tests/unit/images.test.ts                                       |
-| Owned atomic outputs/partial/deviation/hash                | tests/unit/store.test.ts, tests/unit/images.test.ts             |
-| Request-ID/shared-state/restart/conflicts/admission/cancel | tests/unit/store.test.ts, tests/integration/mcp.test.ts         |
-| No paid automatic retry                                    | tests/integration/mcp.test.ts and Generation HTTP contracts     |
-| MCP real handshake/tools/call/stdout framing               | tests/integration/mcp.test.ts, scripts/smoke.mjs                |
-| Packaging clean prod-only install/spaces                   | scripts/package-check.mjs                                       |
-| Comfy workflow/bindings/upload/history/view/GPU guard      | tests/contract/comfyui.test.ts                                  |
-| Live/GUI/GPU installed-host checks                         | not_run; separate authorization/fixtures needed                 |
+The maintained implementation, tests and CI driver are Rust. The immutable baseline keeps all
+50 suites and 470 case identities: 178 unit, 132 integration and 160 contract. The reference
+branch's 688 Rust test declarations remain present. Cargo discovers workspace harnesses;
+[the parity inventory](testing/native-parity.json) binds original case identities separately.
 
-POSIX-specific Linux/macOS: tests/integration/posix-platform.test.ts asserts0600/0644 credential
-permissions, native Unicode paths, confined symlinks and bounded real process-group cleanup.
+Paths below are current Rust sources. A listed assertion is not an execution claim: use the
+exact commit's automatic CI and [test results](TEST-RESULTS.md) for measured evidence.
 
-Simple setup: tests/unit/simple-config.test.ts validates private key/model IDs/names/portable roots
-and configured vs refreshed catalogs; tests/integration/simple-config.test.ts launches actual stdio
-from another CWD with adjacent saved compact file, exact first/explicit model forwarding, output bytes,
-no replay and no key in protocol/logs. Hosted matrix also exercises macOS native dependencies/package.
+| Area | Current assertions / evidence |
+| --- | --- |
+| Config precedence, isolation, origin and authentication | `tests/rust/config_contracts.rs`, `config_acceptance.rs`, `config_parity.rs` |
+| URL prefixes, traversal, queries, DNS and asset destinations | `tests/rust/api_contracts.rs`, `network_acceptance.rs`, `asset_dns_acceptance.rs` |
+| Catalog pagination, caching, partial results and gateway differences | `tests/rust/discovery*.rs`, `catalog_upload_contracts.rs` |
+| Capabilities, defaults, model limits, conflicts and unsupported settings | `tests/rust/model_policy.rs`, `policy_acceptance.rs`, `reference_requirements_acceptance.rs` |
+| Native adapter method, path, headers, body and exact model/prompt forwarding | `tests/rust/adapters.rs`, `provider_wire_contracts.rs`, `generation_contracts.rs` |
+| Multipart/JSON references, masks, translation and native editing | `tests/rust/multipart.rs`, `reference_preflight_acceptance.rs`, `image_editing_acceptance.rs` |
+| Version-scoped 9router reference forwarding and cardinality | `tests/rust/image_route_contracts.rs`, `examples/9router-current.json`, [upstream review](REFERENCES.md) |
+| Binary, Responses, Interactions and bounded SSE/error/preview handling | `tests/rust/streams.rs`, `streams_acceptance.rs`, `normalization_acceptance.rs` |
+| PNG/JPEG/WebP originals, Base64 limits, pixels, alpha, masks and paths | `tests/rust/images.rs`, `editing.rs`, `output_requirements.rs`, `native/files/paths_races.rs` |
+| Atomic outputs, partial success, deviations, hashes and publication faults | `tests/rust/publication_contracts.rs`, `publication_recovery_acceptance.rs`, `persistence_fault_acceptance.rs` |
+| Request identity, shared state, leases, admission, cancellation and restart | `tests/rust/job_recovery_contracts.rs`, `lease_clock_acceptance.rs`, `generation_admission.rs`, `terminal_lifecycle_acceptance.rs` |
+| No paid POST replay and retained originals after uncertain outcomes | `tests/rust/sdk_acceptance.rs`, `detached_job_acceptance.rs`, `local_recovery_acceptance.rs` |
+| Actual SDK stdio/HTTP handshake, tools, resources, protocol eras and cleanup | `tests/rust/sdk_acceptance.rs`, `http_cleanup_acceptance.rs`, `transport_acceptance.rs` |
+| Compact configuration, foreign CWD, saved reloads and pinned credentials | `tests/rust/env_acceptance.rs`, `environment_snapshot_acceptance.rs`, `snapshot_races.rs` |
+| Read-only readiness and explicit host-registration transactions | `tests/rust/readiness_acceptance.rs`, `registration_contracts.rs`, `registration_acceptance.rs` |
+| POSIX private files, Unicode paths, symlinks and owned process groups | `tests/rust/posix_acceptance.rs`, `devtool_supervisor.rs`, `native/devtools/linux_snapshot_tests.rs` |
+| Windows native DPAPI, private ACLs, Unicode and owned worker abort | `tests/rust/dpapi_acceptance.rs`, `devtool_credentials.rs`, `common/dpapi_worker.rs` |
+| Comfy workflow bindings, upload/history/view, targeted cancellation and races | `tests/rust/comfy*.rs`, `workflow.rs` |
+| Typed image/video/audio/3D requests, endpoint contracts and legacy image compatibility | `tests/rust/media_config_contracts.rs`, `media_fal_contracts.rs`, `media_acceptance.rs` |
+| WAV, MP4 and GLB structural validation, limits and malformed originals | `tests/rust/media_format_contracts.rs`, `media_format_cases/` |
+| Owned media output metadata, original bytes and SHA256 | `tests/rust/media_output_contracts.rs`, `media_acceptance.rs` |
+| Release packaging, checksums, licenses, extraction and actual extracted SDK | `tooling/tests/distribution_contracts.rs`, `archive_contracts.rs`, `licenses_contracts.rs`; required six-target CI phases |
+| Existing 51 tooling migrations and original hash/scenario continuity | `docs/testing/tooling-migration.json`, `tooling/tests/tooling_execution_contracts.rs`, `source_review_contracts.rs` |
+| Native signatures and wrong-signer/tamper refusal | `tests/rust/artifact_signatures.rs`, `identity_contracts.rs`, `tooling/tests/signature_acceptance_contracts.rs`; protected manual signed qualification |
+| Live providers, interactive GUI/input, other-user DPAPI denial and installed GPU hosts | Separate real inputs and authorization; no claim from synthetic fixtures |
 
-Read TEST-RESULTS.md for executed evidence, not just test existence. Additional resumed contracts:
-wire-contracts.test.ts (exact native HTTP), capability-descriptors.test.ts (endpoint requirements),
-workflow-validation/workflow-branches (graph/node errors), incremental-stream (bounded frames),
-continuation (private scope), detached-jobs (recovery), negotiation (actual protocol era), logging and
-setup real-entry fixtures. Matrix presence alone is not a passing coverage claim.
-Practical readiness public CLI: tests/integration/readiness.test.ts checks actual SDK tools, GET-only
-probe, blocked credentials/catalog/model and safe summaries. Actual Windows same-user DPAPI/ACL:
-tests/integration/dpapi.test.ts uses a non-secret prompt substitute, real protection/reader and Unicode.
-Real gateway processes against controlled upstreams, actual interactive credential input, other-user
-DPAPI denial, real GUI/GPU/live providers and Windows Server remain separate unverified scenarios.
+All six Windows/Linux/macOS x64/ARM64 CI jobs require formatting, Clippy, existing tests, a release
+build, original dependency notices and extracted-binary SDK execution. The coverage job executes
+existing instrumented workspace tests and reports production code against unchanged 85% region /
+80% branch floors. Stable native execution records formal tooling scenario bindings separately.
+Signing and release publication remain protected manual operations.
 
-Selectable endpoint/settings: compact tests cover custom deployment prefixes, generic default and
-explicit gateway selection, Responses orchestration vs image model, exact output_format/size/quality
-defaults and explicit overrides. Package check asserts root .env.example inclusion,
-valid public templates and private config exclusion. Synthetic8x6 image intentionally reports partial
-when requested dimensions differ; originals remain unchanged.
-
-Env/live configuration: env-config.test.ts covers strict UTF-8 parsing, duplicate/unknown assignments, native profiles/edit settings and fixed-policy rejection. config-reload.test.ts covers last-good save, retained identity/ambiguous transport recovery and immutable in-flight operations; env-stdio.test.ts verifies the actual built stdio entrypoint from another CWD. image-editing.test.ts covers exact reference bytes, translation instructions, rectangle PNG alpha/color polarities and pre-submission invalid-region/mask conflicts. These fixtures do not prove live translation quality.
-
-Recovery review (verified in hostedCI37307308453 on320f903): tests/integration/recovery.test.ts and
-journal-sql-failures.test.ts cover leases, real child kills, journal publication/commit faults and migration;
-async-waiter-race.test.ts covers Responses waiter/refresher fencing; comfy-result-retention.test.ts and
-cancelled-results.test.ts cover partial downloads and cancellation. tests/unit/output-directory-race.test.ts
-uses two real ENOENT observations and competing directory/file/junction schedules.
-Recovery-requirements.test.ts covers scalar/array/multipart cardinality, model limits and sourced preset
-comparisons; output-requirements.test.ts preserves bytes and identical normal/recovered deviations.
-Existing two-process MCP deduplication and large Base64 fixtures remain in the automatic CI discovery.
-Terminal lifecycle follow-up: terminal-lifecycle.test.ts checks public tool terminal states, polling
-uncertainty, targeted dispatch/confirmation and retained partial originals. Reservation-lifecycle.test.ts
-checks empty orphan reclamation, retained/live/detached charges, stale fencing and actual two-process
-budget serialization. Fixture presence is not a passing claim; exact execution evidence is reported
-separately. No paid provider, GUI, GPU or private historical-state validation is implied.
-Real two-host terminal coverage: stdio-terminal-lifecycle.test.ts covers Responses failed/cancelled/
-incomplete/completed and Interactions failed/cancelled/incomplete/budget_exceeded/completed, queued/
-in_progress/auth/rate-limit/server/disconnect/malformed/wrong-ID/account controls, Comfy confirmed/
-dispatched/false/missing/ambiguous/wrong-ID/completed cancellation, public admission and two restarts.
-stdio-terminal-races.test.ts covers real original waiter versus refresher terminal races and Comfy
-waiting-host cancellation versus completed-original recovery. Both use direct actual SDK stdio processes,
-isolated shared state and original-byte/output-ID/no-duplicate assertions, not in-memory substitutes.
-
-Dimension discovery: tests/contract/dimensions.test.ts verifies native ratio/tier/pixel presets, unknown-model honesty and selected-route restrictions without image submission. Large Base64 boundary: tests/unit/images.test.ts covers a valid4MiB round trip, malformed padding/alphabet and byte-limit rejection.
+Synthetic images and structural media fixtures establish original bytes, container metadata,
+bounded parsing and protocol behavior. They do not establish model quality, image translation
+fidelity, video playback, an actual gateway process, host GUI reconnection or GPU generation.
+Historical TypeScript paths remain only in immutable baseline records and historical evidence;
+they are not maintained commands or CI dependencies.

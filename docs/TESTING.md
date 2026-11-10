@@ -631,10 +631,10 @@ The fresh private destination fixes fixture-child access; original ACL assertion
 x64 inventory passed in 13.015 seconds; its earlier idle cause remains unknown, not a proven fix.
 At `5b4ec24`, all 97 targets passed six stable platforms and nightly, including both Windows DPAPI/abort/privacy cases; coverage was 86.90% / 85.63%. Only two formatting layouts failed, archives skipped. Exact hosted formatting is applied; the prior x64 timeout cause, all 470 dispositions and [limits](testing/CREDENTIAL-SNAPSHOTS.md) remain open.
 
-CI starts only through a manual `workflow_dispatch`, once for the final integrated commit. The six
-native OS/CPU targets and separate coverage job remain unchanged; no push or pull-request event starts
-an additional matrix. Final publication also requires approved embedded publisher identity and genuine
-platform signing. Signed0.2.0 qualified at f253557/run40244894089attempt2; its legacy ref is deleted.
+That historical qualification used only manual `workflow_dispatch`. Current Rust completion CI
+also runs automatically on every push and pull request, with all six native OS/CPU targets and the
+separate coverage job required. Final publication still requires approved embedded publisher identity
+and genuine platform signing. Signed0.2.0 qualified at f253557/run40244894089attempt2; its legacy ref is deleted.
 Existing-key main signing is owner-approved, but new0.3.0 qualification is still pending, not inherited.
 
 CI compiler/dependency caches, target/build output and TEMP/TMP/TMPDIR stay inside the workspace, with

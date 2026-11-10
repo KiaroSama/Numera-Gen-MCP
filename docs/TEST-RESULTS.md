@@ -2,6 +2,15 @@
 
 ## Rust completion PR — 2026-11-10
 
+[Automatic run42888877128](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42888877128)
+on PR head `b14825d0423b1ea7314e4a9754f496780db6969e` passed production coverage: **85.0065%
+regions (18426/21676)** and **80.4785% branches (4238/5266)**, with the original 85/80 floors.
+All instrumented workspace harnesses passed, and the case collector authenticated all 470 cases /
+50 suites. Its Linux x64 job also passed quality, tests, release build, notices, packaging and
+extracted stdio/HTTP/media SDK execution. The tested PR merge ref was
+`84a65cbfb547008147772643574feb25715cb903`; later documentation edits require their own automatic
+checks. The live PR checks remain authoritative for the final head and the other native targets.
+
 [Automatic run42883791350](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42883791350)
 on `71d130246147c805b0e778469157521993bc025e` measured 84.0146% regions and 78.5606% branches.
 Expanded format and fal tests passed. A remaining historical source-review receipt counted a Unicode

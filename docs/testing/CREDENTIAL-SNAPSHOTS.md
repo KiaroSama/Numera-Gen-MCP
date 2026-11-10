@@ -1,6 +1,14 @@
 # Native credential snapshot acceptance
 
-## Current evidence
+## Current Rust implementation
+
+Credential snapshot and DPAPI assertions are maintained in Rust; see
+[the current requirement matrix](../REQUIREMENT-TEST-MATRIX.md). Native worker/ACL/abort contracts
+replace the former Node/PowerShell fixtures. Exact-source automatic PR checks establish current
+execution; historical measurements below belong only to their named revisions. Human hidden-console
+input and another user's decryption denial remain separate unverified boundaries.
+
+## Historical evidence
 
 At `3bc2789`, all ten jobs passed: all 94 native targets and both credential cases/module regressions
 on six stable OS/CPU targets and nightly. All-six fmt/Clippy/release/SDK stdio/HTTP/notices/licenses/
@@ -23,7 +31,7 @@ remains unknown. Only two formatting layouts failed; exact hosted formatting is 
 Parent-owned noninheritable kill-on-close jobs contain a self-enrolled worker before helper launch;
 cleanup reaps that worker before terminating its job and requiring zero active processes under one
 two-second ceiling. The original 30-second case and 15-second wall/8-second idle source wrapper remain.
-Node and PowerShell are CI fixtures only, not native runtime dependencies. The current Comfy-polling
+Node and PowerShell were historical CI fixtures and have since been replaced by Rust. The current Comfy-polling
 addition brings 97 targets/467 assignments/three unassigned/all 470 pending. No acceptance promotion.
 
 ## Selected-key environment source
