@@ -6,7 +6,9 @@ use numera_gen_mcp::media::{self, Kind};
 
 #[track_caller]
 pub fn valid(kind: Kind, bytes: &[u8]) -> serde_json::Value {
-    media::inspect(kind, bytes, bytes.len(), 64).unwrap().metadata
+    media::inspect(kind, bytes, bytes.len(), 64)
+        .unwrap()
+        .metadata
 }
 
 #[track_caller]
@@ -28,9 +30,8 @@ pub fn robustness() {
             for value in [0, 0xff] {
                 let mut changed = bytes.clone();
                 changed[offset] = value;
-                let result = std::panic::catch_unwind(|| {
-                    media::inspect(kind, &changed, changed.len(), 64)
-                });
+                let result =
+                    std::panic::catch_unwind(|| media::inspect(kind, &changed, changed.len(), 64));
                 assert!(result.is_ok(), "media mutation panicked at {offset}");
                 if let Ok(info) = result.unwrap() {
                     assert_eq!(info.kind, kind);
