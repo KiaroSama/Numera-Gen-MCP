@@ -311,23 +311,22 @@ pub fn coverage(context: &Context) -> io::Result<()> {
         command
     };
     let mut failures = Vec::new();
-    // Only the production package is instrumented; tooling tests run in the stable matrix.
-    // Real SDK suites are root integration targets and inherit LLVM_PROFILE_FILE into owned servers.
+    // Existing tooling harnesses also exercise shared production helpers. Instrument the whole
+    // workspace; the report below still measures only the production package, without new exclusions.
     suites(
         context,
         &mut command(&[
             "+nightly-2026-10-10",
             "test",
             "--locked",
-            "-p",
-            "numera-gen-mcp",
+            "--workspace",
             "--all-targets",
             "--no-run",
             "--message-format=json-render-diagnostics",
         ]),
         1200000,
         "coverage",
-        &["numera-gen-mcp"],
+        &["numera-gen-mcp", "numera-task"],
         &mut failures,
     );
     required(

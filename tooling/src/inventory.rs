@@ -31,6 +31,9 @@ fn collect(
 }
 
 pub const TOOLING_REVISION: &str = "a24dccd5f53cb4ccad57297b1cf8f749f42858eb";
+// Canonical path/hash map authenticated against all 51 blobs at TOOLING_REVISION.
+const TOOLING_ORIGINALS_SHA256: &str =
+    "c549bba0f3086327576633bae49b2f45a579ce2e5209a8cf134ef9f69500675a";
 
 /// Historical identities stay immutable even after the working copies are retired.
 pub fn tooling_hashes(manifest: &Value) -> io::Result<std::collections::BTreeMap<String, String>> {
@@ -86,6 +89,9 @@ pub fn tooling_hashes(manifest: &Value) -> io::Result<std::collections::BTreeMap
     }
     if powershell != 5 {
         return Err(fail("Historical tooling language inventory differs."));
+    }
+    if crate::ledger::assertion_digest(&serde_json::json!(sources))? != TOOLING_ORIGINALS_SHA256 {
+        return Err(fail("Historical tooling path/hash identities differ."));
     }
     Ok(sources)
 }

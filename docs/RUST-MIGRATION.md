@@ -32,6 +32,12 @@ and deployment boundaries are preserved.
 | Cargo updates #17–#21 | Superseded by RMCP 3.9.0, rusqlite 0.41.1, libc 0.2.191, SHA2 0.11.1 and UUID 1.29.2 already integrated from the reference branch. |
 | Node updates #9, #10, #14–#16 | Obsolete: maintained Node tooling and setup-node have been replaced by Rust. Frozen historical inputs must retain their original versions. |
 
-Superseded PRs and redundant branches are closed after the new PR preserves the changes. `main`
-is not merged. Latest upstream review and the reasons for applying or declining each change are
+All ten superseded PRs are closed. The reference branch and all remaining Dependabot branches
+have been removed after preserving the reference history and checking the superseding versions.
+Only `main` and `rewrite/rust-ci-completion` remain. `main` is not merged.
+Latest upstream review and the reasons for applying or declining each change are
 recorded in [references](REFERENCES.md). Current execution results belong in [test results](TEST-RESULTS.md).
+
+Repository topics and the About description are managed separately in GitHub settings. Use `rust`
+and `cross-platform` in place of `typescript`, preserving other topics, and describe the native Rust
+image/video/audio/3D MCP server. Source changes do not automatically alter repository metadata.

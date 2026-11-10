@@ -1,5 +1,7 @@
 use numera_gen_mcp::media::{Kind, fal};
 use serde_json::json;
+#[path = "media_format_cases/fal.rs"]
+mod cases;
 
 const FLUX: &str = "fal-ai/flux/dev";
 const AUDIO: &str = "fal-ai/stable-audio-25/audio-to-audio";
@@ -58,6 +60,7 @@ fn exact_endpoint_mode_controls_capability_instead_of_brand_name() {
 
 #[test]
 fn preparation_preserves_unicode_roles_and_native_parameter_types() {
+    cases::parameter_boundaries();
     let reference = fal::Reference {
         kind: Kind::Audio,
         role: "audio".into(),
@@ -138,6 +141,7 @@ fn authoritative_integer_round_trips_keep_native_bounds_without_numeric_coercion
 
 #[test]
 fn preparation_fails_before_submission_when_inputs_cannot_be_forwarded() {
+    cases::rejections();
     let image = || fal::Reference {
         kind: Kind::Image,
         role: "image".into(),

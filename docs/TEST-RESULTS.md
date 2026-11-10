@@ -2,6 +2,21 @@
 
 ## Rust completion PR — 2026-11-10
 
+[Automatic run42877696477](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42877696477)
+on `2a65cf1303c69e2393c6060756847574ee955fff` produced a complete coverage report: 79.3274%
+regions and 71.6863% branches, below the unchanged 85/80 floors. Its production-package tests passed.
+Native jobs exposed three source-validation failures: selecting the first rather than final report
+marker, validating retired-source hashes through missing working copies, and a stale complete-file
+review range after added gateway assertions. Corrections preserve all negative checks and authenticate
+the original 51 path/hash identities against their immutable Git revision.
+
+The next candidate instruments every existing workspace test, including tooling tests that exercise
+shared production helpers. Reporting still selects the production package with no new exclusions.
+Existing media test functions now cover WAV encodings/chunks, MP4 AVC/HEVC configuration and sample
+tables, GLB geometry/textures/node graphs, bounded malformed-byte mutations and fal native parameter
+boundaries. Test function counts and categories are unchanged. These authored corrections require
+their own current CI result.
+
 [PR22](https://github.com/KiaroSama/Numera-Gen-MCP/pull/22) continues the complete tooling/media
 reference branch and removes all 51 replaced interpreted source files. The automatic CI checks on
 that PR are the authority for its current head. Historical results below retain their original

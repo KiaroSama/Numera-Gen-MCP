@@ -7,7 +7,8 @@ reference `inlineData` in its executor. Its image adapter collects up to ten ref
 `images`/`reference_images` or their scalar equivalents. Use
 [the version-scoped example](../examples/9router-current.json) only after confirming that gateway
 version and the exact model route. It explicitly enables JSON generation with up to ten references,
-one submission and no masks. A Rust route contract checks the actual encoded PNG inputs and limit.
+one submission and no masks. Replace its example directories with absolute paths for your OS and
+set your own `NINEROUTER_API_KEY`. A Rust route contract checks the encoded PNG inputs and limit.
 The default historical profile remains conservative for older installations; its legacy limitation
 text describes the unconfigured default. A configured forwarding claim does not establish account
 entitlement or a successful live-provider call. The current Codex adapter separates native image

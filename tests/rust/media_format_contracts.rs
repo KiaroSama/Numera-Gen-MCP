@@ -3,9 +3,12 @@ use serde_json::json;
 #[path = "../fixtures/media/bytes.rs"]
 mod bytes;
 use bytes::{glb, mp4, wav};
+#[path = "media_format_cases/mod.rs"]
+mod cases;
 
 #[test]
 fn pcm_original_is_verified_without_invented_image_dimensions() {
+    cases::wav::positive();
     let bytes = wav();
     let original = bytes.clone();
     let info = media::inspect(Kind::Audio, &bytes, 1024, 16).unwrap();
@@ -22,6 +25,7 @@ fn pcm_original_is_verified_without_invented_image_dimensions() {
 
 #[test]
 fn wav_rejects_truncation_inconsistent_rates_and_wrong_kind() {
+    cases::wav::negative();
     let valid = wav();
     for len in [0, 4, 12, valid.len() - 1] {
         assert!(media::inspect(Kind::Audio, &valid[..len], 1024, 16).is_err());
@@ -38,6 +42,7 @@ fn wav_rejects_truncation_inconsistent_rates_and_wrong_kind() {
 
 #[test]
 fn self_contained_triangle_has_verified_mesh_metadata() {
+    cases::glb::positive();
     let bytes = glb();
     let info = media::inspect(Kind::Model3d, &bytes, 4096, 64).unwrap();
     assert_eq!(info.mime, "model/gltf-binary");
@@ -50,6 +55,7 @@ fn self_contained_triangle_has_verified_mesh_metadata() {
 
 #[test]
 fn glb_rejects_header_only_truncated_buffer_and_external_resources() {
+    cases::glb::negative();
     let good = glb();
     assert!(media::inspect(Kind::Model3d, &good[..12], 4096, 64).is_err());
     assert!(media::inspect(Kind::Model3d, &good[..good.len() - 1], 4096, 64).is_err());
@@ -75,6 +81,7 @@ fn glb_rejects_header_only_truncated_buffer_and_external_resources() {
 
 #[test]
 fn visual_mp4_validates_real_sample_tables_and_payload() {
+    cases::mp4::positive();
     let bytes = mp4();
     let info = media::inspect(Kind::Video, &bytes, 8192, 64).unwrap();
     assert_eq!(info.mime, "video/mp4");
@@ -88,6 +95,7 @@ fn visual_mp4_validates_real_sample_tables_and_payload() {
 
 #[test]
 fn mp4_rejects_magic_only_bad_offsets_and_truncated_samples() {
+    cases::mp4::negative();
     let bytes = mp4();
     assert!(media::inspect(Kind::Video, &bytes[..24], 8192, 64).is_err());
     for len in [bytes.len() - 1, 32] {
@@ -105,6 +113,7 @@ fn mp4_rejects_magic_only_bad_offsets_and_truncated_samples() {
 
 #[test]
 fn malformed_inputs_never_escape_as_panics_or_image_shaped_success() {
+    cases::robustness();
     let valid = [wav(), glb(), mp4()];
     for (kind, original) in [Kind::Audio, Kind::Model3d, Kind::Video]
         .into_iter()

@@ -535,11 +535,7 @@ pub fn check(context: &Context) -> io::Result<()> {
             &manifest["materialization"],
             &payloads,
         )?;
-        let selected: &[&str] = if phase == "coverage" {
-            &["numera-gen-mcp"]
-        } else {
-            &["numera-gen-mcp", "numera-task"]
-        };
+        let selected: &[&str] = &["numera-gen-mcp", "numera-task"];
         let sources = test_execution::selected_sources(&context.root, &metadata, selected)?;
         let mut reports =
             BTreeMap::from([(phase.to_owned(), execution["test-execution.json"].clone())]);
@@ -584,7 +580,7 @@ pub fn check(context: &Context) -> io::Result<()> {
                 &tooling_originals,
             )?
         } else {
-            json!({"applicable":false,"not_run_reason":"Coverage selects the runtime package, not tooling"})
+            json!({"applicable":false,"not_run_reason":"Formal tooling scenario bindings use the stable native phase; workspace coverage measures the same existing tests separately"})
         };
         let job_name = if phase == "coverage" {
             "native-coverage".to_owned()

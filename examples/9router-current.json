@@ -1,6 +1,16 @@
 {
   "schemaVersion": 1,
   "defaultConnection": "nine-router-current",
+  "outputDir": "C:/projects/numera-gen-mcp/outputs",
+  "stateDir": "C:/projects/numera-gen-mcp/state",
+  "logging": {
+    "directory": "C:/projects/numera-gen-mcp/logs",
+    "level": "INFO",
+    "logPrompts": false
+  },
+  "files": {
+    "allowedInputRoots": ["C:/projects/numera-gen-mcp/inputs"]
+  },
   "connections": {
     "nine-router-current": {
       "adapter": "openai-images",

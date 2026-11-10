@@ -521,7 +521,7 @@ fn successful_diagnostics_never_clear_required_format_or_other_gate_failures() {
 fn coverage_report_keeps_summary_totals_scope_and_existing_wall_idle_bounds() {
     let project = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let source = fs::read_to_string(project.join("tooling/src/ci.rs")).unwrap();
-    let (before, after) = source.split_once("\"coverage-report\"").unwrap();
+    let (before, after) = source.rsplit_once("\"coverage-report\"").unwrap();
     let command = before.rsplit_once("required(").unwrap().1;
     let bounds = after.split_once(");").unwrap().0;
     let actual = format!("{command}\"coverage-report\"{bounds}")

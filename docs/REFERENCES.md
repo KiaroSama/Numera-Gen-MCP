@@ -2,6 +2,10 @@
 
 ## Rust completion and upstream refresh — checked 2026-11-10
 
+Coverage follows the pinned [cargo-llvm-cov 0.9.1 external-test workflow](https://github.com/taiki-e/cargo-llvm-cov/blob/v0.9.1/README.md#get-coverage-of-external-tests):
+instrument with `show-env`, execute existing workspace harnesses and inherited child processes,
+then report the production package. The 85/80 floors and production source scope are unchanged.
+
 The following current heads, releases and relevant protocol sources were read for this PR.
 Large comparison responses are not exhaustive audits; conclusions refer to the specific sources
 listed here. No upstream implementation was copied into the Rust workspace.
@@ -28,6 +32,12 @@ Their registry metadata preserves upstream licenses and Rust minimums below 1.99
 DNS canonicalization and rejection of hexadecimal final labels; origin-bound credential policy and
 existing network tests remain required. The SQLite WASM package is a transitive lock entry, not a
 new native runtime target.
+
+Registry metadata was checked for all 25 production direct dependencies and the three additional
+tooling archive dependencies. All direct pins are current stable releases except ICU collator/locale,
+which intentionally remain 2.3.1. [ICU4X 2.4](https://github.com/unicode-org/icu4x/releases/tag/icu%402.4.0)
+changes Unicode/CLDR collation data to Unicode 18 / CLDR 49. Upgrading that data is a separate
+canonical-order/persisted-identity migration; this port preserves the frozen compatibility contract.
 
 Latest official Actions releases remain checkout 7.0.1, upload-artifact 7.0.2 and download-artifact
 8.0.2; their immutable SHA pins are retained. setup-node and npm dependency update branches are

@@ -212,11 +212,7 @@ pub fn check(context: &Context) -> io::Result<()> {
     }
     let rebind = ledger::parse(&bytes)?;
     let metadata = crate::ci::suite_metadata(context)?;
-    let selected: &[&str] = if phase == "coverage" {
-        &["numera-gen-mcp"]
-    } else {
-        &["numera-gen-mcp", "numera-task"]
-    };
+    let selected: &[&str] = &["numera-gen-mcp", "numera-task"];
     let sources = test_execution::selected_sources(&context.root, &metadata, selected)?;
     let phases: &[&str] = if phase == "coverage" {
         &["coverage"]
