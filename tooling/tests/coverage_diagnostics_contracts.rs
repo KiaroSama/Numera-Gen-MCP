@@ -20,7 +20,10 @@ impl Fixture {
     fn new() -> Self {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../.ci-work/tooling-tests")
-            .join(format!("coverage observation 東京 {}", uuid::Uuid::new_v4()));
+            .join(format!(
+                "coverage observation 東京 {}",
+                uuid::Uuid::new_v4()
+            ));
         fs::create_dir_all(&root).unwrap();
         Self(root.canonicalize().unwrap())
     }
@@ -138,13 +141,29 @@ fn report_observation_never_becomes_output_progress_or_weakens_idle_cleanup() {
             assert_eq!(receipt.owner_pid, receipt.group as u32);
             assert_ne!(receipt.report_pid, receipt.owner_pid);
             assert!(receipt.signal_ms.is_some());
-            assert_eq!(receipt.status, 0, "The real sampler must produce a valid numeric pair.");
+            assert_eq!(
+                receipt.status, 0,
+                "The real sampler must produce a valid numeric pair."
+            );
             let snapshot = receipt.snapshot.unwrap();
             assert!(!snapshot.first.is_empty() && !snapshot.second.is_empty());
-            assert!(snapshot.first.iter().any(|row| row.pid == receipt.report_pid));
-            assert!(snapshot.second.iter().any(|row| row.pid == receipt.report_pid));
+            assert!(
+                snapshot
+                    .first
+                    .iter()
+                    .any(|row| row.pid == receipt.report_pid)
+            );
+            assert!(
+                snapshot
+                    .second
+                    .iter()
+                    .any(|row| row.pid == receipt.report_pid)
+            );
         } else if let Ok(receipt) = receipt {
-            assert_ne!(receipt.status, 0, "bad helper cannot produce a successful observation");
+            assert_ne!(
+                receipt.status, 0,
+                "bad helper cannot produce a successful observation"
+            );
         }
     }
 }
@@ -221,7 +240,11 @@ fn observer_startup_failure_preserves_report_exit_and_local_observer_cli_stays_h
     .unwrap();
     assert_eq!(outcome.code, 1);
     assert!(outcome.reason.is_none() && outcome.cleanup_verified);
-    assert!(String::from_utf8(outcome.stderr).unwrap().contains("hosted CI only"));
+    assert!(
+        String::from_utf8(outcome.stderr)
+            .unwrap()
+            .contains("hosted CI only")
+    );
     assert!(!fixture.0.join("target").exists());
 }
 
@@ -230,7 +253,11 @@ fn numeric_observation_receipts_reject_partial_unknown_fields_stale_ids_and_link
     use std::os::unix::fs::symlink;
     let fixture = Fixture::new();
     let path = fixture.0.join("observation.json");
-    for bytes in [b"{".as_slice(), b"{\"nonce\":\"wrong\",\"private\":\"marker\"}", &[0xff]] {
+    for bytes in [
+        b"{".as_slice(),
+        b"{\"nonce\":\"wrong\",\"private\":\"marker\"}",
+        &[0xff],
+    ] {
         fs::write(&path, bytes).unwrap();
         assert!(
             numera_task::coverage_diagnostics::read_receipt(

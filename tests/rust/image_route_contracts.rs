@@ -104,6 +104,39 @@ fn explicit_native_json_generation_fields_preserve_references_masks_and_reject_u
         build_request(&raw).err().unwrap().code,
         "unsupported_parameter"
     );
+    // 9router 0.5.116 retains inlineData; opt in only for the inspected version and model.
+    let config: Value =
+        serde_json::from_str(include_str!("../../examples/9router-current.json")).unwrap();
+    let current = &config["connections"]["nine-router-current"];
+    let model = current["defaultModel"].as_js_string().unwrap();
+    let mut request = request.clone();
+    request["reference_images"] = json!(vec![Value::Null; 10]);
+    capabilities::effective_request(current, &request, model).unwrap();
+    let references = vec![image; 10];
+    let prepared = build_request(&Input {
+        connection: current,
+        request: &request,
+        model,
+        operation: "edit",
+        references: &references,
+        mask: None,
+    })
+    .unwrap();
+    assert_eq!(prepared.operation, "images/generations");
+    let Body::Json(body) = prepared.body else {
+        panic!("9router requires its inspected JSON generation route")
+    };
+    assert_eq!(body["images"].as_array().unwrap().len(), 10);
+    for reference in body["images"].as_array().unwrap() {
+        assert!(
+            reference
+                .as_str()
+                .unwrap()
+                .starts_with("data:image/png;base64,")
+        );
+    }
+    request["reference_images"] = json!(vec![Value::Null; 11]);
+    assert!(capabilities::effective_request(current, &request, model).is_err());
 }
 
 #[test]

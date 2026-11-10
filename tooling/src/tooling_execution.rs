@@ -195,7 +195,9 @@ pub fn bind_with_originals(
             let applicable = match path {
                 "native/devtools/process_unix.rs" => identity["platform"] != "win32",
                 "tests/rust/dpapi_acceptance.rs" => identity["platform"] == "win32",
-                "tooling/tests/coverage_diagnostics_contracts.rs" => identity["platform"] == "linux",
+                "tooling/tests/coverage_diagnostics_contracts.rs" => {
+                    identity["platform"] == "linux"
+                }
                 _ => true,
             };
             if applicable {

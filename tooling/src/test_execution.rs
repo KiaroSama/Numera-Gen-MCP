@@ -287,7 +287,9 @@ pub fn execution_identity(environment: &Value, phase: &str, target: &str) -> io:
     let reference = environment["GITHUB_REF"].as_str().unwrap_or("");
     if environment["GITHUB_REPOSITORY"] != "KiaroSama/Numera-Gen-MCP"
         || !crate::hosted_events::valid_reference(
-            environment["GITHUB_EVENT_NAME"].as_str().unwrap_or(""), reference)
+            environment["GITHUB_EVENT_NAME"].as_str().unwrap_or(""),
+            reference,
+        )
         || (phase == "extracted-signed" && environment["GITHUB_EVENT_NAME"] != "workflow_dispatch")
         || environment["GITHUB_JOB"] != job
         || source.len() != 40

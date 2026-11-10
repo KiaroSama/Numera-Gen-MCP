@@ -37,7 +37,10 @@ fn ready_sampler_that_stops_reading_is_killed_at_its_hard_deadline_and_reaped() 
         if accumulated.windows(6).any(|s| s == b"READY\n") {
             break;
         }
-        assert!(Instant::now() < until, "Sampler fixture did not become ready.");
+        assert!(
+            Instant::now() < until,
+            "Sampler fixture did not become ready."
+        );
         assert!(accumulated.len() < 8192);
         std::thread::park_timeout(Duration::from_millis(5));
     }

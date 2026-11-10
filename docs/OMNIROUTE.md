@@ -1,5 +1,12 @@
 # OmniRoute profile
 
+The canonical upstream moved to [cheaper-inference/OmniRoute](https://github.com/cheaper-inference/OmniRoute).
+The 2026-11-10 review pins `895c0f3571a9265a757f27c8700a1a4b971b0092`, including its generation
+handler and multipart edits route. Current edits have provider-specific dispatch; a newly supported
+upstream provider does not enable every model or mask in Numera. Keep explicit verified configuration,
+single paid submission and route-specific forwarding. The historical profile and its evidence below
+remain available for existing installations; see [the current review](REFERENCES.md).
+
 Owner example: `http://127.0.0.1:20100/v1`, api-prefix, independent declared key. No gateway settings
 are changed by Numera. Examined revision4399e60057aaee564ec9e31054a5f6c76cc92a2d, release/v3.8.52.
 

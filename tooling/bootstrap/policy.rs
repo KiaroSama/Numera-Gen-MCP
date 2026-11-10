@@ -117,7 +117,10 @@ impl Config {
     pub fn load() -> io::Result<Self> {
         if required("GITHUB_ACTIONS")? != "true"
             || required("GITHUB_REPOSITORY")? != "KiaroSama/Numera-Gen-MCP"
-            || !matches!(required("GITHUB_EVENT_NAME")?.as_str(), "workflow_dispatch" | "push" | "pull_request")
+            || !matches!(
+                required("GITHUB_EVENT_NAME")?.as_str(),
+                "workflow_dispatch" | "push" | "pull_request"
+            )
         {
             return Err(fail(
                 "Bootstrap is restricted to the selected hosted repository and CI events.",
@@ -160,7 +163,9 @@ impl Config {
         }
         let reference = required("GITHUB_REF")?;
         if !events::valid_reference(&required("GITHUB_EVENT_NAME")?, &reference) {
-            return Err(fail("Bootstrap requires a matching branch or pull-request reference."));
+            return Err(fail(
+                "Bootstrap requires a matching branch or pull-request reference.",
+            ));
         }
         let number = |key| {
             let value = required(key)?;

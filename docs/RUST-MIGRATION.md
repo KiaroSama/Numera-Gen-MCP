@@ -9,7 +9,7 @@ tooling sources. Original file hashes, behavior scenarios, test identities and i
 generated expected bytes remain in `docs/testing` and immutable oracle fixtures. Archived source
 is evidence and is never a runtime fallback or an executable CI dependency.
 
-The original baseline has 50 suites and 470 cases across unit, integration and contract categories.
+The original baseline has 50 suites and 470 cases: 178 unit, 132 integration and 160 contract cases.
 The Rust scenario inventory preserves those identities; Cargo discovers all current native and
 tooling suites. No existing Rust test has been removed. Tests still check provider wire requests,
 real SDK stdio/HTTP sessions, persistence/recovery, bounded child processes, packaging and signatures.

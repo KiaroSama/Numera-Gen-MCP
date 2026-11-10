@@ -1,5 +1,38 @@
 # References
 
+## Rust completion and upstream refresh — checked 2026-11-10
+
+The following current heads, releases and relevant protocol sources were read for this PR.
+Large comparison responses are not exhaustive audits; conclusions refer to the specific sources
+listed here. No upstream implementation was copied into the Rust workspace.
+
+| Upstream | Inspected revision | Applied compatibility decision |
+| --- | --- | --- |
+| [Rust SDK](https://github.com/modelcontextprotocol/rust-sdk) | `f2b0ddf113d1ed426b77a81511eac6e4bffa0ac4`; latest release RMCP 3.9.0 | Keep the locked 3.9.0 SDK, `_meta` result fix and progress-lock correction. New stdio lifecycle documentation confirms initialization waits for host input and logs belong on stderr; actual SDK tests retain these contracts. Directory skill loading is outside the image/media server. |
+| [OmniRoute](https://github.com/cheaper-inference/OmniRoute) | `895c0f3571a9265a757f27c8700a1a4b971b0092` | Update the canonical repository link. Read the current image generation handler and multipart edits dispatch. Keep version-specific explicit forwarding and no client-side paid replay; new provider routes do not prove masks or account access. |
+| [9router](https://github.com/decolua/9router) | `1339107e624d1ab150c6a0c2c2ee22caa7e9db2f`, 0.5.116 | Its Antigravity adapter collects ten references and its executor now preserves `inlineData`. Add a version-scoped JSON configuration example and expand the existing Rust route test for ten encoded PNG references and eleven-reference rejection. Older default contracts remain conservative. Read the Codex native-generation / Responses-edit split without silently replacing a configured route. |
+| [ComfyUI](https://github.com/Comfy-Org/ComfyUI) | `989d93d0d968e704c589ce0146bb18c77f6b50cc`, 0.45.0 | Read current `server.py` upload, history, view and interruption routes. Keep direct API graphs, exact filenames/subfolders and targeted cancellation. New models, node packages and EXR inspection are upstream features, not permission to install nodes or claim supported output codecs. |
+| [Google GenAI](https://github.com/googleapis/js-genai) | `cd31e9f9ea3aac359be9666a37180b5a908b8293` | Reviewed Interactions type changes: image MIME types are open strings; image response format stays distinct from text JSON schema. Keep typed image inputs and explicit formats. Automatic text continuation and the new video CLI default do not authorize additional submissions or a model switch. |
+| [OpenAI Node reference](https://github.com/openai/openai-node) | `08cc5e9a83df66a8ab7c88afce444849870b9c01`, release 7.55.0 | Read current Images request types: edits carry one or more source images; variations are retired. Keep the separate Images and Responses adapters, deterministic multipart names/MIME and explicit model IDs. No Node runtime or SDK default retry is imported. |
+| [mcp-image](https://github.com/shinpr/mcp-image) | `2eade843c281ef9efc49a1a2549f9b3a50a78554`, 0.19.0 | Reviewed GPT Image 2.6 and multi-reference/MIME preflight changes. Numera already accepts explicit model IDs and MIME-derived multipart filenames; retain its per-route configurable cardinality and original preflight tests. Do not replace user models with an upstream default. |
+| [comfyui-mcp](https://github.com/artokun/comfyui-mcp) | `707474d24d0d251ba04a1bebdf86620cef2eaa8b` | Reviewed bounded `/view` body-read errors and oversized-video remedies. Keep Numera's bounded reads and original bytes; do not describe image resizing as a video fix or add a fallback to unrelated local files. |
+| [oh-my-pi](https://github.com/can1357/oh-my-pi) | `e1d8f29d54957da5cb38b11d10a6778d13476980` | Current host reset/routing changes remain host-owned. Numera's explicit provider endpoints, model IDs and native MCP transport remain independent; no host credential/reset behavior is imported. |
+| [fal-js](https://github.com/fal-ai/fal-js) | `a29c8955d51c7e9009091b43dca4f10660f721ae` | Read reserved tag validation and endpoint type refresh. Numera does not expose `X-Fal-Tags`; fixed no-retry/store-IO headers and exact endpoint contracts stay in Rust. No SDK upload, tag passthrough or automatic POST retry is added. |
+
+The reference branch already supersedes Cargo PRs #17–#21 with RMCP 3.9.0, rusqlite 0.41.1,
+libc 0.2.191, SHA2 0.11.1 and UUID 1.29.2. Current RMCP, rusqlite and UUID release notes were
+checked again. The official source-preparation run also resolved const-oid 0.10.3, crc32fast 1.5.5,
+rustls-pki-types 1.16.0 and sqlite-wasm-rs 0.6.3, with registry checksums committed in Cargo.lock.
+Their registry metadata preserves upstream licenses and Rust minimums below 1.99.1. The
+[rustls 1.16.0 notes](https://github.com/rustls/pki-types/releases/tag/v%2F1.16.0) document trailing-dot
+DNS canonicalization and rejection of hexadecimal final labels; origin-bound credential policy and
+existing network tests remain required. The SQLite WASM package is a transitive lock entry, not a
+new native runtime target.
+
+Latest official Actions releases remain checkout 7.0.1, upload-artifact 7.0.2 and download-artifact
+8.0.2; their immutable SHA pins are retained. setup-node and npm dependency update branches are
+obsolete after the maintained tooling migration. The frozen historical oracle is not upgraded.
+
 ## Rust tooling evidence, checked 2026-11-02
 
 - [GitHub workflow jobs API](https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2026-03-10):

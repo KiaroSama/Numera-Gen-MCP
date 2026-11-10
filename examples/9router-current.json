@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "defaultConnection": "nine-router-current",
+  "connections": {
+    "nine-router-current": {
+      "adapter": "openai-images",
+      "gateway": "9router",
+      "gatewayVersion": "0.5.116",
+      "baseUrl": "http://127.0.0.1:20128/v1",
+      "baseUrlMode": "api-prefix",
+      "auth": {
+        "type": "bearer",
+        "secretEnv": "NINEROUTER_API_KEY",
+        "origin": "http://127.0.0.1:20128"
+      },
+      "defaultModel": "antigravity/gemini-3.1-flash-image",
+      "edit": {
+        "mode": "generation",
+        "encoding": "images",
+        "maxReferences": 10,
+        "masks": false
+      },
+      "modelOverrides": {
+        "antigravity/gemini-3.1-flash-image": {
+          "defaults": {},
+          "capabilities": { "image_to_image": "supported", "masks": "unsupported" },
+          "maxReferences": 10,
+          "maxCount": 1,
+          "supportedParameters": ["size"],
+          "evidence": "https://github.com/decolua/9router/blob/1339107e624d1ab150c6a0c2c2ee22caa7e9db2f/open-sse/executors/antigravity.js"
+        }
+      }
+    }
+  }
+}

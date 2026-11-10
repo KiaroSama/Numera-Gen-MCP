@@ -1,5 +1,23 @@
 # 9router profile
 
+## Current version review — 2026-11-10
+
+Version 0.5.116 at `1339107e624d1ab150c6a0c2c2ee22caa7e9db2f` now preserves Antigravity
+reference `inlineData` in its executor. Its image adapter collects up to ten references from
+`images`/`reference_images` or their scalar equivalents. Use
+[the version-scoped example](../examples/9router-current.json) only after confirming that gateway
+version and the exact model route. It explicitly enables JSON generation with up to ten references,
+one submission and no masks. A Rust route contract checks the actual encoded PNG inputs and limit.
+The default historical profile remains conservative for older installations; its legacy limitation
+text describes the unconfigured default. A configured forwarding claim does not establish account
+entitlement or a successful live-provider call. The current Codex adapter separates native image
+generation from Responses edits; no automatic switch of the configured route is introduced.
+
+Sources: [adapter](https://github.com/decolua/9router/blob/1339107e624d1ab150c6a0c2c2ee22caa7e9db2f/open-sse/handlers/imageProviders/antigravity.js),
+[executor](https://github.com/decolua/9router/blob/1339107e624d1ab150c6a0c2c2ee22caa7e9db2f/open-sse/executors/antigravity.js).
+
+## Historical profile
+
 Distinct gateway profile, not renamed OmniRoute. Disabled example20128 is not proof of a running
 service. Set its own address/auth/key. Examined revision a99cf57239ff778b61e434c2786009d5ed1c412c.
 

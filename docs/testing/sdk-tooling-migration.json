@@ -5,7 +5,7 @@
   "status": "authored_not_compiled_or_executed",
   "test_target": "tests/rust/sdk_acceptance.rs",
   "transport": "rmcp 3.9.0 independent client over Owned child pipes or actual streamable HTTP",
-  "source_state": "Original scripts retained unchanged until qualification. Feature004 adapts the current catalog to twelve tools and adds a resource URI alias; all ten legacy tools and old image URI assertions remain.",
+  "source_state": "Original scripts are retained as immutable Git/oracle data; all working-tree tooling is Rust. Feature004 adapts the current catalog to twelve tools and adds a resource URI alias; all ten legacy tools and old image URI assertions remain.",
   "dependencies": {
     "rmcp": ["client", "transport-async-rw", "transport-streamable-http-client-reqwest"],
     "existing": ["tokio", "tokio-util", "serde_json", "base64", "uuid", "reqwest", "rusqlite", "chrono", "libc on Unix"]

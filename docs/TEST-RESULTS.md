@@ -1,5 +1,20 @@
 # Test results
 
+## Rust completion PR — 2026-11-10
+
+[PR22](https://github.com/KiaroSama/Numera-Gen-MCP/pull/22) continues the complete tooling/media
+reference branch and removes all 51 replaced interpreted source files. The automatic CI checks on
+that PR are the authority for its current head. Historical results below retain their original
+source/run identities and do not establish a result for a later commit.
+
+[Source preparation42876534506](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42876534506)
+on `cee9b8d2acd03220a32aa29bf84a430afd94989e` passed. Its authenticated artifact supplied official
+Rust formatting and the current transitive Cargo.lock updates. This operation does not execute
+tests or sign a release. Original category counts remain 178 unit / 132 integration / 160 contract;
+all existing Rust tests are retained, with current gateway assertions added inside an existing test.
+LLVM report generation now has a 300s wall / 180s idle budget; coverage floors and test bounds stay
+unchanged. No release, main merge or owner-host deployment is part of this PR.
+
 ## Current 0.3.0 candidate — failed qualification, 2026-11-10
 
 [Qualification42816429232, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42816429232/attempts/1)

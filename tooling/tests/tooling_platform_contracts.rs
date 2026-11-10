@@ -106,7 +106,10 @@ fn linux_only_tooling_bindings_require_exact_names_and_all_platform_reports() {
             .as_object_mut()
             .unwrap()
             .remove(HARNESS);
-        assert!(empty.bind().is_err(), "zero tests never means missing report");
+        assert!(
+            empty.bind().is_err(),
+            "zero tests never means missing report"
+        );
         if target.contains("linux") {
             for symbol in NAMES {
                 let mut unrelated = original.clone();
