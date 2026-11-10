@@ -49,9 +49,14 @@ fn platforms(mapping: &str) -> &'static [&'static str] {
             &["linux", "darwin"]
         }
         "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status"
-        | "tests/rust/devtool_setup.rs::unsigned_update_is_rejected_before_replacing_a_locked_installation" => {
-            &["win32"]
-        }
+        | "tests/rust/devtool_setup.rs::unsigned_update_is_rejected_before_replacing_a_locked_installation"
+        | "tests/rust/dpapi_acceptance.rs::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants"
+        | "tests/rust/dpapi_acceptance.rs::exact_source_windows_dpapi_script_acl_native_roundtrip_corrupt_and_no_overwrite"
+        | "tests/rust/identity_contracts.rs::disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_binding"
+        | "tests/rust/devtool_credentials.rs::native_protection_cli_whatif_preserves_outside_destination_and_existing_file_without_input"
+        | "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_preserves_exact_consumer_shape_and_refuses_overwrite" => &["win32"],
+        "tests/rust/identity_contracts.rs::identity_custody_refuses_unsupported_hosts_without_creating_files"
+        | "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts" => &["linux", "darwin"],
         "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
             &["win32", "darwin"]
         }
@@ -61,25 +66,11 @@ fn platforms(mapping: &str) -> &'static [&'static str] {
 
 /// Binds dispositions to authenticated exact named tests, not scenario assertion parity.
 /// The caller independently authenticates artifacts, identity and complete source provenance.
-pub fn bind(
-    root: &Path,
-    manifest_bytes: &[u8],
-    identity: &Value,
-    provenance: &str,
-    dependencies: &BTreeMap<String, String>,
-    sources: &BTreeSet<String>,
-    reports: &BTreeMap<String, Vec<u8>>,
-) -> io::Result<Value> {
-    let manifest = ledger::parse(manifest_bytes)?;
-    let originals = inventory::tooling_hashes(&manifest)?
-        .keys()
-        .map(|path| Ok((path.clone(), ledger::read(root, path)?)))
-        .collect::<io::Result<BTreeMap<_, _>>>()?;
-    bind_with_originals(root, manifest_bytes, identity, provenance, dependencies, sources, reports, &originals)
-}
-
 /// Original blobs are separately hash-authenticated historical inputs, not current dependencies.
-#[expect(clippy::too_many_arguments, reason = "Preserve the existing evidence boundary and add only immutable original bytes.")]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Preserve the existing evidence boundary and add only immutable original bytes."
+)]
 pub fn bind_with_originals(
     root: &Path,
     manifest_bytes: &[u8],
@@ -107,9 +98,13 @@ pub fn bind_with_originals(
     inventory::tooling_manifest(root, &manifest, false)?;
     let original_hashes = inventory::tooling_hashes(&manifest)?;
     if originals.len() != original_hashes.len()
-        || originals.iter().any(|(path, bytes)| original_hashes.get(path) != Some(&sha(bytes)))
+        || originals
+            .iter()
+            .any(|(path, bytes)| original_hashes.get(path) != Some(&sha(bytes)))
     {
-        return Err(fail("Historical tooling originals differ from the fixed manifest hashes."));
+        return Err(fail(
+            "Historical tooling originals differ from the fixed manifest hashes.",
+        ));
     }
     if manifest["sdk_scenario_manifest"] != "docs/testing/sdk-tooling-migration.json" {
         return Err(fail("Tooling SDK scenario manifest identity differs."));
@@ -156,17 +151,13 @@ pub fn bind_with_originals(
         "native/devtools/mod.rs",
         "docs/testing/sdk-tooling-migration.json",
     ]);
-    for field in ["entries", "retained_powershell"] {
-        for row in manifest[field].as_array().unwrap() {
-            let path = row["source"].as_str().unwrap();
-            if field == "retained_powershell" || root.join(path).try_exists()? {
-                required.insert(path);
-            }
-            if field == "entries" {
-                for field in ["rust", "tests"] {
-                    required.extend(paths(row, field)?);
-                }
-            }
+    for row in manifest["entries"].as_array().unwrap() {
+        let path = row["source"].as_str().unwrap();
+        if root.join(path).try_exists()? {
+            required.insert(path);
+        }
+        for field in ["rust", "tests"] {
+            required.extend(paths(row, field)?);
         }
     }
     if required.len() > 4096 {
@@ -190,9 +181,12 @@ pub fn bind_with_originals(
         for path in &declared {
             let path = *path;
             let harness = harness(path)?;
-            // This helper is compiled by native/devtools/mod.rs only under cfg(unix).
-            let applicable =
-                path != "native/devtools/process_unix.rs" || identity["platform"] != "win32";
+            // These exact sources contain only platform-gated tests; all reports remain required.
+            let applicable = match path {
+                "native/devtools/process_unix.rs" => identity["platform"] != "win32",
+                "tests/rust/dpapi_acceptance.rs" => identity["platform"] == "win32",
+                _ => true,
+            };
             if applicable {
                 if !sources.contains(harness) {
                     return Err(fail("Declared tooling test harness was not selected."));
@@ -206,7 +200,7 @@ pub fn bind_with_originals(
                 harnesses.insert(harness, passed.clone());
             }
             tests.push(json!({"source":path,"harness":harness,"applicable":applicable,
-                "not_run_reason":if applicable {Value::Null} else {json!("cfg(unix) helper is not compiled on Windows")}}));
+                "not_run_reason":if applicable {Value::Null} else {json!("Source cfg excludes all tests in this exact source on this platform")}}));
         }
         let mut named = BTreeMap::new();
         let mut artifact_phases = BTreeMap::<&str, BTreeMap<&str, Value>>::new();
@@ -284,7 +278,7 @@ pub fn bind_with_originals(
         "identity":identity,"manifest_sha256":sha(manifest_bytes),"provenance_sha256":provenance,
         "execution_report_sha256":sha(&reports["built"]),"phase_reports_sha256":report_hashes,
         "source_files":source_hashes,"historical_original_files":original_hashes,
-        "mapped_python_js":46,"retained_powershell":manifest["retained_powershell"],
+        "mapped_files":51,
         "entries":entries,"harnesses":harnesses,"current_named_harness_execution_verified":true,
         "current_named_test_execution_verified":true,"declared_scenario_execution_verified":true,
         "sdk_artifact_phase_execution_verified":true,"sdk_tested_binary_sha256":sdk_binary,

@@ -149,27 +149,34 @@ pub fn run(mode: &str) -> io::Result<i32> {
         }
         return Ok(0);
     }
+    if mode == "protect" {
+        use numera_gen_mcp::devtools::{private_files, protect_secret};
+        let file = std::path::PathBuf::from(std::env::var_os("NUMERA_FIXTURE_DPAPI").unwrap());
+        let parent = file.parent().unwrap();
+        println!("DPAPI_WRAPPER_STARTED");
+        println!("DPAPI_PARENT_SECURITY_READY");
+        private_files::create_directory(parent)?;
+        println!("DPAPI_PARENT_CREATED");
+        protect_secret::protect_with(&file, false, || Ok(private_files::Secret("non-secret-DPAPI-fixture-日本語".as_bytes().to_vec())))?;
+        let acl = private_files::inspect_private(&file, false)?;
+        if !acl.owner_current_user || !acl.owner_only || !acl.protected { return Err(io::Error::other("Fixture ACL is not current-user only.")); }
+        let plaintext = private_files::read_private(&file, 1048576)?;
+        if plaintext.0.windows(b"non-secret-DPAPI-fixture".len()).any(|bytes| bytes == b"non-secret-DPAPI-fixture") { return Err(io::Error::other("Synthetic ciphertext exposed plaintext.")); }
+        println!("ACL_VERIFIED");
+        return Ok(0);
+    }
     let mut command = if mode == "hang" {
         descendant("branch")?
     } else {
         assert_eq!(mode, "script");
         let mut command = Command::new(env!("CARGO_BIN_EXE_numera-dev"));
-        command
-            .args([
-                "bounded",
-                "15000",
-                "8000",
-                "--exec",
-                "pwsh",
-                "-NoProfile",
-                "-NonInteractive",
-                "-File",
-            ])
-            .arg(std::env::var_os("NUMERA_FIXTURE_DPAPI_SCRIPT").unwrap());
-        if std::env::var("NUMERA_FIXTURE_DPAPI_WRAPPER").unwrap() == "0" {
-            command
-                .arg("-Path")
-                .arg(std::env::var_os("NUMERA_FIXTURE_DPAPI").unwrap());
+        command.args(["bounded", "15000", "8000", "--exec"]);
+        let file = std::env::var_os("NUMERA_FIXTURE_DPAPI").unwrap();
+        if std::env::var("NUMERA_FIXTURE_DPAPI_WRAPPER").unwrap() == "1" {
+            command.arg(std::env::current_exe()?).args(["--exact", "windows::dpapi_script_worker", "--nocapture"])
+                .env("NUMERA_FIXTURE_DPAPI_MODE", "protect");
+        } else {
+            command.arg(env!("CARGO_BIN_EXE_numera-dev")).args(["protect-secret", "--path"]).arg(file);
         }
         command
     };

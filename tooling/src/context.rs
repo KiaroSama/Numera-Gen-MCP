@@ -71,7 +71,8 @@ impl Context {
         );
         let result = operation();
         if let Err(error) = &result {
-            self.logger.log("ERROR", "task", &diagnostic(error), json!({}));
+            self.logger
+                .log("ERROR", "task", &diagnostic(error), json!({}));
         }
         self.logger.log(
             "INFO",

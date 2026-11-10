@@ -29,8 +29,11 @@ fn execute() -> io::Result<()> {
         };
         match args[0].as_str() {
             "fixtures" if args.len() == 1 => numera_task::fixtures::materialize(&context),
+            "dpapi-fixture" if args.len() == 1 => numera_task::dpapi_fixture::create(&context),
             "stable" if args.len() == 1 => numera_task::ci::stable(&context),
-            "acceptance-prepare" if args.len() == 1 => numera_task::ci::acceptance_prepare(&context),
+            "acceptance-prepare" if args.len() == 1 => {
+                numera_task::ci::acceptance_prepare(&context)
+            }
             "coverage" if args.len() == 1 => numera_task::ci::coverage(&context),
             "coverage-gate" if args.len() == 1 => numera_task::inventory::coverage(&context),
             "inventory" if args.len() == 1 => numera_task::inventory::check(&context, false),
@@ -40,7 +43,9 @@ fn execute() -> io::Result<()> {
             "ledger" if args.len() == 1 => numera_task::ledger::check(&context),
             "case-execution" if args.len() == 1 => numera_task::qualification::check(&context),
             "execution-matrix" if args.len() == 1 => numera_task::matrix::check(&context),
-            "signed-execution-matrix" if args.len() == 1 => numera_task::signed_matrix::check(&context),
+            "signed-execution-matrix" if args.len() == 1 => {
+                numera_task::signed_matrix::check(&context)
+            }
             "signing-source" => numera_task::promotion::check(&context, target()?),
             "licenses" => numera_task::licenses::preserve(&context, target()?),
             "prepare" => numera_task::distribution::prepare(&context, target()?, true),
@@ -49,7 +54,9 @@ fn execute() -> io::Result<()> {
                 .enable_all()
                 .build()?
                 .block_on(numera_task::signing_tools::tools(&context, target()?)),
-            "signature-acceptance" => numera_task::signature_acceptance::verify(&context, target()?),
+            "signature-acceptance" => {
+                numera_task::signature_acceptance::verify(&context, target()?)
+            }
             "sign" => numera_task::signing::sign(&context, target()?),
             "package" => numera_task::signing::verify(&context, target()?),
             "extract-intermediate" => numera_task::acceptance::extract(&context, target()?, true),

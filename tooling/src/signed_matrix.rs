@@ -289,8 +289,14 @@ pub fn check(context: &Context) -> io::Result<()> {
         &original.execution,
         &root,
         &records,
-        &sha(&ledger::read(&context.root, crate::source_review::REVIEW_FILE)?),
-        &sha(&ledger::read(&context.root, crate::tooling_review::REVIEW_FILE)?),
+        &sha(&ledger::read(
+            &context.root,
+            crate::source_review::REVIEW_FILE,
+        )?),
+        &sha(&ledger::read(
+            &context.root,
+            crate::tooling_review::REVIEW_FILE,
+        )?),
     )?;
     let qualification_bytes = serde_json::to_vec_pretty(&qualification)
         .map_err(|_| fail("Cannot encode current qualification."))?;

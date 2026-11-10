@@ -32,6 +32,37 @@ Failed hosted attempts compiled and executed parts of 0.3.0, but the corrective 
 requires complete hosted qualification. These source-authored guards are not evidence of successful
 qualification, signing or publication, and do not independently authorize a signing dispatch.
 
+## Explicit local identity maintenance (source candidate)
+
+The 0.3.0 source replaces the first-party identity/check PowerShell helpers with opt-in native
+`numera-dev identity` operations on Windows. These commands are not in the published 0.2.0 binary and
+still require their own hosted qualification.
+
+```text
+numera-dev identity inspect --root ABSOLUTE_ROOT
+numera-dev identity create --root ABSOLUTE_ROOT --dry-run
+numera-dev identity check --root ABSOLUTE_ROOT --libcrypto ABSOLUTE_DLL --libcrypto-sha256 SHA256
+```
+
+`inspect` reads security/presence metadata only, without registry contents, write access or log files.
+Create dry-run validates existing custody/registry conditions without reading secret values, loading
+a DLL, creating logs or changing files. Actual creation additionally requires `--confirm-create` and
+an explicit absolute native OpenSSL3 DLL with its exact SHA-256; it refuses existing identity material.
+It preserves registry bytes, saves the original security descriptor in private custody before any
+explicit owner-only restriction, and retains partial custody for reconciliation on failure. Only the
+selected CurrentUser-owned registry can be restricted; no ownership takeover or parent ACL rewrite
+is permitted. New RSA3072/self-signed certificate/PFX material is created only by that explicit action,
+never as owner-key generation during normal startup, failed signing or inspection. Tests generate
+only disposable isolated identities. Existing approved keys/pins are not rotated by implementing the command.
+
+`check` verifies selected local recovery material, public-key/certificate binding and independent
+positive/tamper/wrong-signer controls. Its optional `--write-fixtures` creates only explicitly requested
+new fixture destinations without overwrite; it never refreshes the independently retained historical
+parity corpus. Native DLL paths and PE architecture/hash are checked before memory-only loading, with
+system-only dependency search and no PATH fallback. Disposable hosted identity tests use separately
+qualified FireDaemon OpenSSL3.5.9; they do not read the owner's registry or publisher identity.
+No command creates an OS trust-store entry, changes a host registration or uploads credentials.
+
 ## What the signature must prove
 
 Windows executables require embedded Authenticode signatures; macOS executables require genuine

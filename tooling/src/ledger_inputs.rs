@@ -344,7 +344,10 @@ fn archive(
     )
 }
 /// Fixed pre-migration Git objects are comparison inputs, never executable generators.
-pub fn tooling_originals(context: &Context, manifest: &Value) -> io::Result<BTreeMap<String, Vec<u8>>> {
+pub fn tooling_originals(
+    context: &Context,
+    manifest: &Value,
+) -> io::Result<BTreeMap<String, Vec<u8>>> {
     context.hosted()?;
     let hashes = crate::inventory::tooling_hashes(manifest)?;
     archive(context, crate::inventory::TOOLING_REVISION, &hashes)

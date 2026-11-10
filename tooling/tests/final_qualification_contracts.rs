@@ -27,7 +27,9 @@ fn fixture() -> (Value, Value, BTreeMap<String, Value>) {
         } else {
             Value::Null
         };
-        contexts.insert(label.into(), json!({"reviewed_named_execution":{
+        contexts.insert(
+            label.into(),
+            json!({"reviewed_named_execution":{
             "identity":identity,"cases":470,"suites":50,
             "current_assertion_review_verified":true,"current_named_execution_verified":true,
             "source_review":{"cases":470,"assertion_records":606,"unique_assertions":411,
@@ -37,19 +39,23 @@ fn fixture() -> (Value, Value, BTreeMap<String, Value>) {
             "reviewed_tooling_execution":{"identity":identity,
                 "source_review_sha256":"2".repeat(64),
                 "current_tooling_assertions_and_execution_verified":true},
-            "coverage_evidence":coverage}));
+            "coverage_evidence":coverage}),
+        );
         if phase == "built" {
             let mut environment = environment.clone();
             environment["GITHUB_REF"] = json!("refs/heads/main");
             environment["GITHUB_RUN_ID"] = json!("8");
             environment["GITHUB_JOB"] = json!("signing");
             let identity = execution_identity(&environment, "extracted-signed", target).unwrap();
-            signed.insert(target.into(), json!({"schema_version":1,
+            signed.insert(
+                target.into(),
+                json!({"schema_version":1,
                 "component":"native-signed-stage-execution","identity":identity,
                 "signed_stage_execution_verified":true,"semantic_parity_claimed":false,
                 "qualification_verified":false,"retirement_authorized":false,
                 "sdk_harnesses":{"tests/rust/sdk_acceptance.rs":{"passed":["sdk_case"]},
-                    "tests/rust/media_acceptance.rs":{"passed":["media_case"]}}}));
+                    "tests/rust/media_acceptance.rs":{"passed":["media_case"]}}}),
+            );
         }
     }
     let source = json!({"schema_version":1,"component":"native-seven-context-execution",
@@ -67,7 +73,8 @@ fn fixture() -> (Value, Value, BTreeMap<String, Value>) {
 fn final_join_requires_all_reviewed_native_coverage_and_genuine_signed_stage_contexts() {
     let (source, root, signed) = fixture();
     let result =
-        final_qualification::bind(&source, &root, &signed, &"1".repeat(64), &"2".repeat(64)).unwrap();
+        final_qualification::bind(&source, &root, &signed, &"1".repeat(64), &"2".repeat(64))
+            .unwrap();
     assert_eq!(result["qualification_verified"], true);
     assert_eq!(result["reviewer"], "primary");
     assert_eq!(result["independent_review_claimed"], false);
@@ -88,16 +95,21 @@ fn final_join_requires_all_reviewed_native_coverage_and_genuine_signed_stage_con
         let (mut source, root, mut signed) = fixture();
         match mutation {
             "missing-native" => {
-                source["contexts"].as_object_mut().unwrap().remove("coverage");
+                source["contexts"]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("coverage");
             }
             "missing-signed" => {
                 signed.remove("aarch64-apple-darwin");
             }
             "runtime-review" => {
-                source["contexts"]["coverage"]["reviewed_named_execution"]["source_review"]["unique_assertions"] = json!(410)
+                source["contexts"]["coverage"]["reviewed_named_execution"]["source_review"]["unique_assertions"] =
+                    json!(410)
             }
             "tooling-review" => {
-                source["contexts"]["aarch64-apple-darwin"]["reviewed_tooling_execution"]["current_tooling_assertions_and_execution_verified"] = json!(false)
+                source["contexts"]["aarch64-apple-darwin"]["reviewed_tooling_execution"]["current_tooling_assertions_and_execution_verified"] =
+                    json!(false)
             }
             "review-bytes" => source["tooling_source_review_sha256"] = json!("4".repeat(64)),
             "source" => source["source_sha"] = json!("b".repeat(40)),
@@ -106,10 +118,12 @@ fn final_join_requires_all_reviewed_native_coverage_and_genuine_signed_stage_con
                     json!(false)
             }
             "sdk" => {
-                signed.get_mut("aarch64-apple-darwin").unwrap()["sdk_harnesses"]["tests/rust/sdk_acceptance.rs"]["passed"] = json!(["unrelated"])
+                signed.get_mut("aarch64-apple-darwin").unwrap()["sdk_harnesses"]["tests/rust/sdk_acceptance.rs"]
+                    ["passed"] = json!(["unrelated"])
             }
             "coverage" => {
-                source["contexts"]["coverage"]["coverage_evidence"]["metrics"][0]["covered"] = json!(84)
+                source["contexts"]["coverage"]["coverage_evidence"]["metrics"][0]["covered"] =
+                    json!(84)
             }
             "extra-coverage" => {
                 source["contexts"]["coverage"]["coverage_evidence"]["metrics"]

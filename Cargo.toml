@@ -476,6 +476,14 @@ path = "tests/rust/devtool_setup.rs"
 name = "devtool_supervisor"
 path = "tests/rust/devtool_supervisor.rs"
 
+[[test]]
+name = "devtool_credentials"
+path = "tests/rust/devtool_credentials.rs"
+
+[[test]]
+name = "identity_contracts"
+path = "tests/rust/identity_contracts.rs"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

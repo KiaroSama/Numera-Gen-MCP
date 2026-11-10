@@ -1,5 +1,8 @@
 pub mod artifact;
 mod capture;
+pub mod identity;
+pub mod private_files;
+pub mod protect_secret;
 mod installation;
 #[cfg(unix)]
 mod process_unix;

@@ -282,8 +282,9 @@ fn original_tooling_manifest_accounts_for_every_file_without_promoting_source_ma
     let bytes = fs::read(project.join("docs/testing/tooling-migration.json")).unwrap();
     let manifest: Value = serde_json::from_slice(&bytes).unwrap();
     let report = inventory::tooling_manifest(project, &manifest, false).unwrap();
-    assert_eq!(report["mapped_python_js"], 46);
-    assert_eq!(report["retained_powershell"], 5);
+    assert_eq!(report["mapped_files"], 51);
+    assert!(report.get("mapped_python_js").is_none());
+    assert!(report.get("retained_powershell").is_none());
     assert_eq!(report["acceptance_verified"], false);
     assert!(
         inventory::tooling_manifest(project, &manifest, true).is_err(),
@@ -293,7 +294,6 @@ fn original_tooling_manifest_accounts_for_every_file_without_promoting_source_ma
         .as_array()
         .unwrap()
         .iter()
-        .chain(manifest["retained_powershell"].as_array().unwrap())
         .map(|row| row["source"].as_str().unwrap())
         .collect::<Vec<_>>()
         .join("\0")
@@ -304,11 +304,11 @@ fn original_tooling_manifest_accounts_for_every_file_without_promoting_source_ma
             .is_err()
     );
     assert!(inventory::tooling_inventory(&manifest, tracked.split_once('\0').unwrap().1).is_err());
-    // Retired originals remain historical input; current tracking contains exactly the five originals.
-    let retired = manifest["retained_powershell"].as_array().unwrap().iter()
-        .map(|row| row["source"].as_str().unwrap()).collect::<Vec<_>>().join("\0") + "\0";
-    inventory::tooling_inventory(&manifest, &retired).unwrap();
-    assert!(inventory::tooling_inventory(&manifest, &(retired + "scripts/unmapped.py\0")).is_err());
+    // All 51 retired originals remain historical inputs, not current executable source.
+    inventory::tooling_inventory(&manifest, "").unwrap();
+    for path in ["scripts/unmapped.py", "scripts/leftover.ps1", "native/extra.cmd", "tooling/extra.bat"] {
+        assert!(inventory::tooling_inventory(&manifest, &format!("{path}\0")).is_err());
+    }
     // An ignored retired source helper is not part of git ls-files and must not enter the inventory.
     inventory::tooling_inventory(&manifest, &(tracked.clone() + "docs/example.md\0")).unwrap();
     for mutation in [
@@ -319,6 +319,8 @@ fn original_tooling_manifest_accounts_for_every_file_without_promoting_source_ma
         "test",
         "powershell",
         "count",
+        "schema",
+        "legacy-field",
     ] {
         let mut changed = manifest.clone();
         match mutation {
@@ -329,10 +331,10 @@ fn original_tooling_manifest_accounts_for_every_file_without_promoting_source_ma
             "hash" => changed["entries"][0]["source_sha256"] = json!("0".repeat(64)),
             "replacement" => changed["entries"][0]["rust"][0] = json!("../outside.rs"),
             "test" => changed["entries"][0]["tests"][0] = json!("tests/rust/missing-test.rs"),
-            "powershell" => {
-                changed["retained_powershell"].as_array_mut().unwrap().pop();
-            }
-            "count" => changed["rust_migration_count"] = json!(45),
+            "powershell" => changed["powershell_retained_count"] = json!(5),
+            "count" => changed["rust_migration_count"] = json!(46),
+            "schema" => changed["schema_version"] = json!(2),
+            "legacy-field" => changed["retained_powershell"] = json!([]),
             _ => unreachable!(),
         }
         assert!(

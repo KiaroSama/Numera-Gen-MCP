@@ -3,6 +3,7 @@ use std::{
     collections::BTreeMap,
     io::{self, Cursor, Write},
     path::Path,
+    process::Command,
 };
 
 const LIMIT: usize = 16 * 1024 * 1024;
@@ -70,15 +71,24 @@ pub fn archive(root: &Path, inventory: &[u8]) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+pub fn bootstrap_command(context: &Context, check: bool) -> Command {
+    let mut command = context.command("rustup");
+    command.args(["run", "1.99.1", "rustfmt"]);
+    if check { command.arg("--check"); }
+    command.args(["--edition", "2024", "tooling/bootstrap/main.rs"]);
+    command
+}
+
 pub fn retain(context: &Context) -> io::Result<()> {
     context.hosted()?;
     // Diagnostic-only mutation follows all source-bound execution checks; it never clears failure.
-    context.run(
+    let workspace = context.run(
         context.command("cargo").args(["fmt", "--all"]),
         30000,
         20000,
         false,
-    )?;
+    );
+    let standalone = context.run(&mut bootstrap_command(context, false), 30000, 20000, false);
     let inventory = context.capture(
         context.command("git").args(["ls-files", "-z"]),
         10000,
@@ -86,5 +96,8 @@ pub fn retain(context: &Context) -> io::Result<()> {
         1024 * 1024,
     )?;
     let bytes = archive(&context.root, &inventory)?;
-    context.write_new(".ci-work/native/formatting.zip", &bytes)
+    context.write_new(".ci-work/native/formatting.zip", &bytes)?;
+    workspace?;
+    standalone?;
+    Ok(())
 }

@@ -5,18 +5,22 @@
 The current source adopts Numera Gen MCP and `numera-gen-mcp`, adds explicit per-model media kinds
 and transformation modes, and authors fal queue orchestration for image, video, audio and 3D outputs.
 The ten legacy image tools remain alongside `generate_media` and `get_media_output_info`.
-Maintained Python/JavaScript tooling is being ported to a separate Rust workspace; the original
-sources remain until equivalent behavior is qualified, and the five PowerShell scripts stay unchanged.
+All 51 original first-party Python/JavaScript/PowerShell executables are being replaced by Rust;
+originals remain until mapped behavior and the exact retirement successor qualify. Native protection,
+identity/custody maintenance and synthetic DPAPI fixtures replace active PowerShell callers. A small
+standard-library Rust bootstrap owns substantive preparation logic; native libraries and fixed OS
+commands remain permitted, with only a documented minimal pre-Rust seed.
 
 The current corrective tree remains uncompiled and unexecuted; earlier qualification failures are
 recorded in [test results](docs/TEST-RESULTS.md). Source-authored corrections keep leaf SDK children
 within outer POSIX harness containment, reject stale evidence after checkout HEAD changes, and add
-read-only qualification of an exact 46-file retirement successor without deleting originals.
-Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and ZIP9.5.0; the lockfile still needs
-hosted resolution. Formatting, assertion parity, six-target runtime/package verification and genuine
-signatures remain required before release. A separate manual source-preparation route resolves/formats
-candidate source without tests or signing inputs. Existing-key signing on `main` is authorized but
-has not run for this candidate.
+read-only qualification of an exact 51-file retirement successor without deleting originals.
+Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and ZIP9.5.0. Successful hosted
+[preparation42711139081](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42711139081)
+on `370422d` returned a candidate lockfile and Rust formatting patch only, without compilation, tests
+or signing inputs. Later edits are not covered by that formatting result. Assertion parity,
+six-target runtime/package verification and genuine signatures remain required before release.
+Existing-key signing on `main` is authorized but has not run for this candidate.
 The installation guide uses the published 0.2.0 archive and its actual legacy executable/template;
 current-source examples and media declarations do not upgrade that binary.
 

@@ -94,11 +94,17 @@ NUMERA_MAX_CONCURRENT_REQUESTS, NUMERA_RETURN_MODE. These are not compact .env k
 OPENAI_BASE_URL/OPENAI_API_KEY/OPENAI_MODEL apply only with --openai-compat.
 
 Auth is none for explicitly trusted local backends, bearer or header with exactly one private apiKey,
-secretEnv, absolute/private/bounded secretFile or Windows current-user secretDpapiFile (PowerShell7).
+secretEnv, absolute/private/bounded secretFile or Windows current-user secretDpapiFile.
 auth.origin binds credentials to the destination. Environment variables are not encrypted.
-Run scripts/protect-secret.ps1 interactively only; no overwrites. It applies a protected current-user-only
-ACL when creating the encrypted file, independent of parent inheritance or token-default grants.
-Native decryption uses Windows DPAPI directly; the retained source-runtime helper emits UTF-8.
+The 0.3.0 source adds `numera-dev protect-secret --path ABSOLUTE_FILE`; its own hosted qualification is
+pending. On Windows it reads the secret from the attached console without echo, encrypts UTF-16LE
+with CurrentUser DPAPI and writes lowercase hexadecimal UTF-8. The existing native reader accepts
+that format. `--dry-run`, `--what-if` and `-WhatIf` validate without reading a secret or writing output.
+The explicit destination may be outside the project. Existing ancestors must be unlinked directories;
+missing parent directories are created sequentially only after valid secret input and native encryption.
+WhatIf and input failure create no parents. Creation is exclusive with a protected current-user-only
+ACL; existing files and parent ACLs remain unchanged. Plaintext arguments, environment input and non-Windows plaintext fallbacks
+are unsupported. The published 0.2.0 developer binary does not acquire this new command.
 Missing credentials never authorize reading another application's store.
 
 Per-model maxCount/maxReferences/supportedParameters/capabilities overrides need verified contracts.

@@ -10,10 +10,9 @@ fn inputs() -> (PathBuf, Value, Value) {
         .parent()
         .unwrap()
         .to_owned();
-    let manifest = serde_json::from_slice(
-        &fs::read(root.join(tooling_execution::MANIFEST_FILE)).unwrap(),
-    )
-    .unwrap();
+    let manifest =
+        serde_json::from_slice(&fs::read(root.join(tooling_execution::MANIFEST_FILE)).unwrap())
+            .unwrap();
     let review =
         serde_json::from_slice(&fs::read(root.join(tooling_review::REVIEW_FILE)).unwrap()).unwrap();
     (root, manifest, review)
@@ -23,8 +22,11 @@ fn inputs() -> (PathBuf, Value, Value) {
 fn committed_tooling_review_binds_all_originals_scenarios_and_current_sources_without_execution() {
     let (root, manifest, review) = inputs();
     let checked = tooling_review::verify(&root, &manifest, &review).unwrap();
-    assert_eq!(checked["files"], 46);
-    assert_eq!(checked["scenarios"], 92);
+    assert_eq!(checked["files"], 51);
+    let scenarios = manifest["entries"].as_array().unwrap().iter()
+        .map(|entry| entry["scenarios"].as_array().unwrap().len()).sum::<usize>();
+    assert!(scenarios > 92, "the original 92 scenarios and real PowerShell coverage remain required");
+    assert_eq!(checked["scenarios"], scenarios);
     assert_eq!(checked["source_assertion_review_verified"], true);
     for field in [
         "current_execution_claimed",
@@ -85,14 +87,28 @@ fn committed_tooling_review_binds_all_originals_scenarios_and_current_sources_wi
 #[test]
 fn tooling_review_never_promotes_missing_or_self_declared_execution() {
     let (root, manifest, review) = inputs();
-    for execution in [
-        json!({}),
-        json!({
-            "schema_version":1,"component":"native-tooling-harness-execution",
-            "manifest_sha256":sha(&fs::read(root.join(tooling_execution::MANIFEST_FILE)).unwrap()),
-            "current_named_test_execution_verified":true,"qualification_verified":true
-        }),
-    ] {
-        assert!(tooling_review::bind_execution(&root, &manifest, &review, &execution).is_err());
+    let execution = json!({
+        "schema_version":1,"component":"native-tooling-harness-execution",
+        "manifest_sha256":sha(&fs::read(root.join(tooling_execution::MANIFEST_FILE)).unwrap()),
+        "mapped_files":51,"entries":manifest["entries"],
+        "current_named_test_execution_verified":true,"declared_scenario_execution_verified":true,
+        "sdk_artifact_phase_execution_verified":true,"scenario_assertions_verified":false,
+        "semantic_parity_claimed":false,"qualification_verified":false,
+        "retirement_authorized":false,"original_evidence_rewritten":false
+    });
+    tooling_review::bind_execution(&root, &manifest, &review, &execution).unwrap();
+    for mutation in ["missing", "self-declared", "count", "legacy-count", "legacy-field", "missing-powershell"] {
+        let mut changed = execution.clone();
+        match mutation {
+            "missing" => changed = json!({}),
+            "self-declared" => changed["qualification_verified"] = json!(true),
+            "count" => changed["mapped_files"] = json!(46),
+            "legacy-count" => changed["mapped_python_js"] = json!(51),
+            "legacy-field" => changed["retained_powershell"] = json!([]),
+            "missing-powershell" => changed["entries"].as_array_mut().unwrap()
+                .retain(|entry| !entry["source"].as_str().unwrap().ends_with(".ps1")),
+            _ => unreachable!(),
+        }
+        assert!(tooling_review::bind_execution(&root, &manifest, &review, &changed).is_err(), "{mutation}");
     }
 }

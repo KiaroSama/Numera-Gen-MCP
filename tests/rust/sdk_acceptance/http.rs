@@ -68,7 +68,8 @@ impl HttpChild {
     async fn ready(&mut self) {
         host::bounded(8000, async {
             loop {
-                if String::from_utf8_lossy(&self.stderr.lock().unwrap()).contains("Local MCP HTTP:") {
+                if String::from_utf8_lossy(&self.stderr.lock().unwrap()).contains("Local MCP HTTP:")
+                {
                     break;
                 }
                 assert!(
@@ -383,7 +384,11 @@ mod containment {
         let root = work.0.canonicalize().unwrap();
         let mut command = Command::new(std::env::current_exe().unwrap());
         command
-            .args(["--exact", "http::containment::fixture_parent", "--nocapture"])
+            .args([
+                "--exact",
+                "http::containment::fixture_parent",
+                "--nocapture",
+            ])
             .env(ROOT, &root);
         let cancelled = AtomicBool::new(false);
         let finished = AtomicBool::new(false);
@@ -447,7 +452,10 @@ mod containment {
                 Ok(stream) => drop(stream),
                 Err(error) => panic!("HTTP child shutdown is unverified: {:?}", error.kind()),
             }
-            assert!(Instant::now() < until, "HTTP child survived its parent group");
+            assert!(
+                Instant::now() < until,
+                "HTTP child survived its parent group"
+            );
             std::thread::park_timeout(Duration::from_millis(10));
         }
         assert!(root.join("children/config.json").is_file());

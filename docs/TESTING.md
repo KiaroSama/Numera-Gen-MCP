@@ -10,7 +10,7 @@ Seven fifteen-input bundles bind exact artifact digests, bytes, source/helper ha
 Comfy error conversion, tier-message and strict POSIX PID-absence assertions passed. See
 [the migration matrix](testing/MIGRATION-MATRIX.md#release-blockers). Older observations below
 are historical, not current failures: `05ed820` measured78.33/70.93 and `b4e466a`81.87/76.67 below
-coverage floors. At `26d4224`, Windows x64 DPAPI failed before script entry with zero CPU/output; `49dde41` passed both Windows DPAPI and PSS snapshot tests without changing bounds. Its historical intermittent startup cause remains unresolved. Native verification is hosted-only.
+coverage floors. At `26d4224`, Windows x64 DPAPI failed before script entry with zero CPU/output; `49dde41` passed both Windows DPAPI and PSS snapshot tests without changing bounds. Its historical intermittent startup cause remains unresolved. Native verification is hosted-only. Current Rust-only private-maintenance/DPAPI contract coverage and its explicit interactive/other-user limits are documented in [practical testing](PRACTICAL-TESTING.md#windows-dpapi-evidence); those authored replacements are not historical execution proof.
 
 The exact Node baseline generates independent config/canonical/image/policy/wire oracle values in CI;
 [maintained validation](testing/SOURCE-VALIDATION.md) is separate. Native tests compare nonempty original fixtures. Real child

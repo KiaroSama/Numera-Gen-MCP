@@ -27,13 +27,19 @@ impl Drop for Fixture {
 fn actual_unfiltered_harness_keeps_original_command_identity_and_measures_phases() {
     const CHILD_ROOT: &str = "NUMERA_HARNESS_CONTRACT_CHILD_ROOT";
     const MODE: &str = "NUMERA_HARNESS_CONTRACT_MODE";
-    const NAME: &str = "actual_unfiltered_harness_keeps_original_command_identity_and_measures_phases";
+    const NAME: &str =
+        "actual_unfiltered_harness_keeps_original_command_identity_and_measures_phases";
     if std::env::var(MODE).as_deref() == Ok("leaf") {
         let root = std::env::var_os(CHILD_ROOT).unwrap();
         assert_eq!(
             std::env::current_dir().unwrap().canonicalize().unwrap(),
             Path::new(&root).canonicalize().unwrap()
         );
+        assert_eq!(
+            std::env::var_os("NUMERA_IDENTITY_TEST_LIBCRYPTO").unwrap(),
+            Path::new(&root).join("identity tools 日本語/libcrypto.dll").into_os_string()
+        );
+        assert_eq!(std::env::var("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256").unwrap(), "a".repeat(64));
         return;
     }
     let driver = std::env::var(MODE).as_deref() == Ok("driver");
@@ -56,9 +62,26 @@ fn actual_unfiltered_harness_keeps_original_command_identity_and_measures_phases
         root,
     };
     let executable = std::env::current_exe().unwrap();
+    let mut compile = Command::new("cargo");
+    compile
+        .env("NUMERA_IDENTITY_TEST_LIBCRYPTO", context.root.join("identity tools 日本語/libcrypto.dll"))
+        .env("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256", "a".repeat(64))
+        .env("NUMERA_SIGNING_FIXTURE", "synthetic-not-a-secret");
+    let overrides = harness_command(&context, &compile, "native/lib.rs", &executable);
+    assert!(!overrides.get_envs().any(|(key, _)| key == "NUMERA_SIGNING_FIXTURE"));
+    let mut removed = Command::new("cargo");
+    removed.env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO").env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256");
+    let removed = harness_command(&context, &removed, "native/lib.rs", &executable);
+    for name in ["NUMERA_IDENTITY_TEST_LIBCRYPTO", "NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256"] {
+        assert!(removed.get_envs().any(|(key, value)| key == name && value.is_none()));
+    }
     let command = || {
-        let mut command =
-            harness_command(&context, &Command::new("cargo"), "native/lib.rs", &executable);
+        let mut command = harness_command(
+            &context,
+            &compile,
+            "native/lib.rs",
+            &executable,
+        );
         command.env(CHILD_ROOT, &context.root);
         command
     };
@@ -74,7 +97,11 @@ fn actual_unfiltered_harness_keeps_original_command_identity_and_measures_phases
                 1024 * 1024,
             )
             .unwrap();
-        assert!(String::from_utf8(output).unwrap().contains("HARNESS_CONTRACT_VERIFIED"));
+        assert!(
+            String::from_utf8(output)
+                .unwrap()
+                .contains("HARNESS_CONTRACT_VERIFIED")
+        );
         return;
     }
     let report = execute_harness(

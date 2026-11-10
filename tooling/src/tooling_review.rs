@@ -48,7 +48,12 @@ pub fn verify(root: &Path, manifest: &Value, review: &Value) -> io::Result<Value
     let decisions = review["entries"]
         .as_object()
         .ok_or_else(|| fail("Tooling assertion review entries missing."))?;
-    if decisions.keys().map(String::as_str).collect::<BTreeSet<_>>() != expected {
+    if decisions
+        .keys()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>()
+        != expected
+    {
         return Err(fail(
             "Every original tooling file requires one source review.",
         ));
@@ -108,14 +113,16 @@ pub fn verify(root: &Path, manifest: &Value, review: &Value) -> io::Result<Value
             "Reviewed tooling source, helper or scenario bytes are stale.",
         ));
     }
-    Ok(json!({"schema_version":1,"component":"native-tooling-source-review-verification",
+    Ok(
+        json!({"schema_version":1,"component":"native-tooling-source-review-verification",
         "manifest_sha256":review["manifest_sha256"],"source_inventory_sha256":review["source_inventory_sha256"],
         "files":entries.len(),"scenarios":scenarios,"reviewer":"primary",
         "source_assertion_review_verified":true,"current_execution_claimed":false,
-        "qualification_verified":false,"retirement_authorized":false}))
+        "qualification_verified":false,"retirement_authorized":false}),
+    )
 }
 
-/// The execution must be reconstructed by tooling_execution::bind from authenticated originals.
+/// The execution must be reconstructed by tooling_execution::bind_with_originals from authenticated originals.
 pub fn bind_execution(
     root: &Path,
     manifest: &Value,
@@ -126,8 +133,9 @@ pub fn bind_execution(
     if execution["schema_version"] != 1
         || execution["component"] != "native-tooling-harness-execution"
         || execution["manifest_sha256"] != review["manifest_sha256"]
-        || execution["mapped_python_js"] != 46
-        || execution["retained_powershell"] != manifest["retained_powershell"]
+        || execution["mapped_files"] != 51
+        || execution.get("mapped_python_js").is_some()
+        || execution.get("retained_powershell").is_some()
         || execution["current_named_test_execution_verified"] != true
         || execution["declared_scenario_execution_verified"] != true
         || execution["sdk_artifact_phase_execution_verified"] != true
@@ -141,20 +149,24 @@ pub fn bind_execution(
     }
     let actual = execution["entries"]
         .as_array()
-        .filter(|rows| rows.len() == 46)
+        .filter(|rows| rows.len() == 51)
         .ok_or_else(|| fail("Reviewed tooling execution inventory missing."))?;
     for (source, executed) in manifest["entries"].as_array().unwrap().iter().zip(actual) {
         if source["source"] != executed["source"]
             || source["source_sha256"] != executed["source_sha256"]
             || source["scenarios"] != executed["scenarios"]
         {
-            return Err(fail("Tooling execution changes reviewed scenario identities."));
+            return Err(fail(
+                "Tooling execution changes reviewed scenario identities.",
+            ));
         }
     }
-    Ok(json!({"schema_version":1,"component":"native-reviewed-tooling-execution",
+    Ok(
+        json!({"schema_version":1,"component":"native-reviewed-tooling-execution",
         "identity":execution["identity"],"source_review":checked,
         "source_review_sha256":sha(&ledger::read(root, REVIEW_FILE)?),
         "manifest_sha256":review["manifest_sha256"],
         "current_tooling_assertions_and_execution_verified":true,
-        "qualification_verified":false,"retirement_authorized":false}))
+        "qualification_verified":false,"retirement_authorized":false}),
+    )
 }

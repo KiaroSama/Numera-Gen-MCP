@@ -328,7 +328,7 @@ mod windows {
     fn start(
         root: &Path,
         mode: &str,
-        script: Option<&Path>,
+        _script: Option<&Path>,
         destination: Option<&Path>,
         wrapper: bool,
     ) -> io::Result<Owned> {
@@ -364,7 +364,6 @@ mod windows {
             "HOMEPATH",
             "APPDATA",
             "LOCALAPPDATA",
-            "PSModulePath",
             "ProgramFiles",
             "ProgramFiles(x86)",
             "ProgramW6432",
@@ -372,9 +371,6 @@ mod windows {
             if let Some(value) = std::env::var_os(key) {
                 command.env(key, value);
             }
-        }
-        if let Some(script) = script {
-            command.env("NUMERA_FIXTURE_DPAPI_SCRIPT", script);
         }
         if let Some(destination) = destination {
             command.env("NUMERA_FIXTURE_DPAPI", destination);
@@ -514,6 +510,35 @@ mod windows {
     }
 
     #[test]
+    fn protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants() {
+        use numera_gen_mcp::devtools::{private_files, protect_secret};
+        let workspace = Workspace::new();
+        let parent = workspace.0.join("private");
+        private_files::create_directory(&parent).unwrap();
+        let file = parent.join("protected.txt");
+        protect_secret::protect_with(&file, true, || panic!("dry-run read secret input")).unwrap();
+        assert!(!file.exists());
+        let security = private_files::inspect_private(&parent, true).unwrap();
+        assert!(security.owner_current_user && security.owner_only && security.protected);
+        private_files::write_new(&file, b"unchanged").unwrap();
+        assert!(protect_secret::protect_with(&file, false, || panic!("existing file read secret")).is_err());
+        assert_eq!(fs::read(&file).unwrap(), b"unchanged");
+        assert!(private_files::write_new(&file, b"replacement").is_err());
+        let hard = parent.join("hard.txt");
+        fs::hard_link(&file, &hard).unwrap();
+        assert!(private_files::read_private(&file, 1024).is_err());
+        fs::remove_file(hard).unwrap();
+        assert_eq!(private_files::read_private(&file, 1024).unwrap().0, b"unchanged");
+        let registry = private_files::open_registry(&file, 1024).unwrap();
+        assert!(registry.owner_current_user && registry.owner_only && registry.protected);
+        assert!(!registry.original_sddl.is_empty());
+        assert!(OpenOptions::new().read(true).write(true).open(&file).is_err(), "exclusive registry handle");
+        private_files::restrict_registry(&registry).unwrap();
+        drop(registry);
+        assert_eq!(fs::read(&file).unwrap(), b"unchanged");
+    }
+
+    #[test]
     fn exact_source_windows_dpapi_script_acl_native_roundtrip_corrupt_and_no_overwrite() {
         let workspace = Workspace::new();
         let runtime = tokio::runtime::Builder::new_current_thread()
@@ -522,64 +547,8 @@ mod windows {
             .unwrap();
         let deadline = Instant::now() + Duration::from_secs(30);
         let root = &workspace.0;
-        let scripts = root.join("scripts");
-        fs::create_dir(&scripts).unwrap();
-        for name in ["common.ps1", "protect-secret.ps1"] {
-            fs::copy(
-                Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("scripts")
-                    .join(name),
-                scripts.join(name),
-            )
-            .unwrap();
-        }
-        let wrapper = root.join("fixture.ps1");
-        fs::write(&wrapper, r#"
-$ErrorActionPreference='Stop'
-Write-Output 'DPAPI_WRAPPER_STARTED'
-$directory=[Security.AccessControl.DirectorySecurity]::new()
-$directory.SetAccessRuleProtection($true,$false)
-$directory.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.WindowsIdentity]::GetCurrent().User,[Security.AccessControl.FileSystemRights]::FullControl,[Security.AccessControl.AccessControlType]::Allow))
-Write-Output 'DPAPI_PARENT_SECURITY_READY'
-[IO.FileSystemAclExtensions]::Create([IO.DirectoryInfo]::new((Join-Path $PSScriptRoot 'private')),$directory)
-Write-Output 'DPAPI_PARENT_CREATED'
-function Read-Host { param([string]$Prompt,[switch]$AsSecureString); ConvertTo-SecureString 'non-secret-DPAPI-fixture-日本語' -AsPlainText -Force }
-& (Join-Path $PSScriptRoot 'scripts/protect-secret.ps1') -Path $env:NUMERA_FIXTURE_DPAPI
-$stage=0
-try {
-    $acl=Get-Acl -LiteralPath $env:NUMERA_FIXTURE_DPAPI
-    $stage=1
-    $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-    $stage=2
-    $rules=@($acl.Access | Where-Object {$_.AccessControlType -eq 'Allow'})
-    $stage=3
-    $foreign=@($rules | Where-Object {$_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -ne $sid})
-    $stage=4
-    if (-not $acl.AreAccessRulesProtected -or $rules.Count -lt 1 -or $foreign.Count -ne 0) { throw 'Fixture ACL is not current-user only.' }
-    Write-Output 'ACL_VERIFIED'
-} catch {
-    $missing=$false; $unmapped=$false; $denied=$false
-    $exception=$_.Exception
-    for ($depth=0; $null -ne $exception -and $depth -lt 8; $depth++) {
-        $missing=$missing -or ($exception -is [Management.Automation.CommandNotFoundException])
-        $unmapped=$unmapped -or ($exception -is [Security.Principal.IdentityNotMappedException])
-        $denied=$denied -or ($exception -is [UnauthorizedAccessException])
-        $exception=$exception.InnerException
-    }
-    [Console]::Error.WriteLine('ACL_STAGE_'+$stage)
-    [Console]::Error.WriteLine('ACL_COMMAND_MISSING_'+$missing)
-    [Console]::Error.WriteLine('ACL_IDENTITY_UNMAPPED_'+$unmapped)
-    [Console]::Error.WriteLine('ACL_PERMISSION_DENIED_'+$denied)
-    if ($stage -eq 4) {
-        [Console]::Error.WriteLine('ACL_PROTECTED_'+$acl.AreAccessRulesProtected)
-        [Console]::Error.WriteLine('ACL_HAS_ALLOW_'+($rules.Count -ge 1))
-        [Console]::Error.WriteLine('ACL_HAS_FOREIGN_'+($foreign.Count -ne 0))
-    }
-    exit 1
-}
-"#.as_bytes()).unwrap();
         let file = root.join("private").join("protected 日本語.txt");
-        let (status, output) = run(root, &wrapper, &file, true, deadline);
+        let (status, output) = run(root, Path::new("native-fixture"), &file, true, deadline);
         let acl = [
             "ACL_STAGE_0",
             "ACL_STAGE_1",
@@ -633,7 +602,7 @@ try {
         assert_eq!(error.code, "missing_credentials");
         let (status, _) = run(
             root,
-            &scripts.join("protect-secret.ps1"),
+            Path::new("native-existing-file"),
             &file,
             false,
             deadline,

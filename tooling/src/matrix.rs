@@ -440,7 +440,8 @@ pub fn check(context: &Context) -> io::Result<()> {
     }
     let tooling_review = ledger::parse(&tooling_review_bytes)?;
     let tooling_dispositions = ledger::parse(&tooling_manifest)?;
-    let tooling_originals = crate::ledger_inputs::tooling_originals(context, &tooling_dispositions)?;
+    let tooling_originals =
+        crate::ledger_inputs::tooling_originals(context, &tooling_dispositions)?;
     let reviewed_files = expected_rebind["current_source_files"]
         .as_object()
         .ok_or_else(|| fail("Reviewed source inventory missing."))?

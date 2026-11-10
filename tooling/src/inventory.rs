@@ -34,48 +34,40 @@ pub const TOOLING_REVISION: &str = "a24dccd5f53cb4ccad57297b1cf8f749f42858eb";
 
 /// Historical identities stay immutable even after the working copies are retired.
 pub fn tooling_hashes(manifest: &Value) -> io::Result<std::collections::BTreeMap<String, String>> {
-    if manifest["schema_version"] != 2
+    if manifest["schema_version"] != 3
         || manifest["feature"] != "003-rust-tooling"
         || manifest["original_revision"] != TOOLING_REVISION
         || manifest["original_file_count"] != 51
-        || manifest["rust_migration_count"] != 46
-        || manifest["powershell_retained_count"] != 5
+        || manifest["rust_migration_count"] != 51
+        || manifest["powershell_retained_count"] != 0
+        || manifest.get("retained_powershell").is_some()
         || manifest["current_execution_claimed"] != false
     {
         return Err(fail("Original tooling migration identity differs."));
     }
+    let rows = manifest["entries"].as_array().filter(|rows| rows.len() == 51)
+        .ok_or_else(|| fail("Every original tooling file requires one disposition."))?;
     let mut sources = std::collections::BTreeMap::new();
-    for (field, count, powershell) in [("entries", 46, false), ("retained_powershell", 5, true)] {
-        let rows = manifest[field]
-            .as_array()
-            .filter(|rows| rows.len() == count)
-            .ok_or_else(|| fail("Every original tooling file requires one disposition."))?;
-        for row in rows {
-            let source = row["source"]
-                .as_str()
-                .ok_or_else(|| fail("Original tooling source missing."))?;
-            let extension = Path::new(source)
-                .extension()
-                .and_then(|value| value.to_str());
-            let digest = row["source_sha256"]
-                .as_str()
-                .filter(|digest| digest.len() == 64 && digest.bytes().all(|byte|
-                    byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)))
-                .ok_or_else(|| fail("Original tooling source hash is invalid."))?;
-            if source.len() > 512
-                || source.bytes().any(|byte| byte == b'\\' || byte == b':' || byte.is_ascii_control())
-                || source.split('/').any(|part| matches!(part, "" | "." | ".."))
-                || !(source.starts_with("scripts/") || source.starts_with("tests/tooling/"))
-                || sources.insert(source.to_owned(), digest.to_owned()).is_some()
-                || (if powershell {
-                    extension != Some("ps1")
-                } else {
-                    !matches!(extension, Some("py" | "mjs"))
-                })
-            {
-                return Err(fail("Original tooling source is invalid or duplicated."));
-            }
+    let mut powershell = 0;
+    for row in rows {
+        let source = row["source"].as_str().ok_or_else(|| fail("Original tooling source missing."))?;
+        let extension = Path::new(source).extension().and_then(|value| value.to_str());
+        let digest = row["source_sha256"].as_str().filter(|digest| {
+            digest.len() == 64 && digest.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        }).ok_or_else(|| fail("Original tooling source hash is invalid."))?;
+        if source.len() > 512
+            || source.bytes().any(|byte| byte == b'\\' || byte == b':' || byte.is_ascii_control())
+            || source.split('/').any(|part| matches!(part, "" | "." | ".."))
+            || !(source.starts_with("scripts/") || source.starts_with("tests/tooling/"))
+            || sources.insert(source.to_owned(), digest.to_owned()).is_some()
+            || !matches!(extension, Some("py" | "mjs" | "ps1"))
+        {
+            return Err(fail("Original tooling source is invalid or duplicated."));
         }
+        powershell += usize::from(extension == Some("ps1"));
+    }
+    if powershell != 5 {
+        return Err(fail("Historical tooling language inventory differs."));
     }
     Ok(sources)
 }
@@ -83,99 +75,54 @@ pub fn tooling_hashes(manifest: &Value) -> io::Result<std::collections::BTreeMap
 pub fn tooling_manifest(root: &Path, manifest: &Value, acceptance: bool) -> io::Result<Value> {
     let hashes = tooling_hashes(manifest)?;
     let mut present = 0;
-    for row in manifest["entries"].as_array().unwrap() {
-        match fs::symlink_metadata(root.join(row["source"].as_str().unwrap())) {
+    for source in hashes.keys() {
+        match fs::symlink_metadata(root.join(source)) {
             Ok(_) => present += 1,
             Err(error) if error.kind() == io::ErrorKind::NotFound => (),
             Err(error) => return Err(error),
         }
     }
-    if !matches!(present, 0 | 46) {
+    if !matches!(present, 0 | 51) {
         return Err(fail("Tooling originals must be entirely retained or entirely retired."));
     }
-    for (field, powershell) in [("entries", false), ("retained_powershell", true)] {
-        for row in manifest[field].as_array().unwrap() {
-            let source = row["source"].as_str().unwrap();
-            if (powershell || present == 46)
-                && hashes[source] != crate::context::sha(&crate::ledger::read(root, source)?)
-            {
-                return Err(fail("Retained original tooling bytes differ."));
-            }
-            if powershell {
-                continue;
-            }
-            if row["scenarios"].as_array().is_none_or(|items| {
-                items.is_empty()
-                    || items
-                        .iter()
-                        .any(|item| item.as_str().is_none_or(|text| text.trim().is_empty()))
-            }) {
-                return Err(fail("Tooling behavior scenarios are missing."));
-            }
-            for field in ["rust", "tests"] {
-                let paths = row[field]
-                    .as_array()
-                    .filter(|items| !items.is_empty())
-                    .ok_or_else(|| fail("Tooling replacement or test seam missing."))?;
-                for path in paths {
-                    let path = path
-                        .as_str()
-                        .ok_or_else(|| fail("Invalid tooling replacement path."))?;
-                    if !path.ends_with(".rs")
-                        || !["native/", "tooling/", "tests/rust/"]
-                            .iter()
-                            .any(|prefix| path.starts_with(prefix))
-                    {
-                        return Err(fail(
-                            "Tooling replacement must identify maintained Rust source.",
-                        ));
-                    }
-                    crate::ledger::read(root, path)?;
+    for row in manifest["entries"].as_array().unwrap() {
+        let source = row["source"].as_str().unwrap();
+        if present == 51 && hashes[source] != crate::context::sha(&crate::ledger::read(root, source)?) {
+            return Err(fail("Retained original tooling bytes differ."));
+        }
+        if row["scenarios"].as_array().is_none_or(|items| {
+            items.is_empty() || items.iter().any(|item| item.as_str().is_none_or(|text| text.trim().is_empty()))
+        }) {
+            return Err(fail("Tooling behavior scenarios are missing."));
+        }
+        for field in ["rust", "tests"] {
+            let paths = row[field].as_array().filter(|items| !items.is_empty())
+                .ok_or_else(|| fail("Tooling replacement or test seam missing."))?;
+            for path in paths {
+                let path = path.as_str().ok_or_else(|| fail("Invalid tooling replacement path."))?;
+                if !path.ends_with(".rs") || !["native/", "tooling/", "tests/rust/"].iter().any(|prefix| path.starts_with(prefix)) {
+                    return Err(fail("Tooling replacement must identify maintained Rust source."));
                 }
+                crate::ledger::read(root, path)?;
             }
         }
     }
     // The pure source map never authenticates qualification or authorizes a source transition.
     if acceptance {
-        return Err(fail(
-            "Current tooling qualification is not yet bound to exact hosted execution.",
-        ));
+        return Err(fail("Current tooling qualification is not yet bound to exact hosted execution."));
     }
-    Ok(
-        serde_json::json!({"mapped_python_js":46,"retained_powershell":5,"acceptance_verified":false}),
-    )
+    Ok(serde_json::json!({"mapped_files":51,"acceptance_verified":false}))
 }
 
 pub fn tooling_inventory(manifest: &Value, tracked: &str) -> io::Result<()> {
-    let expected = ["entries", "retained_powershell"]
-        .iter()
-        .flat_map(|field| manifest[*field].as_array().into_iter().flatten())
-        .map(|row| {
-            row["source"]
-                .as_str()
-                .ok_or_else(|| fail("Tooling source identity missing."))
-        })
-        .collect::<io::Result<BTreeSet<_>>>()?;
-    let actual = tracked
-        .split('\0')
-        .filter(|path| {
-            (path.starts_with("scripts/") || path.starts_with("tests/tooling/"))
-                && Path::new(path)
-                    .extension()
-                    .and_then(|value| value.to_str())
-                    .is_some_and(|ext| matches!(ext, "py" | "mjs" | "ps1"))
-        })
-        .collect::<BTreeSet<_>>();
-    let retained = manifest["retained_powershell"]
-        .as_array()
-        .ok_or_else(|| fail("Retained PowerShell inventory missing."))?
-        .iter()
-        .map(|row| row["source"].as_str().ok_or_else(|| fail("Retained source identity missing.")))
-        .collect::<io::Result<BTreeSet<_>>>()?;
-    if expected != actual && retained != actual {
-        return Err(fail(
-            "Tracked tooling inventory differs from retained or exactly retired dispositions.",
-        ));
+    let hashes = tooling_hashes(manifest)?;
+    let expected = hashes.keys().map(String::as_str).collect::<BTreeSet<_>>();
+    let actual = tracked.split('\0').filter(|path| {
+        Path::new(path).extension().and_then(|value| value.to_str())
+            .is_some_and(|ext| matches!(ext, "py" | "mjs" | "js" | "cjs" | "ts" | "ps1" | "psm1" | "cmd" | "bat" | "sh" | "bash"))
+    }).collect::<BTreeSet<_>>();
+    if expected != actual && !actual.is_empty() {
+        return Err(fail("Tracked tooling inventory differs from retained or exactly retired dispositions."));
     }
     Ok(())
 }
@@ -197,7 +144,9 @@ pub fn check(context: &Context, retired: bool) -> io::Result<()> {
     tooling_manifest(&context.root, &manifest, false)?;
     let originals = crate::ledger_inputs::tooling_originals(context, &manifest)?;
     if originals.len() != 51 {
-        return Err(fail("Authenticated historical tooling inventory is incomplete."));
+        return Err(fail(
+            "Authenticated historical tooling inventory is incomplete.",
+        ));
     }
     let bytes = context.run(
         context.command("git").args(["ls-files", "-z"]),
@@ -254,10 +203,8 @@ pub fn check(context: &Context, retired: bool) -> io::Result<()> {
             .extension()
             .and_then(|s| s.to_str())
             .unwrap_or("");
-        if retired && matches!(extension, "py" | "mjs" | "js" | "ts" | "cjs") {
-            return Err(fail(
-                "Maintained interpreted Python/JavaScript source remains.",
-            ));
+        if retired && matches!(extension, "py" | "mjs" | "js" | "ts" | "cjs" | "ps1" | "psm1" | "cmd" | "bat" | "sh" | "bash") {
+            return Err(fail("Maintained first-party interpreted executable source remains."));
         }
         if matches!(
             extension,

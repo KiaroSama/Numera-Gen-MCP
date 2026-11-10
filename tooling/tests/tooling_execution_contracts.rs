@@ -28,7 +28,10 @@ impl Fixture {
         let parsed: Value = serde_json::from_slice(&manifest).unwrap();
         let context = numera_task::context::Context {
             root: root.canonicalize().unwrap(),
-            logger: numera_gen_mcp::logging::Logger::new(&root.join(".ci-work/tooling-tests/logs"), "ERROR"),
+            logger: numera_gen_mcp::logging::Logger::new(
+                &root.join(".ci-work/tooling-tests/logs"),
+                "ERROR",
+            ),
         };
         let originals = numera_task::ledger_inputs::tooling_originals(&context, &parsed).unwrap();
         let mut files = BTreeSet::from([
@@ -42,54 +45,52 @@ impl Fixture {
             "tests/rust/sdk_acceptance.rs".into(),
         ]);
         let mut names = BTreeMap::<String, BTreeSet<String>>::new();
-        for field in ["entries", "retained_powershell"] {
-            for row in parsed[field].as_array().unwrap() {
-                let path = row["source"].as_str().unwrap();
-                if root.join(path).try_exists().unwrap() {
-                    files.insert(path.to_owned());
-                }
-                if field == "entries" {
-                    for mapping in row["named_tests"].as_array().unwrap() {
-                        let (file, symbol) = mapping.as_str().unwrap().split_once("::").unwrap();
-                        let harness = if file.starts_with("native/") {
-                            "native/lib.rs"
-                        } else if file.starts_with("tests/rust/sdk_acceptance/") {
-                            "tests/rust/sdk_acceptance.rs"
-                        } else {
-                            file
-                        };
-                        let applicable = match symbol {
-                            "abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children" => !target.contains("windows"),
-                            "actual_developer_cli_preserves_full_windows_child_exit_status"
-                            | "unsigned_update_is_rejected_before_replacing_a_locked_installation" => {
-                                target.contains("windows")
-                            }
-                            "approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
-                                target.contains("windows") || target.contains("apple")
-                            }
-                            _ => {
-                                file != "native/devtools/process_unix.rs"
-                                    || !target.contains("windows")
-                            }
-                        };
-                        if applicable {
-                            names
-                                .entry(harness.into())
-                                .or_default()
-                                .insert(symbol.into());
-                        }
+        for row in parsed["entries"].as_array().unwrap() {
+            let path = row["source"].as_str().unwrap();
+            if root.join(path).try_exists().unwrap() {
+                files.insert(path.to_owned());
+            }
+            for mapping in row["named_tests"].as_array().unwrap() {
+                let (file, symbol) = mapping.as_str().unwrap().split_once("::").unwrap();
+                let harness = if file.starts_with("native/") {
+                    "native/lib.rs"
+                } else if file.starts_with("tests/rust/sdk_acceptance/") {
+                    "tests/rust/sdk_acceptance.rs"
+                } else {
+                    file
+                };
+                let applicable = match symbol {
+                    "abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children" => {
+                        !target.contains("windows")
                     }
+                    "actual_developer_cli_preserves_full_windows_child_exit_status"
+                    | "unsigned_update_is_rejected_before_replacing_a_locked_installation"
+                    | "protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants"
+                    | "exact_source_windows_dpapi_script_acl_native_roundtrip_corrupt_and_no_overwrite"
+                    | "disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_binding"
+                    | "native_protection_cli_whatif_preserves_outside_destination_and_existing_file_without_input"
+                    | "native_dpapi_fixture_preserves_exact_consumer_shape_and_refuses_overwrite" => target.contains("windows"),
+                    "identity_custody_refuses_unsupported_hosts_without_creating_files"
+                    | "native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts" => !target.contains("windows"),
+                    "approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
+                        target.contains("windows") || target.contains("apple")
+                    }
+                    _ => file != "native/devtools/process_unix.rs" || !target.contains("windows"),
+                };
+                if applicable {
+                    let actual = if file == "tests/rust/dpapi_acceptance.rs" { format!("windows::{symbol}") } else { symbol.into() };
+                    names.entry(harness.into()).or_default().insert(actual);
                 }
-                for field in ["rust", "tests"] {
-                    for path in row[field].as_array().into_iter().flatten() {
-                        let path = path.as_str().unwrap();
-                        files.insert(path.to_owned());
-                        if field == "tests"
-                            && matches!(Path::new(path).parent(), Some(parent)
-                                if parent == Path::new("tests/rust") || parent == Path::new("tooling/tests"))
-                        {
-                            sources.insert(path.to_owned());
-                        }
+            }
+            for field in ["rust", "tests"] {
+                for path in row[field].as_array().into_iter().flatten() {
+                    let path = path.as_str().unwrap();
+                    files.insert(path.to_owned());
+                    if field == "tests"
+                        && matches!(Path::new(path).parent(), Some(parent)
+                            if parent == Path::new("tests/rust") || parent == Path::new("tooling/tests"))
+                    {
+                        sources.insert(path.to_owned());
                     }
                 }
             }
@@ -116,7 +117,8 @@ impl Fixture {
             .iter()
             .map(|path| {
                 let passed = names.get(path).cloned().unwrap_or_else(|| {
-                    BTreeSet::from(["binding_shape_only".into()])
+                    if path == "tests/rust/dpapi_acceptance.rs" && !target.contains("windows") { BTreeSet::new() }
+                    else { BTreeSet::from(["binding_shape_only".into()]) }
                 });
                 let count = passed.len();
                 (path.clone(), json!({
@@ -195,13 +197,9 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
             &fs::read(fixture.root.join(numera_task::tooling_review::REVIEW_FILE)).unwrap(),
         )
         .unwrap();
-        let reviewed = numera_task::tooling_review::bind_execution(
-            &fixture.root,
-            &manifest,
-            &review,
-            &result,
-        )
-        .unwrap();
+        let reviewed =
+            numera_task::tooling_review::bind_execution(&fixture.root, &manifest, &review, &result)
+                .unwrap();
         assert_eq!(
             reviewed["current_tooling_assertions_and_execution_verified"],
             true
@@ -218,9 +216,9 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
             )
             .is_err()
         );
-        assert_eq!(result["mapped_python_js"], 46);
-        assert_eq!(result["retained_powershell"].as_array().unwrap().len(), 5);
-        assert_eq!(result["entries"].as_array().unwrap().len(), 46);
+        assert_eq!(result["mapped_files"], 51);
+        assert!(result.get("retained_powershell").is_none());
+        assert_eq!(result["entries"].as_array().unwrap().len(), 51);
         assert_eq!(result["manifest_sha256"], sha(&fixture.manifest));
         assert_eq!(result["identity"], fixture.identity);
         assert_eq!(result["current_named_harness_execution_verified"], true);
@@ -228,6 +226,29 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
         assert_eq!(result["semantic_parity_claimed"], false);
         assert_eq!(result["qualification_verified"], false);
         assert_eq!(result["retirement_authorized"], false);
+        let dpapi = "tests/rust/dpapi_acceptance.rs";
+        let protection = result["entries"].as_array().unwrap().iter()
+            .find(|entry| entry["source"] == "scripts/protect-secret.ps1").unwrap();
+        let test = protection["tests"].as_array().unwrap().iter()
+            .find(|test| test["source"] == dpapi).unwrap();
+        assert_eq!(test["applicable"], target.contains("windows"));
+        let mut empty = fixture.clone();
+        let harness = &mut empty.report["harnesses"][dpapi];
+        harness["passed"] = json!([]); harness["count"] = json!(0);
+        harness["summary"] = json!("test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s");
+        assert_eq!(empty.bind().is_ok(), !target.contains("windows"));
+        empty.report["harnesses"].as_object_mut().unwrap().remove(dpapi);
+        assert!(empty.bind().is_err());
+        if target.contains("windows") {
+            let mapping = format!("{dpapi}::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants");
+            assert_eq!(protection["named_execution"][&mapping]["exact_test_name"],
+                "windows::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants");
+            let mut unrelated = fixture.clone();
+            let harness = &mut unrelated.report["harnesses"][dpapi];
+            harness["passed"] = json!(["windows::unrelated_passing_test"]); harness["count"] = json!(1);
+            harness["summary"] = json!("test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s");
+            assert!(unrelated.bind().is_err());
+        }
         let bounded = result["entries"]
             .as_array()
             .unwrap()
@@ -244,8 +265,15 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
         let unix_mapping = "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence";
         let abrupt = "tests/rust/sdk_acceptance/http.rs::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children";
         if let Some(execution) = bounded["named_execution"].get(abrupt) {
-            if target.contains("windows") { assert_eq!(execution["applicable"], false); }
-            else { assert!(execution["exact_test_name"].as_str().unwrap().ends_with("::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children")); }
+            if target.contains("windows") {
+                assert_eq!(execution["applicable"], false);
+            } else {
+                assert!(
+                    execution["exact_test_name"].as_str().unwrap().ends_with(
+                        "::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children"
+                    )
+                );
+            }
         }
         let wide_exit = "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status";
         if target.contains("windows") {
@@ -389,27 +417,48 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
 #[test]
 fn retired_tree_binds_original_blobs_without_claiming_deleted_paths_as_current_dependencies() {
     let mut fixture = Fixture::new("x86_64-unknown-linux-gnu");
-    let removed = fixture.originals.keys().filter(|path| !path.ends_with(".ps1")).cloned().collect::<BTreeSet<_>>();
-    assert_eq!(removed.len(), 46);
-    let directory = fixture.root.join(".ci-work/tooling-tests").join(format!("retired-bind-{}", uuid::Uuid::new_v4()));
+    let removed = fixture.originals.keys().cloned().collect::<BTreeSet<_>>();
+    assert_eq!(removed.len(), 51);
+    let directory = fixture
+        .root
+        .join(".ci-work/tooling-tests")
+        .join(format!("retired-bind-{}", uuid::Uuid::new_v4()));
     fs::create_dir_all(&directory).unwrap();
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        for path in fixture.dependencies.keys().filter(|path| !removed.contains(*path)) {
+        for path in fixture
+            .dependencies
+            .keys()
+            .filter(|path| !removed.contains(*path))
+        {
             let target = directory.join(path);
             fs::create_dir_all(target.parent().unwrap()).unwrap();
             fs::write(target, fs::read(fixture.root.join(path)).unwrap()).unwrap();
         }
         fixture.root = directory.canonicalize().unwrap();
-        fixture.dependencies.retain(|path, _| !removed.contains(path));
+        fixture
+            .dependencies
+            .retain(|path, _| !removed.contains(path));
         assert!(removed.iter().all(|path| !fixture.root.join(path).exists()));
         let report = fixture.bind().unwrap();
-        assert!(removed.iter().all(|path| report["source_files"].get(path).is_none()));
-        assert_eq!(report["historical_original_files"].as_object().unwrap().len(), 51);
+        assert!(
+            removed
+                .iter()
+                .all(|path| report["source_files"].get(path).is_none())
+        );
+        assert_eq!(
+            report["historical_original_files"]
+                .as_object()
+                .unwrap()
+                .len(),
+            51
+        );
         assert_eq!(report["retirement_authorized"], false);
         let path = removed.first().unwrap();
         let bytes = fixture.originals.remove(path).unwrap();
         assert!(fixture.bind().is_err(), "missing historical original");
-        fixture.originals.insert(path.clone(), [bytes, vec![b' ']].concat());
+        fixture
+            .originals
+            .insert(path.clone(), [bytes, vec![b' ']].concat());
         assert!(fixture.bind().is_err(), "mutated historical original");
     }));
     fs::remove_dir_all(&directory).unwrap();
@@ -534,7 +583,11 @@ fn stale_missing_empty_failed_or_unproven_tooling_evidence_is_rejected() {
                 fixture.manifest.push(b' ');
             }
             "original" => {
-                fixture.originals.get_mut("scripts/bounded.mjs").unwrap().push(b' ');
+                fixture
+                    .originals
+                    .get_mut("scripts/bounded.mjs")
+                    .unwrap()
+                    .push(b' ');
             }
             "replacement" => {
                 fixture

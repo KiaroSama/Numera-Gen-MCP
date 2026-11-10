@@ -109,7 +109,13 @@ added. HTTP/menu SDK, CLI and extracted-archive paths passed on all six targets 
 `native/devtools/` owns the separate optional `numera-dev` executable, bounded OS process ownership,
 private capture/ledger and prepared-artifact maintenance. Production MCP does not invoke it. Setup
 reuses the existing readiness and selected-entry registration boundaries, with explicit paths and
-all-five dry-runs before state/install mutations. See [developer tooling](DEVELOPER-TOOLS.md).
+all-five dry-runs before state/install mutations. Native `protect-secret` and explicit identity
+inspect/create/check commands share bounded private-file and ACL primitives. Protection uses CurrentUser
+DPAPI and a hidden Windows console; metadata-only inspection/dry-run creates no logger or custody.
+Persistent identity custody never inherits the temporary signing-input wrapper's deletion-on-drop
+lifetime. The identity adapter loads only an explicitly qualified native OpenSSL3 library; production
+MCP neither invokes these commands nor treats that hosted test dependency as a runtime prerequisite.
+See [developer tooling](DEVELOPER-TOOLS.md).
 
 The artifact verifier pins the approved public key inside the binary, checks current identity
 validity and exact approved logo/member hashes, then hands authenticated bytes to staged replacement

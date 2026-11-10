@@ -17,8 +17,10 @@ must be inspected; a mocked success does not prove a wire contract or host GUI b
 
 Published 0.2.0 already uses a native Rust runtime. Retained Node sources are the historical oracle,
 not a runtime fallback. The 0.3.0 Rust tooling port remains unqualified: preserve all original
-Python/JavaScript tooling until scenario/assertion parity passes, and keep the five PowerShell scripts
-unchanged. Current Cargo.lock still needs hosted resolution for the new workspace. Preserve private config,
+Python/JavaScript/PowerShell tooling until scenario/assertion parity passes, then retire exactly the
+51 mapped originals. First-party executable tooling is Rust; native third-party libraries and fixed
+OS tools remain allowed. Authenticated hosted preparation supplied Cargo.lock, but later edits
+still require exact-source hosted qualification. Preserve private config,
 outputs, receipts/journals, snapshots and history. Local old-runtime cleanup waits owner host cutover
 and verified native reconnection. Registration updates only an explicitly selected host entry with
 backups; no automatic host settings mutation or runtime/model installation.

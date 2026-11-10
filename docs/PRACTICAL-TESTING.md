@@ -59,12 +59,14 @@ keys into prompts, tool arguments, source, screenshots or public host config. Co
 
 ## Windows DPAPI evidence
 
-The persistent Windows fixture executes protect-secret.ps1 with Read-Host replaced by a non-secret
-value and a freshly created private destination directory with a noninheritable ACL, never changing
-its populated workspace parent's permissions. Encryption, exclusive creation with an explicit
-current-user-only DACL and Numera's decryption reader are real operations. It checks protected ACL, UTF-8 round trip, ciphertext not
-containing plaintext, corrupt ciphertext rejection and existing-file refusal. The Unicode fixture
-first reproduced codepage loss; credentials now sets Console.OutputEncoding to UTF-8 explicitly.
+The current Windows fixture authors a native Rust worker using a fixed non-secret value and a fresh
+private destination directory, without changing its workspace parent's permissions. It exercises
+CurrentUser DPAPI encryption, explicit owner-only exclusive creation and the existing native decryption
+reader. Protected ACL inspection, Unicode round trip, plaintext-free ciphertext/logs, corrupt-input
+rejection, no-overwrite and owned Job abort assertions remain. Separate real CLI contracts cover
+invalid options and WhatIf without input or output writes. These revised contracts await hosted
+execution; they do not exercise actual human hidden-console input or another user's access denial.
+Earlier PowerShell fixture results below are historical evidence, not proof for the new Rust writer.
 At `4f471d2`, both native Windows x86_64/ARM64 cases passed strict ACL/native Unicode decryption,
 corrupt-file refusal, no-overwrite and owned Job abort cleanup. At `f723c4b`, ARM passed but x64
 hit an eight-second idle deadline; its cause remains unknown. At `5b4ec24`, both Windows main/abort/privacy

@@ -95,7 +95,8 @@ pub fn bind(
         .filter(|metrics| metrics.len() == 2)
         .ok_or_else(|| fail("Final measured coverage inventory differs."))?;
     crate::inventory::verify_coverage_metrics(metrics)?;
-    Ok(json!({"schema_version":1,"component":"native-current-qualification",
+    Ok(
+        json!({"schema_version":1,"component":"native-current-qualification",
         "source_sha":original["source_sha"],"qualification_run_id":original["run_id"],
         "qualification_run_attempt":original["run_attempt"],"signing_identity":signing_identity,
         "source_review_sha256":runtime_review_sha256,"tooling_source_review_sha256":tooling_review_sha256,
@@ -103,5 +104,6 @@ pub fn bind(
         "signed_contexts":signed.len(),"coverage":coverage,
         "reviewer":"primary","independent_review_claimed":false,
         "qualification_verified":true,"retirement_authorized":false,"owner_host_changed":false,
-        "original_evidence_rewritten":false}))
+        "original_evidence_rewritten":false}),
+    )
 }

@@ -63,7 +63,12 @@ impl Fixture {
     fn git(&self, args: &[&str]) -> Vec<u8> {
         let mut command = self.command("git");
         command
-            .args(["-c", "core.hooksPath=.empty-hooks", "-c", "commit.gpgsign=false"])
+            .args([
+                "-c",
+                "core.hooksPath=.empty-hooks",
+                "-c",
+                "commit.gpgsign=false",
+            ])
             .args(args)
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_GLOBAL", self.root.join("empty-gitconfig"))
@@ -115,7 +120,10 @@ fn actual_capture_binds_tracked_dependencies_excludes_private_inputs_and_never_o
         ("Cargo.lock", b"inert lock\n".as_slice()),
         ("native/lib.rs", b"inert library\n".as_slice()),
         ("native/main.rs", b"inert entry\n".as_slice()),
-        ("schemas/fixture.json", b"{\"type\":\"object\"}\n".as_slice()),
+        (
+            "schemas/fixture.json",
+            b"{\"type\":\"object\"}\n".as_slice(),
+        ),
         ("tooling/src/helper.rs", b"inert task source\n".as_slice()),
         ("tests/rust/helper.rs", b"inert test source\n".as_slice()),
         (
@@ -140,7 +148,12 @@ fn actual_capture_binds_tracked_dependencies_excludes_private_inputs_and_never_o
     for name in ["docs/unconsumed-notes.md", "state/synthetic.json"] {
         fixture.write(name, b"public unconsumed fixture\n");
     }
-    let mut add = vec!["add", "--", "docs/unconsumed-notes.md", "state/synthetic.json"];
+    let mut add = vec![
+        "add",
+        "--",
+        "docs/unconsumed-notes.md",
+        "state/synthetic.json",
+    ];
     add.extend(public.keys().copied());
     fixture.git(&add);
     fixture.git(&["commit", "-m", "test: create isolated evidence fixture"]);
@@ -193,7 +206,11 @@ fn actual_capture_binds_tracked_dependencies_excludes_private_inputs_and_never_o
     );
     for name in INPUTS {
         let mut bytes = Vec::new();
-        archive.by_name(name).unwrap().read_to_end(&mut bytes).unwrap();
+        archive
+            .by_name(name)
+            .unwrap()
+            .read_to_end(&mut bytes)
+            .unwrap();
         assert_eq!(
             bytes,
             fs::read(fixture.root.join(format!(".ci-work/parity/{name}"))).unwrap()
@@ -290,7 +307,11 @@ fn actual_task_lifecycle_keeps_reports_separate_and_logs_success_failure_and_fil
             let expected = "Unsupported task command; no fallback was executed.";
             assert_eq!(events[1]["level"], "ERROR");
             assert_eq!(events[1]["message"], expected);
-            assert!(stderr.lines().any(|line| line == format!("ERROR: {expected}")));
+            assert!(
+                stderr
+                    .lines()
+                    .any(|line| line == format!("ERROR: {expected}"))
+            );
             assert!(stdout.is_empty());
         } else {
             let reports = stdout
@@ -306,7 +327,10 @@ fn actual_task_lifecycle_keeps_reports_separate_and_logs_success_failure_and_fil
             "synthetic-private-command",
             "synthetic-private-password",
         ] {
-            assert!(!stderr.contains(private) && !stdout.contains(private), "{case}");
+            assert!(
+                !stderr.contains(private) && !stdout.contains(private),
+                "{case}"
+            );
         }
         if case == "file-fallback" {
             assert!(stderr.contains("WARNING: File logging unavailable; using stderr."));
@@ -317,11 +341,21 @@ fn actual_task_lifecycle_keeps_reports_separate_and_logs_success_failure_and_fil
                 .map(|entry| entry.unwrap().path())
                 .collect::<Vec<_>>();
             assert_eq!(files.len(), 1);
-            assert!(files[0].file_name().unwrap().to_str().unwrap().contains("_UTC-"));
+            assert!(
+                files[0]
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .contains("_UTC-")
+            );
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
-                assert_eq!(fs::metadata(&files[0]).unwrap().permissions().mode() & 0o777, 0o600);
+                assert_eq!(
+                    fs::metadata(&files[0]).unwrap().permissions().mode() & 0o777,
+                    0o600
+                );
             }
             let file_events = fs::read_to_string(&files[0])
                 .unwrap()

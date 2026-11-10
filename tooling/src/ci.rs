@@ -138,6 +138,14 @@ pub fn stable(context: &Context) -> io::Result<()> {
     );
     required(
         context,
+        &mut crate::formatting::bootstrap_command(context, true),
+        "standalone-format",
+        30000,
+        20000,
+        &mut failures,
+    );
+    required(
+        context,
         context.command("cargo").args([
             "clippy",
             "--locked",
@@ -152,16 +160,29 @@ pub fn stable(context: &Context) -> io::Result<()> {
         180000,
         &mut failures,
     );
+    let mut tests = context.command("cargo");
+    tests.args([
+        "test",
+        "--locked",
+        "--workspace",
+        "--all-targets",
+        "--no-run",
+        "--message-format=json-render-diagnostics",
+    ]);
+    #[cfg(windows)]
+    {
+        tests.env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO").env_remove("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256");
+        match crate::identity_tools::prepare(context) {
+            Ok((path, digest)) => {
+                tests.env("NUMERA_IDENTITY_TEST_LIBCRYPTO", path)
+                    .env("NUMERA_IDENTITY_TEST_LIBCRYPTO_SHA256", digest);
+            }
+            Err(_) => failures.push("identity-test-tools".into()),
+        }
+    }
     suites(
         context,
-        context.command("cargo").args([
-            "test",
-            "--locked",
-            "--workspace",
-            "--all-targets",
-            "--no-run",
-            "--message-format=json-render-diagnostics",
-        ]),
+        &mut tests,
         900000,
         "built",
         &["numera-gen-mcp", "numera-task"],
@@ -197,7 +218,7 @@ pub fn stable(context: &Context) -> io::Result<()> {
     if crate::evidence::verify(context).is_err() {
         failures.push("oracle-evidence".into());
     }
-    if failures.iter().any(|gate| gate == "format") && crate::formatting::retain(context).is_err() {
+    if failures.iter().any(|gate| matches!(gate.as_str(), "format" | "standalone-format")) && crate::formatting::retain(context).is_err() {
         failures.push("format-diagnostics".into());
     }
     finish(failures)

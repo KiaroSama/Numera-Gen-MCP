@@ -41,6 +41,12 @@ fn allowed(url: &Url, initial: &Url) -> bool {
         && url.port_or_known_default() == Some(443)
         && match initial.host_str() {
             Some("static.rust-lang.org") => url.host_str() == Some("static.rust-lang.org"),
+            Some("download.firedaemon.com") => {
+                initial.path() == "/FireDaemon-OpenSSL/openssl-3.5.9.zip"
+                    && url.host_str() == Some("download.firedaemon.com")
+                    && url.path() == initial.path()
+                    && url.query().is_none()
+            }
             Some("github.com") => matches!(
                 url.host_str(),
                 Some(

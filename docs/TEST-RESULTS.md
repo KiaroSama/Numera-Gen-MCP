@@ -49,21 +49,34 @@ process group; Windows ownership remains unchanged, and an abrupt-parent cleanup
 hosted execution. Evidence capture and snapshot/verify share the bounded actual-HEAD check; the
 isolated CLI contract commits only excluded documentation and requires refusal with unchanged archive
 bytes. The retirement path authenticates fixed historical originals through bounded Git archives,
-preserves all five PowerShell files, requires an exact 46-path deletion-only successor of a qualified
-parent, and authenticates that successor's own full qualification through a read-only main collector.
+now covers all 51 original Python/JavaScript/PowerShell files under schema 3, requires an exact
+51-path deletion-only successor of a qualified parent, and authenticates that successor's own full
+qualification through a read-only main collector.
 No originals were deleted, no retirement was verified, and ancestor qualification cannot qualify a
 successor. These authored regression cases have no observed RED/GREEN run under the local Rust ban.
 
+The 2026-11-10 first-party Rust continuation adds native secret protection, opt-in identity maintenance,
+a fixed native OpenSSL3 test dependency and standalone Rust bootstrap/preparation logic. Synthetic
+DPAPI generation no longer launches PowerShell. Source review identified and corrected missing explicit
+Windows ownership, bootstrap capture cleanup ordering and a dry-run fixture prerequisite; missing-parent
+protection parity and exact platform-specific evidence binding were also addressed during integration.
+All these replacements still require hosted formatting, compilation and execution. Actual interactive
+hidden-console restoration/cancellation and distinct-user access denial remain unverified; inspecting
+ACLs or injecting synthetic input does not establish those results.
+
 Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and ZIP9.5.0. RMCP3.9.0 addresses the
 upstream unbounded non-SSE Streamable HTTP client response advisory; this is a dependency update,
-not a demonstrated production exploit or a successful application test. The existing lockfile still
-contains the previous versions. Authentic hosted resolution, current crate notices, compatibility and
+not a demonstrated production exploit or a successful application test. Successful hosted
+[preparation42711139081](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42711139081)
+on `370422d` returned a candidate lockfile and Rust formatting patch only; it did not compile, test or
+sign the candidate. Later edits are outside that formatting result. RMCP3.9.0's actual packaged license
+bytes were inspected, but execution of the complete resolved license collector, compatibility and
 all qualification gates remain pending. ICU2.3.1 retains its documented fingerprint-compatibility hold.
 
-The isolated
+The earlier isolated
 [preparation40956557555](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40956557555)
-only resolved the workspace lock/format for `60be391`; neither preparation nor diagnostic artifacts
-qualify the current tree. No local Rust compiler, formatter, build or test was run.
+resolved the workspace lock/format for `60be391`; neither preparation nor diagnostic artifacts qualify
+the current tree. No local Rust compiler, formatter, build or test was run.
 
 Pending gates include current 470-case assertion/execution and migrated tooling scenario binding,
 every discovered workspace suite on six native targets, instrumented runtime 85/80 coverage,

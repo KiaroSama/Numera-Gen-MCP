@@ -27,8 +27,11 @@ all six targets; the original CI archives are published as0.2.0. Owner-host reco
 
 The source candidate adds `tooling/`, a separate Cargo workspace package producing `numera-task`.
 It reuses native supervision, logging and artifact verification; task-only archive dependencies are
-not production server dependencies. It does not wrap Python or JavaScript. The five original
-PowerShell scripts remain unchanged. Qualification41526803432 compiled the Unix task executable,
+not production server dependencies. Current scope replaces all 51 original first-party executable
+files, including the five PowerShell helpers, with Rust; originals remain until mapped qualification
+permits their exact deletion-only transition. Native third-party libraries and fixed OS/toolchain
+commands remain allowed. Historical source text used only as comparison data is not executed.
+Qualification41526803432 compiled the Unix task executable,
 but SDK/tooling test compilation and quality gates failed; Windows failed during bootstrap.
 Replacement41554639558 compiled the task on both Windows targets, but deep fixture materialization
 aborted before their suites. Unix suites exposed further runtime and tooling failures.
@@ -55,6 +58,7 @@ already prepared hosted runner:
 | Command group | Purpose and qualification boundary |
 | --- | --- |
 | `fixtures`, `evidence-capture`, `evidence-verify` | Materialize independently retained public expected inputs and bind their provenance; never generate expectations from the implementation under test. |
+| `dpapi-fixture` | Hosted Windows-only synthetic CurrentUser ciphertext and the exact existing `config-dpapi.json` consumer shape; fixed public fixture value, not a secret-input interface. |
 | `inventory`, `stable`, `coverage`, `coverage-gate` | Check original tooling dispositions and Cargo suite discovery; run workspace gates and enforce production-runtime 85/80 floors. |
 | `ledger`, `case-execution`, `execution-matrix`, `signed-execution-matrix` | Authenticate historical 470-case/50-suite evidence, propose current mappings and bind current exact names per context and across seven hosted contexts. Source review, execution and final qualification retain separate evidence boundaries. |
 | `retirement-gate` | Read-only verification of an exact qualified parent, the deletion-only successor and that successor's own complete qualification; never deletes source or grants authority to do so. |
@@ -133,8 +137,9 @@ The optional manual inputs `retirement-parent-run-id` and `retirement-parent-run
 completed successful qualification of parent Q. Supplying either enables the read-only main-only
 `retirement-verification` job after the current signed collector succeeds; an incomplete input pair
 fails validation. The job cannot run during source preparation and receives no signing inputs.
-`retirement-gate` requires successor R to have Q as its sole parent and delete exactly the 46 mapped
-Python/JavaScript originals, preserving every other tree entry, including all five PowerShell files.
+`retirement-gate` requires successor R to have Q as its sole parent and delete exactly the 51 mapped
+original executable files, preserving every other tree entry. Schema3 records all 51 migration entries
+with zero retained PowerShell exceptions; source mapping alone never authorizes their removal.
 Bounded Git archives and manifest hashes retain the fixed historical original bytes for comparison;
 no retired generator is executed. R must have its own complete source-bound runtime, tooling, coverage
 and signed qualification. The verifier authenticates R's completed collector job, artifact and original
@@ -160,18 +165,22 @@ package identity, VCS revision, declared license and notice digest. Ordinary reg
 required to contain vendor-generated checksum metadata; missing or changed provenance fails before
 that package's notices are written. These contracts still need actual hosted dependency validation.
 
-Cargo owns the shared lockfile. The isolated preparation returned the resolved workspace lock and
-reviewed formatting; later edits still need final hosted qualification with `--locked`. The authored
-bootstrap downloads the exact host's published 0.2.0 archive, checks its source-pinned SHA-256, and
-selects only its qualified `numera-dev` binary. Windows explicitly selects System32's ZIP-capable
-`tar.exe`, not Git Bash's GNU tar, which rejected ZIPs in qualification41526803432. That native owner supervises contained toolchain
-installation and the first locked task build with wall/idle limits; no second shell supervisor or
-interpreter is introduced. The download has native connection, wall, low-speed and size bounds.
-Missing hosted Rustup/Cargo proxies fail rather than silently installing another bootstrap. This
-new workflow still needs real hosted qualification. Its manual `operation=source-preparation` route
-is separate: only the authenticated owner/toolchain setup, real `cargo generate-lockfile` and
-`cargo fmt --all` run, without compiling the unresolved task crate, running suites or entering the
-signing environment. It returns a source/ref/run/attempt-bound patch, receipt and checksums; review
+Cargo owns the shared lockfile. Successful hosted
+[preparation42711139081](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42711139081)
+on `370422d` returned a candidate workspace lockfile and Rust formatting patch only, without
+compilation, tests or signing. Later edits are outside its formatting result and still require final
+hosted qualification with `--locked`. The current bootstrap keeps a minimal pre-Rust seed to download
+the exact host's published 0.2.0 archive, check its pinned SHA-256 and select its qualified `numera-dev`.
+Windows uses System32's ZIP-capable `tar.exe`, not Git Bash's GNU tar. The native owner supervises
+pinned Rustup setup and hosted compilation of a small standard-library-only driver under
+`tooling/bootstrap/`, independently of the unresolved workspace lock. That Rust driver owns substantive
+target/source validation, toolchain/build and source-preparation decisions; declarative workflow steps
+and the fixed unavoidable seed are not a general interpreter-wrapper exception. Download connection,
+wall, low-speed, size and child/worker bounds remain enforced. Missing hosted Rustup/Cargo proxies fail
+rather than silently installing another bootstrap. This source still needs real hosted qualification.
+`operation=source-preparation` compiles only the standalone driver needed to resolve/format the workspace;
+it does not compile the unresolved task crate, run suites or enter signing. It returns a
+source/ref/run/attempt-bound patch, receipt and checksums; review
 the actual lock/format changes and rebind affected assertion ranges before committing them. Preparation
 is not qualification; `operation=qualify` retains `--locked` and every native/coverage/artifact gate.
 If formatting fails, the stable job retains a bounded tracked-source `formatting.zip` after its
@@ -179,6 +188,40 @@ execution/provenance checks. This is a review candidate only: the original gate 
 neither the archive nor an automatically formatted workspace qualifies the changed bytes.
 Do not use the candidate to replace the working installation. See [source validation](testing/SOURCE-VALIDATION.md)
 for historical/current distinctions and [test results](TEST-RESULTS.md) for observed evidence.
+
+## Explicit local credential maintenance (0.3.0 source)
+
+These new commands are not present in the published 0.2.0 binary and have not yet passed their own
+hosted qualification. They are separate from MCP tools and never run automatically on startup.
+
+```text
+numera-dev protect-secret --path ABSOLUTE_FILE --dry-run
+numera-dev protect-secret --path ABSOLUTE_FILE
+numera-dev identity inspect --root ABSOLUTE_ROOT
+numera-dev identity create --root ABSOLUTE_ROOT --dry-run
+```
+
+Protection is Windows-only. Real input comes from the hidden attached console, never an argument or
+environment variable; WhatIf reads no secret and creates no output. An existing destination refuses
+before input. Existing ancestors must be unlinked directories; missing parents are created only after
+valid input and encryption, never during WhatIf or input failure. Existing parent ACLs are not changed.
+Shared private-file primitives use exclusive creation, explicit current-user ownership/protected DACL,
+one-link regular files, bounded reads and flushed writes. Persistent custody is distinct from the
+temporary signing-input wrapper's cleanup lifetime.
+
+Identity inspection reports ACL/custody presence metadata without registry-content reads or write
+access. Create dry-run checks existing registry and destination conditions without logging, DLL loading
+or custody writes. Actual `identity create` additionally requires `--confirm-create`, and actual
+`create`/`check` require `--libcrypto ABSOLUTE_DLL --libcrypto-sha256 SHA256`. Only an explicitly
+qualified native OpenSSL3 DLL is loaded; no search-path fallback or trust-store installation occurs.
+`check --write-fixtures` is an explicit maintenance writer, not permission to replace independently
+retained parity expectations. See [custody and signer limits](SIGNING.md).
+
+Normal Windows hosted tests qualify the fixed FireDaemon OpenSSL3.5.9 archive and exact architecture's
+libcrypto DLL in project-local temporary storage. Only those verified test path/hash values reach the
+owned harnesses; they are not publisher credentials or an automatic local dependency installation.
+Actual hidden-console interaction and another user's decryption/access denial remain separate from
+injected synthetic DPAPI and ACL contract tests.
 
 ## Bounded commands
 

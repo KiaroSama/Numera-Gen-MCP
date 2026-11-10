@@ -591,6 +591,20 @@ silently resizes output to match. [Dimension selection details](docs/CONFIGURATI
 [Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) · [Requirements](docs/REQUIREMENTS.md) ·
 [References](docs/REFERENCES.md)
 
+## Native private maintenance (0.3.0 source)
+
+The source candidate adds Windows `numera-dev protect-secret --path ABSOLUTE_FILE` with hidden
+CurrentUser DPAPI input and exclusive owner-only output. `--dry-run`/`--what-if` reads no secret and
+creates no file. Native `identity inspect` and `identity create --dry-run`, both with explicit
+`--root ABSOLUTE_ROOT`, inspect local conditions without creating custody or logs. Actual identity
+creation/checking requires separately selected qualified native crypto-library inputs; no command
+runs automatically or rotates the approved signer. [Credential details](docs/CONFIGURATION.md) and
+[identity/custody limits](docs/SIGNING.md) describe the exact boundaries.
+
+These commands and the all-51-file Rust tooling migration remain unqualified source, not features
+of the published 0.2.0 developer binary. Standard OS/native third-party tools remain permitted;
+substantive first-party bootstrap/preparation logic belongs to the Rust driver, not hidden scripts.
+
 ## Logs and troubleshooting
 
 New UTF8 JSON log per execution: `numera-gen-mcp_YYYY-MM-DD_HH-mm-ss_UTC-<pid>-<uuid>.log`, UTC

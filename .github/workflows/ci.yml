@@ -65,29 +65,16 @@ jobs:
           build-task: 'false'
       - name: Resolve and format source only, never qualify or sign
         timeout-minutes: 7
+        env:
+          BOOTSTRAP_TARGET: x86_64-unknown-linux-gnu
+          BOOTSTRAP_COVERAGE: 'false'
+          BOOTSTRAP_BUILD_TASK: 'false'
         run: |
-          set -euo pipefail
-          test "$GITHUB_JOB" = source-preparation
-          test "$NUMERA_CI_OPERATION" = source-preparation
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test -z "$(git status --porcelain --untracked-files=no)"
-          cargo=$(type -P cargo)
-          "$NUMERA_BOOTSTRAP_OWNER" bounded 240000 60000 --exec "$cargo" +1.99.1 generate-lockfile
-          "$NUMERA_BOOTSTRAP_OWNER" bounded 120000 45000 --exec "$cargo" +1.99.1 fmt --all
-          "$NUMERA_BOOTSTRAP_OWNER" bounded 120000 45000 --exec "$cargo" +1.99.1 fmt --all -- --check
-          while IFS= read -r -d '' file; do
-            case "$file" in Cargo.lock|*.rs) ;; *) printf '%s\n' 'Unexpected preparation path.' >&2; exit 1 ;; esac
-          done < <(git diff --name-only -z)
-          test -z "$(git diff --name-only --diff-filter=ACDRTUXB)"
-          mkdir .ci-work/source-preparation
-          git diff --binary -- Cargo.lock '*.rs' > .ci-work/source-preparation/source-preparation.patch
-          test -s .ci-work/source-preparation/source-preparation.patch
-          jq -n --arg repository "$GITHUB_REPOSITORY" --arg source "$GITHUB_SHA" --arg ref "$GITHUB_REF" \
-            --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
-            --arg patch_sha256 "$(sha256sum .ci-work/source-preparation/source-preparation.patch | cut -d ' ' -f 1)" \
-            '{schema:1,operation:"source-preparation",repository:$repository,source_sha:$source,ref:$ref,run_id:$run,run_attempt:$attempt,patch_sha256:$patch_sha256,qualification_verified:false}' \
-            > .ci-work/source-preparation/receipt.json
-          (cd .ci-work/source-preparation && sha256sum source-preparation.patch receipt.json > SHA256SUMS)
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 30000 20000 --exec "$NUMERA_BOOTSTRAP_DRIVER" prepare-checkout
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 240000 60000 --exec "$NUMERA_BOOTSTRAP_DRIVER" prepare-lock
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 120000 45000 --exec "$NUMERA_BOOTSTRAP_DRIVER" prepare-format
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 120000 45000 --exec "$NUMERA_BOOTSTRAP_DRIVER" prepare-format-check
+          "$NUMERA_BOOTSTRAP_OWNER" bounded 30000 20000 --exec "$NUMERA_BOOTSTRAP_DRIVER" prepare-package
       - name: Return only reviewed source-preparation candidates
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -135,18 +122,10 @@ jobs:
           target: ${{ matrix.target }}
       - name: Materialize independent immutable expected inputs
         run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" fixtures
-      - name: Create same-user PowerShell interoperability fixture
+      - name: Create same-user native DPAPI interoperability fixture
         if: runner.os == 'Windows'
-        shell: pwsh
         timeout-minutes: 1
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $file = Join-Path $env:GITHUB_WORKSPACE '.ci-work/parity/current-user-dpapi.txt'
-          $plain = 'synthetic-same-user-credential'
-          $encoded = ConvertFrom-SecureString (ConvertTo-SecureString $plain -AsPlainText -Force)
-          [IO.File]::WriteAllText($file, $encoded, [Text.UTF8Encoding]::new($false))
-          $case = @{ file = $file; expected = @{ Authorization = "Bearer $plain" } } | ConvertTo-Json -Compress
-          [IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE '.ci-work/parity/config-dpapi.json'), $case, [Text.UTF8Encoding]::new($false))
+        run: '"$NUMERA_BOOTSTRAP_OWNER" bounded 30000 15000 --exec ./target/debug/numera-task --root "$GITHUB_WORKSPACE" dpapi-fixture'
       - name: Bind current dependency and fixture provenance
         run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" evidence-capture
       - name: Native workspace quality, complete suite discovery and actual SDK execution

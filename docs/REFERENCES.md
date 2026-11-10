@@ -31,6 +31,25 @@
 Source-authored receipt and execution collectors are not current hosted execution, semantic parity
 or cryptographic verification. Final original archive/download verification remains a separate gate.
 
+## Native private maintenance references, checked 2026-11-10
+
+- [CryptProtectData](https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata):
+  CurrentUser scope, UI-forbidden operation, optional entropy contract and LocalFree ownership.
+- [Console modes](https://learn.microsoft.com/en-us/windows/console/setconsolemode) and
+  [ReadConsole](https://learn.microsoft.com/en-us/windows/console/readconsole): echo/cooked-input behavior,
+  strict Unicode input, redirected-handle limits and restoration obligations.
+- [Owner of a new object](https://learn.microsoft.com/en-us/windows/win32/secauthz/owner-of-a-new-object):
+  elevated token defaults differ; private creation supplies an explicit current-user owner and DACL.
+- [Pinned PowerShell serialization](https://github.com/PowerShell/PowerShell/blob/1aac7f5e38679b3c1469b67071a4c07f50cc064b/src/System.Management.Automation/security/SecureStringHelper.cs):
+  CurrentUser DPAPI protects exactly UTF-16LE code units without a terminator and serializes lowercase
+  hexadecimal, matching the native credential reader. Reference only; no PowerShell runtime is invoked.
+- [FireDaemon OpenSSL](https://github.com/firedaemon/openssl) and
+  [OpenSSL3 APIs](https://docs.openssl.org/3.5/man3/): the explicit memory adapter uses the qualified
+  native library for certificate/PKCS12/signature operations, not handwritten cryptographic formats.
+
+Source/API inspection is not interactive console, other-user access, genuine publisher signing or
+hosted disposable-key execution proof. Current native maintenance remains source-authored.
+
 ## Native migration references, checked 2026-10-11
 
 Rust1.99 stable manifest and Cargo environment reference govern hosted-only compiler/workspace cache
