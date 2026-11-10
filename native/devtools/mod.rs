@@ -3,6 +3,8 @@ mod capture;
 pub mod cargo_output;
 pub mod identity;
 mod installation;
+#[cfg(target_os = "linux")]
+pub mod linux_snapshot;
 pub mod private_files;
 #[cfg(unix)]
 mod process_unix;

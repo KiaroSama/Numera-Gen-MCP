@@ -57,6 +57,11 @@ impl Owned {
         self.child.id()
     }
 
+    #[cfg(target_os = "linux")]
+    pub(super) fn observation_control(&mut self) -> Option<std::process::ChildStdin> {
+        self.child.stdin.take()
+    }
+
     pub(super) fn capture(&mut self) -> io::Result<super::capture::Capture> {
         let stdout = self
             .child

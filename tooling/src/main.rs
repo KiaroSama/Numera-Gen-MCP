@@ -3,6 +3,10 @@ use std::{io, path::PathBuf};
 
 fn execute() -> io::Result<()> {
     let mut args = std::env::args().skip(1).collect::<Vec<_>>();
+    #[cfg(target_os = "linux")]
+    if let Some(code) = numera_task::coverage_diagnostics::entry(&args)? {
+        std::process::exit(code);
+    }
     if args.first().is_some_and(|s| s == "--help") || args.is_empty() {
         println!(
             "Numera hosted Rust tooling\nUsage: numera-task --root ABSOLUTE_ROOT COMMAND [ARGS]\nCommands are hosted-only; no implicit installation, provider call or host edit."

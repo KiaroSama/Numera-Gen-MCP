@@ -10,7 +10,15 @@ fn required(
     idle: u64,
     failures: &mut Vec<String>,
 ) {
-    if context.run(command, wall, idle, false).is_err() {
+    #[cfg(target_os = "linux")]
+    let result = if gate == "coverage-report" {
+        crate::coverage_diagnostics::run(context, command, wall, idle)
+    } else {
+        context.run(command, wall, idle, false)
+    };
+    #[cfg(not(target_os = "linux"))]
+    let result = context.run(command, wall, idle, false);
+    if result.is_err() {
         failures.push(gate.to_owned());
     }
 }

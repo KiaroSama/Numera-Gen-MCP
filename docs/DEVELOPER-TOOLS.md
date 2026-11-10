@@ -74,6 +74,17 @@ zero-failure/unfiltered summaries, source/binary/output hashes and owned cleanup
 final integrity hashing; `duration_us` includes reporting overhead. Both executable byte checks
 remain required, and a phase that exhausts the aggregate deadline cannot be accepted. Tooling hashes
 use the existing native SHA-256 dependency without changing production request fingerprints.
+On Linux, the coverage report has an opt-in numeric observer inside the same owned process group.
+Its outer 60-second wall and 30-second output-idle limits remain authoritative; diagnostic activity
+never resets those clocks. Report stdout/stderr go directly to the original capture, preserving the
+output ceiling. A separate sampler receives one nonblocking control signal near the original limit;
+missed, blocked, raced or incomplete observations remain unavailable. After owned cleanup, the task
+validates the nonce-bound, size-limited receipt before logging numeric process/resource observations.
+The receipt contains no command lines, environment, raw paths, wait symbols or stacks. Sample timing
+and age do not prove the internal LLVM phase, a deadlock or a performance fix. The original report
+exit, all selected objects and the 85/80 coverage floors remain required; diagnostics cannot qualify
+an absent coverage report. This observer is source-authored and still requires hosted verification.
+
 Stable uses no nightly-only JSON test flags. Compiler inventory must match every test-enabled target of the selected
 Cargo packages. Harnesses retain their package working directory and explicit contained profile/target
 overrides; unrelated compiler-command environment is not copied. Built, release and extracted SDK

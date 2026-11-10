@@ -166,6 +166,21 @@ impl Context {
             &self.logger,
         )
     }
+    #[cfg(target_os = "linux")]
+    pub fn observed_outcome(
+        &self,
+        command: &mut Command,
+        wall: u64,
+        idle: u64,
+    ) -> io::Result<supervisor::Outcome> {
+        supervisor::run_with_observation(
+            command,
+            &self.root,
+            Bounds::new(wall, idle)?,
+            &AtomicBool::new(false),
+            &self.logger,
+        )
+    }
     pub fn capture(
         &self,
         command: &mut Command,

@@ -62,7 +62,7 @@ impl Capture {
 }
 
 #[cfg(unix)]
-fn nonblocking(pipe: &impl std::os::fd::AsRawFd) -> io::Result<()> {
+pub(super) fn nonblocking(pipe: &impl std::os::fd::AsRawFd) -> io::Result<()> {
     let fd = pipe.as_raw_fd();
     // SAFETY: live owned pipe, F_GETFL takes no third argument; preserve existing flags.
     let flags = unsafe { libc::fcntl(fd, libc::F_GETFL) };

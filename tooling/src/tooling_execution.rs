@@ -43,6 +43,11 @@ fn harness(path: &str) -> io::Result<&str> {
 
 fn platforms(mapping: &str) -> &'static [&'static str] {
     match mapping {
+        "tooling/tests/coverage_diagnostics_contracts.rs::report_observation_never_becomes_output_progress_or_weakens_idle_cleanup"
+        | "tooling/tests/coverage_diagnostics_contracts.rs::observation_opt_in_preserves_exit_wall_cancellation_and_original_output_limit"
+        | "tooling/tests/coverage_diagnostics_contracts.rs::numeric_observation_receipts_reject_partial_unknown_fields_stale_ids_and_links" => {
+            &["linux"]
+        }
         "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence"
         | "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence"
         | "tests/rust/sdk_acceptance/http.rs::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children" => {
@@ -190,6 +195,7 @@ pub fn bind_with_originals(
             let applicable = match path {
                 "native/devtools/process_unix.rs" => identity["platform"] != "win32",
                 "tests/rust/dpapi_acceptance.rs" => identity["platform"] == "win32",
+                "tooling/tests/coverage_diagnostics_contracts.rs" => identity["platform"] == "linux",
                 _ => true,
             };
             if applicable {

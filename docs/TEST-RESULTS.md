@@ -2,6 +2,23 @@
 
 ## Current 0.3.0 candidate — failed qualification, 2026-11-10
 
+[Qualification42816429232, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42816429232/attempts/1)
+on `51fac9ce7bdd37d2967e146e71c28e10751ccef5` completed with all six native jobs successful.
+Each target passed 145 built harnesses, two release-SDK harnesses and two extracted-intermediate
+SDK harnesses. Authenticated execution archives bind these phases to the exact source/run/attempt,
+with equal release and extracted binary hashes. Formatting, Clippy, the Windows path/ABI/Git
+contracts and ZIP permission checks passed. All seven original job logs and execution archives
+were retained; this establishes native intermediate checks, not signed delivery.
+
+The sole failed job was coverage. All 111 instrumented harnesses passed 513 tests with zero failures
+or ignored tests. Both LLVM commands received `-num-threads=2`; profile merge completed, but
+summary-only export over all 115 objects again exceeded the unchanged 30-second idle limit at
+51.433 seconds total, with cleanup verified. No coverage JSON or floor measurement exists, and
+its missing-file upload error is consequential rather than a separate measured coverage failure.
+The log contains no LLVM crash or out-of-memory diagnostic and does not identify the internal
+bottleneck. The worker cap did not resolve the observed stall. The execution collector, signing
+and retirement stages were skipped; the candidate remains unqualified.
+
 [Qualification42797907686, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42797907686/attempts/1)
 on `fc829256eee71dd4c73efd7935d4d06fd6e4515d` failed all seven native/coverage jobs;
 five downstream jobs were skipped. All seven original logs and execution archives were retained

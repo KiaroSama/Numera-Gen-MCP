@@ -47,7 +47,15 @@ impl Bounds {
         Ok(self)
     }
 }
+#[cfg(target_os = "linux")]
+pub struct Observation {
+    pub pid: u32,
+    pub signal_ms: Option<u64>,
+    pub signal_status: u8,
+}
 pub struct Outcome {
+    #[cfg(target_os = "linux")]
+    pub observation: Option<Observation>,
     pub code: i32,
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,
@@ -79,6 +87,28 @@ pub fn run(
     bounds: Bounds,
     cancelled: &AtomicBool,
     logger: &Logger,
+) -> io::Result<Outcome> {
+    run_inner(command, root, bounds, cancelled, logger, false)
+}
+
+#[cfg(target_os = "linux")]
+pub fn run_with_observation(
+    command: &mut Command,
+    root: &Path,
+    bounds: Bounds,
+    cancelled: &AtomicBool,
+    logger: &Logger,
+) -> io::Result<Outcome> {
+    run_inner(command, root, bounds, cancelled, logger, true)
+}
+
+fn run_inner(
+    command: &mut Command,
+    root: &Path,
+    bounds: Bounds,
+    cancelled: &AtomicBool,
+    logger: &Logger,
+    observation: bool,
 ) -> io::Result<Outcome> {
     let paths = RuntimePaths::new(root)
         .map_err(|_| io::Error::other("Cannot resolve contained command scratch."))?;
@@ -174,7 +204,11 @@ pub fn run(
     }
     command
         .current_dir(command_cwd)
-        .stdin(Stdio::null())
+        .stdin(if observation {
+            Stdio::piped()
+        } else {
+            Stdio::null()
+        })
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     for (key, value) in paths.child_environment() {
@@ -185,6 +219,23 @@ pub fn run(
     let pid = child.id();
     let mut captures = child.capture()?;
     captures.set_limit(bounds.output_limit);
+    #[cfg(target_os = "linux")]
+    let mut observation_result = observation.then_some(Observation {
+        pid,
+        signal_ms: None,
+        signal_status: 0,
+    });
+    #[cfg(target_os = "linux")]
+    let mut control = child.observation_control();
+    #[cfg(target_os = "linux")]
+    if let Some(pipe) = &control
+        && super::capture::nonblocking(pipe).is_err()
+    {
+        control = None;
+        if let Some(result) = &mut observation_result {
+            result.signal_status = 2;
+        }
+    }
     let operation = (|| -> io::Result<Option<String>> {
         ledger.record(
             json!({"event":"start","pid":pid,"owner_pid":std::process::id(),
@@ -241,6 +292,27 @@ pub fn run(
             if child.exited()? {
                 return Ok(None);
             }
+            #[cfg(target_os = "linux")]
+            if control.is_some() {
+                let remaining = bounds
+                    .wall
+                    .saturating_sub(begin.elapsed())
+                    .min(bounds.idle.saturating_sub(progress.elapsed()));
+                if remaining <= Duration::from_millis(1000) {
+                    if remaining >= Duration::from_millis(500)
+                        && let Some(mut pipe) = control.take()
+                    {
+                        // One nonblocking byte is not child output or idle progress. Broken/blocked
+                        // observation is unavailable, never an execution failure or deadline reset.
+                        let sent = pipe.write(&[1]).ok() == Some(1);
+                        if let Some(result) = &mut observation_result {
+                            result.signal_status = if sent { 1 } else { 2 };
+                            result.signal_ms = sent.then(|| begin.elapsed().as_millis() as u64);
+                        }
+                    }
+                    control = None;
+                }
+            }
             std::thread::park_timeout(Duration::from_millis(10));
         }
     })();
@@ -281,6 +353,8 @@ pub fn run(
     stopped?;
     let reason = operation?;
     Ok(Outcome {
+        #[cfg(target_os = "linux")]
+        observation: observation_result,
         code,
         stdout: captures.stdout_bytes,
         stderr: captures.stderr_bytes,

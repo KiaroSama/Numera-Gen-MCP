@@ -3,6 +3,8 @@ pub mod archives;
 pub mod cargo_output;
 pub mod ci;
 pub mod context;
+#[cfg(target_os = "linux")]
+pub mod coverage_diagnostics;
 pub mod coverage_environment;
 pub mod distribution;
 pub mod dpapi_fixture;
