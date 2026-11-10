@@ -2,6 +2,12 @@
 
 ## Rust completion PR — 2026-11-10
 
+The Windows ARM64 job in run42888877128 recorded an `evidence-capture` fixture exit before
+the documentation push cancelled its remaining phases. The assertion retained only the exit code,
+so that log does not establish a cause. The same existing test now includes the task's fixed public
+`ERROR:` diagnostic after checking that private fixture data is absent; captured child details remain
+withheld. No retry, exclusion, ignored case or relaxed assertion is introduced.
+
 [Automatic run42888877128](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42888877128)
 on PR head `b14825d0423b1ea7314e4a9754f496780db6969e` passed production coverage: **85.0065%
 regions (18426/21676)** and **80.4785% branches (4238/5266)**, with the original 85/80 floors.

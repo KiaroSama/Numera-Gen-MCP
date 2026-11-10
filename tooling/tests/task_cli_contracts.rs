@@ -107,8 +107,14 @@ impl Fixture {
                 numera_gen_mcp::runtime_paths::command_path(&self.root.join("empty-gitconfig")),
             );
         let outcome = self.execute(&mut command);
-        assert_eq!(outcome.code, expected);
-        assert!(!String::from_utf8_lossy(&outcome.stderr).contains("synthetic-private-marker"));
+        let stderr = String::from_utf8_lossy(&outcome.stderr);
+        assert!(!stderr.contains("synthetic-private-marker"));
+        // The task emits only fixed public diagnostics; never print captured child details.
+        let diagnostic = stderr
+            .lines()
+            .find(|line| line.starts_with("ERROR: "))
+            .unwrap_or("No fixed task diagnostic.");
+        assert_eq!(outcome.code, expected, "{operation}: {diagnostic}");
         outcome
     }
 }
