@@ -2,6 +2,27 @@
 
 ## Current 0.3.0 candidate — failed qualification, 2026-11-10
 
+[Qualification42797907686, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42797907686/attempts/1)
+on `fc829256eee71dd4c73efd7935d4d06fd6e4515d` failed all seven native/coverage jobs;
+five downstream jobs were skipped. All seven original logs and execution archives were retained
+and authenticated. Each POSIX target passed 145 built harnesses and both release-SDK harnesses,
+with only five formatting hunks across four files failing. Release-SDK execution now passes on
+all six targets, including the previously blocked Linux Cargo-output boundary. Both Windows
+targets passed DPAPI fixture preparation but failed four Clippy checks and five built harnesses.
+The Windows failures expose incompatible duplicate Win32 declarations, path fixtures whose
+verbatim joins normalize away traversal components, lexical rather than physical containment,
+platform-default ZIP permission metadata, and an isolated Git helper exiting 128.
+
+Coverage passed all 111 harnesses. New diagnostic output confirms profile merge completed and
+LLVM export started with 115 unique objects; the report then exceeded its 30-second idle bound
+at 53.4 seconds total. No coverage JSON or passing floor measurement was produced. Explicit
+LLVM worker limits of two address an uncovered resource limit, not a proven cause of the stall;
+object scope, 60-second wall/30-second idle bounds and 85/80 floors remain unchanged.
+A controlled Windows Git experiment separately reproduced exit 128 with a verbatim global-config
+path and success with the same ordinary path, independently of the working-directory spelling.
+This local observation does not replace the next hosted Windows harness result. Corrections and
+authenticated hosted formatting require a new complete qualification before signing or retirement.
+
 [Qualification42780429240, attempt1](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42780429240/attempts/1)
 on `d5975ceb7dbc055d61a7da842e2f04c9b2d4171d` completed with all seven native/coverage jobs
 failed and five downstream jobs skipped. All seven original logs were retained and inspected.

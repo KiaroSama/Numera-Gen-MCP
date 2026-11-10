@@ -11,6 +11,8 @@ use std::{
 #[path = "private_files_windows.rs"]
 mod windows;
 #[cfg(windows)]
+pub(crate) use windows::Attributes;
+#[cfg(windows)]
 pub use windows::{
     PrivateSecurity, RegistryAccess, inspect_private, lock_parents, open_registry,
     restrict_registry,

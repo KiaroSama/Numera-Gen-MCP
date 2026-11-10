@@ -57,9 +57,24 @@ fn compiler_hardlinks_and_detached_copies_do_not_relax_package_artifact_reads() 
 fn noncanonical_roots_nonregular_and_oversized_compiler_inputs_are_rejected() {
     let fixture = Fixture::new();
     fs::write(fixture.output(), b"tiny").unwrap();
-    assert!(read(&fixture.0.join("target/.."), Binary::Server).is_err());
+    // PathBuf::join normalizes ParentDir on verbatim paths, so retain the raw spelling.
+    let separator = std::path::MAIN_SEPARATOR;
+    let mut traversal = fixture.0.as_os_str().to_os_string();
+    traversal.push(format!("{separator}target{separator}.."));
+    let traversal = PathBuf::from(traversal);
+    assert!(
+        traversal
+            .components()
+            .any(|part| matches!(part, Component::ParentDir))
+    );
+    assert!(read(&traversal, Binary::Server).is_err());
     assert!(read(Path::new("relative"), Binary::Server).is_err());
-    assert!(Opened::new(&fixture.0, Binary::Server).unwrap().read(3).is_err());
+    assert!(
+        Opened::new(&fixture.0, Binary::Server)
+            .unwrap()
+            .read(3)
+            .is_err()
+    );
     fs::OpenOptions::new()
         .write(true)
         .open(fixture.output())

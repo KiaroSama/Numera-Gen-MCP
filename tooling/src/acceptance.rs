@@ -269,7 +269,9 @@ pub fn sdk(context: &Context, executable: &Path, phase: &str) -> io::Result<()> 
                 numera_gen_mcp::devtools::cargo_output::Binary::Server,
             )
     {
-        return Err(fail("Release SDK requires the fixed first-party Cargo output."));
+        return Err(fail(
+            "Release SDK requires the fixed first-party Cargo output.",
+        ));
     }
     let executable = executable.canonicalize()?;
     if !executable.starts_with(&context.root) {

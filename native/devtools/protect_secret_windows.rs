@@ -1,4 +1,4 @@
-use super::Secret;
+use super::{Secret, private_files::Attributes};
 use std::{
     ffi::c_void,
     io::{self, Write},
@@ -27,7 +27,7 @@ unsafe extern "system" {
         description: *mut *mut u16,
         entropy: *const Blob,
         reserved: Handle,
-        prompt: Handle,
+        prompt: *const c_void,
         flags: u32,
         output: *mut Blob,
     ) -> i32;
@@ -39,7 +39,7 @@ unsafe extern "system" {
         path: *const u16,
         access: u32,
         share: u32,
-        attributes: Handle,
+        attributes: *const Attributes,
         disposition: u32,
         flags: u32,
         template: Handle,
@@ -114,7 +114,7 @@ pub(super) fn encrypt(text: &str) -> io::Result<Vec<u8>> {
             ptr::null_mut(),
             ptr::null(),
             ptr::null_mut(),
-            ptr::null_mut(),
+            ptr::null(),
             1,
             &mut recovered.0,
         )
@@ -170,7 +170,7 @@ pub(super) fn read_hidden() -> io::Result<Secret> {
             name.as_ptr(),
             0xC0000000,
             3,
-            ptr::null_mut(),
+            ptr::null(),
             3,
             0,
             ptr::null_mut(),
@@ -254,7 +254,9 @@ pub(super) fn read_hidden() -> io::Result<Secret> {
         let mut text = Secret(Vec::new());
         let units = bytes
             .0
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|pair| u16::from_le_bytes([pair[0], pair[1]]));
         for character in std::char::decode_utf16(units) {
             let mut buffer = [0u8; 4];

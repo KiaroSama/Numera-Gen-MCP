@@ -338,7 +338,7 @@ pub fn coverage(context: &Context) -> io::Result<()> {
     );
     required(
         context,
-        &mut command(&[
+        command(&[
             "+nightly-2026-10-10",
             "llvm-cov",
             "report",
@@ -350,7 +350,9 @@ pub fn coverage(context: &Context) -> io::Result<()> {
             "--summary-only",
             "--output-path",
             ".ci-work/native/coverage.json",
-        ]),
+        ])
+        .env("LLVM_COV_FLAGS", "-num-threads=2")
+        .env("LLVM_PROFDATA_FLAGS", "-num-threads=2"),
         "coverage-report",
         60000,
         30000,

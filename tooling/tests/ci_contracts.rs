@@ -530,10 +530,12 @@ fn coverage_report_keeps_summary_totals_scope_and_existing_wall_idle_bounds() {
     assert_eq!(
         actual,
         concat!(
-            "context,&mutcommand(&[\"+nightly-2026-10-10\",\"llvm-cov\",\"report\",",
+            "context,command(&[\"+nightly-2026-10-10\",\"llvm-cov\",\"report\",",
             "\"--verbose\",\"--branch\",\"-p\",\"numera-gen-mcp\",",
             "\"--json\",\"--summary-only\",",
-            "\"--output-path\",\".ci-work/native/coverage.json\",]),",
+            "\"--output-path\",\".ci-work/native/coverage.json\",])",
+            ".env(\"LLVM_COV_FLAGS\",\"-num-threads=2\")",
+            ".env(\"LLVM_PROFDATA_FLAGS\",\"-num-threads=2\"),",
             "\"coverage-report\",60000,30000,&mutfailures,"
         )
     );

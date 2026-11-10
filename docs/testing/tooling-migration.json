@@ -508,7 +508,7 @@
     },
     {
       "source": "scripts/native-signing-check.ps1", "source_sha256": "f45169a5fc8771ef57c97e60b6a6d060a5dc9bd5f161e4bcbf0fd1f61c149140",
-      "rust": ["native/devtools/identity.rs", "native/devtools/identity/crypto.rs", "native/devtools/identity/ffi.rs", "native/devtools/identity/custody.rs", "native/devtools/identity/fixtures.rs", "tests/rust/identity_contracts/der.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs"],
+      "rust": ["native/devtools/identity.rs", "native/devtools/identity/crypto.rs", "native/devtools/identity/ffi.rs", "native/devtools/identity/custody.rs", "native/devtools/identity/fixtures.rs", "tests/rust/identity_contracts/der.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs", "native/files/windows_identity.rs"],
       "tests": ["tests/rust/identity_contracts.rs", "tests/rust/devtool_credentials.rs"],
       "named_tests": ["tests/rust/identity_contracts.rs::disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_binding", "tests/rust/identity_contracts.rs::identity_options_refuse_implicit_creation_unknown_flags_and_unqualified_crypto", "tests/rust/devtool_credentials.rs::native_private_commands_reject_invalid_arguments_before_input_or_custody_mutation"],
       "scenarios": ["Recover encrypted identity and exact public binding, Unicode signature, tamper and wrong-signer rejection", "Explicit historical-format fixture creation refuses existing outputs without rewriting them"],
@@ -520,7 +520,7 @@
     },
     {
       "source": "scripts/native-signing-identity.ps1", "source_sha256": "606dd10af5c03d64b3937d95947afd57b73ab545b13bd93528f43ff1826116e3",
-      "rust": ["native/devtools/main.rs", "native/devtools/identity.rs", "native/devtools/identity/crypto.rs", "native/devtools/identity/ffi.rs", "native/devtools/identity/custody.rs", "tests/rust/identity_contracts/der.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs", "tooling/src/identity_tools.rs"],
+      "rust": ["native/devtools/main.rs", "native/devtools/identity.rs", "native/devtools/identity/crypto.rs", "native/devtools/identity/ffi.rs", "native/devtools/identity/custody.rs", "tests/rust/identity_contracts/der.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs", "native/files/windows_identity.rs", "tooling/src/identity_tools.rs"],
       "tests": ["tests/rust/identity_contracts.rs", "tests/rust/devtool_credentials.rs", "tooling/tests/identity_tools_contracts.rs"],
       "named_tests": ["tests/rust/identity_contracts.rs::identity_options_refuse_implicit_creation_unknown_flags_and_unqualified_crypto", "tests/rust/identity_contracts.rs::crypto_library_architecture_is_verified_before_native_loading", "tests/rust/identity_contracts.rs::identity_custody_refuses_unsupported_hosts_without_creating_files", "tests/rust/identity_contracts.rs::disposable_identity_recovers_exact_custody_and_refuses_overwrite_or_changed_binding", "tests/rust/devtool_credentials.rs::native_private_commands_reject_invalid_arguments_before_input_or_custody_mutation", "tooling/tests/identity_tools_contracts.rs::identity_library_selection_returns_only_exact_native_regular_bytes", "tooling/tests/identity_tools_contracts.rs::identity_library_selection_rejects_size_digest_architecture_duplicate_and_link_changes", "tooling/tests/identity_tools_contracts.rs::identity_download_rejects_other_paths_origins_ports_and_credentials_before_network"],
       "scenarios": ["Metadata-only inspection and dry-run, explicit creation authority and native qualified library", "Exclusive owner-only persistent custody, preserved registry bytes and no implicit rotation"],
@@ -532,7 +532,7 @@
     },
     {
       "source": "scripts/native-signing-inputs.ps1", "source_sha256": "e6b73fbd3215c062d171e9fc13fd8f8a771408916c536122b84fc7e41cc1d8c7",
-      "rust": ["tooling/src/signing.rs", "tooling/src/private_files.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs"],
+      "rust": ["tooling/src/signing.rs", "tooling/src/private_files.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs", "native/files/windows_identity.rs"],
       "tests": ["tooling/tests/signing_contracts.rs", "tooling/tests/signing_platform_contracts.rs"],
       "named_tests": ["tooling/tests/signing_contracts.rs::approved_signer_and_private_input_authority_fail_closed", "tooling/tests/signing_contracts.rs::private_children_keep_only_selected_os_environment_and_capture_never_logs_private_output", "tooling/tests/signing_platform_contracts.rs::selected_input_password_bound_includes_one_transport_newline_without_storing_it", "tooling/tests/signing_platform_contracts.rs::temporary_signing_inputs_are_exclusive_and_normal_or_unwind_cleanup_removes_only_owned_files", "tooling/tests/signing_platform_contracts.rs::invalid_temporary_material_is_rejected_before_any_private_staging_file_exists"],
       "scenarios": ["Exact hosted signing authority and bounded validated selected private inputs", "Exclusive private staging, sanitized child environment and owned cleanup on success or failure"],
@@ -544,7 +544,7 @@
     },
     {
       "source": "scripts/protect-secret.ps1", "source_sha256": "644da736a8d7ee01eb84f442515febdd0ad71af18f1471dd8b434911fd32316d",
-      "rust": ["native/devtools/main.rs", "native/devtools/protect_secret.rs", "native/devtools/protect_secret_windows.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs", "tooling/src/dpapi_fixture.rs", "tests/rust/common/dpapi_worker.rs"],
+      "rust": ["native/devtools/main.rs", "native/devtools/protect_secret.rs", "native/devtools/protect_secret_windows.rs", "native/devtools/private_files.rs", "native/devtools/private_files_windows.rs", "native/files/windows_identity.rs", "tooling/src/dpapi_fixture.rs", "tests/rust/common/dpapi_worker.rs"],
       "tests": ["tests/rust/dpapi_acceptance.rs", "tests/rust/devtool_credentials.rs", "tooling/tests/dpapi_fixture_contracts.rs"],
       "named_tests": ["tests/rust/dpapi_acceptance.rs::protection_dry_run_preserves_input_and_output_and_enforces_private_file_invariants", "tests/rust/dpapi_acceptance.rs::exact_source_windows_dpapi_script_acl_native_roundtrip_corrupt_and_no_overwrite", "tests/rust/devtool_credentials.rs::native_protection_cli_whatif_preserves_outside_destination_and_existing_file_without_input", "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_preserves_exact_consumer_shape_and_refuses_overwrite", "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts", "tests/rust/devtool_credentials.rs::private_files_accept_rooted_disk_spellings_without_weakening_rejections"],
       "scenarios": ["CurrentUser UTF-16LE DPAPI ciphertext roundtrip, Unicode, corruption refusal and unchanged existing output", "Explicit absolute destination and WhatIf without secret input or output mutation", "Native same-user fixture preserves the existing consumer contract without a plaintext fallback"],
@@ -562,10 +562,10 @@
     "Current assertion review/rebinding and authenticated exact named six-target plus coverage execution"
   ],
   "remaining": [
-    "Qualification42780429240 atd5975ce failed after42765943268; the corrective source requires its own hosted format/Clippy/tests and qualification, with no local Rust execution authorized",
+    "Qualification42797907686 atfc82925 failed after42780429240: four POSIX targets reached147passing built/release-SDK harness summaries but failed formatting; both Windows targets had four Clippy errors and five failed built harnesses despite both release-SDK harnesses passing; coverage reached111passing harnesses then LLVM export expired without JSON/floors. Current corrections require their own complete hosted qualification; no local Rust execution is authorized",
     "Current470-case source rebinding/review is not successful execution; exact corrective hosted qualification and signed delivery remain pending",
     "Do not retire Python/JavaScript merely to make inventory green",
-    "Historical validation, private signing and published-owner bootstrap contracts are authored but unexecuted; initial hosted bootstrap qualification remains pending",
+    "Hosted bootstrap, compiler discovery and release-SDK execution occurred in the failed qualification, not successful full qualification. Corrective source bindings, Windows fixture/ABI/ZIP behavior and report-only LLVM worker caps remain unqualified; console and distinct-user practical checks plus genuine private signing are separately pending",
     "Hosted source-preparation resolved Cargo.lock and existing-key main authority is approved; neither preparation nor authority qualifies current Rust or permits signing before validation"
   ]
 }

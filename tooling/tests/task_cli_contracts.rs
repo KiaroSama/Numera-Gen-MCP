@@ -71,7 +71,10 @@ impl Fixture {
             ])
             .args(args)
             .env("GIT_CONFIG_NOSYSTEM", "1")
-            .env("GIT_CONFIG_GLOBAL", self.root.join("empty-gitconfig"))
+            .env(
+                "GIT_CONFIG_GLOBAL",
+                numera_gen_mcp::runtime_paths::command_path(&self.root.join("empty-gitconfig")),
+            )
             .env("GIT_AUTHOR_NAME", "Numera contract fixture")
             .env("GIT_COMMITTER_NAME", "Numera contract fixture")
             .env("GIT_AUTHOR_EMAIL", "Kiaro.Sama.Dev@gmail.com")
@@ -80,7 +83,14 @@ impl Fixture {
             .env("GIT_COMMITTER_DATE", "2026-11-03T00:00:00Z")
             .env("GIT_TERMINAL_PROMPT", "0");
         let outcome = self.execute(&mut command);
-        assert_eq!(outcome.code, 0);
+        let phase = match args.first().copied() {
+            Some("init") => "init",
+            Some("add") => "add",
+            Some("commit") => "commit",
+            Some("rev-parse") => "revision",
+            _ => "unexpected",
+        };
+        assert_eq!(outcome.code, 0, "Isolated Git phase failed: {phase}");
         outcome.stdout
     }
     fn task(&self, operation: &str, source: &str, expected: i32) -> Outcome {
@@ -92,7 +102,10 @@ impl Fixture {
             .env("GITHUB_ACTIONS", "true")
             .env("GITHUB_SHA", source)
             .env("GIT_CONFIG_NOSYSTEM", "1")
-            .env("GIT_CONFIG_GLOBAL", self.root.join("empty-gitconfig"));
+            .env(
+                "GIT_CONFIG_GLOBAL",
+                numera_gen_mcp::runtime_paths::command_path(&self.root.join("empty-gitconfig")),
+            );
         let outcome = self.execute(&mut command);
         assert_eq!(outcome.code, expected);
         assert!(!String::from_utf8_lossy(&outcome.stderr).contains("synthetic-private-marker"));

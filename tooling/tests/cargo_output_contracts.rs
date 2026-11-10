@@ -21,7 +21,9 @@ impl Fixture {
     }
     fn file(&self, name: &str) -> PathBuf {
         let suffix = if cfg!(windows) { ".exe" } else { "" };
-        self.0.join("target/release").join(format!("{name}{suffix}"))
+        self.0
+            .join("target/release")
+            .join(format!("{name}{suffix}"))
     }
 }
 impl Drop for Fixture {
@@ -45,10 +47,16 @@ fn trusted_cargo_output_accepts_real_hardlinks_without_weakening_package_reader(
     fs::hard_link(&original, fixture.file("numera-gen-mcp")).unwrap();
     fs::copy(&original, fixture.file("numera-dev")).unwrap();
     let context = fixture.context();
-    assert_eq!(cargo_output::read(&context, "numera-gen-mcp").unwrap(), bytes);
+    assert_eq!(
+        cargo_output::read(&context, "numera-gen-mcp").unwrap(),
+        bytes
+    );
     assert!(read_regular(&fixture.file("numera-gen-mcp"), 1024).is_err());
     assert_eq!(cargo_output::read(&context, "numera-dev").unwrap(), bytes);
-    assert_eq!(read_regular(&fixture.file("numera-dev"), 1024).unwrap(), bytes);
+    assert_eq!(
+        read_regular(&fixture.file("numera-dev"), 1024).unwrap(),
+        bytes
+    );
     assert_eq!(fs::read(original).unwrap(), bytes);
 }
 

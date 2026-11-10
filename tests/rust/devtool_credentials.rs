@@ -129,7 +129,16 @@ fn private_files_accept_rooted_disk_spellings_without_weakening_rejections() {
         );
         assert!(private_files::write_new(&file, b"replacement").is_err());
         assert_eq!(std::fs::read(&file).unwrap(), b"synthetic private bytes");
-        assert!(private_files::verify_ancestors(&directory.join("../escape.txt")).is_err());
+        // PathBuf::join normalizes ParentDir on verbatim paths, so retain the raw spelling.
+        let mut traversal = directory.as_os_str().to_os_string();
+        traversal.push(r"\..\escape.txt");
+        let traversal = std::path::PathBuf::from(traversal);
+        assert!(
+            traversal
+                .components()
+                .any(|part| matches!(part, Component::ParentDir))
+        );
+        assert!(private_files::verify_ancestors(&traversal).is_err());
         let linked = directory.join("hard-linked.txt");
         std::fs::hard_link(&file, &linked).unwrap();
         assert!(private_files::read_private(&file, 128).is_err());

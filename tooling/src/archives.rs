@@ -92,6 +92,7 @@ pub fn encode(prefix: &str, entries: &BTreeMap<String, Vec<u8>>, zip: bool) -> i
         let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
         for (name, bytes) in entries {
             let options = zip::write::SimpleFileOptions::default()
+                .system(zip::System::Unix)
                 .compression_method(zip::CompressionMethod::Deflated)
                 .compression_level(Some(6))
                 .last_modified_time(zip::DateTime::default())

@@ -331,13 +331,16 @@ async fn declared_secret_files_are_bounded_private_and_pinned_across_changes() {
 async fn source_generated_current_user_dpapi_format_round_trips_without_a_shell() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let data = std::fs::read(root.join(".ci-work/parity/config-dpapi.json"))
-        .expect("CI must generate same-user PowerShell DPAPI oracle");
+        .expect("CI must generate same-user native DPAPI fixture");
     let case: Value = serde_json::from_slice(&data).unwrap();
     let workspace = Workspace::new();
     let runtime = RuntimePaths::new(&workspace.0).unwrap();
-    let source = Path::new(case["file"].as_str().expect("declared fixture file"));
+    let source = Path::new(case["file"].as_str().expect("declared fixture file"))
+        .canonicalize()
+        .expect("existing DPAPI fixture file");
+    let ci_workspace = root.join(".ci-work").canonicalize().unwrap();
     assert!(
-        source.starts_with(root.join(".ci-work")),
+        source.starts_with(&ci_workspace),
         "DPAPI fixture must stay inside CI workspace"
     );
     let connection = numera_gen_mcp::compat::value::json!({"auth":{"type":"bearer", "secretDpapiFile":source.to_str().expect("fixture path")}});

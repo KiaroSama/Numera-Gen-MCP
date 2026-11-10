@@ -1,5 +1,6 @@
 use numera_task::archives::{decode, encode, validate_name};
 use std::collections::BTreeMap;
+use zip::HasZipMetadata;
 
 #[test]
 fn sorted_archive_members_round_trip_exact_bytes_in_both_formats() {
@@ -36,6 +37,7 @@ fn sorted_archive_members_round_trip_exact_bytes_in_both_formats() {
                 assert!(file.is_file());
                 assert_eq!(file.compression(), zip::CompressionMethod::Deflated);
                 assert_eq!(file.last_modified(), Some(zip::DateTime::default()));
+                assert_eq!(file.get_metadata().system, zip::System::Unix);
                 assert_eq!(
                     file.unix_mode().unwrap() & 0o177777,
                     if index == 0 { 0o100755 } else { 0o100644 }

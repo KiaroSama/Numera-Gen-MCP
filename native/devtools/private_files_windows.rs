@@ -12,21 +12,10 @@ use std::{
 };
 type Handle = *mut c_void;
 #[repr(C)]
-struct Attributes {
+pub(crate) struct Attributes {
     length: u32,
     descriptor: *mut c_void,
     inherit: i32,
-}
-#[repr(C)]
-struct FileInformation {
-    attributes: u32,
-    created: [u32; 2],
-    accessed: [u32; 2],
-    written: [u32; 2],
-    volume: u32,
-    size: [u32; 2],
-    links: u32,
-    index: [u32; 2],
 }
 #[repr(C)]
 struct AclSize {
@@ -45,7 +34,6 @@ unsafe extern "system" {
     fn LocalFree(memory: Handle) -> Handle;
     fn GetCurrentProcess() -> Handle;
     fn CreateDirectoryW(path: *const u16, attributes: *const Attributes) -> i32;
-    fn GetFileInformationByHandle(file: Handle, info: *mut FileInformation) -> i32;
     fn CreateFileW(
         path: *const u16,
         access: u32,
@@ -339,11 +327,8 @@ fn regular(file: &File, directory: bool) -> io::Result<()> {
     {
         return Err(io::Error::other("Private regular object required."));
     }
-    let mut info: FileInformation = unsafe { std::mem::zeroed() };
-    if unsafe { GetFileInformationByHandle(file.as_raw_handle(), &mut info) } == 0 {
-        return Err(io::Error::last_os_error());
-    }
-    if !directory && info.links != 1 {
+    let links = crate::files::windows_identity::links(file)?;
+    if !directory && links != 1 {
         return Err(io::Error::other("Hard-linked private file rejected."));
     }
     Ok(())
