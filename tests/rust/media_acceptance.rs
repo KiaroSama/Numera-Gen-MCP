@@ -12,6 +12,8 @@ mod fixtures;
 mod host;
 #[path = "media_acceptance/lifecycle.rs"]
 mod lifecycle;
+#[path = "media_acceptance/legacy.rs"]
+mod legacy;
 #[path = "../fixtures/media/bytes.rs"]
 mod media_bytes;
 #[path = "media_acceptance/modes.rs"]
@@ -27,6 +29,7 @@ mod support;
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn real_sdk_media_kinds_modes_outputs_and_legacy_catalog() {
     modes::run().await;
+    legacy::run().await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

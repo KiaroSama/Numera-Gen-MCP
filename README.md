@@ -28,9 +28,10 @@ forwarding, configured GPU ComfyUI workflows and exact fal queue endpoint contra
 retries, hidden uploads, prompt enhancement or automatic provider/model fallback.
 
 **0.3.0 development status:** multimedia generation, explicit output kinds/modes, additive tools and
-Rust-only maintained tooling are authored in the current source. They have not yet passed the final
-hosted build, six-target acceptance or signature gates. Do not treat this source tree as a qualified
-new release. The published signed 0.2.0 below remains an image-only historical release.
+Rust-only maintained tooling are authored in the current source. The automatic checks on
+[PR22](https://github.com/KiaroSama/Numera-Gen-MCP/pull/22) record hosted builds, six-target acceptance
+and coverage for each exact commit. Signed release qualification remains a separate manual gate.
+The published signed 0.2.0 below remains an image-only historical release.
 
 The runtime, developer utility, CI driver and maintained tests are Rust. All 51 replaced
 Python/JavaScript/PowerShell source files have been removed; historical oracle archives remain

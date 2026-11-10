@@ -2,6 +2,14 @@
 
 ## Rust completion PR — 2026-11-10
 
+[Automatic run42883791350](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42883791350)
+on `71d130246147c805b0e778469157521993bc025e` measured 84.0146% regions and 78.5606% branches.
+Expanded format and fal tests passed. A remaining historical source-review receipt counted a Unicode
+separator as a line in `js_schema.rs`; Rust counts LF/CRLF lines. The corrected receipt retains the
+same source bytes and obligations. Existing tests additionally exercise typed legacy-image routing
+through the real SDK, all four reference sources, request boundaries, process parsing and identity
+option validation. These changes retain test identities/categories and the unchanged coverage floors.
+
 [Automatic run42877696477](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42877696477)
 on `2a65cf1303c69e2393c6060756847574ee955fff` produced a complete coverage report: 79.3274%
 regions and 71.6863% branches, below the unchanged 85/80 floors. Its production-package tests passed.

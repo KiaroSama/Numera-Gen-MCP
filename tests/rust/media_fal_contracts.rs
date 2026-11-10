@@ -2,6 +2,8 @@ use numera_gen_mcp::media::{Kind, fal};
 use serde_json::json;
 #[path = "media_format_cases/fal.rs"]
 mod cases;
+#[path = "media_format_cases/request.rs"]
+mod request_cases;
 
 const FLUX: &str = "fal-ai/flux/dev";
 const AUDIO: &str = "fal-ai/stable-audio-25/audio-to-audio";
@@ -311,6 +313,7 @@ fn completed_failure_and_cancellation_races_remain_distinct() {
 
 #[test]
 fn malformed_file_items_and_parameter_objects_cannot_panic() {
+    request_cases::run();
     for response in [
         json!({"images":[false,[],12,"x",null]}),
         json!({"images":[]}),
