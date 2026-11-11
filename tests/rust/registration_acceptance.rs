@@ -7,8 +7,13 @@ use std::{
     fs::{self, File, OpenOptions},
     path::{Path, PathBuf},
     process::{Child, Command, ExitStatus, Stdio},
+    sync::Mutex,
     time::{Duration, Instant},
 };
+
+// A Unix child can inherit a sibling fixture's executable writer until exec.
+// Serialize copy and spawn, not child execution.
+static COPY_OR_SPAWN: Mutex<()> = Mutex::new(());
 
 // Only the direct native registration command runs here; it has no helper descendants.
 struct Owned {
@@ -119,7 +124,10 @@ impl Fixture {
         } else {
             "numera-gen-mcp"
         });
-        fs::copy(env!("CARGO_BIN_EXE_numera-gen-mcp"), &executable).unwrap();
+        {
+            let _guard = COPY_OR_SPAWN.lock().unwrap();
+            fs::copy(env!("CARGO_BIN_EXE_numera-gen-mcp"), &executable).unwrap();
+        }
         Self {
             workspace,
             executable,
@@ -184,7 +192,11 @@ impl Fixture {
         }
         let deadline =
             (Instant::now() + Duration::from_secs(12)).min(self.deadline - Duration::from_secs(2));
-        let child = command.spawn().unwrap_or_else(|error| {
+        let child = {
+            let _guard = COPY_OR_SPAWN.lock().unwrap();
+            command.spawn()
+        }
+        .unwrap_or_else(|error| {
             panic!(
                 "Cannot start registration child: kind={:?}, os_code={:?}",
                 error.kind(),
