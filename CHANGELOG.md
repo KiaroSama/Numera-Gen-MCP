@@ -11,8 +11,11 @@ identity/custody maintenance and synthetic DPAPI fixtures replace active PowerSh
 standard-library Rust bootstrap owns substantive preparation logic; native libraries and fixed OS
 commands remain permitted, with only a documented minimal pre-Rust seed.
 
-Pushes and pull requests now require six-target native tests and release builds. LLVM reporting has
-a bounded 300-second wall / 180-second output-idle budget without reducing coverage floors or tests.
+Manual qualification runs six-target native tests, release builds, production coverage and the
+execution collector on the exact selected commit. Source preparation and protected signing are
+separate operations. GLB validation decodes each index accessor once and checks its maximum against
+each primitive's vertex count. LLVM reporting retains the 300-second wall / 180-second output-idle
+budget and unchanged coverage floors.
 The current PR requires its own successful CI; earlier qualification failures are
 recorded in [test results](docs/TEST-RESULTS.md). Source-authored corrections keep leaf SDK children
 within outer POSIX harness containment, reject stale evidence after checkout HEAD changes, and add

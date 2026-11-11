@@ -1,6 +1,7 @@
 use super::invalid;
 use crate::error::Result;
 use serde_json::{Value, json};
+use std::collections::BTreeMap;
 
 fn uint(value: &Value) -> Result<usize> {
     value
@@ -52,6 +53,29 @@ fn checked_end(start: usize, count: usize, stride: usize, width: usize) -> Resul
         .and_then(|n| n.checked_add(start))
         .and_then(|n| n.checked_add(width))
         .ok_or_else(|| invalid("GLB accessor offset/count overflow."))
+}
+
+// Call only after validating this immutable buffer's unsigned scalar accessor range.
+fn cached_max_index(
+    cache: &mut BTreeMap<usize, usize>,
+    index: usize,
+    accessor: &Accessor,
+    bin: &[u8],
+) -> usize {
+    *cache.entry(index).or_insert_with(|| {
+        (0..accessor.count)
+            .map(|n| {
+                let p = accessor.start + n * accessor.stride;
+                match accessor.size {
+                    1 => usize::from(bin[p]),
+                    2 => usize::from(u16::from_le_bytes([bin[p], bin[p + 1]])),
+                    _ => u32::from_le_bytes([bin[p], bin[p + 1], bin[p + 2], bin[p + 3]])
+                        as usize,
+                }
+            })
+            .max()
+            .unwrap_or(0)
+    })
 }
 
 pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
@@ -328,6 +352,7 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
     let meshes = array(&document, "meshes")?;
     let mut primitive_count = 0usize;
     let mut vertex_count = 0usize;
+    let mut index_maxima = BTreeMap::new();
     for mesh in meshes {
         let primitives = array(mesh, "primitives")?;
         if primitives.is_empty() {
@@ -367,26 +392,19 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
             }
             let mut draw_count = positions.count;
             if let Some(indices) = primitive.get("indices") {
+                let index = uint(indices)?;
                 let a = accessors
-                    .get(uint(indices)?)
+                    .get(index)
                     .ok_or_else(|| invalid("GLB indices select a missing accessor."))?;
                 if a.components != 1 || !matches!(a.component, 5121 | 5123 | 5125) {
                     return Err(invalid("GLB indices need unsigned scalar values."));
                 }
                 draw_count = a.count;
-                for n in 0..a.count {
-                    let p = a.start + n * a.stride;
-                    let index = match a.size {
-                        1 => usize::from(bin[p]),
-                        2 => usize::from(u16::from_le_bytes([bin[p], bin[p + 1]])),
-                        _ => u32::from_le_bytes([bin[p], bin[p + 1], bin[p + 2], bin[p + 3]])
-                            as usize,
-                    };
-                    if index >= positions.count {
-                        return Err(invalid(
-                            "GLB index references a vertex outside the primitive.",
-                        ));
-                    }
+                // Reused primitives share decoding work, never their individual vertex bound.
+                if cached_max_index(&mut index_maxima, index, a, bin) >= positions.count {
+                    return Err(invalid(
+                        "GLB index references a vertex outside the primitive.",
+                    ));
                 }
             }
             if (mode == 1 && !draw_count.is_multiple_of(2))
@@ -489,4 +507,27 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
         json!({"mesh_count":meshes.len(),"primitive_count":primitive_count,"vertex_count":vertex_count,
         "node_count":nodes.len(),"texture_count":textures.len(),"validation":"structural"}),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn index_maximum_decodes_each_accessor_once_without_sharing_distinct_keys() {
+        let accessor = Accessor {
+            start: 0,
+            stride: 1,
+            count: 3,
+            component: 5121,
+            components: 1,
+            size: 1,
+        };
+        let mut cache = BTreeMap::new();
+        assert_eq!(cached_max_index(&mut cache, 7, &accessor, &[0, 2, 1]), 2);
+        // A repeated accessor must not touch the binary again, even to read its first byte.
+        assert_eq!(cached_max_index(&mut cache, 7, &accessor, &[]), 2);
+        assert_eq!(cached_max_index(&mut cache, 8, &accessor, &[0, 1, 0]), 1);
+        assert_eq!(cache.len(), 2);
+    }
 }

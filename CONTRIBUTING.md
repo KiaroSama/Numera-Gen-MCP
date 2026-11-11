@@ -19,9 +19,10 @@ Published 0.2.0 already uses a native Rust runtime. The 0.3.0 workspace replaces
 Python/JavaScript/PowerShell tooling files with Rust. Historical source and independently generated
 oracle bytes remain immutable data with their original hashes, scenario maps and test categories.
 First-party executable tooling is Rust; native third-party libraries and fixed OS tools remain
-allowed. Push and PR checks must run all existing suites and build release binaries for all six
-native targets. Signing remains a separate protected manual operation on main. Later edits
-still require exact-source hosted qualification. Preserve private config,
+allowed. Dispatch `CI` with `operation=qualify` on the candidate branch to run all suites and
+build release binaries for all six native targets. Confirm the run and checks refer to the tested
+commit. Signing remains a separate protected manual operation on `main` using the qualified binaries.
+Later edits still require exact-source hosted qualification. Preserve private config,
 outputs, receipts/journals, snapshots and history. Local old-runtime cleanup waits owner host cutover
 and verified native reconnection. Registration updates only an explicitly selected host entry with
 backups; no automatic host settings mutation or runtime/model installation.

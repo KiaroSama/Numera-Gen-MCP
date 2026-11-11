@@ -15,10 +15,11 @@ tooling suites. No existing Rust test has been removed. Tests still check provid
 real SDK stdio/HTTP sessions, persistence/recovery, bounded child processes, packaging and signatures.
 Production coverage floors remain 85% regions and 80% branches.
 
-CI runs on every push and pull request, as well as manual dispatch. All six Windows/Linux/macOS
+A manual `qualify` dispatch checks out the selected branch's exact commit. All six Windows/Linux/macOS
 x64/ARM64 contexts run quality gates, tests, release builds, dependency notice collection and
-extracted-binary SDK checks. Automatic CI cannot select source preparation or signing. Signing
-still requires the protected environment and a manual invocation on `main`.
+extracted-binary SDK checks. The coverage job and authenticated execution collector complete the test
+batch. Source preparation is not qualification. Signing requires the protected environment and a
+manual invocation on `main`.
 
 The current repository contains no standalone web-panel or Worker source tree. No external web
 panel, gateway dashboard or Worker implementation is migrated by this PR. Their original languages

@@ -82,6 +82,11 @@ pub fn positive() {
         assert_eq!(info["texture_count"], 1);
         assert_eq!(info["node_count"], 2);
         assert_eq!(info["vertex_count"], 3);
+        let primitive = doc["meshes"][0]["primitives"][0].clone();
+        doc["meshes"][0]["primitives"] = json!(vec![primitive; 256]);
+        let repeated = valid(Kind::Model3d, &encode(&doc, &binary));
+        assert_eq!(repeated["primitive_count"], 256);
+        assert_eq!(repeated["vertex_count"], 768);
     }
     for (component, size) in [
         (5120u32, 1usize),
@@ -123,6 +128,20 @@ pub fn positive() {
 }
 
 pub fn negative() {
+    for component in [5121, 5123, 5125] {
+        let (mut doc, binary) = textured(component);
+        let mut fewer_positions = doc["accessors"][0].clone();
+        fewer_positions["count"] = json!(2);
+        doc["accessors"].as_array_mut().unwrap().push(fewer_positions);
+        let mut smaller = doc["meshes"][0]["primitives"][0].clone();
+        smaller["attributes"]["POSITION"] = json!(2);
+        for smaller_first in [false, true] {
+            let mut changed = doc.clone();
+            let primitives = changed["meshes"][0]["primitives"].as_array_mut().unwrap();
+            primitives.insert(usize::from(!smaller_first), smaller.clone());
+            invalid(Kind::Model3d, &encode(&changed, &binary));
+        }
+    }
     let (doc, binary) = parts();
     for (path, value) in [
         ("/asset/version", json!("1.0")),

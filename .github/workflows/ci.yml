@@ -1,7 +1,6 @@
 name: CI
+run-name: ${{ inputs.operation == 'qualify' && 'Tests' || inputs.operation == 'source-preparation' && 'Source preparation' || 'Signing' }} / ${{ github.ref_name }} / ${{ github.sha }}
 on:
-  push:
-  pull_request:
   workflow_dispatch:
     inputs:
       operation:
@@ -32,8 +31,8 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: ci-${{ github.head_ref || github.ref_name }}-${{ inputs.operation || 'qualify' }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref }}-${{ inputs.operation }}
+  cancel-in-progress: false
 env:
   NUMERA_TEST_WORKERS: "2"
   CARGO_BUILD_JOBS: "2"
@@ -60,6 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
       - name: Bootstrap the existing owner without compiling the unresolved workspace
@@ -91,7 +91,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   native:
-    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'qualify'
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'qualify'
     name: native-${{ matrix.target }}
     strategy:
       fail-fast: false
@@ -118,6 +118,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Bootstrap under the authenticated native process owner
@@ -179,7 +180,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   native-coverage:
-    if: github.event_name != 'workflow_dispatch' || inputs.operation == 'qualify'
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'qualify'
     runs-on: ubuntu-latest
     timeout-minutes: 50
     defaults:
@@ -188,6 +189,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Bootstrap stable and instrumented toolchains under the native owner
@@ -233,7 +235,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   execution-matrix:
-    if: inputs.operation == 'qualify'
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'qualify'
     needs: [native, native-coverage]
     runs-on: ubuntu-latest
     permissions:
@@ -246,6 +248,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Bootstrap the native evidence collector
@@ -305,6 +308,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Bootstrap the signing runner under the native owner
@@ -386,6 +390,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Bootstrap the public signed execution collector
@@ -426,6 +431,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Bootstrap the read-only retirement verifier
