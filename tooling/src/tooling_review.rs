@@ -65,6 +65,8 @@ pub fn verify(root: &Path, manifest: &Value, review: &Value) -> io::Result<Value
         "native/devtools/signature_macos.rs",
         "docs/testing/sdk-tooling-migration.json",
         "tooling/src/lib.rs",
+        "tooling/src/commit_status.rs",
+        "tooling/tests/commit_status_contracts.rs",
         "tooling/src/ledger/execution.rs",
         "tooling/src/ledger/input.rs",
         "tooling/src/ledger/mapping.rs",

@@ -10,6 +10,10 @@ replaced by Rust seams and scenario tests. Production coverage still requires 85
 80% branches. All existing workspace tests contribute instrumented execution; the report continues
 to select production code. Only LLVM report generation receives 300s wall / 180s idle.
 Manual qualification retains the authenticated execution collector; protected signing is separate.
+Native, coverage and collector jobs also publish their observed result through GitHub commit statuses
+on that exact SHA, linked to the original run and attempt. Signing has separate status contexts;
+failure and cancellation never become success. A missing reporter or incomplete job remains missing
+proof, not a passing check. These statuses supplement the original reports, not replace them.
 See [the migration record](RUST-MIGRATION.md) and [latest results](TEST-RESULTS.md).
 
 ## Native Rust migration — baseline acceptance

@@ -215,6 +215,10 @@ unsafe extern "system" fn policy(
     0
 }
 
+fn integrity_status_allowed(status: i32) -> bool {
+    status == 0 || status == 0x800b0109u32 as i32
+}
+
 pub(super) fn verify(path: &Path) -> Result<()> {
     let reject = || {
         NumeraError::new(
@@ -279,6 +283,28 @@ pub(super) fn verify(path: &Path) -> Result<()> {
         context: 0,
         signatures: null_mut(),
     };
+    // Authenticode verifies the file digest before our custom chain policy can
+    // override an earlier trust-provider error. Only public-root trust may differ.
+    let mut integrity_action = Guid {
+        a: 0x00aac56b,
+        b: 0xcd44,
+        c: 0x11d0,
+        d: [0x8c, 0xc2, 0, 0xc0, 0x4f, 0xc2, 0x95, 0xee],
+    };
+    data.policy = null_mut();
+    // SAFETY: the live structures describe this file and request no UI or trust mutation.
+    let integrity =
+        unsafe { WinVerifyTrust(-1isize as *mut c_void, &mut integrity_action, &mut data) };
+    data.action = 2;
+    // SAFETY: close releases only the state returned by the preceding verification.
+    let integrity_closed =
+        unsafe { WinVerifyTrust(-1isize as *mut c_void, &mut integrity_action, &mut data) };
+    if !integrity_status_allowed(integrity) || integrity_closed != 0 {
+        return Err(reject());
+    }
+    data.policy = &mut policy_data as *mut PolicyData as *mut c_void;
+    data.action = 1;
+    data.state = null_mut();
     let mut action = Guid {
         a: 0xfc451c16,
         b: 0xac75,
@@ -298,6 +324,15 @@ pub(super) fn verify(path: &Path) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn authenticode_integrity_allows_only_success_or_the_pinned_root_exception() {
+        assert!(super::integrity_status_allowed(0));
+        assert!(super::integrity_status_allowed(0x800b0109u32 as i32));
+        for code in [0x80096010u32, 0x800b0100, 0x800b0101, 0x800b0111, 0x800b0004] {
+            assert!(!super::integrity_status_allowed(code as i32));
+        }
+    }
+
     #[test]
     fn unsigned_test_executable_is_not_accepted_as_native_publisher_code() {
         let path = std::env::current_exe().unwrap();

@@ -46,6 +46,9 @@ fn execute() -> io::Result<()> {
             "evidence-verify" if args.len() == 1 => numera_task::evidence::verify(&context),
             "ledger" if args.len() == 1 => numera_task::ledger::check(&context),
             "case-execution" if args.len() == 1 => numera_task::qualification::check(&context),
+            "commit-status" if args.len() == 3 => {
+                numera_task::commit_status::publish(&context, &args[1], &args[2])
+            }
             "execution-matrix" if args.len() == 1 => numera_task::matrix::check(&context),
             "signed-execution-matrix" if args.len() == 1 => {
                 numera_task::signed_matrix::check(&context)

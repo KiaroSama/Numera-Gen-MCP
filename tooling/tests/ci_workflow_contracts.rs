@@ -112,8 +112,8 @@ fn qualification_preserves_six_native_targets_coverage_and_original_report_colle
     assert!(coverage.contains(" coverage"));
     assert!(coverage.contains(" case-execution"));
     for (job, suffix, retained) in [
-        (native, "${{ matrix.target }}", 2),
-        (coverage, "coverage", 3),
+        (native, "${{ matrix.target }}", 3),
+        (coverage, "coverage", 4),
     ] {
         for report in [
             "test-execution.json",
@@ -137,7 +137,15 @@ fn qualification_preserves_six_native_targets_coverage_and_original_report_colle
     assert!(collector.contains("name:native-execution-matrix"));
     assert!(collector.contains("path:.ci-work/native/execution-matrix.json"));
     assert!(collector.contains("if-no-files-found:error"));
-    assert!(!collector.contains("always()"));
+    assert!(
+        collector.contains("if:github.event_name=='workflow_dispatch'&&inputs.operation=='qualify'")
+    );
+    assert_eq!(collector.matches("if:always()").count(), 1);
+    for job in [native, coverage, block(&workflow, "execution-matrix", 2)] {
+        assert!(job.contains("statuses: write"));
+        assert!(job.contains("NUMERA_OBSERVED_JOB_STATUS: ${{ job.status }}"));
+        assert!(job.contains(" commit-status "));
+    }
 }
 
 #[test]
@@ -171,6 +179,12 @@ fn preparation_and_same_source_signing_remain_isolated_from_native_test_reruns()
             assert!(job.contains(gate), "Missing signing gate: {gate}");
         }
         assert!(!job.contains("source-preparation"));
+        assert!(job.contains("statuses:write"));
+        assert!(job.contains("NUMERA_OBSERVED_JOB_STATUS:${{job.status}}"));
+        assert!(job.contains("commit-status"));
+    }
+    for job in [preparation, block(&workflow, "retirement-verification", 2)] {
+        assert!(!job.contains("statuses: write"));
     }
     assert!(signing.contains("environment: numera-signing"));
     assert!(signing.contains("artifact-ids: ${{ steps.source.outputs.artifact-id }}"));

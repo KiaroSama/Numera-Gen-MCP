@@ -2,6 +2,7 @@ pub mod acceptance;
 pub mod archives;
 pub mod cargo_output;
 pub mod ci;
+pub mod commit_status;
 pub mod context;
 #[cfg(target_os = "linux")]
 pub mod coverage_diagnostics;

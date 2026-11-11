@@ -70,6 +70,10 @@ certificate-backed Mach-O signatures. An ad-hoc Apple signature is not an owner 
 standalone binaries use authenticated detached signatures or a signed manifest covering their exact
 bytes. A detached manifest supplements, never replaces, supported Windows/macOS embedded signatures.
 Both the MCP executable and optional developer executable must satisfy their target contract.
+Windows verification checks Authenticode file integrity separately before evaluating the pinned
+certificate chain. Only the public-root trust error for the subsequently pinned self-signed
+certificate is allowed; bad digests, missing signatures and other trust errors reject activation.
+The verifier never adds a certificate to the system trust store.
 
 The native prepared-artifact verifier authenticates exact manifest bytes against its compiled public
 key, checks target/version/source metadata and bounded regular member hashes, and requires the exact

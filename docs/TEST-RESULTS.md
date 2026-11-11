@@ -1,5 +1,21 @@
 # Test results
 
+## Qualified source and blocked Windows signing - 2026-11-11
+
+[Qualification42990319557](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42990319557)
+succeeded for exact `bf0ce09a6cffbb597195ad71cf7f60258c941e38`: six native targets,
+coverage and the authenticated execution collector. Production coverage measured **85.0344%
+regions (18546/21810)** and **80.4389% branches (4252/5286)**. The original collector retains
+all470 cases /50 suites and seven execution contexts. Main received that same tested commit.
+
+[Protected signing42996772639](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42996772639)
+consumed the original successful qualification attempt without rerunning its tests. Linux and
+macOS signing passed on both architectures. Both Windows jobs failed genuine signature acceptance
+with `Invalid native signature was accepted.`; the signed collector was skipped. No0.3.0 release
+or local activation followed. The independent Authenticode integrity check and exact-commit status
+reporter are corrective source changes, not yet executed acceptance evidence. Negative fixtures,
+signer pins, coverage floors and fail-closed activation remain unchanged.
+
 ## Atomic submission correction - 2026-11-11
 
 [Manual qualification42986603034](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42986603034)

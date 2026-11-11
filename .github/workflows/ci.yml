@@ -92,6 +92,9 @@ jobs:
           retention-days: 7
   native:
     if: github.event_name == 'workflow_dispatch' && inputs.operation == 'qualify'
+    permissions:
+      contents: read
+      statuses: write
     name: native-${{ matrix.target }}
     strategy:
       fail-fast: false
@@ -179,8 +182,18 @@ jobs:
           path: .ci-work/intermediate/*
           if-no-files-found: error
           retention-days: 7
+      - name: Publish real native test status beside the commit
+        if: always()
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERA_OBSERVED_JOB_STATUS: ${{ job.status }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status "$NUMERA_OBSERVED_JOB_STATUS" '${{ matrix.target }}'
   native-coverage:
     if: github.event_name == 'workflow_dispatch' && inputs.operation == 'qualify'
+    permissions:
+      contents: read
+      statuses: write
     runs-on: ubuntu-latest
     timeout-minutes: 50
     defaults:
@@ -234,6 +247,13 @@ jobs:
           path: .ci-work/native/oracle-evidence.zip
           if-no-files-found: error
           retention-days: 7
+      - name: Publish real coverage status beside the commit
+        if: always()
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERA_OBSERVED_JOB_STATUS: ${{ job.status }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status "$NUMERA_OBSERVED_JOB_STATUS" none
   execution-matrix:
     if: github.event_name == 'workflow_dispatch' && inputs.operation == 'qualify'
     needs: [native, native-coverage]
@@ -241,6 +261,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      statuses: write
     timeout-minutes: 50
     defaults:
       run:
@@ -268,6 +289,13 @@ jobs:
           path: .ci-work/native/execution-matrix.json
           if-no-files-found: error
           retention-days: 7
+      - name: Publish authenticated test collection status beside the commit
+        if: always()
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERA_OBSERVED_JOB_STATUS: ${{ job.status }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status "$NUMERA_OBSERVED_JOB_STATUS" none
   signing:
     name: signing-${{ matrix.target }}
     needs: [native, native-coverage, execution-matrix]
@@ -283,6 +311,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      statuses: write
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -369,6 +398,13 @@ jobs:
           path: .ci-work/release/*
           if-no-files-found: error
           retention-days: 7
+      - name: Publish real native signing status beside the commit
+        if: always()
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERA_OBSERVED_JOB_STATUS: ${{ job.status }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status "$NUMERA_OBSERVED_JOB_STATUS" '${{ matrix.target }}'
   signed-execution-matrix:
     if: >-
       !cancelled() && needs.signing.result == 'success' &&
@@ -383,6 +419,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      statuses: write
     timeout-minutes: 50
     defaults:
       run:
@@ -412,6 +449,13 @@ jobs:
             .ci-work/native/current-qualification.json
           if-no-files-found: error
           retention-days: 7
+      - name: Publish authenticated signed qualification status beside the commit
+        if: always()
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERA_OBSERVED_JOB_STATUS: ${{ job.status }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status "$NUMERA_OBSERVED_JOB_STATUS" none
   retirement-verification:
     if: >-
       !cancelled() && needs.signed-execution-matrix.result == 'success' &&
