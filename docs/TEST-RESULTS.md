@@ -1,5 +1,17 @@
 # Test results
 
+## Atomic recovery qualification - 2026-11-11
+
+[Run43023264686](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43023264686)
+for exact `3bc36b2da2bc64e0ef9ce4f90db8f1c0aeda0c03` passed the original three-second Responses
+waiter and atomic release/rollback regression in all six native logs collected so far and coverage. Complete
+qualification still failed: strict Clippy found one unnecessary test `mut`, and tooling review
+correctly rejected a stale inventory after its direct finalization-test consumer changed. Measured
+coverage was **84.9995% regions (18586/21866)**, below85%, and **80.4717% branches (4265/5300)**.
+No rounding or floor exception applies. The next correction removes that `mut`, rebinds the exact
+tooling inputs and exercises stale-owner atomic-update refusal and receipt rollback explicitly.
+These are not successful successor results; signing and release remain blocked.
+
 ## Reservation correction qualification - 2026-11-11
 
 [Run43015996198](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43015996198)

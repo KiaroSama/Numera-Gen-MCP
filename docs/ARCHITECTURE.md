@@ -45,7 +45,8 @@ signing/negative checks and signed extracted SDK checks passed; owner-host cutov
   same transaction, but do not update an identical reservation value. Actual changes remain durable.
   Image recovery closes its renewal tasks, then commits the final receipt and writer release atomically;
   SQL failure restores the prior receipt and local generation cache. Submission retains its writer for continuation
-  persistence. Failure cleanup still releases only the matching owner generation.
+  persistence. Failure cleanup still releases only the matching owner generation. If recovery loses
+  that generation before final commit, it returns the current stored receipt instead of an uncommitted result.
   An instance-owned persistence port delegates publication write/sync/link/unlink to the original OS
   operations by default. Its receipt-update entry seam supports scoped failure verification without
   changing real SQL error sanitization, generation fences or the database schema.

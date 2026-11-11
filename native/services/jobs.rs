@@ -89,6 +89,8 @@ pub async fn recover_local(
             Ok(done) => locked(&generation.store)?.update_and_release(done)?,
             Err(_) => locked(&generation.store)?.release(id, Some(&receipt))?,
         }
+    } else if result.is_ok() {
+        result = Ok(locked(&generation.store)?.get(id)?);
     }
     result
 }
@@ -283,6 +285,8 @@ pub async fn get(
             Ok(done) => locked(&generation.store)?.update_and_release(done)?,
             Err(_) => locked(&generation.store)?.release(id, Some(&receipt))?,
         }
+    } else if result.is_ok() {
+        result = Ok(locked(&generation.store)?.get(id)?);
     }
     result
 }

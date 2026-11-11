@@ -521,7 +521,7 @@ fn final_receipt_and_release_commit_together_or_restore_the_writer() {
     let workspace = common::Workspace::new();
     let directory = workspace.0.join("final-state");
     let mut owner = Store::open(&directory).unwrap();
-    let mut peer = Store::open(&directory).unwrap();
+    let peer = Store::open(&directory).unwrap();
     let current = running(&mut owner, "done", "local", "responses");
     owner.reserve("done", 1024, 2048).unwrap();
     let db = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
@@ -534,7 +534,9 @@ fn final_receipt_and_release_commit_together_or_restore_the_writer() {
     let mut done = current.clone();
     done.value["status"] = json!("completed");
     done.value["storage_outcome"] = json!("completed");
+    let before = done.value.clone();
     assert!(owner.update_and_release(&mut done).is_err());
+    assert_eq!(done.value, before);
     assert_eq!(peer.get("done").unwrap().status(), "running");
     assert!(owner.owns("done", Some(&current)).unwrap());
     owner.reserve("done", 1024, 2048).unwrap();
@@ -552,6 +554,7 @@ fn final_receipt_and_release_commit_together_or_restore_the_writer() {
     assert!(!owner.owns("done", Some(&done)).unwrap());
     let mut stale = current;
     assert_eq!(code(owner.update(&mut stale)), "outcome_unknown");
+    assert_eq!(code(owner.update_and_release(&mut stale)), "outcome_unknown");
     owner.release("done", Some(&done)).unwrap();
     drop(owner);
     drop(peer);
