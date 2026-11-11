@@ -1,5 +1,23 @@
 # Test results
 
+## Package metadata qualification and review correction - 2026-11-11
+
+Exact `b0500d893da2ce5c2379066c9d397ad9a67f2030` passed
+[qualification43064219541](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43064219541),
+attempt1: all six native targets, coverage and the execution collector succeeded. All470cases/50suites
+have applicable execution across seven contexts; each native log has153successful harness summaries,
+coverage149. Coverage remains **18600/21878regions (85.0169%)** and
+**4269/5304branches (80.4864%)**, above unchanged85/80floors. The license/Rust contract and real
+COMMIT/corrupt-metadata regressions passed in all seven producer contexts.
+
+Code review then identified a test-only false positive: matching declaration lines anywhere in a
+manifest could accept values from an unrelated table. Current package values were correct. The
+corrective contracts use Cargo-resolved package name/license/minimum-version metadata in each
+package's own harness, preserving toolchain/README/GPL-byte checks without a parser dependency or
+runtime change. The affected141-source tooling inventory is rebound; historical identities and
+execution flags are unchanged. These new test bytes need a fresh final-source hosted qualification;
+b0500d8success is not transferred. No local Rust, paid call, signer/key/trust or host-setting change.
+
 ## Successful runtime/tooling qualification and signing - 2026-11-11
 
 Exact `a4b46006a02d9a767d8acd6812e9d5077b94d28b` passed

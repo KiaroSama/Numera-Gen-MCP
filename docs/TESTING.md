@@ -22,6 +22,9 @@ inject statement failure and deferred COMMIT failure, retaining real WAL/FULL du
 visibility, generation-cache restoration and reopen checks. Real SQLite metadata tests reject
 oversized continuation updates without replacing the prior value, refuse malformed stored
 continuation/output JSON without deleting rows, and verify valid Unicode metadata across reopen.
+Package identity contracts read Cargo's compile-time `CARGO_PKG_NAME`, `CARGO_PKG_LICENSE` and
+`CARGO_PKG_RUST_VERSION` in each package's own harness, not matching text in unrelated TOML tables.
+The tooling contract also retains the pinned toolchain, README grant and verbatim GPL text checks.
 
 ## Native Rust migration — baseline acceptance
 

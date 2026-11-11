@@ -7,6 +7,14 @@ use numera_gen_mcp::{devtools::identity, logging::Logger};
 #[cfg(windows)]
 use std::{fs, path::Path};
 
+/// Bind the runtime package itself, not matching declarations in another manifest table.
+#[test]
+fn runtime_package_license_and_rust_minimum_are_cargo_resolved() {
+    assert_eq!(env!("CARGO_PKG_NAME"), "numera-gen-mcp");
+    assert_eq!(env!("CARGO_PKG_LICENSE"), "GPL-3.0-or-later");
+    assert_eq!(env!("CARGO_PKG_RUST_VERSION"), "1.99.1");
+}
+
 #[test]
 fn identity_options_refuse_implicit_creation_unknown_flags_and_unqualified_crypto() {
     for args in [

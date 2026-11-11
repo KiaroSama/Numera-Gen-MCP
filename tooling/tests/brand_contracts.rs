@@ -1,18 +1,13 @@
 use numera_task::{context::sha, distribution};
 use std::{fs, path::Path};
 
+/// Cargo resolves this package's fields, so unrelated TOML tables cannot satisfy the checks.
 #[test]
 fn first_party_license_and_rust_minimum_match_the_distribution_notice() {
+    assert_eq!(env!("CARGO_PKG_NAME"), "numera-task");
+    assert_eq!(env!("CARGO_PKG_LICENSE"), "GPL-3.0-or-later");
+    assert_eq!(env!("CARGO_PKG_RUST_VERSION"), "1.99.1");
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-    for path in ["Cargo.toml", "tooling/Cargo.toml"] {
-        let manifest = fs::read_to_string(root.join(path)).unwrap();
-        for declaration in [
-            "license = \"GPL-3.0-or-later\"",
-            "rust-version = \"1.99.1\"",
-        ] {
-            assert!(manifest.lines().any(|line| line == declaration));
-        }
-    }
     let toolchain = fs::read_to_string(root.join("rust-toolchain.toml")).unwrap();
     assert!(toolchain.lines().any(|line| line == "channel = \"1.99.1\""));
     let readme = fs::read_to_string(root.join("README.md")).unwrap();
