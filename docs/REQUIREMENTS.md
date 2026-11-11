@@ -5,7 +5,7 @@ Owner assignment dated 2026-10-02; this is a faithful public requirements summar
 ## Product
 
 Personal provider-independent native Rust generation/transformation MCP server, **Numera Gen MCP**,
-executable/package `numera-gen-mcp`, registration `numera-gen`, GPL-3.0-only. Preserve legacy image
+executable/package and current MCP registration `numera-gen-mcp`, GPL-3.0-or-later. Preserve legacy image
 generation/editing while adding explicitly declared image/video/audio/3D modes. Keep the host chat
 model unchanged; configured modalities never establish forwarding or account entitlement.
 Target repository https://github.com/KiaroSama/Numera-Gen-MCP. Example checkout location: `C:/projects/numera-gen-mcp`; use your own absolute paths.
@@ -72,7 +72,17 @@ Unavailable live checks remain not_run.
 output types and modes while retaining image behavior/config, plus complete active branding as
 Numera Gen MCP and repository `Numera-Gen-MCP`. The additive source targets 0.3.0; final hosted
 qualification remains separate from historical 0.2.0. Private data and immutable signed assets stay
-unchanged. Maintained Rust tooling migration retains the five PowerShell scripts.
+unchanged. The later Rust-only tooling scope supersedes the original five-PowerShell retention
+exception: all 51 first-party executable helpers are replaced, while independent historical source
+and oracle bytes remain immutable test data.
+
+2026-11-11: current first-party code uses GNU GPL version 3 or, at the recipient's option, any later
+version (GPL-3.0-or-later). Canonical GPLv3 text and third-party/historical grants remain unchanged.
+Both package minimums and public labels declare Rust1.99.1, already the stable CI pin. Final README,
+exact-source qualification/signing, compatible signed download and practical reversible installation
+precede removal of inspected disposable generated extras. Keep one current compatible installation
+where safe; preserve private data/config/keys/outputs/receipts/history/fixtures and required rollback.
+Actual host reconnection remains a separate condition, not implied by isolated MCP readiness.
 
 2026-10-02: owner corrected local root (spaced name), required moving all work/preserving assets and
 removing empty wrong root. Completed relocation.

@@ -27,6 +27,8 @@ outputs, receipts/journals, snapshots and history. Local old-runtime cleanup wai
 and verified native reconnection. Registration updates only an explicitly selected host entry with
 backups; no automatic host settings mutation or runtime/model installation.
 
-GPL-3.0-only first-party changes and required dependency/reference licenses/notices remain intact.
+Contribute first-party changes under GPL-3.0-or-later: GNU GPL version 3 or, at the recipient's
+option, any later version. Preserve the complete GPLv3 text and dependency/reference licenses/notices;
+the first-party grant does not relicense third-party code or historical distributions.
 Publication and Release require owner authorization and exact final hosted verification; an uncompiled
 migration candidate is not a ready Release.

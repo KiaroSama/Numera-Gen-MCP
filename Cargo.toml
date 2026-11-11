@@ -2,8 +2,8 @@
 name = "numera-gen-mcp"
 version = "0.3.0"
 edition = "2024"
-rust-version = "1.99"
-license = "GPL-3.0-only"
+rust-version = "1.99.1"
+license = "GPL-3.0-or-later"
 description = "Provider-independent native image, video, audio and 3D orchestration MCP server"
 repository = "https://github.com/KiaroSama/Numera-Gen-MCP"
 publish = false

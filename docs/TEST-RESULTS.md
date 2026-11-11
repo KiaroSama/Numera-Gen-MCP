@@ -1,5 +1,32 @@
 # Test results
 
+## Successful runtime/tooling qualification and signing - 2026-11-11
+
+Exact `a4b46006a02d9a767d8acd6812e9d5077b94d28b` passed
+[qualification43042249179](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43042249179),
+attempt1: all eight required jobs, six native Windows/Linux/macOS x64/ARM64 targets, coverage and
+the authenticated execution collector. All470frozen cases/50suites have applicable execution in
+seven contexts. Each native log contains153successful harness summaries; coverage contains149.
+Region coverage is **18600/21878 (85.0169%)** and branch coverage **4269/5304 (80.4864%)**,
+above unchanged85/80floors. All seven contexts pass the unchanged three-second waiter,
+deferred-COMMIT receipt/cache/SQL rollback and malformed/oversized metadata preservation regressions.
+
+The same source was fast-forwarded to main without a new merge SHA.
+[Protected signing43048283044](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43048283044),
+attempt1, succeeded for all six native targets and the signed execution collector. It selected the
+original successful qualification's binaries, with no repeat of the heavy suites. Genuine signature
+positive/tampered/unsigned/wrong-signer checks and signed extracted activation/SDK checks succeeded;
+qualification-only jobs in that signing run were intentionally skipped, not rerun or counted as passes.
+Existing publisher/key/certificate pins stayed unchanged; no public OS trust or notarization is implied.
+
+These results qualify onlya4b4600, not later edits. The owner's final GPL-3.0-or-later grant,
+Rust1.99.1minimum declarations and packaged README changes require their own final-source
+qualification/signing. The published Release must record that source/run/attempt and original assets;
+no old signed archive may be relabeled or repacked. Actual owner-host cutover, interactive GUI,
+live media/provider entitlement and GPU generation are not_run. Historical retirement verification
+was not reconstructed: the51originals were already removed in68b43e4; current parity/execution does
+not manufacture that missing historical verifier run.
+
 ## Commit rollback qualification - 2026-11-11
 
 [Run43036236847](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43036236847),

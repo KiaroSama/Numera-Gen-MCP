@@ -2,6 +2,34 @@ use numera_task::{context::sha, distribution};
 use std::{fs, path::Path};
 
 #[test]
+fn first_party_license_and_rust_minimum_match_the_distribution_notice() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    for path in ["Cargo.toml", "tooling/Cargo.toml"] {
+        let manifest = fs::read_to_string(root.join(path)).unwrap();
+        for declaration in [
+            "license = \"GPL-3.0-or-later\"",
+            "rust-version = \"1.99.1\"",
+        ] {
+            assert!(manifest.lines().any(|line| line == declaration));
+        }
+    }
+    let toolchain = fs::read_to_string(root.join("rust-toolchain.toml")).unwrap();
+    assert!(toolchain.lines().any(|line| line == "channel = \"1.99.1\""));
+    let readme = fs::read_to_string(root.join("README.md")).unwrap();
+    for notice in [
+        "License GPL-3.0-or-later",
+        "Rust 1.99.1",
+        "either version 3 of the License, or (at your option) any later version.",
+    ] {
+        assert!(readme.contains(notice));
+    }
+    assert_eq!(
+        sha(&fs::read(root.join("LICENSE")).unwrap()),
+        "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    );
+}
+
+#[test]
 fn current_distribution_uses_new_identity_without_replacing_publisher_or_legacy_provenance() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let cargo = fs::read_to_string(root.join("Cargo.toml")).unwrap();

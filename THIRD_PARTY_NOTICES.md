@@ -1,15 +1,17 @@
 # Third-party notices
 
-First-party Numera code is GPL-3.0-only. No reference implementation source copied.
+Current first-party Numera code is GPL-3.0-or-later: GNU GPL version 3 or, at the recipient's
+option, any later version. The complete GPLv3 text remains in LICENSE. This grant does not change
+third-party licenses or immutable historical distributions. No reference implementation source copied.
 
 ## Native distribution
 
 The published 0.2.0 archives include their verified resolved license inventory; see
-[the exact release evidence](docs/releases/0.2.0.md). Current 0.3.0 source is a separate, unqualified
-candidate: successful hosted [preparation42711139081](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42711139081)
-on `370422d` returned a candidate Cargo.lock and Rust formatting patch. Current manifests select
-RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and ZIP9.5.0. Preparation is not runtime or license qualification;
-a complete resolved transitive license inventory is still required before distributing that candidate. Every ready archive must
+[the exact release evidence](docs/releases/0.2.0.md). Version 0.3.0 is a separate distribution.
+The prior `a4b4600` source passed qualification and six-target signing; its results do not qualify
+later license/metadata revisions. Every final Release must identify its own exact qualified source
+and original signed artifacts. Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and
+ZIP9.5.0. Preparation alone is neither runtime nor license qualification. Every ready archive must
 include the actual resolved dependency licenses/notices and bundled SQLite/codec notices; this document
 is not a substitute. RMCP, Tokio, reqwest, rusqlite, serde/serde_json, ICU4X, image, Base64, SHA2, chrono,
 regex, UUID, URL, ring and the tooling archive crates retain their upstream licenses.
@@ -44,7 +46,9 @@ OpenSSL is Apache-2.0; retain the upstream distribution's applicable license/not
 bytes are distributed. This hosted test dependency is not a bundled MCP runtime dependency, a
 publisher credential or a local installation. Current source adds no crypto implementation crate and
 copies no upstream implementation. Original package: [FireDaemon OpenSSL](https://github.com/firedaemon/openssl).
-Actual hosted loading and disposable-key tests remain unqualified until their own run succeeds.
+The priora4b4600 qualification and signing runs passed the applicable hosted Windows identity and
+disposable-key checks on both architectures. Final artifacts still require their own exact-source
+proof; no test DLL or disposable test key is a publisher credential or a runtime dependency.
 
 ## Historical Node implementation / hosted source oracle
 

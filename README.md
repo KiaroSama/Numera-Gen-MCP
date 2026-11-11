@@ -5,8 +5,8 @@
 <img src="docs/assets/logo.png" alt="Numera Gen MCP logo" width="240" />
 
 [![CI workflow on main](https://github.com/KiaroSama/Numera-Gen-MCP/actions/workflows/ci.yml/badge.svg?branch=main&event=workflow_dispatch)](https://github.com/KiaroSama/Numera-Gen-MCP/actions/workflows/ci.yml?query=branch%3Amain+event%3Aworkflow_dispatch)
-[![License GPL-3.0-only](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
-[![Rust 1.99](https://img.shields.io/badge/Rust-1.99-CE422B)](rust-toolchain.toml)
+[![License GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](#license)
+[![Rust 1.99.1](https://img.shields.io/badge/Rust-1.99.1-CE422B)](rust-toolchain.toml)
 [![Rust edition 2024](https://img.shields.io/badge/edition-2024-CE422B)](Cargo.toml)
 [![Native executable](https://img.shields.io/badge/distribution-native_binary-blue)](Cargo.toml)
 [![MCP stdio](https://img.shields.io/badge/MCP-stdio-7651a8)](docs/ARCHITECTURE.md)
@@ -27,11 +27,14 @@ Keep your host chat model unchanged. Named connections separate native image pro
 forwarding, configured GPU ComfyUI workflows and exact fal queue endpoint contracts. No paid POST
 retries, hidden uploads, prompt enhancement or automatic provider/model fallback.
 
-**0.3.0 release candidate:** multimedia generation, explicit output kinds/modes, twelve tools and
-Rust-only maintained tooling are integrated. Use the new installation guide only with the signed
-[0.3.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.3.0) after it is published.
-If that release is absent, retain the working [historical 0.2.0](docs/releases/0.2.0.md) installation;
-source or an unsigned CI intermediate is not an installable final release.
+**Version 0.3.0** adds multimedia generation, explicit output kinds/modes, twelve tools and
+Rust-only maintained tooling. First-party code is now **GPL-3.0-or-later**; source builds use
+**Rust 1.99.1**, while released binaries need no compiler or language runtime.
+
+Install only the signed [0.3.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.3.0)
+with its exact-source verification record. If that Release is absent, publication is still pending:
+retain the working [historical 0.2.0](docs/releases/0.2.0.md) installation. Source or an unsigned CI
+intermediate is not an installable final release.
 
 The runtime, developer utility, CI driver and maintained tests are Rust. All 51 replaced
 Python/JavaScript/PowerShell source files have been removed; historical oracle archives remain
@@ -43,22 +46,22 @@ the same qualified binaries without rerunning the heavy suites. The workflow bad
 not proof that preparation, tests and signatures all ran; [test evidence](docs/TEST-RESULTS.md) records
 the exact source/run/attempt. [Rust migration](docs/RUST-MIGRATION.md) records scope and dispositions.
 
-**Native 0.2.0 is available:** all 470 frozen baseline cases and 50 suites have reviewed native assertion
-mappings and applicable execution at `f2535577c2e3145da03e2d5c123d7de061656860`.
-[Run40244894089](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/40244894089), attempt 2,
-passed all sixteen jobs: six native targets, strict quality checks, real publisher signatures,
-tamper/wrong-signer rejection and signed extracted stdio/HTTP SDK execution. Coverage was
-85.7791% regions / 83.3426% branches, above unchanged 85% / 80% floors. Signed maintenance passed
-all six targets, including native activation checks and full-width Windows child exit codes.
-The published Windows x64 archive additionally passed current-host pinned signature verification and
-ten-tool SDK readiness. [Signing and trust](docs/SIGNING.md) explains why self-signed identity is not
-public OS trust, Apple Developer ID or notarization. That release's production implementation is Rust; its historical CI used a frozen Node oracle/SDK
-runtime. The 0.3.0 source replaces maintained Python/JavaScript tooling with the separate Rust
-`numera-task` workspace and retains independently generated expected bytes rather than regenerating
-expectations with the implementation under test. Qualification is still pending.
-Preserve the working installation until a replacement is signed and its actual host connection is
-verified. Historical cutover evidence does not qualify the new source tree.
-See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [historical test evidence](docs/TEST-RESULTS.md).
+The 0.3.0 runtime/tooling source at `a4b4600` passed all eight qualification jobs in
+[run43042249179](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43042249179), attempt 1:
+all 470 frozen cases / 50 suites across seven runtime/coverage contexts, with **85.0169% region**
+and **80.4864% branch** coverage. The unchanged floors are 85% / 80%. Its six signed native targets
+passed [run43048283044](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43048283044).
+These are prior-source results, not proof for later edits: the final license/README/Rust-metadata
+revision must pass its own exact-source qualification and protected signing before publication.
+The Release record identifies the actual final source, runs, targets and checksums.
+
+[Historical 0.2.0](docs/releases/0.2.0.md) retains its original signed bytes and image-only template.
+Preserve a working installation until the replacement is signed and the actual host connection is
+verified. [Signing and trust](docs/SIGNING.md) distinguishes the pinned self-signed publisher from
+public OS trust, Apple Developer ID and notarization. CI/SDK readiness does not prove actual GUI
+reconnection, live provider entitlement or GPU generation. Independently generated oracle bytes
+remain immutable test inputs, not expectations regenerated by the implementation under test.
+See [migration acceptance](docs/testing/MIGRATION-MATRIX.md) and [test evidence](docs/TEST-RESULTS.md).
 
 The native target also adds an optional direct HTTP MCP endpoint at `http://127.0.0.1:1969/mcp`,
 a configurable port and a cross-platform native menu. It reuses Numera's own tools, not a remote MCP
@@ -638,8 +641,14 @@ Never retry unknown generation automatically. Cancel waiting does not prove upst
 
 ## License
 
-[GPL-3.0-only](LICENSE), complete GPLv3 text. [Third-party notices](THIRD_PARTY_NOTICES.md).
-Generated image/asset/model licensing is separate from software licensing.
+Numera Gen MCP's current first-party code is licensed under **GPL-3.0-or-later**.
+You may redistribute it and/or modify it under the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+It is distributed without any warranty; see the complete, unchanged [GPLv3 text](LICENSE).
+
+[Third-party notices](THIRD_PARTY_NOTICES.md) retain their own grants. This first-party license change
+does not rewrite historical signed releases or establish rights to generated media, inputs, models
+or other assets.
 
 ## Donate
 

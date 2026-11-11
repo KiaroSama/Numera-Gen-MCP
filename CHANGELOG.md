@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased 0.3.0 - 2026-10-29
+## Unreleased 0.3.0 - 2026-11-11
 
 The current source adopts Numera Gen MCP and `numera-gen-mcp`, adds explicit per-model media kinds
 and transformation modes, and authors fal queue orchestration for image, video, audio and 3D outputs.
@@ -25,9 +25,17 @@ Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and ZIP9.5.0. Succ
 on `370422d` returned a candidate lockfile and Rust formatting patch only, without compilation, tests
 or signing inputs. Later edits are not covered by that formatting result. Assertion parity,
 six-target runtime/package verification and genuine signatures remain required before release.
-Existing-key signing on `main` is authorized but has not run for this candidate.
-The installation guide uses the published 0.2.0 archive and its actual legacy executable/template;
-current-source examples and media declarations do not upgrade that binary.
+The prior `a4b4600` source passed all eight qualification jobs in run43042249179/attempt1,
+with all470cases/50suites across seven contexts and85.0169% regions/80.4864% branches.
+Protected main-only signing43048283044 passed all six native targets and the signed collector,
+using the same qualified binaries and existing signer. These results are not proof for later edits.
+
+At the owner's request, current first-party code now uses GPL-3.0-or-later, with the complete GPLv3
+text unchanged and third-party/historical grants retained. Both package minimums and the README
+label now match the existing Rust1.99.1 toolchain. The refreshed installation guide targets the
+actual0.3.0 archive/executable and keeps historical0.2.0 instructions separate. These final build
+inputs require their own exact-source qualification/signing before publication or local replacement;
+no old signed archive is relabeled or repacked.
 
 ## Native 0.2.0 - 2026-10-26
 
