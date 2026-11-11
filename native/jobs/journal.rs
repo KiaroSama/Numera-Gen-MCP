@@ -73,23 +73,24 @@ impl Store {
             .map_err(|_| NumeraError::storage())
     }
     pub fn reserve(&mut self, id: &str, bytes: i64, budget: i64) -> Result<()> {
+        self.transaction(|store| store.reserve_in_transaction(id, bytes, budget))
+    }
+    pub(super) fn reserve_in_transaction(&mut self, id: &str, bytes: i64, budget: i64) -> Result<()> {
         if bytes <= 0 || budget <= 0 || bytes > 9007199254740991 || budget > 9007199254740991 {
             return Err(NumeraError::new(
                 "invalid_configuration",
                 "Result journal limits must be positive safe integers.",
             ));
         }
-        self.transaction(|store| {
-            store.fence(id,None)?;
-            let used:i64=store.db.query_row("SELECT COALESCE(SUM(MAX(reservation,COALESCE((SELECT SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)) FROM all_result_journal WHERE request_id=requests.id),0))),0) FROM requests WHERE id!=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
-            let retained:i64=store.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM all_result_journal WHERE request_id=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
-            let reserve=bytes.max(retained);
-            if used.checked_add(reserve).is_none_or(|v|v>budget) {
-                return Err(NumeraError::new("rate_limited","Private result journal capacity is full; recover retained outputs before authorizing more image work.").stage("storage"));
-            }
-            store.db.execute("UPDATE requests SET reservation=? WHERE id=?",params![reserve,id]).map_err(|_|NumeraError::storage())?;
-            Ok(())
-        })
+        self.fence(id, None)?;
+        let used:i64=self.db.query_row("SELECT COALESCE(SUM(MAX(reservation,COALESCE((SELECT SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)) FROM all_result_journal WHERE request_id=requests.id),0))),0) FROM requests WHERE id!=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
+        let retained:i64=self.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM all_result_journal WHERE request_id=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
+        let reserve = bytes.max(retained);
+        if used.checked_add(reserve).is_none_or(|v| v > budget) {
+            return Err(NumeraError::new("rate_limited","Private result journal capacity is full; recover retained outputs before authorizing more image work.").stage("storage"));
+        }
+        self.db.execute("UPDATE requests SET reservation=? WHERE id=?",params![reserve,id]).map_err(|_|NumeraError::storage())?;
+        Ok(())
     }
     fn other_bytes(&self, id: &str, index: u32) -> Result<i64> {
         self.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),(SELECT json_extract(metadata,'$.bytes') FROM outputs WHERE id=output_id),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM all_result_journal WHERE request_id=? AND item!=?",params![id,index],|r|r.get(0)).map_err(|_|NumeraError::storage())

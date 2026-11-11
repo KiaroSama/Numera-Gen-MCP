@@ -397,6 +397,77 @@ fn releasing_empty_terminal_reservation_keeps_receipt_but_frees_full_budget() {
 }
 
 #[test]
+fn atomic_submission_preserves_queue_reservation_failure_and_existing_identity() {
+    use numera_gen_mcp::jobs::SubmissionLimits;
+    let workspace = common::Workspace::new();
+    let directory = workspace.0.join("atomic-state");
+    let limits = SubmissionLimits {
+        queued: 4,
+        global: 1,
+        connection: 1,
+        bytes: 4096,
+        journal: 4096,
+    };
+    let mut owner = Store::open(&directory).unwrap();
+    let mut peer = Store::open(&directory).unwrap();
+    let first = owner
+        .prepare_submission(receipt("first", "local"), "first", "identity", limits)
+        .unwrap();
+    assert!(first.fresh && first.admission.unwrap());
+    let visible = peer.get("first").unwrap();
+    assert_eq!(visible.value["status"], "submitting");
+    assert_eq!(visible.value["generation_outcome"], "unknown");
+    assert_eq!(visible.value["another_submission_may_charge"], true);
+    let repeated = peer
+        .prepare_submission(receipt("first", "local"), "first", "identity", limits)
+        .unwrap();
+    assert!(!repeated.fresh && !repeated.admission.unwrap());
+    let queued = peer
+        .prepare_submission(receipt("queued", "local"), "queued", "identity", limits)
+        .unwrap();
+    assert!(queued.fresh && !queued.admission.unwrap());
+    assert_eq!(queued.receipt.value["status"], "prepared");
+    finish_probe(&mut owner, "first");
+    let mut ready = queued.receipt;
+    assert!(peer.admit_submission(&mut ready, limits).unwrap());
+    assert_eq!(ready.value["generation_outcome"], "unknown");
+    finish_probe(&mut peer, "queued");
+    let bad = owner
+        .prepare_submission(
+            receipt("no-space", "local"),
+            "no-space",
+            "identity",
+            SubmissionLimits {
+                journal: 1,
+                ..limits
+            },
+        )
+        .unwrap();
+    assert!(bad.fresh);
+    assert_eq!(code(bad.admission), "rate_limited");
+    assert_eq!(bad.receipt.value["status"], "prepared");
+    assert_eq!(peer.get("no-space").unwrap().value["status"], "prepared");
+    let next = peer
+        .prepare_submission(receipt("next", "other"), "next", "identity", limits)
+        .unwrap();
+    assert!(next.fresh && next.admission.unwrap());
+    prepare(&mut owner, "reservation-probe", "third");
+    assert_eq!(code(owner.reserve("reservation-probe", 1, 4096)), "rate_limited");
+    assert_eq!(
+        code(owner.prepare_submission(receipt("first", "local"), "changed", "identity", limits)),
+        "request_id_conflict"
+    );
+    drop(owner);
+    drop(peer);
+    let reopened = Store::open(&directory).unwrap();
+    assert_eq!(reopened.get("next").unwrap().value["status"], "submitting");
+    assert_eq!(
+        reopened.get("no-space").unwrap().value["generation_outcome"],
+        "not_submitted"
+    );
+}
+
+#[test]
 fn two_real_store_instances_enforce_global_and_connection_admission_limits() {
     let workspace = common::Workspace::new();
     let directory = workspace.0.join("state");

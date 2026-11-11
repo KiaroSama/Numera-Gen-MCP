@@ -32,9 +32,12 @@ signing/negative checks and signed extracted SDK checks passed; owner-host cutov
   Cancellation of local waiting does not establish upstream cancellation or a refund.
   `polling.rs` supplies the production Comfy loop's immediate-first-poll/fixed-500ms/pre-cancel
   scheduling; callers retain receipt/fence/retention and sanitized cancellation-error policy.
-  Intent diagnostics expose numeric preparation/admission/reservation/update durations only, without
-  changing deadlines or adding event bodies. The cumulative pre-submit duration includes preparation;
-  logging's own synchronous write cost is outside those measurements.
+  Intent diagnostics expose numeric preparation and queued-admission durations, without changing
+  deadlines or adding event bodies. Fresh unqueued preparation, admission, journal reservation and
+  submission intent share one durable transaction. A savepoint preserves the prepared receipt when
+  admission or reservation fails; POST remains forbidden until the outer commit succeeds. Queued
+  requests retain their prepared intent and later atomically acquire capacity, reservation and intent.
+  Logging's own synchronous write cost is outside those measurements.
 - `native/jobs/`: bundled SQLite, preserved schema v2/WAL/FULL, renewable 30-second leases and
   generation fences. Journal phases waiting/retained/publishing/committed keep stable output identity
   across filesystem/SQL crash gaps. State remains local shared storage, not an unreliable network drive.

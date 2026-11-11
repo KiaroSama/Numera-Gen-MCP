@@ -3,6 +3,8 @@ mod lifecycle;
 mod migration;
 mod persistence;
 mod store;
+mod submission;
 pub use journal::ResultItem;
 pub use persistence::{NativePersistence, Persistence};
 pub use store::{Receipt, RequestRow, Store};
+pub use submission::{PreparedSubmission, SubmissionLimits};

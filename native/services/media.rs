@@ -106,8 +106,21 @@ pub async fn run(
         "generation_outcome":"not_submitted","storage_outcome":"not_started","another_submission_may_charge":false,
         "output_requirements":{"output_subdirectory":request.output_subdirectory.as_deref().unwrap_or(&now[..10]),"filename_prefix":request.filename_prefix,"media":expected_media},"created_at":now,"updated_at":now}),
     );
-    let (fresh, mut receipt) = locked(&generation.store)?.prepare(initial, &hash, &identity)?;
-    if !fresh {
+    let config = &generation.config.value;
+    let limits = crate::jobs::SubmissionLimits {
+        queued: config["maxQueuedRequests"].as_u64().unwrap_or(16) as usize,
+        global: config["maxConcurrentRequests"].as_u64().unwrap_or(4) as usize,
+        connection: connection["maxConcurrentRequests"].as_u64().unwrap_or(2) as usize,
+        bytes: config["files"]["maxAggregateBytes"]
+            .as_i64()
+            .unwrap_or(100 * 1024 * 1024),
+        journal: config["files"]["maxJournalBytes"]
+            .as_i64()
+            .unwrap_or(256 * 1024 * 1024),
+    };
+    let prepared = locked(&generation.store)?.prepare_submission(initial, &hash, &identity, limits)?;
+    let mut receipt = prepared.receipt;
+    if !prepared.fresh {
         return Ok(receipt);
     }
     match generation.active.lock() {
@@ -126,39 +139,19 @@ pub async fn run(
         true,
     );
     let action = async {
-        let config = &generation.config.value;
-        if locked(&generation.store)?.queued()? as u64
-            > config["maxQueuedRequests"].as_u64().unwrap_or(16)
-        {
-            return Err(NumeraError::new(
-                "rate_limited",
-                "Local bounded queue is full.",
-            ));
-        }
-        while !locked(&generation.store)?.admit(
-            &id,
-            &name,
-            config["maxConcurrentRequests"].as_u64().unwrap_or(4) as usize,
-            connection["maxConcurrentRequests"].as_u64().unwrap_or(2) as usize,
-        )? {
-            super::generation::wait(&cancel, 50).await?;
+        let mut admitted = prepared.admission?;
+        while !admitted {
+            if cancel.is_cancelled() {
+                return Err(super::generation::cancelled());
+            }
+            admitted = locked(&generation.store)?.admit_submission(&mut receipt, limits)?;
+            if !admitted {
+                super::generation::wait(&cancel, 50).await?;
+            }
         }
         if cancel.is_cancelled() {
             return Err(super::generation::cancelled());
         }
-        locked(&generation.store)?.reserve(
-            &id,
-            config["files"]["maxAggregateBytes"]
-                .as_i64()
-                .unwrap_or(100 * 1024 * 1024),
-            config["files"]["maxJournalBytes"]
-                .as_i64()
-                .unwrap_or(256 * 1024 * 1024),
-        )?;
-        receipt.value["status"] = json!("submitting");
-        receipt.value["generation_outcome"] = json!("unknown");
-        receipt.value["another_submission_may_charge"] = json!(true);
-        locked(&generation.store)?.update(&mut receipt)?;
         generation.logger.log(
             "INFO",
             "media",

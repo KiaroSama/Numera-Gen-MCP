@@ -31,6 +31,8 @@ pub(super) struct Submission<'a, 'input> {
     pub identity: &'a str,
     pub before_submit_ms: u64,
     pub prepare_ms: u64,
+    pub admission: Result<bool>,
+    pub limits: crate::jobs::SubmissionLimits,
 }
 
 impl Generation {
@@ -48,57 +50,33 @@ impl Generation {
             identity,
             before_submit_ms,
             prepare_ms,
+            admission,
+            limits,
         } = submission;
         let admitting = std::time::Instant::now();
         let c = input.connection;
         let config = &self.config.value;
-        if locked(&self.store)?.queued()? as u64
-            > config["maxQueuedRequests"].as_u64().unwrap_or(16)
-        {
-            return Err(NumeraError::new(
-                "rate_limited",
-                "Local bounded queue is full.",
-            ));
-        }
-        while !locked(&self.store)?.admit(
-            id,
-            name,
-            config["maxConcurrentRequests"].as_u64().unwrap_or(4) as usize,
-            if c["adapter"] == "comfyui" {
-                1
-            } else {
-                c["maxConcurrentRequests"].as_u64().unwrap_or(2) as usize
-            },
-        )? {
-            tokio::select! {_=cancel.cancelled()=>return Err(cancelled()),_=tokio::time::sleep(Duration::from_millis(50))=>{}}
+        let mut admitted = admission?;
+        while !admitted {
+            if cancel.is_cancelled() {
+                return Err(cancelled());
+            }
+            admitted = locked(&self.store)?.admit_submission(receipt, limits)?;
+            if !admitted {
+                tokio::select! {_=cancel.cancelled()=>return Err(cancelled()),_=tokio::time::sleep(Duration::from_millis(50))=>{}}
+            }
         }
         if cancel.is_cancelled() {
             return Err(cancelled());
         }
         let admission_ms = admitting.elapsed().as_millis() as u64;
-        let reserving = std::time::Instant::now();
-        locked(&self.store)?.reserve(
-            id,
-            config["files"]["maxAggregateBytes"]
-                .as_i64()
-                .unwrap_or(100 * 1024 * 1024),
-            config["files"]["maxJournalBytes"]
-                .as_i64()
-                .unwrap_or(256 * 1024 * 1024),
-        )?;
-        let reserve_ms = reserving.elapsed().as_millis() as u64;
-        receipt.value["status"] = json!("submitting");
-        receipt.value["generation_outcome"] = json!("unknown");
-        let updating = std::time::Instant::now();
-        locked(&self.store)?.update(receipt)?;
-        let update_ms = updating.elapsed().as_millis() as u64;
         self.logger.log(
             "INFO",
             "generation",
             "Submission intent persisted.",
             json!({"requestId":id,"connection":name,"before_submit_ms":before_submit_ms,
                 "prepare_ms":prepare_ms,"admission_ms":admission_ms,
-                "reserve_ms":reserve_ms,"update_ms":update_ms}),
+                "atomic_intent":true}),
         );
         let mut claimed = false;
         let result = if let Some(workflow) = workflow {

@@ -193,27 +193,41 @@ impl Store {
 
     pub fn prepare(
         &mut self,
+        receipt: Receipt,
+        hash: &str,
+        identity: &str,
+    ) -> Result<(bool, Receipt)> {
+        self.transaction(|store| store.prepare_in_transaction(receipt, hash, identity))
+    }
+
+    pub(super) fn prepare_in_transaction(
+        &mut self,
         mut receipt: Receipt,
         hash: &str,
         identity: &str,
     ) -> Result<(bool, Receipt)> {
-        self.transaction(|store| {
-            let id = receipt.id()?.to_owned();
-            let old: Option<(String,String)> = store.db.query_row("SELECT fingerprint,identity FROM requests WHERE id=?",[&id],|r|Ok((r.get(0)?,r.get(1)?)))
-                .optional().map_err(|_|NumeraError::storage())?;
-            if let Some((old_hash,old_identity)) = old {
-                if old_hash != hash || old_identity != identity {
-                    return Err(NumeraError::new("request_id_conflict","Request ID is already bound to different effective inputs or connection identity."));
-                }
-                store.expire(Some(&id))?;
-                return Ok((false,store.get(&id)?));
+        let id = receipt.id()?.to_owned();
+        let old: Option<(String, String)> = self
+            .db
+            .query_row(
+                "SELECT fingerprint,identity FROM requests WHERE id=?",
+                [&id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()
+            .map_err(|_| NumeraError::storage())?;
+        if let Some((old_hash, old_identity)) = old {
+            if old_hash != hash || old_identity != identity {
+                return Err(NumeraError::new("request_id_conflict","Request ID is already bound to different effective inputs or connection identity."));
             }
-            store.db.execute("INSERT INTO requests(id,fingerprint,identity,receipt,owner,lease) VALUES(?,?,?,?,?,?)",
-                params![id,hash,identity,receipt.value.to_string(),store.owner,store.lease_now()+Self::LEASE_MS]).map_err(|_|NumeraError::storage())?;
-            store.generations.insert(id,1);
-            receipt.stamp(1);
-            Ok((true,receipt))
-        })
+            self.expire(Some(&id))?;
+            return Ok((false, self.get(&id)?));
+        }
+        self.db.execute("INSERT INTO requests(id,fingerprint,identity,receipt,owner,lease) VALUES(?,?,?,?,?,?)",
+            params![id,hash,identity,receipt.value.to_string(),self.owner,self.lease_now()+Self::LEASE_MS]).map_err(|_|NumeraError::storage())?;
+        self.generations.insert(id, 1);
+        receipt.stamp(1);
+        Ok((true, receipt))
     }
 
     pub fn update(&self, receipt: &mut Receipt) -> Result<()> {

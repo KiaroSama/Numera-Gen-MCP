@@ -90,21 +90,37 @@ impl Store {
         global: usize,
         per_connection: usize,
     ) -> Result<bool> {
-        self.transaction(|store| {
-            store.expire(None)?;
-            let values:Vec<String>={
-                let mut stmt=store.db.prepare("SELECT receipt FROM requests WHERE lease>? OR (owner IS NULL AND json_extract(receipt,'$.status')='running' AND json_extract(receipt,'$.upstream_job') IS NOT NULL)").map_err(|_|NumeraError::storage())?;
-                stmt.query_map([store.lease_now()],|r|r.get(0)).and_then(Iterator::collect).map_err(|_|NumeraError::storage())?
-            };
-            let all:Vec<Value>=values.into_iter().map(|v|Value::parse_with_limit(&v,128*1024*1024).map_err(|_|NumeraError::storage())).collect::<Result<Vec<Value>>>()?
-                .into_iter().filter(|v|matches!(v["status"].as_str(),Some("submitting"|"running"|"finalizing")) && v["upstream_terminal"].is_null() && v["generation_outcome"]!="completed").collect();
-            if all.len()>=global || all.iter().filter(|v|v["connection"]==connection).count()>=per_connection {return Ok(false);}
-            let mut receipt=store.get(id)?;
-            if receipt.status()!="prepared" || !store.owns(id,None)? {return Ok(false);}
-            receipt.value["status"]=json!("submitting");
-            store.update(&mut receipt)?;
-            Ok(true)
-        })
+        self.transaction(|store| store.admit_in_transaction(id, connection, global, per_connection))
+    }
+
+    pub(super) fn admit_in_transaction(
+        &mut self,
+        id: &str,
+        connection: &str,
+        global: usize,
+        per_connection: usize,
+    ) -> Result<bool> {
+        self.expire(None)?;
+        let values: Vec<String> = {
+            let mut stmt=self.db.prepare("SELECT receipt FROM requests WHERE lease>? OR (owner IS NULL AND json_extract(receipt,'$.status')='running' AND json_extract(receipt,'$.upstream_job') IS NOT NULL)").map_err(|_|NumeraError::storage())?;
+            stmt.query_map([self.lease_now()], |r| r.get(0))
+                .and_then(Iterator::collect)
+                .map_err(|_| NumeraError::storage())?
+        };
+        let all:Vec<Value>=values.into_iter().map(|v|Value::parse_with_limit(&v,128*1024*1024).map_err(|_|NumeraError::storage())).collect::<Result<Vec<Value>>>()?
+            .into_iter().filter(|v|matches!(v["status"].as_str(),Some("submitting"|"running"|"finalizing")) && v["upstream_terminal"].is_null() && v["generation_outcome"]!="completed").collect();
+        if all.len() >= global
+            || all.iter().filter(|v| v["connection"] == connection).count() >= per_connection
+        {
+            return Ok(false);
+        }
+        let mut receipt = self.get(id)?;
+        if receipt.status() != "prepared" || !self.owns(id, None)? {
+            return Ok(false);
+        }
+        receipt.value["status"] = json!("submitting");
+        self.update(&mut receipt)?;
+        Ok(true)
     }
 
     pub fn claim(&mut self, id: &str, expected: Option<&Receipt>, received: bool) -> Result<bool> {
@@ -128,10 +144,12 @@ impl Store {
     }
 
     pub fn queued(&mut self) -> Result<usize> {
-        self.transaction(|store| {
-            store.expire(None)?;
-            store.db.query_row("SELECT COUNT(*) FROM requests WHERE json_extract(receipt,'$.status')='prepared'",[],|r|r.get::<_,i64>(0))
-                .map(|v|v as usize).map_err(|_|NumeraError::storage())
-        })
+        self.transaction(Self::queued_in_transaction)
+    }
+
+    pub(super) fn queued_in_transaction(&mut self) -> Result<usize> {
+        self.expire(None)?;
+        self.db.query_row("SELECT COUNT(*) FROM requests WHERE json_extract(receipt,'$.status')='prepared'",[],|r|r.get::<_,i64>(0))
+            .map(|v|v as usize).map_err(|_|NumeraError::storage())
     }
 }

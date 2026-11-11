@@ -347,9 +347,25 @@ impl Generation {
             "another_submission_may_charge":true,"output_requirements":required,"created_at":now,"updated_at":now}),
         );
         let preparing = std::time::Instant::now();
-        let (fresh, mut receipt) = locked(&self.store)?.prepare(initial, &hash, &identity)?;
+        let limits = crate::jobs::SubmissionLimits {
+            queued: config["maxQueuedRequests"].as_u64().unwrap_or(16) as usize,
+            global: config["maxConcurrentRequests"].as_u64().unwrap_or(4) as usize,
+            connection: if c["adapter"] == "comfyui" {
+                1
+            } else {
+                c["maxConcurrentRequests"].as_u64().unwrap_or(2) as usize
+            },
+            bytes: config["files"]["maxAggregateBytes"]
+                .as_i64()
+                .unwrap_or(100 * 1024 * 1024),
+            journal: config["files"]["maxJournalBytes"]
+                .as_i64()
+                .unwrap_or(256 * 1024 * 1024),
+        };
+        let prepared = locked(&self.store)?.prepare_submission(initial, &hash, &identity, limits)?;
         let prepare_ms = preparing.elapsed().as_millis() as u64;
-        if !fresh {
+        let mut receipt = prepared.receipt;
+        if !prepared.fresh {
             return Ok(receipt);
         }
         self.active
@@ -372,6 +388,8 @@ impl Generation {
                 identity: &identity,
                 before_submit_ms: started.elapsed().as_millis() as u64,
                 prepare_ms,
+                admission: prepared.admission,
+                limits,
             }),
         )
         .await;
