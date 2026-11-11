@@ -554,12 +554,76 @@ fn final_receipt_and_release_commit_together_or_restore_the_writer() {
     assert!(!owner.owns("done", Some(&done)).unwrap());
     let mut stale = current;
     assert_eq!(code(owner.update(&mut stale)), "outcome_unknown");
-    assert_eq!(code(owner.update_and_release(&mut stale)), "outcome_unknown");
+    assert_eq!(
+        code(owner.update_and_release(&mut stale)),
+        "outcome_unknown"
+    );
     owner.release("done", Some(&done)).unwrap();
     drop(owner);
     drop(peer);
     let reopened = Store::open(&directory).unwrap();
     assert_eq!(reopened.get("done").unwrap().status(), "completed");
+}
+
+#[test]
+fn final_commit_failure_restores_receipt_cache_and_durable_ownership() {
+    let workspace = common::Workspace::new();
+    let directory = workspace.0.join("commit-state");
+    let mut owner = Store::open(&directory).unwrap();
+    let peer = Store::open(&directory).unwrap();
+    let current = running(&mut owner, "commit", "local", "responses");
+    let mut wrong_generation = current.clone();
+    wrong_generation.stamp(current.generation.unwrap() + 1);
+    assert_eq!(
+        code(owner.update_and_release(&mut wrong_generation)),
+        "outcome_unknown"
+    );
+    assert_eq!(peer.get("commit").unwrap().value, current.value);
+    owner.reserve("commit", 1024, 2048).unwrap();
+    let db = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
+    // Both UPDATEs succeed; only COMMIT checks this deferred foreign key.
+    db.execute_batch(
+        "CREATE TABLE commit_parent(id INTEGER PRIMARY KEY);
+         CREATE TABLE commit_child(id INTEGER REFERENCES commit_parent(id) DEFERRABLE INITIALLY DEFERRED);
+         CREATE TRIGGER defer_release_failure AFTER UPDATE OF owner ON requests
+         WHEN NEW.id='commit' AND NEW.owner IS NULL
+         BEGIN INSERT INTO commit_child VALUES(1); END;",
+    )
+    .unwrap();
+    let mut done = current.clone();
+    done.value["status"] = json!("completed");
+    done.value["storage_outcome"] = json!("completed");
+    done.value["updated_at"] = json!("before-commit");
+    let before = done.clone();
+    assert_eq!(
+        code(owner.update_and_release(&mut done)),
+        "storage_error"
+    );
+    assert_eq!(done.value, before.value);
+    assert_eq!(done.generation, before.generation);
+    assert_eq!(peer.get("commit").unwrap().value, current.value);
+    assert!(owner.owns("commit", Some(&current)).unwrap());
+    owner.reserve("commit", 1024, 2048).unwrap();
+    let children: i64 = db
+        .query_row("SELECT count(*) FROM commit_child", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(children, 0);
+    let retained: bool = db
+        .query_row(
+            "SELECT owner IS NOT NULL AND lease>0 AND reservation=1024 FROM requests WHERE id='commit'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert!(retained);
+    db.execute_batch("DROP TRIGGER defer_release_failure;").unwrap();
+    owner.update_and_release(&mut done).unwrap();
+    assert_eq!(peer.get("commit").unwrap().status(), "completed");
+    assert!(!owner.owns("commit", Some(&done)).unwrap());
+    drop(owner);
+    drop(peer);
+    let reopened = Store::open(&directory).unwrap();
+    assert_eq!(reopened.get("commit").unwrap().status(), "completed");
 }
 
 #[test]

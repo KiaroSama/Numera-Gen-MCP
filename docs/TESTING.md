@@ -15,6 +15,11 @@ on that exact SHA, linked to the original run and attempt. Signing has separate 
 failure and cancellation never become success. A missing reporter or incomplete job remains missing
 proof, not a passing check. These statuses supplement the original reports, not replace them.
 See [the migration record](RUST-MIGRATION.md) and [latest results](TEST-RESULTS.md).
+The real Responses waiter keeps setup inside its original three-second scenario; numeric boundary
+timestamps identify config, Store, logger and runtime-path completion only on failure. They neither
+extend the bound nor identify a specific SQLite/fsync cause. Atomic receipt/release tests separately
+inject statement failure and deferred COMMIT failure, retaining real WAL/FULL durability, cross-owner
+visibility, generation-cache restoration and reopen checks.
 
 ## Native Rust migration — baseline acceptance
 

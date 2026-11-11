@@ -32,6 +32,7 @@ use tokio_util::sync::CancellationToken;
 struct PersistenceObservation {
     started: Instant,
     file_us: [AtomicU64; 8],
+    setup_us: [AtomicU64; 5],
     receipt_updates: AtomicUsize,
     after_unlink_updates: AtomicUsize,
     last_update_us: AtomicU64,
@@ -42,6 +43,7 @@ impl PersistenceObservation {
         Self {
             started,
             file_us: std::array::from_fn(|_| AtomicU64::new(u64::MAX)),
+            setup_us: std::array::from_fn(|_| AtomicU64::new(u64::MAX)),
             receipt_updates: AtomicUsize::new(0),
             after_unlink_updates: AtomicUsize::new(0),
             last_update_us: AtomicU64::new(u64::MAX),
@@ -99,6 +101,13 @@ impl Persistence for ObservedPersistence {
 }
 
 fn generation(root: &Path, origin: &str, observation: Arc<PersistenceObservation>) -> Generation {
+    let mark = |index: usize| {
+        observation.setup_us[index].store(
+            observation.started.elapsed().as_micros() as u64,
+            Ordering::Relaxed,
+        );
+    };
+    mark(0);
     let config = Config::parse(
         &json!({
             "schemaVersion":1,"defaultConnection":"local",
@@ -122,14 +131,22 @@ fn generation(root: &Path, origin: &str, observation: Arc<PersistenceObservation
     assert_eq!(connection["requestTimeoutMs"], 300000);
     assert_eq!(connection["discoveryTimeoutMs"], 15000);
     assert_eq!(connection["maxConcurrentRequests"], 2);
+    mark(1);
+    let store = Store::open_with_persistence(
+        &root.join("state"),
+        ObservedPersistence(observation.clone()),
+    )
+    .unwrap();
+    mark(2);
+    let logger = Logger::new(&root.join("logs"), "ERROR");
+    mark(3);
+    let runtime = RuntimePaths::new(root).unwrap();
+    mark(4);
     Generation {
         config: Arc::new(config),
-        store: Arc::new(Mutex::new(
-            Store::open_with_persistence(&root.join("state"), ObservedPersistence(observation))
-                .unwrap(),
-        )),
-        logger: Arc::new(Logger::new(&root.join("logs"), "ERROR")),
-        runtime: RuntimePaths::new(root).unwrap(),
+        store: Arc::new(Mutex::new(store)),
+        logger: Arc::new(logger),
+        runtime,
         env: HashMap::new().into(),
         active: Arc::new(Mutex::new(HashMap::new())),
     }
@@ -367,6 +384,13 @@ async fn waiter_case(workspace: &Workspace) {
         (value != u64::MAX).then_some(value)
     });
     if result.is_err() {
+        eprintln!(
+            "Responses waiter setup_us [begin,config_done,store_done,logger_done,runtime_done]={:?}",
+            observation.setup_us.each_ref().map(|value| {
+                let value = value.load(Ordering::Relaxed);
+                (value != u64::MAX).then_some(value)
+            })
+        );
         eprintln!(
             "Responses waiter timeout: server_stage={} client_stage={} posts={} polls={} resolved_us={} elapsed_ms={}",
             server_stage.get(),

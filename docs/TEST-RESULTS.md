@@ -1,5 +1,23 @@
 # Test results
 
+## Recovery boundary qualification - 2026-11-11
+
+[Run43028155208](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43028155208)
+for exact `9cf632bf886a8af276a19fe46d60d20245d7a60a`, attempt1, failed. All six native
+jobs rejected one formatting hunk. Linux ARM64 additionally exceeded the unchanged three-second
+Responses waiter bound: setup completed at2353226 microseconds, the POST reply at2776840,
+and timeout resolved at3121773 before any GET or output publication. This failure does not
+implicate final receipt/release, which never ran. Other contexts passed that waiter.
+
+Coverage measured **84.9895% regions (18594/21878)** and **80.4676% branches (4268/5304)**;
+the region floor failed without rounding or exclusions. The retained report has per-file summaries,
+not uncovered-line data. The exact hosted formatting archive is authenticated and its360members
+match the corrected tree. The next diagnostic measures setup boundaries inside the same timer.
+A real deferred-foreign-key regression exercises COMMIT failure after receipt update and release,
+checking rollback, generation-cache restoration, peer visibility and durable retry without a new
+submission. These additions are authored, not executed proof. No production timing repair is claimed;
+qualification, protected signing, release and local activation remain incomplete.
+
 ## Atomic recovery qualification - 2026-11-11
 
 [Run43023264686](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43023264686)
