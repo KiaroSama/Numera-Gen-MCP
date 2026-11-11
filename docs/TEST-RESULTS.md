@@ -1,5 +1,21 @@
 # Test results
 
+## Commit rollback qualification - 2026-11-11
+
+[Run43036236847](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43036236847),
+attempt1, failed for exact `51784a417b706609a061e2c624ecf98f430f7618`. All seven original
+producer logs pass the unchanged three-second waiter and the real deferred-COMMIT rollback test.
+Each of the six native jobs failed only formatting; the two exact hosted hunks are now applied.
+Coverage failed at **84.9849% regions (18593/21878)** and **80.4676% branches (4268/5304)**.
+The original formatter and coverage archives were authenticated against their GitHub artifact digests.
+The execution collector and signing were skipped, not successful.
+
+The next test-only correction exercises existing Store guards for oversized continuation metadata,
+malformed stored continuation/output JSON, required output identity and stale-owner writes. It checks
+that rejection preserves the previous continuation and output rows, then verifies Unicode metadata
+across reopen. No production behavior, timeout, durability, coverage denominator or floor changes.
+This authored regression is not current execution evidence or a promised coverage improvement.
+
 ## Recovery boundary qualification - 2026-11-11
 
 [Run43028155208](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43028155208)

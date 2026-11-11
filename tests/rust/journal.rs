@@ -185,3 +185,74 @@ fn journal_reservations_urls_and_stable_publication_fail_closed_under_writer_fen
         "outcome_unknown"
     );
 }
+
+#[test]
+fn continuation_and_output_corruption_fail_closed_without_discarding_state() {
+    let workspace = Workspace::new();
+    let directory = workspace.0.join("metadata-state");
+    let mut store = Store::open(&directory).unwrap();
+    let (_, owner) = store.prepare(receipt("owned"), "hash", "account").unwrap();
+    let valid = json!({"signature":"synthetic","note":"تصویر"});
+    store.save_continuation("owned", "scope", &valid).unwrap();
+    let oversized = json!("x".repeat(1024 * 1024));
+    assert_eq!(
+        store
+            .save_continuation("owned", "scope", &oversized)
+            .unwrap_err()
+            .code,
+        "invalid_response"
+    );
+    assert_eq!(store.continuation("owned", "scope").unwrap(), valid);
+    let db = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
+    db.execute("UPDATE continuation SET value='{' WHERE id='owned'", [])
+        .unwrap();
+    assert_eq!(
+        store.continuation("owned", "scope").unwrap_err().code,
+        "storage_error"
+    );
+    let retained: String = db
+        .query_row(
+            "SELECT value FROM continuation WHERE id='owned'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(retained, "{");
+    store.save_continuation("owned", "scope", &valid).unwrap();
+    let output = json!({"output_id":"saved","request_id":"owned","note":"تصویر"});
+    store.add_output(&output).unwrap();
+    assert_eq!(
+        store
+            .add_output(&json!({"output_id":"missing-request"}))
+            .unwrap_err()
+            .code,
+        "storage_error"
+    );
+    db.execute("UPDATE outputs SET metadata='{' WHERE id='saved'", [])
+        .unwrap();
+    assert_eq!(store.output("saved").unwrap_err().code, "storage_error");
+    assert_eq!(store.list_outputs(0, 10).unwrap_err().code, "storage_error");
+    let rows: i64 = db
+        .query_row("SELECT count(*) FROM outputs", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(rows, 1);
+    db.execute(
+        "UPDATE outputs SET metadata=? WHERE id='saved'",
+        [output.to_string()],
+    )
+    .unwrap();
+    assert_eq!(store.output("saved").unwrap(), output);
+    assert_eq!(store.list_outputs(0, 10).unwrap(), vec![output.clone()]);
+    store.release("owned", Some(&owner)).unwrap();
+    assert_eq!(
+        store
+            .save_continuation("owned", "scope", &valid)
+            .unwrap_err()
+            .code,
+        "outcome_unknown"
+    );
+    drop(store);
+    let reopened = Store::open(&directory).unwrap();
+    assert_eq!(reopened.continuation("owned", "scope").unwrap(), valid);
+    assert_eq!(reopened.output("saved").unwrap(), output);
+}

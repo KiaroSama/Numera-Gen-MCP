@@ -19,7 +19,9 @@ The real Responses waiter keeps setup inside its original three-second scenario;
 timestamps identify config, Store, logger and runtime-path completion only on failure. They neither
 extend the bound nor identify a specific SQLite/fsync cause. Atomic receipt/release tests separately
 inject statement failure and deferred COMMIT failure, retaining real WAL/FULL durability, cross-owner
-visibility, generation-cache restoration and reopen checks.
+visibility, generation-cache restoration and reopen checks. Real SQLite metadata tests reject
+oversized continuation updates without replacing the prior value, refuse malformed stored
+continuation/output JSON without deleting rows, and verify valid Unicode metadata across reopen.
 
 ## Native Rust migration — baseline acceptance
 

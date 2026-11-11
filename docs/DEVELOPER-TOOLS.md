@@ -157,8 +157,12 @@ Bounded Git archives and manifest hashes retain the fixed historical original by
 no retired generator is executed. R must have its own complete source-bound runtime, tooling, coverage
 and signed qualification. The verifier authenticates R's completed collector job, artifact and original
 log even while the enclosing run is still in progress; Q's enclosing run must already have succeeded.
-This is source-authored behavior awaiting hosted proof. No originals have been deleted, and no
-retirement has been verified by this implementation work.
+This verifier remains source-authored behavior awaiting hosted proof. An earlier branch commit
+already removed all51mapped originals; the current tree cannot retroactively satisfy the verifier's
+single deletion-only Q-to-R transition. The complete current-source qualification still authenticates
+historical bytes, reviewed assertions and actual named execution. It does not claim that the earlier
+removal passed this separate retirement verifier, and no original is restored or deleted again to
+manufacture that history.
 
 After a valid root is established, `numera-task` records maintenance startup, safe failure and final
 exit/duration through the shared UTC logger at `.ci-work/native/logs/`. Machine-readable reports stay

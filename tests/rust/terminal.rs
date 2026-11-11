@@ -595,10 +595,7 @@ fn final_commit_failure_restores_receipt_cache_and_durable_ownership() {
     done.value["storage_outcome"] = json!("completed");
     done.value["updated_at"] = json!("before-commit");
     let before = done.clone();
-    assert_eq!(
-        code(owner.update_and_release(&mut done)),
-        "storage_error"
-    );
+    assert_eq!(code(owner.update_and_release(&mut done)), "storage_error");
     assert_eq!(done.value, before.value);
     assert_eq!(done.generation, before.generation);
     assert_eq!(peer.get("commit").unwrap().value, current.value);
@@ -616,7 +613,8 @@ fn final_commit_failure_restores_receipt_cache_and_durable_ownership() {
         )
         .unwrap();
     assert!(retained);
-    db.execute_batch("DROP TRIGGER defer_release_failure;").unwrap();
+    db.execute_batch("DROP TRIGGER defer_release_failure;")
+        .unwrap();
     owner.update_and_release(&mut done).unwrap();
     assert_eq!(peer.get("commit").unwrap().status(), "completed");
     assert!(!owner.owns("commit", Some(&done)).unwrap());
