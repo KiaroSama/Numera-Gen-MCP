@@ -96,8 +96,8 @@ impl Store {
         }
         self.db
             .execute(
-                "UPDATE requests SET reservation=? WHERE id=?",
-                params![reserve, id],
+                "UPDATE requests SET reservation=? WHERE id=? AND reservation!=?",
+                params![reserve, id, reserve],
             )
             .map_err(|_| NumeraError::storage())?;
         Ok(())

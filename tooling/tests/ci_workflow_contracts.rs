@@ -138,7 +138,8 @@ fn qualification_preserves_six_native_targets_coverage_and_original_report_colle
     assert!(collector.contains("path:.ci-work/native/execution-matrix.json"));
     assert!(collector.contains("if-no-files-found:error"));
     assert!(
-        collector.contains("if:github.event_name=='workflow_dispatch'&&inputs.operation=='qualify'")
+        collector
+            .contains("if:github.event_name=='workflow_dispatch'&&inputs.operation=='qualify'")
     );
     assert_eq!(collector.matches("if:always()").count(), 1);
     for job in [native, coverage, block(&workflow, "execution-matrix", 2)] {

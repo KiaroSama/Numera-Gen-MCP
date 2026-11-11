@@ -41,6 +41,8 @@ signing/negative checks and signed extracted SDK checks passed; owner-host cutov
 - `native/jobs/`: bundled SQLite, preserved schema v2/WAL/FULL, renewable 30-second leases and
   generation fences. Journal phases waiting/retained/publishing/committed keep stable output identity
   across filesystem/SQL crash gaps. State remains local shared storage, not an unreliable network drive.
+  Repeated reservations still recheck the writer fence, retained bytes and shared capacity within the
+  same transaction, but do not update an identical reservation value. Actual changes remain durable.
   An instance-owned persistence port delegates publication write/sync/link/unlink to the original OS
   operations by default. Its receipt-update entry seam supports scoped failure verification without
   changing real SQL error sanitization, generation fences or the database schema.

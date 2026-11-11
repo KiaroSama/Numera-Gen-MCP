@@ -1,5 +1,25 @@
 # Test results
 
+## Integrity and status correction qualification - 2026-11-11
+
+[Run43008223973](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43008223973)
+for exact `57930c4ab6347ecea56e9890c54809a6d9bd0ffd` failed. Every native target reported
+formatting differences; Linux ARM64 additionally exceeded the unchanged three-second Responses
+waiter acceptance deadline. The other five targets' runtime suites passed. Coverage passed at
+**85.0390% regions (18547/21810)** and **80.4578% branches (4253/5286)**, but the collector was
+skipped after native failures. Signing did not run on this branch. Original hosted formatter bytes
+are retained; their correction is not qualification of a successor.
+
+The new reporter published each actual native failure and the successful coverage result on the
+same SHA. An isolated browser also verified all eight test and six signing statuses in the home-page
+popup for the earlier main commit `bf0ce09`, including its two Windows signing failures. Original
+job/run links remain visible; no failed result was changed to success.
+
+The next correction applies the exact hosted formatter output and avoids an unchanged reservation
+UPDATE after the existing fence and budget checks. Its trigger regression rejects redundant writes
+while retaining changed-value persistence, reduced-budget rejection and stale-owner fencing. This
+is not a measured latency improvement or proof that the original three-second waiter now passes.
+
 ## Qualified source and blocked Windows signing - 2026-11-11
 
 [Qualification42990319557](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42990319557)

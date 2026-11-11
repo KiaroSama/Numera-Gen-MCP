@@ -45,7 +45,9 @@ pub fn publish(context: &Context, outcome: &str, target: &str) -> io::Result<()>
     if std::env::var("GITHUB_REPOSITORY").as_deref() != Ok("KiaroSama/Numera-Gen-MCP")
         || std::env::var("GITHUB_EVENT_NAME").as_deref() != Ok("workflow_dispatch")
     {
-        return Err(fail("Commit status belongs to this repository's manual CI."));
+        return Err(fail(
+            "Commit status belongs to this repository's manual CI.",
+        ));
     }
     let label = label(&std::env::var("GITHUB_JOB").unwrap_or_default(), target)?;
     let url = run_url(
@@ -56,7 +58,14 @@ pub fn publish(context: &Context, outcome: &str, target: &str) -> io::Result<()>
     context.capture(
         context
             .command("gh")
-            .args(["api", "--hostname", "github.com", "--method", "POST", &endpoint])
+            .args([
+                "api",
+                "--hostname",
+                "github.com",
+                "--method",
+                "POST",
+                &endpoint,
+            ])
             .args(["-f", &format!("state={}", state(outcome)?)])
             .args(["-f", &format!("context={label}")])
             .args(["-f", &format!("target_url={url}")])

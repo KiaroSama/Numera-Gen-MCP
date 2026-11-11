@@ -328,7 +328,13 @@ mod tests {
     fn authenticode_integrity_allows_only_success_or_the_pinned_root_exception() {
         assert!(super::integrity_status_allowed(0));
         assert!(super::integrity_status_allowed(0x800b0109u32 as i32));
-        for code in [0x80096010u32, 0x800b0100, 0x800b0101, 0x800b0111, 0x800b0004] {
+        for code in [
+            0x80096010u32,
+            0x800b0100,
+            0x800b0101,
+            0x800b0111,
+            0x800b0004,
+        ] {
             assert!(!super::integrity_status_allowed(code as i32));
         }
     }

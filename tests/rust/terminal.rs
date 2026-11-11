@@ -471,6 +471,52 @@ fn atomic_submission_preserves_queue_reservation_failure_and_existing_identity()
 }
 
 #[test]
+fn repeated_reservation_skips_writes_but_rechecks_budget_and_owner_fence() {
+    let workspace = common::Workspace::new();
+    let directory = workspace.0.join("reservation-state");
+    let mut owner = Store::open(&directory).unwrap();
+    let mut peer = Store::open(&directory).unwrap();
+    let old = running(&mut owner, "same", "local", "responses");
+    owner.reserve("same", 2048, 4096).unwrap();
+    let db = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
+    db.execute_batch(
+        "CREATE TABLE reservation_writes(value INTEGER);
+         CREATE TRIGGER reject_equal_reservation BEFORE UPDATE OF reservation ON requests
+         WHEN NEW.id='same' AND NEW.reservation=OLD.reservation
+         BEGIN SELECT RAISE(ABORT,'Unchanged reservation must not write'); END;
+         CREATE TRIGGER record_reservation AFTER UPDATE OF reservation ON requests
+         WHEN NEW.id='same'
+         BEGIN INSERT INTO reservation_writes VALUES(NEW.reservation); END;",
+    )
+    .unwrap();
+    owner.reserve("same", 2048, 4096).unwrap();
+    prepare(&mut peer, "other", "other");
+    peer.reserve("other", 1024, 4096).unwrap();
+    assert_eq!(code(owner.reserve("same", 2048, 2048)), "rate_limited");
+    owner.reserve("same", 1024, 4096).unwrap();
+    let writes: Vec<i64> = db
+        .prepare("SELECT value FROM reservation_writes")
+        .unwrap()
+        .query_map([], |row| row.get(0))
+        .unwrap()
+        .map(|row| row.unwrap())
+        .collect();
+    assert_eq!(writes, [1024]);
+    db.execute_batch("DROP TRIGGER reject_equal_reservation; DROP TRIGGER record_reservation;")
+        .unwrap();
+    owner.release("same", Some(&old)).unwrap();
+    assert!(peer.claim("same", None, false).unwrap());
+    assert_eq!(code(owner.reserve("same", 1024, 4096)), "outcome_unknown");
+    drop(owner);
+    drop(peer);
+    let reopened = Store::open(&directory).unwrap();
+    assert_eq!(reopened.get("same").unwrap().value["status"], "finalizing");
+    let sql = "SELECT reservation FROM requests WHERE id='same'";
+    let saved: i64 = db.query_row(sql, [], |row| row.get(0)).unwrap();
+    assert_eq!(saved, 1024);
+}
+
+#[test]
 fn two_real_store_instances_enforce_global_and_connection_admission_limits() {
     let workspace = common::Workspace::new();
     let directory = workspace.0.join("state");

@@ -21,7 +21,11 @@ fn status_contexts_and_links_bind_only_supported_jobs_and_original_attempts() {
         assert!(label(job, "none").is_err());
         assert!(label(job, "unsupported").is_err());
     }
-    for job in ["native-coverage", "execution-matrix", "signed-execution-matrix"] {
+    for job in [
+        "native-coverage",
+        "execution-matrix",
+        "signed-execution-matrix",
+    ] {
         assert!(label(job, "none").unwrap().ends_with(job));
         assert!(label(job, "x86_64-pc-windows-msvc").is_err());
     }

@@ -126,7 +126,8 @@ receipts only after fixture cleanup. They bind the exact signing context, public
 manifest, tested binary, SDK report and extracted archive hashes. `signed-execution-matrix` waits for
 all six signing jobs, authenticates original report artifacts and unique receipt digests in each
 successful job log, and joins their SDK inventories to the authenticated seven-context report.
-It has read-only GitHub permissions and receives no publisher inputs. Its signed-stage report stays
+It has read-only content/action access, commit-status write access for its own observed result,
+and no publisher inputs. Its signed-stage report stays
 separate from `current-qualification.json`, which requires the complete source-reviewed runtime and
 tooling assertions, seven current execution contexts, coverage floors and six signed contexts at the
 exact source. Neither report grants retirement authority or claims independent review. These
