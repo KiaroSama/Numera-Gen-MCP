@@ -132,7 +132,10 @@ pub fn negative() {
         let (mut doc, binary) = textured(component);
         let mut fewer_positions = doc["accessors"][0].clone();
         fewer_positions["count"] = json!(2);
-        doc["accessors"].as_array_mut().unwrap().push(fewer_positions);
+        doc["accessors"]
+            .as_array_mut()
+            .unwrap()
+            .push(fewer_positions);
         let mut smaller = doc["meshes"][0]["primitives"][0].clone();
         smaller["attributes"]["POSITION"] = json!(2);
         for smaller_first in [false, true] {

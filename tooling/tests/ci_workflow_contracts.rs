@@ -45,10 +45,16 @@ fn only_manual_branch_source_runs_qualify_without_cancelling_original_evidence()
     assert!(concurrency.contains("cancel-in-progress:false"));
     assert!(workflow.contains("run-name:"));
     for label in ["'Tests'", "'Source preparation'", "'Signing'"] {
-        assert!(workflow.contains(label), "Missing operation display: {label}");
+        assert!(
+            workflow.contains(label),
+            "Missing operation display: {label}"
+        );
     }
     assert!(workflow.contains("NUMERA_BUILD_SHA: ${{ github.sha }}"));
-    let checkouts: Vec<_> = workflow.split("- uses: actions/checkout@").skip(1).collect();
+    let checkouts: Vec<_> = workflow
+        .split("- uses: actions/checkout@")
+        .skip(1)
+        .collect();
     assert_eq!(checkouts.len(), 7);
     for checkout in checkouts {
         let checkout = checkout.split("\n      - ").next().unwrap();
@@ -140,7 +146,13 @@ fn preparation_and_same_source_signing_remain_isolated_from_native_test_reruns()
     let preparation = block(&workflow, "source-preparation", 2);
     assert!(preparation.contains("inputs.operation == 'source-preparation'"));
     assert!(preparation.contains("build-task: 'false'"));
-    for forbidden in ["secrets.", "environment:", " stable", " coverage", " sign '"] {
+    for forbidden in [
+        "secrets.",
+        "environment:",
+        " stable",
+        " coverage",
+        " sign '",
+    ] {
         assert!(!preparation.contains(forbidden));
     }
     let signing = block(&workflow, "signing", 2);
@@ -165,7 +177,12 @@ fn preparation_and_same_source_signing_remain_isolated_from_native_test_reruns()
     assert!(signing.contains("run-id: ${{ steps.source.outputs.run-id }}"));
     assert!(signing.contains("digest-mismatch: error"));
     assert!(signing.find(" signing-source ").unwrap() < signing.find("secrets.").unwrap());
-    for forbidden in [" stable", " coverage", " case-execution", "continue-on-error"] {
+    for forbidden in [
+        " stable",
+        " coverage",
+        " case-execution",
+        "continue-on-error",
+    ] {
         assert!(!signing.contains(forbidden));
     }
     assert!(signed.contains("needs: [native, native-coverage, execution-matrix, signing]"));

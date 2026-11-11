@@ -69,8 +69,7 @@ fn cached_max_index(
                 match accessor.size {
                     1 => usize::from(bin[p]),
                     2 => usize::from(u16::from_le_bytes([bin[p], bin[p + 1]])),
-                    _ => u32::from_le_bytes([bin[p], bin[p + 1], bin[p + 2], bin[p + 3]])
-                        as usize,
+                    _ => u32::from_le_bytes([bin[p], bin[p + 1], bin[p + 2], bin[p + 3]]) as usize,
                 }
             })
             .max()
