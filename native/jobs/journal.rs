@@ -75,7 +75,12 @@ impl Store {
     pub fn reserve(&mut self, id: &str, bytes: i64, budget: i64) -> Result<()> {
         self.transaction(|store| store.reserve_in_transaction(id, bytes, budget))
     }
-    pub(super) fn reserve_in_transaction(&mut self, id: &str, bytes: i64, budget: i64) -> Result<()> {
+    pub(super) fn reserve_in_transaction(
+        &mut self,
+        id: &str,
+        bytes: i64,
+        budget: i64,
+    ) -> Result<()> {
         if bytes <= 0 || budget <= 0 || bytes > 9007199254740991 || budget > 9007199254740991 {
             return Err(NumeraError::new(
                 "invalid_configuration",
@@ -89,7 +94,12 @@ impl Store {
         if used.checked_add(reserve).is_none_or(|v| v > budget) {
             return Err(NumeraError::new("rate_limited","Private result journal capacity is full; recover retained outputs before authorizing more image work.").stage("storage"));
         }
-        self.db.execute("UPDATE requests SET reservation=? WHERE id=?",params![reserve,id]).map_err(|_|NumeraError::storage())?;
+        self.db
+            .execute(
+                "UPDATE requests SET reservation=? WHERE id=?",
+                params![reserve, id],
+            )
+            .map_err(|_| NumeraError::storage())?;
         Ok(())
     }
     fn other_bytes(&self, id: &str, index: u32) -> Result<i64> {

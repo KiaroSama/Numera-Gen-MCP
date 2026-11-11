@@ -118,7 +118,8 @@ pub async fn run(
             .as_i64()
             .unwrap_or(256 * 1024 * 1024),
     };
-    let prepared = locked(&generation.store)?.prepare_submission(initial, &hash, &identity, limits)?;
+    let prepared =
+        locked(&generation.store)?.prepare_submission(initial, &hash, &identity, limits)?;
     let mut receipt = prepared.receipt;
     if !prepared.fresh {
         return Ok(receipt);

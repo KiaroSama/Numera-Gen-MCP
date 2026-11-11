@@ -56,7 +56,11 @@ impl Store {
     }
 
     /// Retry only local admission for a persisted queued intent, never the POST.
-    pub fn admit_submission(&mut self, receipt: &mut Receipt, limits: SubmissionLimits) -> Result<bool> {
+    pub fn admit_submission(
+        &mut self,
+        receipt: &mut Receipt,
+        limits: SubmissionLimits,
+    ) -> Result<bool> {
         let mut candidate = receipt.clone();
         let admitted =
             self.transaction(|store| store.submission_inner(&mut candidate, limits, false))?;
@@ -101,7 +105,10 @@ impl Store {
             .ok_or_else(NumeraError::storage)?
             .to_owned();
         if check_queue && self.queued_in_transaction()? > limits.queued {
-            return Err(NumeraError::new("rate_limited", "Local bounded queue is full."));
+            return Err(NumeraError::new(
+                "rate_limited",
+                "Local bounded queue is full.",
+            ));
         }
         if !self.admit_in_transaction(&id, &connection, limits.global, limits.connection)? {
             return Ok(false);

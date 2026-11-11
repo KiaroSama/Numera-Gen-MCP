@@ -362,7 +362,8 @@ impl Generation {
                 .as_i64()
                 .unwrap_or(256 * 1024 * 1024),
         };
-        let prepared = locked(&self.store)?.prepare_submission(initial, &hash, &identity, limits)?;
+        let prepared =
+            locked(&self.store)?.prepare_submission(initial, &hash, &identity, limits)?;
         let prepare_ms = preparing.elapsed().as_millis() as u64;
         let mut receipt = prepared.receipt;
         if !prepared.fresh {

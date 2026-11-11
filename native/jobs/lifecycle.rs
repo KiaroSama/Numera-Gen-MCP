@@ -107,8 +107,21 @@ impl Store {
                 .and_then(Iterator::collect)
                 .map_err(|_| NumeraError::storage())?
         };
-        let all:Vec<Value>=values.into_iter().map(|v|Value::parse_with_limit(&v,128*1024*1024).map_err(|_|NumeraError::storage())).collect::<Result<Vec<Value>>>()?
-            .into_iter().filter(|v|matches!(v["status"].as_str(),Some("submitting"|"running"|"finalizing")) && v["upstream_terminal"].is_null() && v["generation_outcome"]!="completed").collect();
+        let all: Vec<Value> = values
+            .into_iter()
+            .map(|v| {
+                Value::parse_with_limit(&v, 128 * 1024 * 1024).map_err(|_| NumeraError::storage())
+            })
+            .collect::<Result<Vec<Value>>>()?
+            .into_iter()
+            .filter(|v| {
+                matches!(
+                    v["status"].as_str(),
+                    Some("submitting" | "running" | "finalizing")
+                ) && v["upstream_terminal"].is_null()
+                    && v["generation_outcome"] != "completed"
+            })
+            .collect();
         if all.len() >= global
             || all.iter().filter(|v| v["connection"] == connection).count() >= per_connection
         {
@@ -149,7 +162,13 @@ impl Store {
 
     pub(super) fn queued_in_transaction(&mut self) -> Result<usize> {
         self.expire(None)?;
-        self.db.query_row("SELECT COUNT(*) FROM requests WHERE json_extract(receipt,'$.status')='prepared'",[],|r|r.get::<_,i64>(0))
-            .map(|v|v as usize).map_err(|_|NumeraError::storage())
+        self.db
+            .query_row(
+                "SELECT COUNT(*) FROM requests WHERE json_extract(receipt,'$.status')='prepared'",
+                [],
+                |r| r.get::<_, i64>(0),
+            )
+            .map(|v| v as usize)
+            .map_err(|_| NumeraError::storage())
     }
 }

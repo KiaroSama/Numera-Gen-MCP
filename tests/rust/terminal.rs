@@ -452,7 +452,10 @@ fn atomic_submission_preserves_queue_reservation_failure_and_existing_identity()
         .unwrap();
     assert!(next.fresh && next.admission.unwrap());
     prepare(&mut owner, "reservation-probe", "third");
-    assert_eq!(code(owner.reserve("reservation-probe", 1, 4096)), "rate_limited");
+    assert_eq!(
+        code(owner.reserve("reservation-probe", 1, 4096)),
+        "rate_limited"
+    );
     assert_eq!(
         code(owner.prepare_submission(receipt("first", "local"), "changed", "identity", limits)),
         "request_id_conflict"

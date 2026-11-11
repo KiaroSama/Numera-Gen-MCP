@@ -1,5 +1,26 @@
 # Test results
 
+## Atomic submission correction - 2026-11-11
+
+[Manual qualification42986603034](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42986603034)
+tests exact source `9c7b605f727be14ea9a0b30a026bede08d7fc443`. Its coverage job passed the new
+atomic Store regression and the original SDK terminal/admission test with the unchanged700ms
+request budget. Measured production coverage is **85.0592% regions (18548/21806)** and
+**80.4767% branches (4254/5286)**, above the unchanged85/80 floors. All six completed native jobs
+(Linux, Windows and macOS, each x64/ARM64) reported only `format` as a failed gate.
+The execution collector was skipped after those failures. This is not complete qualification.
+The retained hosted formatter supplied seven reviewed source files. Any formatting successor
+requires its own exact-source qualification; these results do not transfer to a later commit.
+
+The preceding [run42938424158](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42938424158)
+on `6020c3a11579ab5fcf84865df5a8954266934cb3` passed five native targets and coverage, but Linux x64
+failed the SDK admission probe before the provider observed a POST. Fixed numeric diagnostics
+measured630ms preparation,398ms reservation and457ms intent update against the700ms budget.
+The correction coalesces fresh preparation, admission, reservation and intent into one durable
+SQLite transaction for image and media requests. FULL WAL durability, request identity, queue
+limits, no replay and the original SDK timing/assertions remain. The source review is primary,
+not independent certification; signing, release and installed-host acceptance remain separate.
+
 ## Rust completion PR — 2026-11-10
 
 The Windows ARM64 job in run42888877128 recorded an `evidence-capture` fixture exit before

@@ -218,7 +218,10 @@ impl Store {
             .map_err(|_| NumeraError::storage())?;
         if let Some((old_hash, old_identity)) = old {
             if old_hash != hash || old_identity != identity {
-                return Err(NumeraError::new("request_id_conflict","Request ID is already bound to different effective inputs or connection identity."));
+                return Err(NumeraError::new(
+                    "request_id_conflict",
+                    "Request ID is already bound to different effective inputs or connection identity.",
+                ));
             }
             self.expire(Some(&id))?;
             return Ok((false, self.get(&id)?));
