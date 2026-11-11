@@ -274,6 +274,7 @@ async fn finalized(recover: bool, name: &str) {
                 request: &request,
                 cancel: &signal,
                 recovery: false,
+                defer_commit: false,
             },
         )
         .await

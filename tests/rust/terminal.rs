@@ -517,6 +517,49 @@ fn repeated_reservation_skips_writes_but_rechecks_budget_and_owner_fence() {
 }
 
 #[test]
+fn final_receipt_and_release_commit_together_or_restore_the_writer() {
+    let workspace = common::Workspace::new();
+    let directory = workspace.0.join("final-state");
+    let mut owner = Store::open(&directory).unwrap();
+    let mut peer = Store::open(&directory).unwrap();
+    let current = running(&mut owner, "done", "local", "responses");
+    owner.reserve("done", 1024, 2048).unwrap();
+    let db = rusqlite::Connection::open(directory.join("receipts.sqlite")).unwrap();
+    db.execute_batch(
+        "CREATE TRIGGER reject_release BEFORE UPDATE OF owner ON requests
+         WHEN NEW.id='done' AND NEW.owner IS NULL
+         BEGIN SELECT RAISE(ABORT,'Controlled release failure'); END;",
+    )
+    .unwrap();
+    let mut done = current.clone();
+    done.value["status"] = json!("completed");
+    done.value["storage_outcome"] = json!("completed");
+    assert!(owner.update_and_release(&mut done).is_err());
+    assert_eq!(peer.get("done").unwrap().status(), "running");
+    assert!(owner.owns("done", Some(&current)).unwrap());
+    owner.reserve("done", 1024, 2048).unwrap();
+    db.execute_batch("DROP TRIGGER reject_release;").unwrap();
+    owner.update_and_release(&mut done).unwrap();
+    assert_eq!(peer.get("done").unwrap().status(), "completed");
+    let released: bool = db
+        .query_row(
+            "SELECT owner IS NULL AND lease=0 AND reservation=0 FROM requests WHERE id='done'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert!(released);
+    assert!(!owner.owns("done", Some(&done)).unwrap());
+    let mut stale = current;
+    assert_eq!(code(owner.update(&mut stale)), "outcome_unknown");
+    owner.release("done", Some(&done)).unwrap();
+    drop(owner);
+    drop(peer);
+    let reopened = Store::open(&directory).unwrap();
+    assert_eq!(reopened.get("done").unwrap().status(), "completed");
+}
+
+#[test]
 fn two_real_store_instances_enforce_global_and_connection_admission_limits() {
     let workspace = common::Workspace::new();
     let directory = workspace.0.join("state");

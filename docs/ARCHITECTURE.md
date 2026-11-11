@@ -43,6 +43,9 @@ signing/negative checks and signed extracted SDK checks passed; owner-host cutov
   across filesystem/SQL crash gaps. State remains local shared storage, not an unreliable network drive.
   Repeated reservations still recheck the writer fence, retained bytes and shared capacity within the
   same transaction, but do not update an identical reservation value. Actual changes remain durable.
+  Image recovery closes its renewal tasks, then commits the final receipt and writer release atomically;
+  SQL failure restores the prior receipt and local generation cache. Submission retains its writer for continuation
+  persistence. Failure cleanup still releases only the matching owner generation.
   An instance-owned persistence port delegates publication write/sync/link/unlink to the original OS
   operations by default. Its receipt-update entry seam supports scoped failure verification without
   changing real SQL error sanitization, generation fences or the database schema.

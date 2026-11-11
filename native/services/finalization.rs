@@ -44,6 +44,7 @@ pub struct Finalization<'a> {
     pub request: &'a Value,
     pub cancel: &'a CancellationToken,
     pub recovery: bool,
+    pub defer_commit: bool,
 }
 
 pub async fn finalize(
@@ -58,6 +59,7 @@ pub async fn finalize(
         request,
         cancel,
         recovery,
+        defer_commit,
     } = input;
     let mut receipt = receipt;
     let id = receipt.id()?.to_owned();
@@ -322,7 +324,9 @@ pub async fn finalize(
     } else {
         "completed"
     });
-    locked(store)?.update(&mut receipt)?;
+    if !defer_commit {
+        locked(store)?.update(&mut receipt)?;
+    }
     logger.log(
         "INFO",
         "generation",

@@ -69,7 +69,7 @@ pub async fn recover_local(
         cancel.clone(),
         false,
     );
-    let result = finalization::finalize(
+    let mut result = finalization::finalize(
         &generation.config.value,
         &generation.store,
         &generation.logger,
@@ -79,11 +79,17 @@ pub async fn recover_local(
             request: &request,
             cancel,
             recovery: true,
+            defer_commit: true,
         },
     )
     .await;
     lease.close().await;
-    locked(&generation.store)?.release(id, Some(&receipt))?;
+    if locked(&generation.store)?.owns(id, Some(&receipt))? {
+        match &mut result {
+            Ok(done) => locked(&generation.store)?.update_and_release(done)?,
+            Err(_) => locked(&generation.store)?.release(id, Some(&receipt))?,
+        }
+    }
     result
 }
 
@@ -250,7 +256,7 @@ pub async fn get(
         )
         .stage("network")),
     };
-    let result = match result {
+    let mut result = match result {
         Ok(value) => Ok(value),
         Err(error) => {
             if !locked(&generation.store)?.owns(id, Some(&receipt))? {
@@ -272,7 +278,12 @@ pub async fn get(
         }
     };
     lease.close().await;
-    locked(&generation.store)?.release(id, Some(&receipt))?;
+    if locked(&generation.store)?.owns(id, Some(&receipt))? {
+        match &mut result {
+            Ok(done) => locked(&generation.store)?.update_and_release(done)?,
+            Err(_) => locked(&generation.store)?.release(id, Some(&receipt))?,
+        }
+    }
     result
 }
 

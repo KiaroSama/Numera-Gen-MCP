@@ -1,5 +1,22 @@
 # Test results
 
+## Reservation correction qualification - 2026-11-11
+
+[Run43015996198](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43015996198)
+for exact `c594252fc50a1a2f51e5cec4dfe6b29a5b91c907` passed five native targets and coverage.
+Linux ARM64 passed the new reservation-trigger and status-reporting contracts, but the unchanged
+three-second Responses waiter still failed; its timeout resolved at3110550 microseconds after the
+last receipt-update entry at2931828 microseconds. Its only failed gate was that harness. Formatting
+passed, but the execution collector was skipped and no signing ran. Avoiding unchanged reservations
+did not prove the waiter repaired.
+
+The next source correction commits the recovered final image receipt and writer release together.
+A real SQLite release-failure trigger checks atomic rollback and owner-cache preservation; peer
+visibility, stale writes and reopen remain explicit. Renewal tasks close before that commit, while
+submission retains ownership for continuation
+storage. This authored correction still requires current hosted acceptance; the original deadline,
+FULL WAL and output publication assertions are not relaxed.
+
 ## Integrity and status correction qualification - 2026-11-11
 
 [Run43008223973](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43008223973)

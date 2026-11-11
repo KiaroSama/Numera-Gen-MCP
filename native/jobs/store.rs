@@ -250,6 +250,24 @@ impl Store {
         Ok(())
     }
 
+    /// Publish the final receipt and relinquish its writer in one durable commit.
+    pub fn update_and_release(&mut self, receipt: &mut Receipt) -> Result<()> {
+        let id = receipt.id()?.to_owned();
+        let before = receipt.clone();
+        let generation = self.generations.get(&id).copied();
+        let result = self.transaction(|store| {
+            store.update(receipt)?;
+            store.release(&id, Some(receipt))
+        });
+        if result.is_err() {
+            *receipt = before;
+            if let Some(generation) = generation {
+                self.generations.insert(id, generation);
+            }
+        }
+        result
+    }
+
     pub fn renew(&self, id: &str, receipt: Option<&Receipt>) -> Result<bool> {
         let generation = receipt.and_then(|r| r.generation).or_else(|| {
             if receipt.is_none() {

@@ -466,7 +466,7 @@ impl Generation {
         }
         receipt = locked(&self.store)?.get(&id)?;
         let lease = Lease::start(self.store.clone(), receipt.clone(), cancel.clone(), false);
-        let result = finalization::finalize(
+        let mut result = finalization::finalize(
             &self.config.value,
             &self.store,
             &self.logger,
@@ -476,12 +476,16 @@ impl Generation {
                 request,
                 cancel,
                 recovery,
+                defer_commit: recovery || !claimed || terminal_claim,
             },
         )
         .await;
         lease.close().await;
         if !claimed || terminal_claim {
-            locked(&self.store)?.release(&id, Some(&receipt))?;
+            match &mut result {
+                Ok(done) => locked(&self.store)?.update_and_release(done)?,
+                Err(_) => locked(&self.store)?.release(&id, Some(&receipt))?,
+            }
         }
         result
     }
