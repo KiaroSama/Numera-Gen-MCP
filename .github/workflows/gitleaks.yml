@@ -76,6 +76,28 @@ jobs:
               f"gitleaks_{VERSION}_linux_x64.tar.gz"
           )
           LEVELS = {"INFO", "WARNING", "ERROR", "DEBUG"}
+          # Each exception is anchored to a reviewed non-secret shape: SHA-256 digests keyed by
+          # source file names, a test name, an empty example assignment, a pinned public-key
+          # digest, and documentation prose. Arbitrary values in those positions still fail.
+          SCANNER_CONFIG = r"""[extend]
+          useDefault = true
+
+          [[allowlists]]
+          description = "Reviewed digest, test-name and placeholder false positives"
+          targetRules = ["generic-api-key"]
+          regexTarget = "match"
+          regexes = [
+            '''^[A-Za-z0-9_./-]+\.(?:rs|ts|js|ps1)"\s*:\s*"[0-9a-f]{64}"$''',
+            '''^credential-bearing errors: [A-Z0-9_]+=duplicate\\\\?n$''',
+            '''^KEY_PIN = "[0-9a-f]{64}"$''',
+            '''^secret source:\n[A-Z0-9_]+=$''',
+          ]
+
+          [[allowlists]]
+          description = "Reviewed documentation prose false positive"
+          targetRules = ["generic-api-key"]
+          regexes = ['''^absolute/private/bounded$''']
+          """
 
 
           class ScanFailure(Exception):
@@ -103,7 +125,7 @@ jobs:
               if not summary_path:
                   return
               lines = ["## Gitleaks", "", f"Scanner: **{VERSION}**", "", f"Scope: **{scope}**", ""]
-              lines.extend(["Rules: Pinned built-in Gitleaks rules with standard exclusions. Full history describes revision coverage, not universal byte or credential coverage.", ""])
+              lines.extend(["Rules: Pinned built-in Gitleaks rules with standard exclusions and reviewed workflow-defined false-positive exceptions.Full history describes revision coverage, not universal byte or credential coverage.", ""])
               if not findings:
                   lines.append("No matching secrets were found in the scanned Git history.")
               else:
@@ -145,9 +167,10 @@ jobs:
                   require(version.returncode == 0 and version.stdout.strip() == VERSION, "The Gitleaks executable version could not be verified.")
                   log("INFO", "Verified the scanner version and download checksum.")
 
-                  # Use the pinned built-in rules, without repository-controlled suppression files.
+                  # Use the pinned built-in rules plus the reviewed exceptions in this workflow;
+                  # repository-controlled suppression files and inline allow comments stay ignored.
                   config_path = temporary / "scanner.toml"
-                  config_path.write_text("[extend]\nuseDefault = true\n", encoding="utf-8")
+                  config_path.write_text(SCANNER_CONFIG, encoding="utf-8")
                   log_options = "--full-history --diff-filter=uxdb --no-ext-diff --no-textconv --ignore-submodules=all -m"
                   scope = "All fetched branches and tags, including full history and merge diffs"
                   if event_name == "pull_request":

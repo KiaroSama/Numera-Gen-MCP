@@ -8,6 +8,9 @@ roots, owned output IDs, bounded image decoders, per-connection secret resolutio
 transactional request receipts and stderr-only redacted runtime logs. Never execute filename, prompt,
 metadata or upstream prose instructions. Do not enable TLS bypass or hidden public upload services.
 
-Dependency advisories are checked against the installed locked tree. Default tests use controlled
+Dependency advisories are checked against the installed locked tree. A checksum-pinned Gitleaks
+workflow scans pull-request commits and all fetched history with built-in rules; its few reviewed
+false-positive exceptions (file digests, a test name, an empty example and documentation prose) live
+in the workflow itself and stay anchored to those exact shapes. Default tests use controlled
 local fixtures, not real identities/services. Live/active security testing requires explicit scope and
 owner authorization; passing offline tests is not an exhaustive security audit.
