@@ -106,7 +106,10 @@ fn phase_logs(target: &Path) -> Vec<PathBuf> {
 /// file; observation never changes the activation verdict and withholds every other field.
 fn publish_phases(context: &Context, target: &Path, seen: &[PathBuf], action: &str) {
     let mut phases = Vec::new();
-    for path in phase_logs(target).into_iter().filter(|path| !seen.contains(path)) {
+    for path in phase_logs(target)
+        .into_iter()
+        .filter(|path| !seen.contains(path))
+    {
         let Ok(bytes) = read_regular(&path, 4 * 1024 * 1024) else {
             continue;
         };
@@ -117,12 +120,18 @@ fn publish_phases(context: &Context, target: &Path, seen: &[PathBuf], action: &s
             let name = record["phase"].as_str().unwrap_or("");
             if record["component"] != "setup-phase"
                 || name.is_empty()
-                || !name.bytes().all(|b| b.is_ascii_lowercase() || b == b'-' || b == b'/')
+                || !name
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b == b'-' || b == b'/')
             {
                 continue;
             }
-            phases.push(json!({"phase":name,"since_start_ms":record["since_start_ms"].as_u64(),
-                "duration_ms":record["duration_ms"].as_u64()}));
+            // Fixed allow-list of fields: name and two integer timings, never the record itself.
+            let mut row = serde_json::Map::new();
+            row.insert("phase".into(), json!(name));
+            row.insert("since_start_ms".into(), json!(record["since_start_ms"].as_u64()));
+            row.insert("duration_ms".into(), json!(record["duration_ms"].as_u64()));
+            phases.push(Value::Object(row));
         }
     }
     // The runtime logger takes its own value type; conversion failure keeps a fixed marker.

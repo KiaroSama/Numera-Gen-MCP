@@ -231,7 +231,10 @@ fn signed_prepared_install_and_update_preserve_private_files_without_compilation
         "publish",
         "published/manifest-repin",
     ] {
-        assert!(finished.iter().any(|phase| phase == expected), "missing {expected}");
+        assert!(
+            finished.iter().any(|phase| phase == expected),
+            "missing {expected}"
+        );
     }
 }
 
