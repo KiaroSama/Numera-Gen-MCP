@@ -125,12 +125,12 @@ fn publish_phases(context: &Context, target: &Path, seen: &[PathBuf], action: &s
                 "duration_ms":record["duration_ms"].as_u64()}));
         }
     }
-    context.logger.log(
-        "INFO",
-        "setup-phase",
-        "Observed setup phase timings.",
-        json!({"action":action,"phases":phases}),
-    );
+    // The runtime logger takes its own value type; conversion failure keeps a fixed marker.
+    use numera_gen_mcp::compat::value as runtime;
+    let observed = runtime::Value::from_serde(&json!({"action":action,"phases":phases}))
+        .unwrap_or_else(|_| runtime::json!({"action":action,"phases":"unavailable"}));
+    let message = "Observed setup phase timings.";
+    context.logger.log("INFO", "setup-phase", message, observed);
 }
 fn installed(root: &Path, manifest: &artifact::Manifest) -> io::Result<BTreeMap<String, Vec<u8>>> {
     manifest
