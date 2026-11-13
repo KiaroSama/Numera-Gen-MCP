@@ -129,7 +129,10 @@ fn publish_phases(context: &Context, target: &Path, seen: &[PathBuf], action: &s
             // Fixed allow-list of fields: name and two integer timings, never the record itself.
             let mut row = serde_json::Map::new();
             row.insert("phase".into(), json!(name));
-            row.insert("since_start_ms".into(), json!(record["since_start_ms"].as_u64()));
+            row.insert(
+                "since_start_ms".into(),
+                json!(record["since_start_ms"].as_u64()),
+            );
             row.insert("duration_ms".into(), json!(record["duration_ms"].as_u64()));
             phases.push(Value::Object(row));
         }

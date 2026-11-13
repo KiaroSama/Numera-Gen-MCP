@@ -164,8 +164,7 @@ pub fn install(
         return Err(invalid("Prepared artifact changed before installation."));
     }
     if let Some(current) = &current
-        && observed_verify(&root, "locked-current", phase)?.manifest_bytes
-            != current.manifest_bytes
+        && observed_verify(&root, "locked-current", phase)?.manifest_bytes != current.manifest_bytes
     {
         return Err(invalid("Installed artifact changed before update."));
     }

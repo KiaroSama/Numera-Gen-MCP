@@ -29,7 +29,7 @@
     "tests/rust/crash_recovery_acceptance.rs": "d4789844ea02f81314ede3f344d85aef5a764e98ff56ca431414ea85820b74f2",
     "tests/rust/credential_snapshot_acceptance.rs": "5720e26afc5ab74e54f71042e1d52a3ecfb94ad2443b0421055c29bf7d1325b6",
     "tests/rust/detached_job_acceptance.rs": "066608af937d8a3d975ccc63a820fe9b544ddf96cfc8782ac1456d664e9e099e",
-    "tests/rust/devtool_setup.rs": "c78ce85e89aed833db54778cd9c1190f40876622113ef05fd13797e39f316292",
+    "tests/rust/devtool_setup.rs": "60ae2e2b0b248f675080766a824c280c1ad80a1b1cf81d3960278f81ff76f0f1",
     "tests/rust/devtool_supervisor.rs": "0d0e215a5f6fe16e484d9eb6e0711b03cc2264a2ed4288e99a6d41951e7e6eaa",
     "tests/rust/discovery_acceptance.rs": "8025484042c769090583b0a057fc25554c9c49104617e29763e9759e1b352484",
     "tests/rust/discovery_lifecycle_acceptance.rs": "281f65e329ad311f807b9888eb181b2aad1b7329ee70e2bb21c7c7968841c23d",
