@@ -154,15 +154,30 @@ pub fn verify_native(path: &Path) -> Result<()> {
 }
 
 pub fn verify_activation(directory: &Path) -> Result<Prepared> {
+    verify_activation_observed(directory, &mut |_, _| {})
+}
+
+/// Same verification as `verify_activation`; `phase` receives each step name when it starts
+/// (false) and finishes (true) so slow activation can be attributed without changing checks.
+pub fn verify_activation_observed(
+    directory: &Path,
+    phase: &mut dyn FnMut(&str, bool),
+) -> Result<Prepared> {
+    phase("manifest-and-member-digests", false);
     let prepared = verify(directory)?;
+    phase("manifest-and-member-digests", true);
     for member in &prepared.manifest.files {
         if member.path.starts_with("bin/") {
             let path = prepared.root.join(&member.path);
+            phase("native-signature", false);
             verify_native(&path)?;
+            phase("native-signature", true);
         }
     }
     // Pin the same bytes again after native verification, before any installation mutation.
+    phase("manifest-repin", false);
     let after = verify(directory)?;
+    phase("manifest-repin", true);
     if after.manifest_bytes != prepared.manifest_bytes {
         return Err(invalid());
     }

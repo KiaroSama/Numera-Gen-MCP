@@ -134,10 +134,44 @@ impl Logger {
     }
 
     pub fn log(&self, level: &str, component: &str, message: &str, context: Value) {
-        if level_index(level) < self.level {
+        let Some(line) = self.line(level, component, message, &context) else {
             return;
+        };
+        if let Ok(mut guard) = self.file.lock()
+            && let Some(file) = guard.as_mut()
+            && file.write_all(&line).and_then(|_| file.flush()).is_err()
+        {
+            *guard = None;
+            eprintln!("WARNING: File logging failed.");
         }
-        let mut data = redact(&context, 0)
+        let _ = std::io::stderr().write_all(&line);
+    }
+
+    /// Writes only to the private file log. Phase records must not reach stderr, where a
+    /// bounded supervisor counts them as child output and would reset its idle deadline.
+    pub fn file_only(&self, level: &str, component: &str, message: &str, context: Value) {
+        let Some(line) = self.line(level, component, message, &context) else {
+            return;
+        };
+        if let Ok(mut guard) = self.file.lock()
+            && let Some(file) = guard.as_mut()
+            && file.write_all(&line).and_then(|_| file.flush()).is_err()
+        {
+            *guard = None;
+        }
+    }
+
+    fn line(
+        &self,
+        level: &str,
+        component: &str,
+        message: &str,
+        context: &Value,
+    ) -> Option<Vec<u8>> {
+        if level_index(level) < self.level {
+            return None;
+        }
+        let mut data = redact(context, 0)
             .as_object()
             .cloned()
             .unwrap_or_else(Object::new);
@@ -149,18 +183,9 @@ impl Logger {
         data.insert("level".into(), json!(level));
         data.insert("component".into(), json!(component));
         data.insert("message".into(), redact(&json!(message), 0));
-        let Ok(mut line) = serde_json::to_vec(&Value::Object(data)) else {
-            return;
-        };
+        let mut line = serde_json::to_vec(&Value::Object(data)).ok()?;
         line.push(b'\n');
-        if let Ok(mut guard) = self.file.lock()
-            && let Some(file) = guard.as_mut()
-            && file.write_all(&line).and_then(|_| file.flush()).is_err()
-        {
-            *guard = None;
-            eprintln!("WARNING: File logging failed.");
-        }
-        let _ = std::io::stderr().write_all(&line);
+        Some(line)
     }
 }
 

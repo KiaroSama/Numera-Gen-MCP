@@ -204,6 +204,35 @@ fn signed_prepared_install_and_update_preserve_private_files_without_compilation
                 .starts_with(".numera-staging-")
         }));
     }
+    // Phase timing stays in the private file log, names and integers only, for both actions.
+    let mut finished = Vec::new();
+    for entry in fs::read_dir(target.join("logs")).unwrap() {
+        let text = fs::read_to_string(entry.unwrap().path()).unwrap();
+        for line in text.lines() {
+            let record: serde_json::Value = serde_json::from_str(line).unwrap();
+            if record["component"] != "setup-phase" {
+                continue;
+            }
+            assert!(!line.contains(&*target.to_string_lossy()));
+            assert!(!line.contains(&*source.to_string_lossy()));
+            if record["message"] == "Setup phase finished." {
+                assert!(record["duration_ms"].as_u64().is_some());
+                finished.push(record["phase"].as_str().unwrap().to_string());
+            }
+        }
+    }
+    for expected in [
+        "artifact/manifest-and-member-digests",
+        "locked-prepared/manifest-repin",
+        "current/manifest-and-member-digests",
+        "locked-current/manifest-repin",
+        "stage-read",
+        "stage-write",
+        "publish",
+        "published/manifest-repin",
+    ] {
+        assert!(finished.iter().any(|phase| phase == expected), "missing {expected}");
+    }
 }
 
 #[test]

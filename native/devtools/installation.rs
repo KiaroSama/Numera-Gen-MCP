@@ -114,7 +114,25 @@ fn replace(from: &Path, to: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<()> {
+/// Runs one activation verification under a named scope, forwarding its inner phases.
+fn observed_verify(
+    directory: &Path,
+    scope: &str,
+    phase: &mut dyn FnMut(&str, bool),
+) -> Result<Prepared> {
+    artifact::verify_activation_observed(directory, &mut |name, done| {
+        phase(&format!("{scope}/{name}"), done)
+    })
+}
+
+/// `phase` receives each installation step when it starts (false) and finishes (true). It only
+/// observes timing; every check, lock, staging write and rollback is unchanged.
+pub fn install(
+    prepared: &Prepared,
+    destination: &Path,
+    update: bool,
+    phase: &mut dyn FnMut(&str, bool),
+) -> Result<()> {
     let root =
         fs::canonicalize(destination).map_err(|_| invalid("Installation root is unavailable."))?;
     if root == prepared.root || !root.is_dir() {
@@ -123,7 +141,7 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
         ));
     }
     let current = if update {
-        Some(artifact::verify_activation(&root)?)
+        Some(observed_verify(&root, "current", phase)?)
     } else {
         if root.join("manifest.json").exists() {
             return Err(invalid("Installation already exists; use Update."));
@@ -141,12 +159,13 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
         file: Some(lock_file),
     };
     // Verify again after taking the lock, including source bytes and current installation ownership.
-    let verified = artifact::verify_activation(&prepared.root)?;
+    let verified = observed_verify(&prepared.root, "locked-prepared", phase)?;
     if verified.manifest_bytes != prepared.manifest_bytes {
         return Err(invalid("Prepared artifact changed before installation."));
     }
     if let Some(current) = &current
-        && artifact::verify_activation(&root)?.manifest_bytes != current.manifest_bytes
+        && observed_verify(&root, "locked-current", phase)?.manifest_bytes
+            != current.manifest_bytes
     {
         return Err(invalid("Installed artifact changed before update."));
     }
@@ -156,6 +175,7 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
         path: staging,
         preserve: false,
     };
+    phase("stage-read", false);
     let mut entries = Vec::new();
     for member in &verified.manifest.files {
         let bytes = artifact::read(&verified.root, &member.path, member.bytes)?;
@@ -169,6 +189,8 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
         artifact::read(&verified.root, "manifest.sig", 1024)?,
     ));
     entries.push(("manifest.json".into(), verified.manifest_bytes));
+    phase("stage-read", true);
+    phase("stage-write", false);
     let mut snapshots = Vec::new();
     for (index, (name, bytes)) in entries.iter().enumerate() {
         let target = checked_path(&root, name, false)?;
@@ -199,8 +221,10 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
         }
         snapshots.push(before);
     }
+    phase("stage-write", true);
     let mut published = 0;
     let attempt = (|| -> Result<()> {
+        phase("publish", false);
         for (index, (name, _)) in entries.iter().enumerate() {
             let target = checked_path(&root, name, true)?;
             let now = if target.exists() {
@@ -218,7 +242,8 @@ pub fn install(prepared: &Prepared, destination: &Path, update: bool) -> Result<
             })?;
             published += 1;
         }
-        artifact::verify_activation(&root)?;
+        phase("publish", true);
+        observed_verify(&root, "published", phase)?;
         Ok(())
     })();
     if let Err(error) = attempt {

@@ -81,7 +81,11 @@ fn setup(
             .arg("--config")
             .arg(config);
     }
+    let seen = phase_logs(target);
     let outcome = context.outcome(&mut command, 20000, 10000, 1024 * 1024)?;
+    if matches!(action, "Install" | "Update") {
+        publish_phases(context, target, &seen, action);
+    }
     if !outcome.cleanup_verified
         || outcome.reason.is_some()
         || outcome.code != if reject { 1 } else { 0 }
@@ -92,6 +96,41 @@ fn setup(
         return Ok(Value::Null);
     }
     serde_json::from_slice(&outcome.stdout).map_err(|_| fail("Setup CLI returned invalid JSON."))
+}
+fn phase_logs(target: &Path) -> Vec<PathBuf> {
+    fs::read_dir(target.join("logs"))
+        .map(|rows| rows.flatten().map(|row| row.path()).collect())
+        .unwrap_or_default()
+}
+/// Republishes only allow-listed phase names and integer timings from the child's own new log
+/// file; observation never changes the activation verdict and withholds every other field.
+fn publish_phases(context: &Context, target: &Path, seen: &[PathBuf], action: &str) {
+    let mut phases = Vec::new();
+    for path in phase_logs(target).into_iter().filter(|path| !seen.contains(path)) {
+        let Ok(bytes) = read_regular(&path, 4 * 1024 * 1024) else {
+            continue;
+        };
+        for line in bytes.split(|byte| *byte == b'\n') {
+            let Ok(record) = serde_json::from_slice::<Value>(line) else {
+                continue;
+            };
+            let name = record["phase"].as_str().unwrap_or("");
+            if record["component"] != "setup-phase"
+                || name.is_empty()
+                || !name.bytes().all(|b| b.is_ascii_lowercase() || b == b'-' || b == b'/')
+            {
+                continue;
+            }
+            phases.push(json!({"phase":name,"since_start_ms":record["since_start_ms"].as_u64(),
+                "duration_ms":record["duration_ms"].as_u64()}));
+        }
+    }
+    context.logger.log(
+        "INFO",
+        "setup-phase",
+        "Observed setup phase timings.",
+        json!({"action":action,"phases":phases}),
+    );
 }
 fn installed(root: &Path, manifest: &artifact::Manifest) -> io::Result<BTreeMap<String, Vec<u8>>> {
     manifest

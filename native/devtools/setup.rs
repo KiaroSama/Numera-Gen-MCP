@@ -207,9 +207,39 @@ pub fn execute(
                 })
             }
             "Install" | "Update" => {
-                let artifact =
-                    super::artifact::verify_activation(Path::new(&options.values["artifact"]))?;
-                super::installation::install(&artifact, &options.root, options.action == "Update")?;
+                // File-only phase timing: stderr output would reset a supervisor idle deadline
+                // and hide the slow step. Names and durations only, never paths or contents.
+                let begin = std::time::Instant::now();
+                let mut starts: HashMap<String, u64> = HashMap::new();
+                let mut phase = |name: &str, done: bool| {
+                    let now = begin.elapsed().as_millis() as u64;
+                    let duration = if done {
+                        starts.remove(name).map(|start| now.saturating_sub(start))
+                    } else {
+                        starts.insert(name.to_string(), now);
+                        None
+                    };
+                    logger.file_only(
+                        "INFO",
+                        "setup-phase",
+                        if done {
+                            "Setup phase finished."
+                        } else {
+                            "Setup phase started."
+                        },
+                        json!({"phase":name,"since_start_ms":now,"duration_ms":duration}),
+                    );
+                };
+                let artifact = super::artifact::verify_activation_observed(
+                    Path::new(&options.values["artifact"]),
+                    &mut |name, done| phase(&format!("artifact/{name}"), done),
+                )?;
+                super::installation::install(
+                    &artifact,
+                    &options.root,
+                    options.action == "Update",
+                    &mut phase,
+                )?;
                 Ok(Report {
                     dry_run: false,
                     value: json!({"action":options.action,"dry_run":false,"installed":true}),
