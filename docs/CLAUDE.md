@@ -6,10 +6,11 @@ stdio MCP in `bridge` mode. The optional separate [direct HTTP mode](HTTP.md) li
 configurable port1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
 
 All 470 frozen cases/50 suites and all six real signature/package/extracted SDK checks passed at
-`f253557` / run `40244894089`, attempt2, all sixteen jobs successful. [Signed delivery](releases/0.2.0.md)
-records exact archives and deliberate self-signed trust limits. CI and isolated native readiness are
-not actual Desktop reconnection. Install the verified binary before using the examples below;
-retain the previous runtime until the actual host connection is verified.
+`7601b53` / qualification run `43571048279`, attempt 1, with protected signing run `43592102769`,
+attempt 1. [0.3.0 verification](releases/0.3.0.md) records exact archives and deliberate self-signed
+trust limits. CI and isolated native readiness are not actual Desktop reconnection. Install the
+verified binary before using the examples below; retain the previous runtime until the actual host
+connection is verified.
 
 The current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen-mcp` host entry.
 Release 0.3.0 ships that executable and was qualified and signed at `7601b53`; the
