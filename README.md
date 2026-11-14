@@ -32,9 +32,8 @@ Rust-only maintained tooling. First-party code is now **GPL-3.0-or-later**; sour
 **Rust 1.99.1**, while released binaries need no compiler or language runtime.
 
 Install only the signed [0.3.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.3.0)
-with its exact-source verification record. If that Release is absent, publication is still pending:
-retain the working [historical 0.2.0](docs/releases/0.2.0.md) installation. Source or an unsigned CI
-intermediate is not an installable final release.
+with its [verification record](docs/releases/0.3.0.md). Source or an unsigned CI intermediate is not
+an installable final release.
 
 The runtime, developer utility, CI driver and maintained tests are Rust. All 51 replaced
 Python/JavaScript/PowerShell source files have been removed; historical oracle archives remain
@@ -46,14 +45,15 @@ the same qualified binaries without rerunning the heavy suites. The workflow bad
 not proof that preparation, tests and signatures all ran; [test evidence](docs/TEST-RESULTS.md) records
 the exact source/run/attempt. [Rust migration](docs/RUST-MIGRATION.md) records scope and dispositions.
 
-The 0.3.0 runtime/tooling source at `a4b4600` passed all eight qualification jobs in
-[run43042249179](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43042249179), attempt 1:
-all 470 frozen cases / 50 suites across seven runtime/coverage contexts, with **85.0169% region**
-and **80.4864% branch** coverage. The unchanged floors are 85% / 80%. Its six signed native targets
-passed [run43048283044](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43048283044).
-These are prior-source results, not proof for later edits: the final license/README/Rust-metadata
-revision must pass its own exact-source qualification and protected signing before publication.
-The Release record identifies the actual final source, runs, targets and checksums.
+The released 0.3.0 source at `7601b53` passed all eight qualification jobs in
+[run 43571048279](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43571048279), attempt 1:
+all 470 frozen cases / 50 suites across seven runtime/coverage contexts, with **85.0617% region**
+and **80.5002% branch** coverage. The unchanged floors are 85% / 80%. Its six signed native targets
+and the signed collector passed
+[run 43592102769](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43592102769), attempt 1,
+at the same commit with the existing signer. The
+[0.3.0 verification record](docs/releases/0.3.0.md) identifies the actual source, runs, targets and
+checksums. Later edits are not covered by these results.
 
 [Historical 0.2.0](docs/releases/0.2.0.md) retains its original signed bytes and image-only template.
 Preserve a working installation until the replacement is signed and the actual host connection is
@@ -73,10 +73,11 @@ registration and interactive GUI use remain unverified.
 
 **Use a signed released binary, not a source build or unsigned CI intermediate.** The five steps
 below target **0.3.0** and its actual `numera-gen-mcp` executable. Require the published release's
-exact-source qualification, signatures and matching checksums before installation. If publication
-is still pending, keep the current installation. The immutable image-only **0.2.0** release retains
-`numera-image-gen-mcp` and its own template; never rename those signed bytes or copy media settings
-into that old version. [Historical installation and trust evidence](docs/releases/0.2.0.md) remains available.
+exact-source qualification, signatures and matching checksums before installation; the
+[verification record](docs/releases/0.3.0.md) holds both. The immutable image-only **0.2.0** release
+retains `numera-image-gen-mcp` and its own template; never rename those signed bytes or copy media
+settings into that old version. [Historical installation and trust
+evidence](docs/releases/0.2.0.md) remains available.
 
 You need a local MCP-capable client, a writable installation folder, and an endpoint/key/model
 that actually supports your intended image operation. Hosted generation also needs network access;
@@ -84,8 +85,9 @@ ComfyUI needs its own configured installation. Nothing in setup authorizes a pai
 
 ### 1. Download the ready native build
 
-Download [native 0.3.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.3.0)
-from this repository's Releases page after publication; a missing Release is not permission to use an unsigned artifact.
+Download [native 0.3.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.3.0) from this
+repository's Releases page and verify it against the published `.sha256` sidecar; an unavailable or
+unverified archive is not permission to use an unsigned artifact.
 Normal usage needs **no Node.js, npm, Rust toolchain, Python, compiler or local build**.
 Your MCP client runs the executable directly. ComfyUI remains an optional separately installed backend,
 not a bundled runtime.

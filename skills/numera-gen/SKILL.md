@@ -6,8 +6,8 @@ description: Generate or edit images, videos, audio or 3D through an installed N
 # Numera Gen MCP workflow
 
 Use the installed server's actual tool schemas. The signed 0.2.0 release has ten image tools; the
-0.3.0 source candidate adds media tools but is not yet qualified or installed. The server works
-without this optional skill. Loading instructions grants no provider, filesystem or cost permission.
+released 0.3.0 adds media tools for twelve total. The server works without this optional skill.
+Loading instructions grants no provider, filesystem or cost permission.
 
 1. Call list_connections, list_models and get_model_capabilities for the selected destination/model.
    Separate configured outputTypes/modes, documented capability, implemented forwarding and account

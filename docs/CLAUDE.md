@@ -12,11 +12,12 @@ not actual Desktop reconnection. Install the verified binary before using the ex
 retain the previous runtime until the actual host connection is verified.
 
 The current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen-mcp` host entry.
-The new executable is a 0.3.0 source candidate until its own qualification and release. The immutable
-published 0.2.0 archives retain their legacy executable name; use that actual name for those archives,
-never rename signed bytes to imitate the new build. Saved `numera-gen` and `numera-image-gen` entries
-are not automatically renamed or removed: back them up and explicitly migrate the selected Numera
-entry rather than running two copies against shared state.
+Release 0.3.0 ships that executable and was qualified and signed at `7601b53`; the
+[0.3.0 verification record](releases/0.3.0.md) holds both runs. The immutable published 0.2.0 archives
+retain their legacy executable name; use that actual name for those archives, never rename signed bytes
+to imitate the new build. Saved `numera-gen` and `numera-image-gen` entries are not automatically
+renamed or removed: back them up and explicitly migrate the selected Numera entry rather than running
+two copies against shared state.
 
 ## Claude Desktop
 

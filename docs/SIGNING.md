@@ -28,15 +28,16 @@ successful native, coverage and execution-matrix jobs in the same qualification 
 `sign-qualified` promotion of an original successful run/attempt at the identical SHA. Promotion
 skips those already executed suites; it authenticates their original matrix, jobs and intermediate
 bytes before signing. Source preparation cannot enter the protected environment or receive its inputs.
-Failed hosted attempts compiled and executed parts of 0.3.0, but the corrective working tree still
-requires complete hosted qualification. These source-authored guards are not evidence of successful
-qualification, signing or publication, and do not independently authorize a signing dispatch.
+The released 0.3.0 source `7601b53` completed hosted qualification in run `43571048279`, attempt 1
+(eight jobs) and protected signing in run `43592102769`, attempt 1 (six native targets plus the
+signed collector). The [0.3.0 verification record](releases/0.3.0.md) binds both to that commit.
+A dispatch remains a separate, explicitly authorized action, and any later edit is not covered.
 
-## Explicit local identity maintenance (source candidate)
+## Explicit local identity maintenance
 
 The 0.3.0 source replaces the first-party identity/check PowerShell helpers with opt-in native
-`numera-dev identity` operations on Windows. These commands are not in the published 0.2.0 binary and
-still require their own hosted qualification.
+`numera-dev identity` operations on Windows. These commands are absent from the published 0.2.0
+binary; the released 0.3.0 binary includes them, covered by the runs above.
 
 ```text
 numera-dev identity inspect --root ABSOLUTE_ROOT

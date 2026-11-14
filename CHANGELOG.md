@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased 0.3.0 - 2026-11-11
+## 0.3.0 - 2026-11-14
 
 The current source adopts Numera Gen MCP and `numera-gen-mcp`, adds explicit per-model media kinds
 and transformation modes, and authors fal queue orchestration for image, video, audio and 3D outputs.
@@ -23,19 +23,26 @@ read-only qualification of an exact 51-file retirement successor without deletin
 Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and ZIP9.5.0. Successful hosted
 [preparation42711139081](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/42711139081)
 on `370422d` returned a candidate lockfile and Rust formatting patch only, without compilation, tests
-or signing inputs. Later edits are not covered by that formatting result. Assertion parity,
-six-target runtime/package verification and genuine signatures remain required before release.
-The prior `a4b4600` source passed all eight qualification jobs in run43042249179/attempt1,
-with all470cases/50suites across seven contexts and85.0169% regions/80.4864% branches.
-Protected main-only signing43048283044 passed all six native targets and the signed collector,
-using the same qualified binaries and existing signer. These results are not proof for later edits.
+or signing inputs. Assertion parity, six-target runtime/package verification and genuine signatures
+remain required for any later edit.
+Reinstalling identical bytes no longer stages a redundant rollback copy of every member. Staging
+flushes and virus-scans each file it writes, which dominated the Windows ARM update; a published
+member already holds the previous bytes, so an identical member needs no `old-*` snapshot. Rollback
+restores only members that actually changed. Verification, locking, replacement and rollback
+semantics are unchanged.
+Release `0.3.0` was qualified at `7601b53` by run43571048279/attempt1: all eight jobs succeeded,
+with all 470 cases and 50 suites across seven contexts and 85.06165536697456% regions /
+80.50018804061678% branches, above the 85/80 floors. Protected main-only signing run43592102769/
+attempt1 then passed all six native targets and the signed collector using the same binaries and the
+existing signer (`31ccb588…`, certificate `657dd786…`). Published archives are not notarized and
+carry no public OS trust. [Verification and trust limits](docs/releases/0.3.0.md) record the archive
+digests, the host practical checks and the boundaries of those results.
 
 At the owner's request, current first-party code now uses GPL-3.0-or-later, with the complete GPLv3
 text unchanged and third-party/historical grants retained. Both package minimums and the README
 label now match the existing Rust1.99.1 toolchain. The refreshed installation guide targets the
-actual0.3.0 archive/executable and keeps historical0.2.0 instructions separate. These final build
-inputs require their own exact-source qualification/signing before publication or local replacement;
-no old signed archive is relabeled or repacked.
+actual0.3.0 archive/executable and keeps historical0.2.0 instructions separate. No old signed
+archive is relabeled or repacked; 0.2.0 remains published exactly as signed.
 
 ## Native 0.2.0 - 2026-10-26
 

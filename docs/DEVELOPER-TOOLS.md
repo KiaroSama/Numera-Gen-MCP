@@ -25,7 +25,7 @@ all six targets; the original CI archives are published as0.2.0. Owner-host reco
 
 ## Hosted maintenance workspace
 
-The source candidate adds `tooling/`, a separate Cargo workspace package producing `numera-task`.
+Release 0.3.0 adds `tooling/`, a separate Cargo workspace package producing `numera-task`.
 It reuses native supervision, logging and artifact verification; task-only archive dependencies are
 not production server dependencies. Current scope replaces all 51 original first-party executable
 files, including the five PowerShell helpers, with Rust; originals are now retired from the working tree.

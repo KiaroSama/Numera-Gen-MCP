@@ -197,7 +197,7 @@ roles, cardinalities and model policy reject before source transfer or a paid PO
 local wait cancellation is independent of provider cancellation/refund. Originals are verified as
 PNG/JPEG/WebP, PCM/IEEE-float WAV, self-contained single-visual-track nonfragmented MP4 or a bounded
 self-contained GLB2 mesh subset. Other containers/codecs/features fail explicitly without conversion.
-The source candidate retains up to64normalized media items through the shared schema2 Store: legacy
+Release 0.3.0 retains up to64normalized media items through the shared schema2 Store: legacy
 indices0–9 stay unchanged, media-only overflow10–63 uses an additive table in the same database and
 shares byte budgets, writer fences and stable publication. No second job database or old-binary
 media-state downgrade is supported. Excessive responses fail, never silently truncate. Structural
