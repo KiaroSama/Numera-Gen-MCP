@@ -211,7 +211,12 @@ pub fn install(
             bytes,
             name.starts_with("bin/"),
         )?;
-        if let Some(before) = &before {
+        // Stage the previous bytes only when they differ. Every staged file is flushed and
+        // virus-scanned, which dominated the Windows ARM update, and a reinstall of identical
+        // bytes needs no rollback copy: the published file already holds them.
+        if let Some(before) = &before
+            && before != bytes
+        {
             write_new(
                 &tree.path.join(format!("old-{index}")),
                 before,
@@ -265,10 +270,11 @@ pub fn install(
                 restored = false;
                 continue;
             }
-            restored &= if snapshots[index].is_some() {
-                replace(&tree.path.join(format!("old-{index}")), &target).is_ok()
-            } else {
-                fs::remove_file(&target).is_ok()
+            restored &= match &snapshots[index] {
+                // Identical previous bytes need nothing: the published member already holds them.
+                Some(before) if *before == entries[index].1 => true,
+                Some(_) => replace(&tree.path.join(format!("old-{index}")), &target).is_ok(),
+                None => fs::remove_file(&target).is_ok(),
             };
         }
         if !restored {
