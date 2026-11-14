@@ -236,6 +236,9 @@ fn signed_prepared_install_and_update_preserve_private_files_without_compilation
             "missing {expected}"
         );
     }
+    // Both actions emit more records than the 30-item array cap a single summary would hit,
+    // so every finished phase must survive as its own record.
+    assert!(finished.len() > 30, "phase records were truncated");
 }
 
 #[test]

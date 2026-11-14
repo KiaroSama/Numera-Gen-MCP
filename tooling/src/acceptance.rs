@@ -137,12 +137,29 @@ fn publish_phases(context: &Context, target: &Path, seen: &[PathBuf], action: &s
             phases.push(Value::Object(row));
         }
     }
-    // The runtime logger takes its own value type; conversion failure keeps a fixed marker.
+    // One record per line: redact() caps arrays at 30 items, so a single array would silently
+    // drop the later phases of a real Update and hide the step being measured.
     use numera_gen_mcp::compat::value as runtime;
-    let observed = runtime::Value::from_serde(&json!({"action":action,"phases":phases}))
-        .unwrap_or_else(|_| runtime::json!({"action":action,"phases":"unavailable"}));
-    let message = "Observed setup phase timings.";
-    context.logger.log("INFO", "setup-phase", message, observed);
+    let count = phases.len();
+    for phase in phases {
+        let converted = runtime::Value::from_serde(&phase)
+            .unwrap_or_else(|_| runtime::json!({"phase":"unavailable"}));
+        context.logger.log(
+            "INFO",
+            "setup-phase",
+            "Observed setup phase record.",
+            converted,
+        );
+    }
+    let summary =
+        runtime::Value::from_serde(&json!({"action":action,"records":count})).ok();
+    let summary = summary.unwrap_or_else(|| runtime::json!({"action":action}));
+    context.logger.log(
+        "INFO",
+        "setup-phase",
+        "Observed setup phase timings.",
+        summary,
+    );
 }
 fn installed(root: &Path, manifest: &artifact::Manifest) -> io::Result<BTreeMap<String, Vec<u8>>> {
     manifest
