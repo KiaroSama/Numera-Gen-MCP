@@ -248,7 +248,16 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
         Value::Array(
             slots
                 .into_values()
-                .filter(|model| !model.is_empty())
+                // A numbered slot with no id and no name is an unused placeholder; the
+                // template ships several. Dropping it keeps the remaining filled slots
+                // listed instead of failing schema validation on an empty model.
+                .filter(|model| {
+                    ["id", "name"].iter().any(|field| {
+                        model
+                            .get(*field)
+                            .is_some_and(|value| !value.as_str().unwrap_or("").trim().is_empty())
+                    })
+                })
                 .map(Value::Object)
                 .collect(),
         ),

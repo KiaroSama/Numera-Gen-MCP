@@ -72,6 +72,23 @@ fn invalid_configuration(result: Result<Config>) {
 }
 
 #[test]
+fn unused_numbered_slots_do_not_fail_the_filled_ones() {
+    let workspace = Workspace::new();
+    // The shipped template leaves high-numbered slots with only an ENABLED key. Those
+    // placeholders must not be treated as models: the filled slots stay listed.
+    let text = format!(
+        "{VALID}MODEL_2_ENABLED=\"true\"\nMODEL_3_ENABLED=\"true\"\nMODEL_3_OUTPUT_FORMAT=\"\"\nMODEL_3_SIZE=\"\"\nMODEL_3_QUALITY=\"\"\n"
+    );
+    let config = load_file(&workspace, ".env", text.as_bytes()).unwrap();
+    let connection = &config.value["connections"]["default"];
+    assert_eq!(connection["defaultModel"], "family/image");
+    assert_eq!(
+        connection["configuredModels"],
+        json!([{"id":"family/image","name":"تصویر #1"}])
+    );
+}
+
+#[test]
 fn quoted_env_slots_preserve_source_defaults_and_process_environment() {
     let workspace = Workspace::new();
     let before = std::env::vars_os().collect::<BTreeMap<_, _>>();

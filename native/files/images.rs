@@ -64,14 +64,20 @@ pub fn data_url(value: &str, limit: usize) -> Result<Vec<u8>> {
     };
     if !matches!(
         prefix,
-        "data:image/png;base64" | "data:image/jpeg;base64" | "data:image/webp;base64"
+        "data:image/png;base64"
+            | "data:image/jpeg;base64"
+            | "data:image/webp;base64"
+            | "data:image/gif;base64"
     ) {
         return Err(data_error());
     }
     decode_base64(encoded, limit)
 }
 fn data_error() -> NumeraError {
-    NumeraError::new("invalid_input", "Expected a PNG/JPEG/WebP Base64 data URL.")
+    NumeraError::new(
+        "invalid_input",
+        "Expected a PNG/JPEG/WebP/GIF Base64 data URL.",
+    )
 }
 
 pub fn inspect(bytes: Vec<u8>, config: &Value, limit: Option<usize>) -> Result<Image> {
@@ -92,10 +98,12 @@ pub fn inspect(bytes: Vec<u8>, config: &Value, limit: Option<usize>) -> Result<I
         (ImageFormat::Jpeg, "jpg")
     } else if bytes.starts_with(b"RIFF") && bytes.get(8..12) == Some(b"WEBP".as_slice()) {
         (ImageFormat::WebP, "webp")
+    } else if bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a") {
+        (ImageFormat::Gif, "gif")
     } else {
         return Err(NumeraError::new(
             "invalid_input",
-            "Only valid PNG, JPEG and WebP bytes are supported.",
+            "Only valid PNG, JPEG, WebP and GIF bytes are supported.",
         ));
     };
     let max_pixels = config["files"]["maxPixels"].as_u64().unwrap_or(64000000);
@@ -112,7 +120,11 @@ pub fn inspect(bytes: Vec<u8>, config: &Value, limit: Option<usize>) -> Result<I
     if width == 0 || height == 0 || u64::from(width) * u64::from(height) > max_pixels {
         return Err(invalid());
     }
-    reject_animation(&bytes, format)?;
+    // GIF is the one animated container accepted here; the PNG/WebP guard still rejects
+    // multi-frame APNG and animated WebP bytes.
+    if format != ImageFormat::Gif {
+        reject_animation(&bytes, format)?;
+    }
     let decoded = image::DynamicImage::from_decoder(decoder).map_err(|_| invalid())?;
     if decoded.width() != width || decoded.height() != height {
         return Err(invalid());

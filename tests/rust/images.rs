@@ -305,3 +305,19 @@ fn generated_original_image_fixtures_are_preserved_and_validated() {
         );
     }
 }
+
+#[test]
+fn gif_bytes_are_accepted_as_animated_image_output() {
+    let config = json!({"files":{"maxOutputBytes":4 * 1024 * 1024,"maxPixels":64000000}});
+    // 2-frame 1x1 GIF89a, the shape the OpenAI image API returns for output_format=gif.
+    let gif: Vec<u8> = vec![
+        0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0xff, 0xff, 0xff, 0x21, 0xf9, 0x04, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x2c, 0x00, 0x00,
+        0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02, 0x44, 0x01, 0x00, 0x3b,
+    ];
+    let image = inspect(gif.clone(), &config, None).expect("GIF must be accepted");
+    assert_eq!(image.mime, "image/gif");
+    assert_eq!(image.extension, "gif");
+    assert_eq!((image.width, image.height), (1, 1));
+    assert_eq!(image.bytes, gif);
+}

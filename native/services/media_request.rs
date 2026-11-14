@@ -151,7 +151,7 @@ pub fn decode_data(raw: &str, kind: Kind, limit: usize) -> Result<Vec<u8>> {
         .and_then(|s| s.strip_suffix(";base64"))
         .ok_or_else(|| invalid("Media data URI must use explicit base64 encoding."))?;
     let allowed = match kind {
-        Kind::Image => ["image/png", "image/jpeg", "image/webp"].contains(&mime),
+        Kind::Image => ["image/png", "image/jpeg", "image/webp", "image/gif"].contains(&mime),
         Kind::Audio => mime == "audio/wav",
         Kind::Video => mime == "video/mp4",
         Kind::Model3d => mime == "model/gltf-binary",

@@ -10,6 +10,8 @@ pub const COMMON_FIELDS: &[&str] = &[
     "image_size",
     "quality",
     "output_format",
+    "frame_count",
+    "frame_duration_ms",
     "background",
     "seed",
     "negative_prompt",

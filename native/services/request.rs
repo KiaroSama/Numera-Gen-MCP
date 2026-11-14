@@ -105,7 +105,7 @@ pub fn parse(mut value: Value) -> Result<Value> {
     }
     if value["output_format"]
         .as_str()
-        .is_some_and(|s| !["png", "jpeg", "webp"].contains(&s))
+        .is_some_and(|s| !["png", "jpeg", "webp", "gif"].contains(&s))
         || value["return_mode"]
             .as_str()
             .is_some_and(|s| !["files", "files_and_preview"].contains(&s))

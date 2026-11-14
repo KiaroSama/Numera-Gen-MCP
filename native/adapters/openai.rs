@@ -67,7 +67,16 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
     let mut tool = json!({"type":"image_generation","model":model,"action":if *operation=="edit"{"edit"}else{"generate"}});
     for key in COMMON_FIELDS {
         if let Some(value) = r.get(*key) {
-            if !["size", "quality", "output_format", "background"].contains(key) {
+            if ![
+                "size",
+                "quality",
+                "output_format",
+                "frame_count",
+                "frame_duration_ms",
+                "background",
+            ]
+            .contains(key)
+            {
                 return Err(NumeraError::new(
                     "unsupported_parameter",
                     &format!("Responses image tool does not accept {key}."),

@@ -73,3 +73,6 @@ __pycache__/
 !/.env.sample
 !/.env.template
 !/.env.dist
+/fal.env
+/fal.env.*
+!/fal.env.example

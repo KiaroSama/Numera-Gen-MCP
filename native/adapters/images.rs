@@ -34,7 +34,14 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
             } else if c["gateway"] == "omniroute" {
                 &["size", "quality"]
             } else {
-                &["size", "quality", "output_format", "background"]
+                &[
+                    "size",
+                    "quality",
+                    "output_format",
+                    "frame_count",
+                    "frame_duration_ms",
+                    "background",
+                ]
             };
             keys.iter().map(|s| json!(s)).collect()
         });

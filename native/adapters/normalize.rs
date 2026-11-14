@@ -282,7 +282,7 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
 
 pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normalized> {
     let image_mime = mime.split(';').next().unwrap_or("");
-    if ["image/png", "image/jpeg", "image/webp"].contains(&image_mime) {
+    if ["image/png", "image/jpeg", "image/webp", "image/gif"].contains(&image_mime) {
         return Ok(Normalized {
             images: vec![ResultItem {
                 bytes: Some(bytes),
