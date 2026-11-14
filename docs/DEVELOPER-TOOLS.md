@@ -206,10 +206,11 @@ neither the archive nor an automatically formatted workspace qualifies the chang
 Do not use the candidate to replace the working installation. See [source validation](testing/SOURCE-VALIDATION.md)
 for historical/current distinctions and [test results](TEST-RESULTS.md) for observed evidence.
 
-## Explicit local credential maintenance (0.3.0 source)
+## Explicit local credential maintenance
 
-These new commands are not present in the published 0.2.0 binary and have not yet passed their own
-hosted qualification. They are separate from MCP tools and never run automatically on startup.
+These commands are absent from the published 0.2.0 binary. The released 0.3.0 binary includes them,
+covered by qualification run `43571048279` and signing run `43592102769` at `7601b53`. They are
+separate from MCP tools and never run automatically on startup.
 
 ```text
 numera-dev protect-secret --path ABSOLUTE_FILE --dry-run

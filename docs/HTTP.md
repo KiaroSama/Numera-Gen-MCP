@@ -1,13 +1,14 @@
 # Direct local HTTP MCP
 
 Provider-free hosted native SDK/CLI and signed extracted HTTP checks passed on all six targets at
-`f253557` / run `40244894089`, attempt2, together with all470 baseline cases and50 suites. The verified
-[Release0.2.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.2.0) is published.
-Actual owner GUI registration remains unverified; retain the previous runtime until reconnection succeeds.
+`7601b53` / run `43571048279`, attempt 1, together with all 470 baseline cases and 50 suites; protected
+signing run `43592102769`, attempt 1, covers the same commit. The verified
+[Release 0.3.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.3.0) is published, and
+[its verification record](releases/0.3.0.md) binds both runs. Actual owner GUI registration remains
+unverified; retain the previous runtime until reconnection succeeds.
 
 Current commands below use Numera Gen MCP's `numera-gen-mcp` binary. The immutable historical
 0.2.0 release retains `numera-image-gen-mcp[.exe]`; use its actual filename when running that release.
-The historical CI result above is not qualification of the current rebranded source.
 
 ## Start
 

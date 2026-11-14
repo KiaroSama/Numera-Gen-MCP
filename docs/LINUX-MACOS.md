@@ -1,9 +1,10 @@
 # Linux and macOS setup
 
-The native target is a ready executable, not a source-build prerequisite. At `f253557` /
-run `40244894089`, attempt2, all sixteen jobs passed, including six native targets, genuine signatures and
-signed extracted SDK checks. [Signed delivery](releases/0.2.0.md) records artifacts and trust limits;
-install the verified archive before switching a live client.
+The native target is a ready executable, not a source-build prerequisite. At `7601b53`,
+qualification run `43571048279`, attempt 1 (eight jobs) and protected signing run `43592102769`,
+attempt 1 (six native targets plus the signed collector) both passed, which together covers the
+complete matrix. [0.3.0 verification](releases/0.3.0.md) records artifacts and trust limits; install
+the verified archive before switching a live client.
 
 Current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen-mcp` host entry.
 The immutable historical 0.2.0 archives still contain `numera-image-gen-mcp`; substitute that actual
