@@ -151,8 +151,7 @@ fn publish_phases(context: &Context, target: &Path, seen: &[PathBuf], action: &s
             converted,
         );
     }
-    let summary =
-        runtime::Value::from_serde(&json!({"action":action,"records":count})).ok();
+    let summary = runtime::Value::from_serde(&json!({"action":action,"records":count})).ok();
     let summary = summary.unwrap_or_else(|| runtime::json!({"action":action}));
     context.logger.log(
         "INFO",
