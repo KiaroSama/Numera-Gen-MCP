@@ -289,25 +289,36 @@ impl Owned {
     fn members(&self, deadline: Instant) -> io::Result<Vec<OwnedHandle>> {
         // Two DWORD counts precede an aligned ULONG_PTR array on both supported 64-bit targets.
         let mut buffer = vec![0usize; 65537];
-        // SAFETY: initialized, pointer-aligned buffer; class3 includes nested jobs, bounded to65536PIDs.
-        if unsafe {
-            QueryInformationJobObject(
-                self.job.as_raw_handle(),
-                3,
-                buffer.as_mut_ptr().cast(),
-                std::mem::size_of_val(buffer.as_slice()) as u32,
-                std::ptr::null_mut(),
-            )
-        } == 0
-        {
-            return Err(io::Error::last_os_error());
-        }
-        let counts = buffer[0];
-        let assigned = counts as u32;
-        let returned = (counts >> 32) as u32;
-        if assigned != returned || returned as usize > 65536 {
-            return Err(io::Error::other("Owned job member list is incomplete."));
-        }
+        // The buffer always fits the bound, so a count mismatch is a snapshot taken while a
+        // descendant was joining or leaving the job. Re-query until consistent or the deadline.
+        let returned = loop {
+            // SAFETY: initialized, pointer-aligned buffer; class3 includes nested jobs, bounded to65536PIDs.
+            if unsafe {
+                QueryInformationJobObject(
+                    self.job.as_raw_handle(),
+                    3,
+                    buffer.as_mut_ptr().cast(),
+                    std::mem::size_of_val(buffer.as_slice()) as u32,
+                    std::ptr::null_mut(),
+                )
+            } == 0
+            {
+                return Err(io::Error::last_os_error());
+            }
+            let counts = buffer[0];
+            let assigned = counts as u32;
+            let returned = (counts >> 32) as u32;
+            if returned as usize > 65536 {
+                return Err(io::Error::other("Owned job member list exceeds its bound."));
+            }
+            if assigned == returned {
+                break returned;
+            }
+            if Instant::now() >= deadline {
+                return Err(io::Error::other("Owned job member list is incomplete."));
+            }
+            pause(deadline);
+        };
         let mut members = Vec::new();
         for pid in &buffer[1..1 + returned as usize] {
             if Instant::now() >= deadline {
