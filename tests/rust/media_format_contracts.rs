@@ -1,3 +1,4 @@
+use numera_gen_mcp::compat::value::Value;
 use numera_gen_mcp::media::{self, Kind};
 use serde_json::json;
 #[path = "../fixtures/media/bytes.rs"]
@@ -142,4 +143,55 @@ fn images_reuse_real_decoder_and_kind_tokens_are_exact() {
     assert!(media::inspect(Kind::Image, &bytes[..16], 2048, 1).is_err());
     assert_eq!(serde_json::to_value(Kind::Model3d).unwrap(), "3d");
     assert!(serde_json::from_value::<Kind>(json!("model_3d")).is_err());
+}
+// GIF is accepted as a per-request output format and as animated bytes, but not as a model
+// default: the immutable oracle pins a gif config default to invalid_configuration.
+#[test]
+fn gif_is_an_accepted_request_output_format_while_undecodable_formats_reject() {
+    let request = numera_gen_mcp::services::request::parse(
+        Value::from_serde(&json!({
+            "prompt": "fixture",
+            "output_format": "gif",
+            "frame_count": 2,
+            "frame_duration_ms": 100,
+        }))
+        .unwrap(),
+    )
+    .expect("gif is a declared request output format");
+    assert_eq!(request["output_format"], "gif");
+    assert_eq!(request["frame_count"], 2);
+    assert_eq!(request["frame_duration_ms"], 100);
+    for rejected in [json!("svg"), json!("tiff"), json!(1), json!(true)] {
+        let value = Value::from_serde(&json!({
+            "prompt": "fixture",
+            "output_format": rejected,
+        }))
+        .unwrap();
+        assert_eq!(
+            numera_gen_mcp::services::request::parse(value)
+                .expect_err("undecodable output format must reject")
+                .code,
+            "invalid_input"
+        );
+    }
+    // The schema bounds each frame field, so an out-of-range value rejects before submission.
+    for bounds in [
+        json!({"frame_count": 1}),
+        json!({"frame_count": 17}),
+        json!({"frame_duration_ms": 19}),
+        json!({"frame_duration_ms": 2001}),
+    ] {
+        let mut value = json!({"prompt": "fixture", "output_format": "gif"});
+        if let (Some(object), Some(extra)) = (value.as_object_mut(), bounds.as_object()) {
+            for (key, item) in extra {
+                object.insert(key.clone(), item.clone());
+            }
+        }
+        assert_eq!(
+            numera_gen_mcp::services::request::parse(Value::from_serde(&value).unwrap())
+                .expect_err("frame bounds are enforced")
+                .code,
+            "invalid_input"
+        );
+    }
 }

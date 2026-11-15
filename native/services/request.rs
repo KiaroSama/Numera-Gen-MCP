@@ -49,6 +49,8 @@ pub fn parse(mut value: Value) -> Result<Value> {
         "filename_prefix",
         "return_mode",
         "wait",
+        "frame_count",
+        "frame_duration_ms",
     ];
     if object
         .keys()
