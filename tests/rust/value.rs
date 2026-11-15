@@ -180,7 +180,7 @@ fn serde_round_trip_and_every_to_value_conversion_keep_exact_shapes() {
     assert_eq!(true.to_value(), Value::from(true));
     assert_eq!(Number::from(3u8).to_value().as_f64(), Some(3.0));
     assert!(().to_value().is_null());
-    assert_eq!((&7u32).to_value().as_f64(), Some(7.0));
+    assert_eq!(7u32.to_value().as_f64(), Some(7.0));
     assert!(None::<u8>.to_value().is_null());
     assert_eq!(Some(1i8).to_value().as_f64(), Some(1.0));
     assert_eq!([1u8, 2][..].to_value().as_array().unwrap().len(), 2);
