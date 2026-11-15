@@ -10,11 +10,10 @@
 [![Rust edition 2024](https://img.shields.io/badge/edition-2024-CE422B)](Cargo.toml)
 [![Native executable](https://img.shields.io/badge/distribution-native_binary-blue)](Cargo.toml)
 [![MCP stdio](https://img.shields.io/badge/MCP-stdio-7651a8)](docs/ARCHITECTURE.md)
-[![Windows target](https://img.shields.io/badge/target-Windows_11-0078d4)](docs/WINDOWS-WSL.md)
-[![Linux CI](https://img.shields.io/badge/CI_matrix-Linux-555)](.github/workflows/ci.yml)
-[![macOS CI](https://img.shields.io/badge/CI_matrix-macOS-555)](.github/workflows/ci.yml)
+[![Platforms](https://img.shields.io/badge/platforms-Windows_|_Linux_|_macOS-555)](.github/workflows/ci.yml)
+[![Architectures](https://img.shields.io/badge/architectures-x64_|_ARM64-555)](.github/workflows/ci.yml)
 [![JSON Schema](https://img.shields.io/badge/config-JSON_Schema-3068b7)](schemas/config.schema.json)
-[![Media formats](https://img.shields.io/badge/media-PNG_JPEG_WebP_MP4_WAV_GLB-668c00)](docs/COMPATIBILITY.md)
+[![Media formats](https://img.shields.io/badge/media-PNG_JPEG_WebP_GIF_MP4_WAV_GLB-668c00)](docs/COMPATIBILITY.md)
 [![SQLite receipts](https://img.shields.io/badge/receipts-SQLite-003b57)](native/jobs/store.rs)
 [![Documentation](https://img.shields.io/badge/docs-Markdown-blue)](docs/CONFIGURATION.md)
 [![RMCP SDK](https://img.shields.io/badge/SDK-RMCP-7651a8)](Cargo.toml)
@@ -250,7 +249,7 @@ must be enabled, and IDs must be unique. A configured model is not proof of acco
 | `MODEL_n_ID`            | Exact provider model ID sent to the API, including any required provider prefix.                                                                    | Required for a nonempty slot; up to300 characters.                  |
 | `MODEL_n_NAME`          | Friendly name the agent displays through `list_models`. It does not change routing.                                                                 | Required for a nonempty slot; up to100 characters.                  |
 | `MODEL_n_ENABLED`       | Enables the slot. `false` hides it from configured listing and denies its ID for submission.                                                        | Empty/omitted: `true`. Template slots2 and3 explicitly use `false`. |
-| `MODEL_n_OUTPUT_FORMAT` | Default output format: `png`, `jpeg` or `webp`, only if the selected route supports it.                                                             | Empty: provider default, nothing sent.                              |
+| `MODEL_n_OUTPUT_FORMAT` | Default output format: `png`, `jpeg`, `webp` or `gif`, only if the selected route supports it.                                                       | Empty: provider default, nothing sent.                              |
 | `MODEL_n_SIZE`          | Default native pixel dimensions, for example `1024x1024`, if accepted by that API/model. Numera does not resize the returned original to match.     | Empty: provider default; nonblank values up to100 characters.       |
 | `MODEL_n_QUALITY`       | Default native quality value, for example `auto`, `low`, `medium` or `high` on models supporting those values. It is not a universal quality scale. | Empty: provider default; nonblank values up to100 characters.       |
 
@@ -564,7 +563,7 @@ forwards inline data only where that exact endpoint implements the role; it make
 
 Implemented endpoint bindings cover text/image-to-image, text/image/video-to-video, text/audio-to-audio,
 and text/image/3D-to-3D paths individually, not all possible conversions. Unsupported endpoint/mode,
-reference, parameter or format fails explicitly. Initial original-byte validation covers PNG/JPEG/WebP,
+reference, parameter or format fails explicitly. Initial original-byte validation covers PNG/JPEG/WebP/GIF,
 PCM/IEEE-float WAV, self-contained single-visual-track nonfragmented MP4, and a bounded self-contained
 GLB 2.0 mesh subset. Audio tracks in MP4, fragmented video, compressed/animated/skinned GLB and other
 media formats are not supported by these validators. Structural validation is not full decode,

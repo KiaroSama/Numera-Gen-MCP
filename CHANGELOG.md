@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased
+
+`generate_image` and `edit_image` now route through the typed fal media path when the selected
+connection uses the `fal-queue` adapter, so the fal profile works through the legacy image tools
+instead of only through `generate_media`. Arguments the fal endpoints do not take (`size`,
+`quality`, `background`, `aspect_ratio`, `mask`, `edit_region`, `upscale`, `target_language`,
+`frame_count`, `frame_duration_ms`) reject before submission and point at `provider_options`;
+`image_size`, `output_format`, `seed`, `negative_prompt`, `count` and `provider_options` map onto
+endpoint parameters. References keep their existing `output_id`, `path`, `url` and `data_url` forms.
+Hunyuan3D returns OBJ and FBX variants beside its GLB. Those variants previously failed the GLB-only
+structural validator and downgraded an otherwise complete receipt to partial, so only GLB is decoded
+and non-GLB variants are recorded without conversion.
+A 4xx on the submission itself is now recorded as terminal, which releases the admission
+reservation instead of holding it for the life of the connection. A 4xx while an upstream handle
+exists is only a failed read of a live, possibly paid job, so it stays recoverable through `get_job`
+and keeps its reservation.
+The `--logo` argument writes the embedded PNG to standard output. Referencing only its length let
+the linker discard roughly one megabyte of image data, so the bytes are now genuinely retained;
+verified present in the built Windows binaries.
+The image request schema listed `svg` as an accepted `output_format` although no route decodes SVG
+and the request validator rejects it, so a client could pass schema validation and then fail after
+a paid request. The enum now matches the config schema and the validator. README and compatibility
+claims about image formats were corrected to match the accepted set.
+This section also covers the unreleased GIF output acceptance committed before it: animated GIF
+bytes, MIME and extension now pass the media guards while multi-frame APNG and animated WebP still
+reject, `frame_count` and `frame_duration_ms` reach only routes that declare them, and an `.env`
+numbered slot with neither id nor name is treated as a template placeholder rather than a model.
+None of this is qualified. The 0.3.0 record below describes `7601b53` only.
+
 ## 0.3.0 - 2026-11-14
 
 The current source adopts Numera Gen MCP and `numera-gen-mcp`, adds explicit per-model media kinds

@@ -528,7 +528,21 @@ impl Generation {
         if ambiguous {
             receipt.value["generation_outcome"] = json!("unknown");
         }
-        if !receipt.value["upstream_job"].is_null()
+        // A 4xx on the submission itself is definitive: no handle was returned, so nothing is
+        // running upstream and re-reading cannot change the outcome. Marking it terminal releases
+        // the admission reservation instead of consuming it for the life of the connection.
+        // A 4xx while a handle exists is only a failed read of a live, possibly paid job, so it
+        // stays recoverable through get_job and keeps its reservation.
+        let rejected = receipt.value["upstream_job"].is_null()
+            && error
+                .http_status
+                .is_some_and(|status| (400..500).contains(&status));
+        if rejected {
+            receipt.value["upstream_terminal"] = json!("failed");
+            receipt.value["generation_outcome"] = json!("failed");
+        }
+        if !rejected
+            && !receipt.value["upstream_job"].is_null()
             && receipt.value["upstream_terminal"].is_null()
             && (receipt.value["generation_outcome"] != "completed"
                 || (crate::error::array(&receipt.value["outputs"]).is_empty()

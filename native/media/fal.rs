@@ -198,13 +198,16 @@ pub fn outputs(endpoint: &str, response: &Value) -> Result<Vec<Artifact>> {
                 if !["glb", "obj", "fbx"].contains(&format.as_str()) {
                     return Err(invalid("Fal returned an unrecognized model variant role."));
                 }
-                if format == "glb"
-                    && value["url"].as_str().is_some_and(|url| {
-                        result
-                            .iter()
-                            .any(|a| a.role == "model" && a.error.is_none() && a.url == url)
-                    })
-                {
+                // Only GLB has a structural validator; OBJ/FBX bytes would fail it and
+                // downgrade an otherwise complete receipt to partial.
+                if format != "glb" {
+                    continue;
+                }
+                if value["url"].as_str().is_some_and(|url| {
+                    result
+                        .iter()
+                        .any(|a| a.role == "model" && a.error.is_none() && a.url == url)
+                }) {
                     continue;
                 }
                 collect(

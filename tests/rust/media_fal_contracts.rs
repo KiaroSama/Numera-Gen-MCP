@@ -371,7 +371,63 @@ fn outputs_preserve_mesh_texture_roles_and_invalid_items_instead_of_dropping() {
     .unwrap();
     assert!(missing.iter().all(|v| v.error.is_some()));
     let outputs = fal::outputs("fal-ai/hunyuan3d-v3/text-to-3d", &json!({"model_glb":{"url":"https://example.invalid/a.glb"},"model_urls":{"glb":{"url":"https://example.invalid/a.glb"},"obj":{"url":"https://example.invalid/a.obj"}},"thumbnail":{"url":"https://example.invalid/thumb.png"}})).unwrap();
-    assert_eq!(outputs.len(), 3);
-    assert!(outputs.iter().any(|v| v.role == "model_obj"));
+    // OBJ/FBX share the GLB URL slot but have no validator, so they must not be
+    // collected: a rejected variant downgrades an otherwise complete receipt.
+    assert_eq!(outputs.len(), 2);
+    assert!(!outputs.iter().any(|v| v.role.starts_with("model_")));
+    assert!(outputs.iter().all(|v| v.error.is_none()));
     assert!(outputs.iter().any(|v| v.role == "thumbnail"));
+}
+
+#[test]
+fn image_tools_select_the_fal_media_mode_and_reject_endpoint_unknowns() {
+    use numera_gen_mcp::compat::value::json as vjson;
+    use numera_gen_mcp::services::fal_image;
+    let generate = fal_image::to_media_request(
+        &vjson!({
+            "prompt": "a red boat",
+            "model": "fal-ai/flux/dev",
+            "image_size": "landscape_4_3",
+            "seed": 7,
+            "provider_options": { "num_inference_steps": 20 }
+        }),
+        "generate",
+    )
+    .unwrap();
+    assert_eq!(generate["mode"], "text-to-image");
+    assert_eq!(generate["parameters"]["image_size"], "landscape_4_3");
+    // Explicit options override the common field of the same name.
+    assert_eq!(generate["parameters"]["num_inference_steps"], 20);
+    assert_eq!(generate["references"].as_array().map(Vec::len), Some(0));
+    // The endpoint contract, not the bridge, decides whether the mode exists.
+    assert!(
+        fal::prepare(
+            "fal-ai/flux/dev",
+            "text-to-image",
+            Some("a red boat"),
+            &[],
+            &serde_json::json!({"image_size":"landscape_4_3","num_inference_steps":20})
+        )
+        .is_ok()
+    );
+
+    let edit = fal_image::to_media_request(
+        &vjson!({
+            "prompt": "oil painting",
+            "reference_images": [{ "type": "path", "path": "/abs/ref.jpg" }]
+        }),
+        "edit",
+    )
+    .unwrap();
+    assert_eq!(edit["mode"], "image-to-image");
+    assert_eq!(edit["references"][0]["kind"], "image");
+    assert_eq!(edit["references"][0]["role"], "image");
+    assert_eq!(edit["references"][0]["path"], "/abs/ref.jpg");
+
+    // A native-OpenAI field the fal contracts do not carry fails loudly, not silently.
+    assert!(
+        fal_image::to_media_request(&vjson!({"prompt": "x", "quality": "high"}), "generate")
+            .is_err()
+    );
+    assert!(fal_image::to_media_request(&vjson!({"prompt": "x"}), "edit").is_err());
 }

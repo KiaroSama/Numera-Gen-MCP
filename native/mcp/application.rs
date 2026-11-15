@@ -249,17 +249,17 @@ impl Application {
                 Ok(metadata)
             }
             "generate_image" | "edit_image" => {
-                let receipt = generation
-                    .run(
-                        args,
-                        if name == "generate_image" {
-                            "generate"
-                        } else {
-                            "edit"
-                        },
-                        cancel,
-                    )
-                    .await?;
+                let operation = if name == "generate_image" {
+                    "generate"
+                } else {
+                    "edit"
+                };
+                let receipt = if crate::services::fal_image::selected(&generation.config, &args) {
+                    let media = crate::services::fal_image::to_media_request(&args, operation)?;
+                    crate::services::media::run(&generation, media, cancel).await?
+                } else {
+                    generation.run(args, operation, cancel).await?
+                };
                 if !receipt.value["upstream_job"].is_null() {
                     self.snapshots
                         .lock()

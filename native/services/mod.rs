@@ -1,5 +1,6 @@
 pub mod comfy;
 pub mod discovery;
+pub mod fal_image;
 pub mod finalization;
 pub mod generation;
 pub mod health;

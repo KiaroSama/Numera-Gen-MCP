@@ -9,7 +9,7 @@ use numera_gen_mcp::{
 use rmcp::ServiceExt;
 use std::{
     collections::HashMap,
-    io::IsTerminal,
+    io::{IsTerminal, Write},
     path::{Path, PathBuf},
     sync::Arc,
     time::Duration,
@@ -174,9 +174,18 @@ fn main() {
         );
         return;
     }
+    // The embedded logo is exposed as real output: referencing only its length lets the linker
+    // drop the megabyte of image data, so `--logo` keeps the bytes genuinely present in the binary.
+    if matches!(args.first().map(String::as_str), Some("--logo")) {
+        match std::io::stdout().write_all(numera_gen_mcp::build_identity::LOGO) {
+            Ok(()) => std::io::stdout().flush().ok(),
+            Err(_) => std::process::exit(1),
+        };
+        return;
+    }
     if matches!(args.first().map(String::as_str), Some("--help" | "help")) {
         println!(
-            "Numera Gen MCP\nUsage: numera-gen-mcp bridge [--config ABSOLUTE_PATH]\n       numera-gen-mcp http [--port 1969] [--config ABSOLUTE_PATH]\n       numera-gen-mcp menu\nHTTP listens only on 127.0.0.1 at /mcp; a separate private local token is required.\nClaude launches bridge directly; no launcher or background service is required.\nConfiguration: adjacent .env/config.local.json, explicit --config or NUMERA_CONFIG.\nManaged temporary files and cache stay inside the installation root."
+            "Numera Gen MCP\nUsage: numera-gen-mcp bridge [--config ABSOLUTE_PATH]\n       numera-gen-mcp http [--port 1969] [--config ABSOLUTE_PATH]\n       numera-gen-mcp menu\n       numera-gen-mcp --version\n       numera-gen-mcp --logo > logo.png\nHTTP listens only on 127.0.0.1 at /mcp; a separate private local token is required.\nClaude launches bridge directly; no launcher or background service is required.\nConfiguration: adjacent .env/config.local.json, explicit --config or NUMERA_CONFIG.\nManaged temporary files and cache stay inside the installation root."
         );
         return;
     }

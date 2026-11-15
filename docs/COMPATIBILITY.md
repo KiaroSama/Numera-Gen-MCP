@@ -44,7 +44,8 @@ the separately repaired gateway still has no verified successful Pro generation.
 | ComfyUI                | explicit API graph                   | explicit reference/mask graph bindings      | node/GPU checks; job history/view, no automatic node/checkpoint install     |
 
 Native count>1 requires documented maxCount and actual mapped batch support; not silently repeated.
-PNG/JPEG/WebP originals validated. SVG/animation unsupported. Source references, live/GUI/GPU not-run
+PNG/JPEG/WebP/GIF originals validated. GIF is the only animated container accepted; multi-frame APNG
+and animated WebP are still rejected, and SVG is not decoded. Source references, live/GUI/GPU not-run
 reasons and exact runtime/platform evidence are separate. SDK2.3.0 selected. Local tests verify legacy
 initialize and auto negotiation falls back to legacy on this direct stdio server; a modern-only pin is
 rejected. No modern-only transport support is advertised. Provider signatures are privately retained;
