@@ -21,17 +21,29 @@ the linker discard roughly one megabyte of image data, so the bytes are now genu
 verified present in the built Windows binaries.
 The image request schema listed `svg` as an accepted `output_format` although no route decodes SVG
 and the request validator rejects it, so a client could pass schema validation and then fail after
-a paid request. The enum now matches the config schema and the validator. README and compatibility
-claims about image formats were corrected to match the accepted set.
+a paid request. The enum now matches the validator. README and compatibility claims about image
+formats were corrected to match the accepted set.
 This section also covers the unreleased GIF output acceptance committed before it: animated GIF
-bytes, MIME and extension now pass the media guards while multi-frame APNG and animated WebP still
+bytes, MIME and extension pass the media guards while multi-frame APNG and animated WebP still
 reject, `frame_count` and `frame_duration_ms` reach only routes that declare them, and an `.env`
 numbered slot with neither id nor name is treated as a template placeholder rather than a model.
-That earlier commit added `gif` to the config schema enum without updating the frozen case that
-asserted a `gif` model default must be rejected, so it failed; the rejection list now uses `svg`,
-which no enum accepts, and `gif` is asserted valid. A submission-phase 4xx and a 4xx on an existing
-handle are covered by `comfy_same_store_acceptance`, which reads the reservation column directly:
-the first must release it, the second must retain it.
+That earlier commit also added `gif` to the config schema's model-default enum, which the immutable
+oracle contradicts: `tests/fixtures/oracle/*/config.json` carries a case named
+`invalid-compact-invalid_format` asserting a `gif` model default rejects as `invalid_configuration`,
+and the frozen ledger binds the same expectation to `config_acceptance.rs` and `js_schema.rs`. Those
+fixtures are hash-bound to baseline `fc7da25` through `provenance.json`, and `fixtures.rs` permits
+only checkout path relocation, so the oracle was not edited. The config-level enum entry was removed
+again and gif is accepted only as a per-request `output_format`, which no frozen case or ledger
+assertion constrains; `request.rs` is unchanged from that commit. The `js_schema.rs` case that
+asserted a `gif` model default rejects was restored to its original form, reversing an earlier
+attempt in this section that widened it instead.
+A submission-phase 4xx and a 4xx on an existing handle are covered by `comfy_same_store_acceptance`,
+which reads the reservation column directly: the first must release it, the second must retain it.
+`docs/testing/current-assertion-review.json` and `tooling-assertion-review.json` were refreshed for
+the four assertion sources that changed bytes, each moving from `reviewed_source_continuity` to
+`reviewed_authorized_adaptation` with a rationale naming the additive control, because the previous
+rationale claimed a namespace-only change that is no longer true. No oracle, ledger claim, case
+aggregate or scenario count changed.
 None of this is qualified. The 0.3.0 record below describes `7601b53` only.
 
 ## 0.3.0 - 2026-11-14

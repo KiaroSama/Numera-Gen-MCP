@@ -353,7 +353,7 @@ fn public_request_schema_rejects_invalid_inputs_without_coercion() {
         json!({"prompt":"ok","edit_region":{"x":0,"y":0,"width":0,"height":1}}),
         json!({"prompt":"ok","target_language":" "}),
         json!({"prompt":"ok","return_mode":"url"}),
-        json!({"prompt":"ok","output_format":"gif"}),
+        json!({"prompt":"ok","output_format":"svg"}),
     ] {
         assert_eq!(request::parse(value).unwrap_err().code, "invalid_input");
     }
