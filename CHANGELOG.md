@@ -27,6 +27,11 @@ This section also covers the unreleased GIF output acceptance committed before i
 bytes, MIME and extension now pass the media guards while multi-frame APNG and animated WebP still
 reject, `frame_count` and `frame_duration_ms` reach only routes that declare them, and an `.env`
 numbered slot with neither id nor name is treated as a template placeholder rather than a model.
+That earlier commit added `gif` to the config schema enum without updating the frozen case that
+asserted a `gif` model default must be rejected, so it failed; the rejection list now uses `svg`,
+which no enum accepts, and `gif` is asserted valid. A submission-phase 4xx and a 4xx on an existing
+handle are covered by `comfy_same_store_acceptance`, which reads the reservation column directly:
+the first must release it, the second must retain it.
 None of this is qualified. The 0.3.0 record below describes `7601b53` only.
 
 ## 0.3.0 - 2026-11-14

@@ -166,7 +166,7 @@ fn simple_union_strings_count_utf16_and_use_js_whitespace_without_replacement() 
         r#"{"api_endpoint":"bad","api_key":"x","models":[{"id":"m","name":"n"}]}"#,
         r#"{"api_endpoint":"https://example.com","api_key":"x","models":[]}"#,
         r#"{"api_endpoint":"https://example.com","api_key":"x","models":[{"id":"m","name":"n","quality":"﻿ "}]}"#,
-        r#"{"api_endpoint":"https://example.com","api_key":"x","models":[{"id":"m","name":"n","output_format":"gif"}]}"#,
+        r#"{"api_endpoint":"https://example.com","api_key":"x","models":[{"id":"m","name":"n","output_format":"svg"}]}"#,
     ] {
         assert!(
             schema
@@ -174,6 +174,12 @@ fn simple_union_strings_count_utf16_and_use_js_whitespace_without_replacement() 
                 .is_err()
         );
     }
+    // GIF is an accepted image output, so it is a valid model default rather than a rejection.
+    let mut gif = parse(
+        r#"{"api_endpoint":"https://example.com","api_key":"x","models":[{"id":"m","name":"n","output_format":"gif"}]}"#,
+    )
+    .expect("gif default");
+    assert!(schema.default_and_validate(&mut gif).is_ok());
     let name = "🌍".repeat(51);
     let mut value = parse(&format!(r#"{{"api_endpoint":"https://example.com","api_key":"x","models":[{{"id":"m","name":"{name}"}}]}}"#))
         .expect("long name");

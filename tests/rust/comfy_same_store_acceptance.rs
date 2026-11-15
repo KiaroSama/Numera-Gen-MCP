@@ -325,3 +325,115 @@ async fn exact_source_comfy_retained_original_recovers_with_new_generation_and_s
     )
     .await;
 }
+
+// The two 4xx routes in record_error decide whether a possibly paid upstream job keeps its
+// admission reservation. A text-only workflow needs no upload and no image oracle, so both
+// branches are reachable here.
+#[tokio::test]
+async fn submission_rejection_releases_reservation_while_a_live_history_4xx_stays_recoverable() {
+    let workspace = Workspace::new();
+    let root = &workspace.0;
+    let reservation = |id: &str| -> i64 {
+        rusqlite::Connection::open(root.join("state").join("receipts.sqlite"))
+            .unwrap()
+            .query_row("SELECT reservation FROM requests WHERE id=?", [id], |row| {
+                row.get(0)
+            })
+            .unwrap()
+    };
+    let budget = 100 * 1024 * 1024;
+    wire::serve(
+        |request| match request.path.split('?').next().unwrap() {
+            "/object_info" => wire::json_reply(json!({
+                "Text": {"input": {"required": {"text": ["STRING"]}}},
+                "Save": {"output_node": true, "input": {"required": {"text": ["STRING"]}}}
+            })),
+            "/system_stats" => wire::json_reply(json!({"devices": [{"type": "cuda"}]})),
+            // Definitive rejection: no prompt ID, so nothing can be running upstream.
+            "/prompt" => wire::Reply {
+                status: 400,
+                ..wire::json_reply(json!({"error": "rejected"}))
+            },
+            _ => panic!("Fixture received an unexpected {} path.", request.path),
+        },
+        |origin, requests| async move {
+            let generation = generation(root, &origin, true);
+            let signal = CancellationToken::new();
+            let rejected = generation
+                .run(
+                    json!({"prompt": "fixture", "request_id": "submission-rejection"}),
+                    "generate",
+                    &signal,
+                )
+                .await
+                .unwrap();
+            assert_eq!(rejected.status(), "failed");
+            assert_eq!(rejected.value["generation_outcome"], "failed");
+            assert_eq!(rejected.value["upstream_terminal"], "failed");
+            assert!(rejected.value["upstream_job"].is_null());
+            assert_eq!(rejected.value["errors"][0]["code"], "upstream_error");
+            assert_eq!(rejected.value["errors"][0]["http_status"], 400);
+            assert!(
+                !rejected.value["warnings"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|warning| warning.as_str().is_some_and(|t| t.contains("get_job")))
+            );
+            assert_eq!(reservation("submission-rejection"), 0);
+            assert_eq!(
+                requests
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|c| c.method == "POST")
+                    .count(),
+                1
+            );
+        },
+    )
+    .await;
+    wire::serve(
+        |request| match request.path.split('?').next().unwrap() {
+            "/object_info" => wire::json_reply(json!({
+                "Text": {"input": {"required": {"text": ["STRING"]}}},
+                "Save": {"output_node": true, "input": {"required": {"text": ["STRING"]}}}
+            })),
+            "/system_stats" => wire::json_reply(json!({"devices": [{"type": "cuda"}]})),
+            "/prompt" => wire::json_reply(json!({"prompt_id": "live-job"})),
+            // Failed read of a job that upstream may still be running and may already charge for.
+            "/history/live-job" => wire::Reply {
+                status: 404,
+                ..wire::json_reply(json!({}))
+            },
+            _ => panic!("Fixture received an unexpected {} path.", request.path),
+        },
+        |origin, _| async move {
+            let generation = generation(root, &origin, true);
+            let signal = CancellationToken::new();
+            let live = generation
+                .run(
+                    json!({"prompt": "fixture", "request_id": "live-history-4xx"}),
+                    "generate",
+                    &signal,
+                )
+                .await
+                .unwrap();
+            assert_eq!(live.status(), "running");
+            assert_eq!(live.value["generation_outcome"], "running");
+            assert!(live.value["upstream_terminal"].is_null());
+            assert_eq!(live.value["upstream_job"]["id"], "live-job");
+            assert_eq!(live.value["errors"][0]["code"], "model_unavailable");
+            assert_eq!(live.value["errors"][0]["http_status"], 404);
+            assert!(
+                live.value["warnings"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|warning| warning.as_str().is_some_and(|t| t.contains("get_job")))
+            );
+            assert_eq!(reservation("live-history-4xx"), budget);
+        },
+    )
+    .await;
+}
