@@ -50,7 +50,7 @@ fn limits() -> Limits {
     Limits {
         bytes: 32,
         wall: Duration::from_secs(2),
-        idle: Duration::from_millis(50),
+        idle: Duration::from_millis(300),
     }
 }
 

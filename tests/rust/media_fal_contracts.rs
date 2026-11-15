@@ -431,3 +431,150 @@ fn image_tools_select_the_fal_media_mode_and_reject_endpoint_unknowns() {
     );
     assert!(fal_image::to_media_request(&vjson!({"prompt": "x"}), "edit").is_err());
 }
+
+#[test]
+fn image_tool_mapping_carries_count_passthrough_keys_and_rejects_bad_references() {
+    use numera_gen_mcp::compat::value::json as vjson;
+    use numera_gen_mcp::services::fal_image;
+    let mapped = fal_image::to_media_request(
+        &vjson!({
+            "prompt": "p",
+            "count": 3,
+            "negative_prompt": "blur",
+            "output_format": "png",
+            "connection": "fal",
+            "model": "fal-ai/flux/dev",
+            "request_id": "req_1",
+            "wait": false,
+            "output_subdirectory": "sub",
+            "filename_prefix": "pre",
+            "mask": null
+        }),
+        "generate",
+    )
+    .unwrap();
+    assert_eq!(mapped["parameters"]["num_images"], 3);
+    assert_eq!(mapped["parameters"]["negative_prompt"], "blur");
+    assert_eq!(mapped["parameters"]["output_format"], "png");
+    for key in [
+        "connection",
+        "model",
+        "request_id",
+        "output_subdirectory",
+        "filename_prefix",
+    ] {
+        assert!(mapped.get(key).is_some(), "{key} must pass through");
+    }
+    assert_eq!(mapped["wait"], false);
+    // A single image does not emit num_images.
+    let one =
+        fal_image::to_media_request(&vjson!({"prompt": "p", "count": 1}), "generate").unwrap();
+    assert!(one["parameters"].get("num_images").is_none());
+    // Unknown reference kinds reject before submission.
+    assert!(
+        fal_image::to_media_request(
+            &vjson!({"prompt": "p", "reference_images": [{"type": "ftp", "ftp": "x"}]}),
+            "edit"
+        )
+        .is_err()
+    );
+    // A non-null unsupported field rejects; an explicit null is ignored.
+    assert!(
+        fal_image::to_media_request(&vjson!({"prompt": "p", "size": "1024x1024"}), "generate")
+            .is_err()
+    );
+}
+
+#[test]
+fn outputs_covers_remaining_endpoint_patterns_and_tracking_covers_local_origin() {
+    // stable-audio-25 audio-to-audio uses "audio" key (singular non-array)
+    let out = fal::outputs(
+        "fal-ai/stable-audio-25/audio-to-audio",
+        &json!({"audio":{"url":"https://example.invalid/out.wav","content_type":"audio/wav"}}),
+    )
+    .unwrap();
+    assert_eq!(out.len(), 1);
+    assert_eq!(out[0].role, "audio");
+    assert_eq!(out[0].reported_mime.as_deref(), Some("audio/wav"));
+
+    // trellis (image-to-3d) uses model_mesh
+    let out = fal::outputs(
+        "fal-ai/trellis",
+        &json!({"model_mesh":{"url":"https://example.invalid/m.glb"}}),
+    )
+    .unwrap();
+    assert_eq!(out.len(), 1);
+    assert_eq!(out[0].role, "model");
+
+    // trellis-2 retexture also uses model_glb key (and no variants, no thumbnail)
+    let out = fal::outputs(
+        "fal-ai/trellis-2/retexture",
+        &json!({"model_glb":{"url":"https://example.invalid/m.glb"}}),
+    )
+    .unwrap();
+    assert_eq!(out.len(), 1);
+
+    // hunyuan3d with an unrecognized variant role rejects
+    assert!(
+        fal::outputs(
+            "fal-ai/hunyuan3d-v3/text-to-3d",
+            &json!({"model_glb":{"url":"https://example.invalid/x.glb"}, "model_urls":{"stl":{"url":"https://example.invalid/x.stl"}}})
+        )
+        .is_err()
+    );
+
+    // hunyuan3d with too many model_urls variants rejects
+    let many: serde_json::Value = {
+        let mut m = serde_json::Map::new();
+        for i in 0..17u32 {
+            m.insert(
+                format!("v{i}"),
+                json!({"url": "https://example.invalid/x.glb"}),
+            );
+        }
+        serde_json::Value::Object(m)
+    };
+    assert!(
+        fal::outputs(
+            "fal-ai/hunyuan3d-v3/text-to-3d",
+            &json!({"model_glb":{"url":"https://example.invalid/x.glb"}, "model_urls": many})
+        )
+        .is_err()
+    );
+
+    // fal::outputs rejects a non-object response body
+    assert!(fal::outputs("fal-ai/flux/dev", &json!([])).is_err());
+
+    // fal::status error_type too long or with bad chars
+    assert!(
+        fal::status(&json!({"status":"COMPLETED","request_id":"x","error_type":"ok!bad"})).is_err()
+    );
+    let long_type: String = "a".repeat(129);
+    assert!(
+        fal::status(&json!({"status":"COMPLETED","request_id":"x","error_type": long_type}))
+            .is_err()
+    );
+
+    // handle with localhost tracking URL is valid
+    let h = fal::handle(
+        FLUX,
+        &json!({"request_id":"x","status_url":"http://127.0.0.1/fal-ai/flux/requests/x/status"}),
+    )
+    .unwrap();
+    assert_eq!(
+        h.status_url,
+        "http://127.0.0.1/fal-ai/flux/requests/x/status"
+    );
+
+    // handle with a tracking URL whose path does not match the endpoint/id rejects
+    assert!(
+        fal::handle(
+            FLUX,
+            &json!({"request_id":"x","status_url":"https://queue.fal.run/other/path/status"})
+        )
+        .is_err()
+    );
+
+    // handle with tracking URL value that is not a string rejects
+    assert!(fal::handle(FLUX, &json!({"request_id":"x","cancel_url":true})).is_err());
+}
