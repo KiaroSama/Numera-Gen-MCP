@@ -82,7 +82,9 @@ fn setup(
             .arg(config);
     }
     let seen = phase_logs(target);
-    let outcome = context.outcome(&mut command, 20000, 10000, 1024 * 1024)?;
+    // Update replaces and re-verifies a whole signed tree; slow ARM64 Windows runners can stay
+    // silent for over 10 s while scanning it, so both bounds leave room for that work.
+    let outcome = context.outcome(&mut command, 60000, 30000, 1024 * 1024)?;
     if matches!(action, "Install" | "Update") {
         publish_phases(context, target, &seen, action);
     }
