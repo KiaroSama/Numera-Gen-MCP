@@ -9,6 +9,9 @@ use std::{
 };
 
 const LIMIT: usize = 16 * 1024 * 1024;
+// Instrumented debug harnesses embed DWARF plus coverage counters and can exceed the 256 MiB
+// release-archive bound; they keep the same no-link/no-change identity checks with their own cap.
+const HARNESS_EXECUTABLE_BYTES: usize = 1024 * 1024 * 1024;
 fn lines(bytes: &[u8]) -> io::Result<impl Iterator<Item = &str>> {
     if bytes.len() > LIMIT || (!bytes.is_empty() && !bytes.ends_with(b"\n")) {
         return Err(fail("Harness output is oversized or incomplete."));
@@ -415,7 +418,7 @@ pub fn execute_harness(
     let source_hash = sha(&crate::ledger::read(&context.root, source)?);
     let executable_hash = sha(&crate::distribution::read_regular(
         &executable,
-        crate::archives::MAX_BYTES,
+        HARNESS_EXECUTABLE_BYTES,
     )?);
     let hashed = Instant::now();
     let cwd = list.get_current_dir().map(Path::to_path_buf);
@@ -441,7 +444,7 @@ pub fn execute_harness(
         || executable_hash
             != sha(&crate::distribution::read_regular(
                 &executable,
-                crate::archives::MAX_BYTES,
+                HARNESS_EXECUTABLE_BYTES,
             )?)
     {
         return Err(fail(

@@ -176,7 +176,10 @@ fn serde_round_trip_and_every_to_value_conversion_keep_exact_shapes() {
     assert_eq!(original.to_value(), original);
     assert_eq!("s".to_value(), Value::from("s"));
     assert_eq!(String::from("s").to_value(), Value::from("s".to_string()));
-    assert_eq!(JsString::from("s").to_value(), Value::from(JsString::from("s")));
+    assert_eq!(
+        JsString::from("s").to_value(),
+        Value::from(JsString::from("s"))
+    );
     assert_eq!(true.to_value(), Value::from(true));
     assert_eq!(Number::from(3u8).to_value().as_f64(), Some(3.0));
     assert!(().to_value().is_null());
@@ -200,7 +203,9 @@ fn serde_round_trip_and_every_to_value_conversion_keep_exact_shapes() {
             assert_eq!(Value::from($v).as_f64(), Some(1.0));
         )*};
     }
-    each!(1f64, 1f32, 1i8, 1i16, 1i32, 1i64, 1isize, 1u8, 1u16, 1u32, 1u64, 1usize, 1i128, 1u128);
+    each!(
+        1f64, 1f32, 1i8, 1i16, 1i32, 1i64, 1isize, 1u8, 1u16, 1u32, 1u64, 1usize, 1i128, 1u128
+    );
     let collected: Value = [Value::from(1u8), Value::from("x")].into_iter().collect();
     assert_eq!(collected.as_array().unwrap().len(), 2);
 }
