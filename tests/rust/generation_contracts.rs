@@ -600,3 +600,52 @@ async fn comfy_wait_false_retains_one_handle_and_get_job_recovers_original_bytes
     server.close().await;
     result.unwrap();
 }
+
+#[tokio::test]
+async fn edit_routes_to_the_edit_model_while_generate_keeps_the_named_model() {
+    let workspace = Workspace::new();
+    // Inline 1x1 PNG: this test must not depend on the CI-generated image oracle.
+    let bytes = STANDARD
+        .decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+        .unwrap();
+    let encoded = STANDARD.encode(&bytes);
+    let server = Server::new(move |_| Reply {
+        status: 200,
+        value: json!({"data":[{"b64_json":encoded}]}),
+        bytes: None,
+    })
+    .await;
+    let action = async {
+        let mut raw = edit_config(&workspace, &server.origin);
+        raw["connections"]["test"]["allowedModels"] = json!(["base"]);
+        raw["connections"]["test"]["modelOverrides"] = json!({
+            "base": {"defaults":{}, "capabilities":{}, "editModel":"edit-only"}
+        });
+        let generation = make_generation(&workspace, &raw);
+        let signal = CancellationToken::new();
+        let made = generation
+            .run(
+                json!({"prompt":"plain","model":"base","request_id":"gen-base"}),
+                "generate",
+                &signal,
+            )
+            .await
+            .unwrap();
+        saved(&made, &bytes);
+        // The edit resolves to "edit-only", which the allow list does not contain.
+        assert_eq!(
+            error(
+                generation
+                    .run(
+                        json!({"prompt":"edit","model":"base","request_id":"edit-base","reference_images":[data_source(&bytes)]}),
+                        "edit",
+                        &signal,
+                    )
+                    .await
+            ),
+            "model_unavailable"
+        );
+    };
+    action.await;
+    server.close().await;
+}

@@ -389,6 +389,10 @@
                 },
                 "evidence": {
                   "type": "string"
+                },
+                "editModel": {
+                  "type": "string",
+                  "minLength": 1
                 }
               },
               "required": ["defaults", "capabilities"],

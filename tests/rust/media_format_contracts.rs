@@ -135,6 +135,11 @@ fn malformed_inputs_never_escape_as_panics_or_image_shaped_success() {
 }
 
 #[test]
+fn glb_rejects_non_numeric_ids_and_non_array_containers() {
+    cases::glb::malformed_scalars();
+}
+
+#[test]
 fn images_reuse_real_decoder_and_kind_tokens_are_exact() {
     let bytes = bytes::png();
     let info = media::inspect(Kind::Image, &bytes, 2048, 1).unwrap();

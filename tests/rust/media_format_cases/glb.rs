@@ -235,3 +235,34 @@ pub fn negative() {
         invalid(Kind::Model3d, &encode(&bad, &binary));
     }
 }
+
+/// Non-numeric ids and non-array containers must reject without panicking.
+pub fn malformed_scalars() {
+    let (doc, binary) = parts();
+    for (path, value) in [
+        ("/scene", json!("x")),
+        ("/scenes/0/nodes", json!(["x"])),
+        ("/scenes/0/nodes", json!(5)),
+        ("/scenes", json!(5)),
+        ("/nodes", json!(5)),
+        ("/nodes/0/mesh", json!("x")),
+        ("/nodes/0/children", json!(5)),
+        ("/nodes/0/children", json!(["x"])),
+        ("/accessors", json!(5)),
+        ("/buffers", json!(5)),
+        ("/skins", json!(5)),
+        ("/animations", json!(5)),
+        ("/extensionsRequired", json!(5)),
+        ("/buffers/0/byteLength", json!("x")),
+        ("/bufferViews/0/buffer", json!("x")),
+        ("/bufferViews/0/byteLength", json!("x")),
+        ("/bufferViews/0/byteStride", json!("x")),
+        ("/bufferViews/0/target", json!("x")),
+        ("/accessors/0/bufferView", json!("x")),
+        ("/meshes/0/primitives/0/indices", json!("x")),
+    ] {
+        let mut changed = doc.clone();
+        assign(&mut changed, path, value);
+        invalid(Kind::Model3d, &encode(&changed, &binary));
+    }
+}

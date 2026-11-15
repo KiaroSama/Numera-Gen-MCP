@@ -136,9 +136,17 @@ impl Generation {
                 "Select a model or configure this connection defaultModel.",
             ));
         };
-        let preliminary = capabilities::effective_request(c, &original, model)?;
+        // An edit may be routed to a different model than the one the caller named. The
+        // requested id stays the public identity; the override id is what the provider
+        // charges and what every capability, policy and requirement lookup must use.
+        let edit_model = (operation == "edit")
+            .then(|| c["modelOverrides"][model].get("editModel"))
+            .flatten()
+            .and_then(Value::as_js_string);
+        let wire_model = edit_model.unwrap_or(model);
+        let preliminary = capabilities::effective_request(c, &original, wire_model)?;
         let (request, policy_warnings) =
-            model_policy::validate(c, &headers, model, preliminary, host_cancel).await?;
+            model_policy::validate(c, &headers, wire_model, preliminary, host_cancel).await?;
         let id = request["request_id"]
             .as_str()
             .map(str::to_owned)
@@ -275,7 +283,7 @@ impl Generation {
         let input = Input {
             connection: c,
             request: &request,
-            model,
+            model: wire_model,
             operation,
             references: &references,
             mask: mask.as_ref(),
@@ -308,7 +316,7 @@ impl Generation {
         ] {
             parameters.remove(key);
         }
-        let mut hashed = json!({"identity":identity,"model":model,"operation":operation,"prompt":request["prompt"],"count":request["count"],"parameters":parameters,
+        let mut hashed = json!({"identity":identity,"model":wire_model,"operation":operation,"prompt":request["prompt"],"count":request["count"],"parameters":parameters,
             "reference_hashes":references.iter().map(|i|&i.sha256).collect::<Vec<_>>()});
         if let Some(mask) = &mask {
             hashed["mask_hash"] = json!(mask.sha256);
@@ -329,7 +337,7 @@ impl Generation {
         }
         if let (Some(object), Some(values)) = (
             required.as_object_mut(),
-            requirements::snapshot(c, model, &request).as_object(),
+            requirements::snapshot(c, wire_model, &request).as_object(),
         ) {
             object.extend(values.clone());
         }

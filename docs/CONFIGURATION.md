@@ -158,8 +158,11 @@ Full JSON declares `connections.<name>.modelOverrides.<exact-id>.outputTypes` an
 JSON declares `models[].output_types` and `modes`. Both are bounded, nonempty unique lists when supplied.
 Kinds are `image`, `video`, `audio`, `3d`; each mode's output kind must be declared. Every exact fal
 endpoint must declare every kind its binding may return, including image sidecars on Rodin/Hunyuan.
-A declaration is not account access or successful generation evidence. Legacy image models need no new
-fields. Other adapters can declare only their existing text-to-image/image-to-image paths.
+A declaration is not account access or successful generation evidence. An optional
+`modelOverrides.<exact-id>.editModel` sends `operation=edit` requests to a different provider model id
+while the requested id stays the public receipt identity. Capabilities, defaults, allow/deny policy,
+parameter evidence and the request identity all resolve against the edit model id; `generate` requests
+are unaffected. Legacy image models need no new fields. Other adapters can declare only their existing text-to-image/image-to-image paths.
 
 For fal use profile `fal` (full adapter `fal-queue`), `https://queue.fal.run`, Key authentication and
 an exact implemented endpoint. Only owned loopback HTTP origins are allowed for offline fixtures;

@@ -163,3 +163,44 @@ fn deep_facade_lifecycle_and_mutation_are_iterative() {
         .join()
         .expect("iterative lifecycle");
 }
+
+#[test]
+fn serde_round_trip_and_every_to_value_conversion_keep_exact_shapes() {
+    use numera_gen_mcp::compat::value::ToValue;
+    use std::collections::{BTreeMap, HashMap};
+    let original = Value::parse(r#"{"a":[1,"x",null,true],"b":{"c":2.5}}"#).unwrap();
+    let text = serde_json::to_string(&original).unwrap();
+    let back: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(back, original);
+    assert!(serde_json::from_str::<Value>("{").is_err());
+    assert_eq!(original.to_value(), original);
+    assert_eq!("s".to_value(), Value::from("s"));
+    assert_eq!(String::from("s").to_value(), Value::from("s".to_string()));
+    assert_eq!(JsString::from("s").to_value(), Value::from(JsString::from("s")));
+    assert_eq!(true.to_value(), Value::from(true));
+    assert_eq!(Number::from(3u8).to_value().as_f64(), Some(3.0));
+    assert!(().to_value().is_null());
+    assert_eq!((&7u32).to_value().as_f64(), Some(7.0));
+    assert!(None::<u8>.to_value().is_null());
+    assert_eq!(Some(1i8).to_value().as_f64(), Some(1.0));
+    assert_eq!([1u8, 2][..].to_value().as_array().unwrap().len(), 2);
+    assert_eq!([1u16, 2, 3].to_value().as_array().unwrap().len(), 3);
+    assert_eq!(vec![1i16].to_value().as_array().unwrap().len(), 1);
+    let object = original.as_object().unwrap().clone();
+    assert!(object.to_value().is_object());
+    let hash: HashMap<&str, i32> = HashMap::from([("k", 1)]);
+    assert_eq!(hash.to_value()["k"].as_f64(), Some(1.0));
+    let tree: BTreeMap<String, i64> = BTreeMap::from([("z".to_string(), 2)]);
+    assert_eq!(tree.to_value()["z"].as_f64(), Some(2.0));
+    let js = numera_gen_mcp::compat::js_json::from_serde(&serde_json::json!({"q": 1})).unwrap();
+    assert_eq!(js.to_value()["q"].as_f64(), Some(1.0));
+    macro_rules! each {
+        ($($v:expr),*) => {$(
+            assert_eq!($v.to_value().as_f64(), Some(1.0));
+            assert_eq!(Value::from($v).as_f64(), Some(1.0));
+        )*};
+    }
+    each!(1f64, 1f32, 1i8, 1i16, 1i32, 1i64, 1isize, 1u8, 1u16, 1u32, 1u64, 1usize, 1i128, 1u128);
+    let collected: Value = [Value::from(1u8), Value::from("x")].into_iter().collect();
+    assert_eq!(collected.as_array().unwrap().len(), 2);
+}
