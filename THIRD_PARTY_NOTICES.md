@@ -10,8 +10,8 @@ The published 0.2.0 archives include their verified resolved license inventory; 
 [the exact release evidence](docs/releases/0.2.0.md). Version 0.3.0 is a separate distribution.
 The prior `a4b4600` source passed qualification and six-target signing; its results do not qualify
 later license/metadata revisions. Every final Release must identify its own exact qualified source
-and original signed artifacts. Current manifests select RMCP3.9.0, UUID1.29.2, flate2 1.1.11 and
-ZIP9.5.0. Preparation alone is neither runtime nor license qualification. Every ready archive must
+and original signed artifacts. Current manifests select RMCP3.10.0, UUID1.29.2, flate2 1.1.11 and
+ZIP9.5.1. Preparation alone is neither runtime nor license qualification. Every ready archive must
 include the actual resolved dependency licenses/notices and bundled SQLite/codec notices; this document
 is not a substitute. RMCP, Tokio, reqwest, rusqlite, serde/serde_json, ICU4X, image, Base64, SHA2, chrono,
 regex, UUID, URL, ring and the tooling archive crates retain their upstream licenses.
@@ -26,13 +26,13 @@ The published `rmcp 3.5.1` crate also omits its repository-root license. Its
 [complete original notice](docs/licenses/rmcp-3.5.1/LICENSE), including Apache-2.0/MIT transition
 terms and the documentation attribution statement, is preserved verbatim from the archive's source
 revision. The package's declared license and the original notice are recorded separately, not
-collapsed into a generic Apache text. The inspected published `rmcp 3.9.0` crate is 677294 bytes
-with SHA-256 `d24a7e92f4bcaa36b97fa93c4fa7ca8f3e669eced949345b3462dba333c7f909`, matching
+collapsed into a generic Apache text. The inspected published `rmcp 3.10.0` crate is 691461 bytes
+with SHA-256 `b5949e504d5ab9944a168259afc0c39ac0230627b6ec5367ace194c59bcbe163`, matching
 its registry checksum and the prepared lockfile. Its packaged `LICENSE` is 12227 bytes with SHA-256
 `0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a`; it retains the Apache-2.0
 transition, MIT contributions and CC BY 4.0 documentation attribution. Preserve that complete text,
 not just the declared Apache-2.0 label. The crate records source revision
-`5596a8a0bba2a1ec5519cc855cdadf23e4dcecdc`, path `crates/rmcp`, and contains no separate `NOTICE`.
+`53e64a93c8e32d8f7699af587b9e28566929940c`, path `crates/rmcp`, and contains no separate `NOTICE`.
 This byte inspection is not an executed license-collection result. The `3.5.1` supplement remains
 historical evidence, not a replacement for the current crate's own license.
 The source-side Google dimension table is documented under CC BY 4.0 attribution in the source and
