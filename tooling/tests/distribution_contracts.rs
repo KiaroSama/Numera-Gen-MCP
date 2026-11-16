@@ -18,7 +18,7 @@ fn fixture() -> BTreeMap<String, Vec<u8>> {
             numera_gen_mcp::build_identity::LOGO.to_vec(),
         ),
     ]);
-    let manifest = json!({"version":"0.3.0","target":"x86_64-pc-windows-msvc","source_sha":"a".repeat(40),"publisher":"KiaroSama",
+    let manifest = json!({"version":"0.4.0","target":"x86_64-pc-windows-msvc","source_sha":"a".repeat(40),"publisher":"KiaroSama",
         "binary_sha256":sha(&entries["bin/numera-gen-mcp.exe"]),"files":entries.iter().map(|(name,data)|json!({"path":name,"bytes":data.len(),"sha256":sha(data)})).collect::<Vec<_>>()});
     entries.insert(
         "manifest.json".into(),

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 - unreleased candidate
 
 Windows MSVC builds embed the approved logo as the executable's own icon (`docs/assets/logo.ico`,
 seven PNG sizes from the logo, compiled into a `.res` by `build.rs` without extra dependencies).
@@ -52,7 +52,11 @@ the four assertion sources that changed bytes, each moving from `reviewed_source
 `reviewed_authorized_adaptation` with a rationale naming the additive control, because the previous
 rationale claimed a namespace-only change that is no longer true. No oracle, ledger claim, case
 aggregate or scenario count changed.
-None of this is qualified. The 0.3.0 record below describes `7601b53` only.
+The waited 64-original media acceptance case now has its own 25s call budget inside its unchanged
+35s scenario bound: durably finalizing 64 originals measured 5.5–9.5s locally, so the shared 10s
+call budget flaked on the slower ARM64 Windows runner. No production code or assertion changed.
+This candidate is not qualified until its own CI run and signing pass. The 0.3.0 record below
+describes `7601b53` only.
 
 ## 0.3.0 - 2026-11-14
 
