@@ -29,6 +29,8 @@ pub(crate) fn dependencies(context: &Context) -> io::Result<BTreeMap<String, Str
                 ".github/workflows/ci.yml",
                 ".github/actions/native-bootstrap/action.yml",
                 "docs/assets/logo.png",
+                "build.rs",
+                "docs/assets/logo.ico",
                 "docs/signing/publisher.json",
                 "docs/signing/publisher-key.der",
                 "docs/signing/publisher-cert.der",

@@ -86,3 +86,40 @@ fn current_distribution_uses_new_identity_without_replacing_publisher_or_legacy_
     assert!(distribution::ASSETS.contains(&"schemas/media-request.schema.json"));
     assert!(distribution::ASSETS.contains(&"examples/fal.json"));
 }
+
+/// The Windows executable icon is the approved logo: every ICO image is a PNG with the logo's
+/// pixels at that size, and the actual built server carries those bytes as RT_ICON resources.
+#[test]
+fn approved_logo_is_the_windows_executable_icon() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let ico = fs::read(root.join("docs/assets/logo.ico")).unwrap();
+    let word = |at: usize| u16::from_le_bytes([ico[at], ico[at + 1]]);
+    let dword = |at: usize| u32::from_le_bytes(ico[at..at + 4].try_into().unwrap()) as usize;
+    assert_eq!((word(0), word(2)), (0, 1));
+    let count = usize::from(word(4));
+    assert!(count >= 5, "icon needs the standard Explorer sizes");
+    let images: Vec<&[u8]> = (0..count)
+        .map(|index| {
+            let entry = 6 + index * 16;
+            &ico[dword(entry + 12)..dword(entry + 12) + dword(entry + 8)]
+        })
+        .collect();
+    assert!(
+        images
+            .iter()
+            .all(|image| image.starts_with(b"\x89PNG\r\n\x1a\n"))
+    );
+    let build = fs::read_to_string(root.join("build.rs")).unwrap();
+    assert!(build.contains("docs/assets/logo.ico"));
+    assert!(build.contains("cargo:rustc-link-arg-bins="));
+    let executable = root.join("target/debug/numera-gen-mcp.exe");
+    if cfg!(all(windows, target_env = "msvc")) && executable.is_file() {
+        let binary = fs::read(executable).unwrap();
+        for image in &images {
+            assert!(
+                binary.windows(image.len()).any(|window| window == *image),
+                "built executable lacks an embedded logo icon image"
+            );
+        }
+    }
+}

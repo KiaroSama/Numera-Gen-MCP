@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+Windows MSVC builds embed the approved logo as the executable's own icon (`docs/assets/logo.ico`,
+seven PNG sizes from the logo, compiled into a `.res` by `build.rs` without extra dependencies).
+macOS and Linux distribute a bare executable in a zip, which has no file-icon slot; they gain the
+logo icon only once an `.app` bundle or AppImage/deb package exists. Manual CI jobs now post a pending
+commit status when they start, so every qualification job shows beside its exact commit.
+
 `generate_image` and `edit_image` now route through the typed fal media path when the selected
 connection uses the `fal-queue` adapter, so the fal profile works through the legacy image tools
 instead of only through `generate_media`. Arguments the fal endpoints do not take (`size`,

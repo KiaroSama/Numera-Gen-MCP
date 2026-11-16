@@ -1,7 +1,13 @@
-use numera_task::commit_status::{label, run_url, state};
+use numera_task::commit_status::{description, label, run_url, state};
 
 #[test]
 fn only_explicit_success_can_publish_a_successful_commit_status() {
+    assert_eq!(state("started").unwrap(), "pending");
+    assert!(description("started").contains("replaces this status"));
+    assert_eq!(
+        description("failure"),
+        "Observed job result: failure".to_string()
+    );
     assert_eq!(state("success").unwrap(), "success");
     assert_eq!(state("failure").unwrap(), "failure");
     assert_eq!(state("cancelled").unwrap(), "error");

@@ -3,10 +3,21 @@ use std::io;
 
 pub fn state(outcome: &str) -> io::Result<&'static str> {
     match outcome {
+        // Manual-dispatch check runs are not linked beside the commit, so each job announces
+        // itself as pending when it starts and its final always() step replaces that state.
+        "started" => Ok("pending"),
         "success" => Ok("success"),
         "failure" => Ok("failure"),
         "cancelled" => Ok("error"),
         _ => Err(fail("Unknown job outcome cannot publish a commit status.")),
+    }
+}
+
+pub fn description(outcome: &str) -> String {
+    if outcome == "started" {
+        "Job started; its observed result replaces this status.".into()
+    } else {
+        format!("Observed job result: {outcome}")
     }
 }
 
@@ -69,7 +80,7 @@ pub fn publish(context: &Context, outcome: &str, target: &str) -> io::Result<()>
             .args(["-f", &format!("state={}", state(outcome)?)])
             .args(["-f", &format!("context={label}")])
             .args(["-f", &format!("target_url={url}")])
-            .args(["-f", &format!("description=Observed job result: {outcome}")])
+            .args(["-f", &format!("description={}", description(outcome))])
             .env("GH_PROMPT_DISABLED", "1")
             .env("GH_PAGER", "cat")
             .env_remove("GH_DEBUG"),

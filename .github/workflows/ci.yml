@@ -129,6 +129,11 @@ jobs:
         timeout-minutes: 30
         with:
           target: ${{ matrix.target }}
+      - name: Show this job as pending beside the commit
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status started '${{ matrix.target }}'
       - name: Materialize independent immutable expected inputs
         run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" fixtures
       - name: Create same-user native DPAPI interoperability fixture
@@ -211,6 +216,11 @@ jobs:
         with:
           target: x86_64-unknown-linux-gnu
           coverage: 'true'
+      - name: Show this job as pending beside the commit
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status started none
       - name: Materialize original expected bytes and provenance
         run: |
           ./target/debug/numera-task --root "$GITHUB_WORKSPACE" fixtures
@@ -277,6 +287,11 @@ jobs:
         timeout-minutes: 30
         with:
           target: x86_64-unknown-linux-gnu
+      - name: Show this job as pending beside the commit
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status started none
       - name: Authenticate all seven current named execution contexts
         timeout-minutes: 16
         env:
@@ -345,6 +360,11 @@ jobs:
         timeout-minutes: 30
         with:
           target: ${{ matrix.target }}
+      - name: Show this job as pending beside the commit
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status started '${{ matrix.target }}'
       - name: Prepare independent fixture inputs and compiled acceptance inventory
         run: |
           ./target/debug/numera-task --root "$GITHUB_WORKSPACE" acceptance-prepare
@@ -435,6 +455,11 @@ jobs:
         timeout-minutes: 30
         with:
           target: x86_64-unknown-linux-gnu
+      - name: Show this job as pending beside the commit
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./target/debug/numera-task --root "$GITHUB_WORKSPACE" commit-status started none
       - name: Bind original signed bytes and all six actual native acceptance contexts
         timeout-minutes: 16
         env:
