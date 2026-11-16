@@ -1,5 +1,18 @@
 # Test results
 
+## Released 0.4.0 qualification and signing - 2026-11-16
+
+Exact `582580bb72ac8a08b46237408df062af008c83ff` passed
+[qualification 43956183996](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43956183996),
+attempt 1: all six required jobs succeeded, covering four native targets (Windows MSVC and Linux GNU,
+each x86_64 and ARM64), coverage and the execution collector. All 470 cases have applicable execution
+across five contexts. Coverage is **22115/18873 regions (85.34026678724848%)** and
+**5352/4319 branches (80.69880418535126%)**, above the unchanged 85/80 floors. Protected main-only
+[signing 43967661374](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43967661374), attempt 1,
+promoted that original run and passed all four native signing targets and the signed collector at the
+same commit with the existing signer. The eight published archives and sidecars match those CI bytes
+without rebuilding. macOS is not part of 0.4.0. See [0.4.0 verification](releases/0.4.0.md).
+
 ## Released 0.3.0 qualification and signing - 2026-11-14
 
 Exact `7601b53a701eb105d7cd40e15c123d6561e03ade` passed

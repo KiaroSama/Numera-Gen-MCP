@@ -1,11 +1,11 @@
 # Codex setup
 
 The native target runs directly over stdio. No launcher, Node runtime or manually started service is
-needed: Codex runs the absolute native executable with `args = ["bridge"]`. At `7601b53` /
-run `43571048279`, attempt 1, all eight qualification jobs passed, and protected signing
-run `43592102769`, attempt 1, passed all six native targets plus the signed collector. Both together
-cover the complete matrix. [0.3.0 verification](releases/0.3.0.md) records the artifacts and trust
-limits. Install the verified binary first; actual owner-host reconnection remains a separate check.
+needed: Codex runs the absolute native executable with `args = ["bridge"]`. At `582580b` /
+run `43956183996`, attempt 1, all six qualification jobs passed, and protected signing
+run `43967661374`, attempt 1, passed all four native targets plus the signed collector. Together the
+two runs cover the complete matrix. [0.4.0 verification](releases/0.4.0.md) records the artifacts and
+trust limits. Install the verified binary first; actual owner-host reconnection remains a separate check.
 
 Current Numera Gen MCP examples use `numera-gen-mcp` and host entry `numera-gen-mcp`. Historical signed
 0.2.0 archives retain the old executable name. Existing `numera-image-gen` tables remain untouched;
@@ -27,7 +27,7 @@ The paths are examples. Linux use the actual absolute POSIX binary and configura
 Temporary files and cache are `<installation-root>/.runtime/temp` and `.runtime/cache`; changing
 `NUMERA_CONFIG` does not move them. Keep the executable inside the owning project's `bin/` and adapt
 all three temp paths to that same root. No cache environment key is needed. The current-name binary
-is a 0.3.0 candidate until its own qualification/release; do not rename a signed 0.2.0 binary.
+ships in 0.3.0 and later; do not rename a signed 0.2.0 binary.
 Never put an API key in the table. Restart/reconnect after command changes, then call `health_check`,
 `list_connections` and `list_models`. Settings reload does not authorize or resubmit an image.
 

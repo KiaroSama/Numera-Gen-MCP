@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 - unreleased candidate
+## 0.4.0 - 2026-11-16
 
 macOS support is removed. Hosted macOS runners kept failing on capacity, so releases, CI,
 signing and setup docs now cover Windows and Linux on x64 and ARM64 only (four native targets plus

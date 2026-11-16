@@ -208,8 +208,8 @@ for historical/current distinctions and [test results](TEST-RESULTS.md) for obse
 
 ## Explicit local credential maintenance
 
-These commands are absent from the published 0.2.0 binary. The released 0.3.0 binary includes them,
-covered by qualification run `43571048279` and signing run `43592102769` at `7601b53`. They are
+These commands are absent from the published 0.2.0 binary. Released 0.3.0 and later binaries include them;
+0.4.0 is covered by qualification run `43956183996` and signing run `43967661374` at `582580b`. They are
 separate from MCP tools and never run automatically on startup.
 
 ```text

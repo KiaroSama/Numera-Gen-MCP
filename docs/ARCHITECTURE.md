@@ -2,10 +2,10 @@
 
 Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated tools -> application
 services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
-transactional receipts. Release 0.3.0 adds `generate_media` and `get_media_output_info` to the ten
-legacy image tools. The released source `7601b53` passed qualification run `43571048279`, attempt 1
-(eight jobs) and protected signing run `43592102769`, attempt 1 (six native targets plus the signed
-collector); see [test results](TEST-RESULTS.md) and [0.3.0 verification](releases/0.3.0.md).
+transactional receipts. Release 0.3.0 added `generate_media` and `get_media_output_info` to the ten
+legacy image tools. The released 0.4.0 source `582580b` passed qualification run `43956183996`, attempt 1
+(six jobs) and protected signing run `43967661374`, attempt 1 (four native targets plus the signed
+collector); see [test results](TEST-RESULTS.md) and [0.4.0 verification](releases/0.4.0.md).
 The tracked production runtime is Rust. Historical 0.2.0 has reviewed mappings for all 470 frozen
 cases and 50 suites, with exact hosted execution at `f253557` / run `40244894089`, attempt2. All sixteen jobs, six real publisher
 signing/negative checks and signed extracted SDK checks passed; owner-host cutover remains separate.

@@ -1,10 +1,10 @@
 # Linux setup
 
 The native target is a ready executable, not a source-build prerequisite. Version 0.4.0 removes
-macOS support; Linux and Windows are the supported platforms. At `7601b53`,
-qualification run `43571048279`, attempt 1 (eight jobs) and protected signing run `43592102769`,
-attempt 1 (six native targets plus the signed collector) both passed, which together covers the
-complete matrix. [0.3.0 verification](releases/0.3.0.md) records artifacts and trust limits; install
+macOS support; Linux and Windows are the supported platforms. At `582580b`,
+qualification run `43956183996`, attempt 1 (six jobs) and protected signing run `43967661374`,
+attempt 1 (four native targets plus the signed collector) both passed, which together covers the
+complete matrix. [0.4.0 verification](releases/0.4.0.md) records artifacts and trust limits; install
 the verified archive before switching a live client.
 
 Current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen-mcp` host entry.

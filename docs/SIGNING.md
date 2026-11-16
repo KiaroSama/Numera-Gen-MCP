@@ -21,23 +21,23 @@ plus isolated ten-tool SDK readiness on the current host, without provider acces
 verified CI archives. Actual owner-host cutover is separate; the working runtime is retained.
 Unsigned intermediate CI archives remain internal test artifacts, never completed distributions.
 
-## Current 0.3.0 candidate
+## Current release route
 
-The current candidate's existing-key signing route remains manual and `main`-only. It requires either
+The current existing-key signing route remains manual and `main`-only. It requires either
 successful native, coverage and execution-matrix jobs in the same qualification run, or explicit
 `sign-qualified` promotion of an original successful run/attempt at the identical SHA. Promotion
 skips those already executed suites; it authenticates their original matrix, jobs and intermediate
 bytes before signing. Source preparation cannot enter the protected environment or receive its inputs.
-The released 0.3.0 source `7601b53` completed hosted qualification in run `43571048279`, attempt 1
-(eight jobs) and protected signing in run `43592102769`, attempt 1 (six native targets plus the
-signed collector). The [0.3.0 verification record](releases/0.3.0.md) binds both to that commit.
+The released 0.4.0 source `582580b` completed hosted qualification in run `43956183996`, attempt 1
+(six jobs) and protected signing promotion in run `43967661374`, attempt 1 (four native targets plus
+the signed collector). The [0.4.0 verification record](releases/0.4.0.md) binds both to that commit.
 A dispatch remains a separate, explicitly authorized action, and any later edit is not covered.
 
 ## Explicit local identity maintenance
 
 The 0.3.0 source replaces the first-party identity/check PowerShell helpers with opt-in native
 `numera-dev identity` operations on Windows. These commands are absent from the published 0.2.0
-binary; the released 0.3.0 binary includes them, covered by the runs above.
+binary; released 0.3.0 and later binaries include them, covered by the runs above.
 
 ```text
 numera-dev identity inspect --root ABSOLUTE_ROOT
