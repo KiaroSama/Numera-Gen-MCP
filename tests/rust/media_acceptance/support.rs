@@ -111,7 +111,11 @@ pub fn authenticated(request: &super::provider::Request) {
 }
 
 pub async fn generate(host: &Host, request: Value) -> Value {
-    let result = host.call_timeout("generate_media", request, 10000).await;
+    generate_within(host, request, 10000).await
+}
+
+pub async fn generate_within(host: &Host, request: Value, ms: u64) -> Value {
+    let result = host.call_timeout("generate_media", request, ms).await;
     assert_ne!(result["isError"], true, "{result}");
     structured(&result)
 }

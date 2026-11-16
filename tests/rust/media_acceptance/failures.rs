@@ -46,9 +46,13 @@ async fn many_role_originals() {
             &[(endpoint, "text-to-3d", &["3d", "image"])],
         );
         let mut first = s::start(&directory, &config, "media-many-roles").await;
-        let done = s::generate(
+        // One waited call durably finalizes the 64-original journal bound (synced journal and
+        // file commits per original); measured 5.5–9.5s locally, so the shared 10s call budget
+        // flaked on slower hosted runners. The 35s scenario bound above remains the outer limit.
+        let done = s::generate_within(
             &first,
             s::request("many-roles", endpoint, "text-to-3d", true, &[]),
+            25000,
         )
         .await;
         assert_eq!(done["status"], "completed", "{done}");
