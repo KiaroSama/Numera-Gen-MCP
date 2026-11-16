@@ -12,8 +12,6 @@ mod process_unix;
 mod process_windows;
 pub mod protect_secret;
 pub mod setup;
-#[cfg(target_os = "macos")]
-mod signature_macos;
 #[cfg(windows)]
 mod signature_windows;
 pub mod supervisor;

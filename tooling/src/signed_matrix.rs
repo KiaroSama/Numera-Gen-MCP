@@ -185,8 +185,6 @@ pub fn check(context: &Context) -> io::Result<()> {
         )?;
         let os = if target.contains("windows") {
             "windows"
-        } else if target.contains("apple") {
-            "macos"
         } else {
             "linux"
         };
@@ -272,7 +270,7 @@ pub fn check(context: &Context) -> io::Result<()> {
     if contexts.keys().map(String::as_str).collect::<BTreeSet<_>>()
         != matrix::contexts().keys().copied().collect()
     {
-        return Err(fail("Original seven-context inventory differs."));
+        return Err(fail("Original five-context inventory differs."));
     }
     for (target, record) in &records {
         let original = contexts
@@ -309,7 +307,7 @@ pub fn check(context: &Context) -> io::Result<()> {
         json!({"component":"native-current-qualification","identity":root,
             "report_sha256":sha(&qualification_bytes),"qualification_verified":true}),
     );
-    let report = json!({"schema_version":1,"component":"native-signed-six-context-execution",
+    let report = json!({"schema_version":1,"component":"native-signed-four-context-execution",
         "source_sha":root["source_sha"],"run_id":run,"run_attempt":attempt,"contexts":records,
         "evidence":evidence_records,"execution_matrix_artifact":original.matrix_artifact,
         "original_execution_identity":original.identity,"execution_matrix_sha256":original.matrix_sha256,
@@ -323,7 +321,7 @@ pub fn check(context: &Context) -> io::Result<()> {
     )?;
     println!(
         "{}",
-        json!({"component":"native-signed-six-context-execution","contexts":6,
+        json!({"component":"native-signed-four-context-execution","contexts":4,
         "current_signed_stage_execution_verified":true,"qualification_verified":false})
     );
     Ok(())

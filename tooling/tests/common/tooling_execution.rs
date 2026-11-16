@@ -83,7 +83,7 @@ impl Fixture {
                         !target.contains("windows")
                     }
                     "approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
-                        target.contains("windows") || target.contains("apple")
+                        target.contains("windows")
                     }
                     _ => file != "native/devtools/process_unix.rs" || !target.contains("windows"),
                 };

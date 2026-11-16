@@ -44,8 +44,7 @@ selected existing file, never guess or overwrite the whole settings file.
 }
 ```
 
-Replace the example command with the absolute installed binary path. On macOS the command is an
-absolute POSIX path ending in `bin/numera-gen-mcp`; the arguments remain `["bridge"]`.
+Replace the example command with the absolute installed binary path; the arguments remain `["bridge"]`.
 Server support on Linux does not establish Claude Desktop application availability on Linux.
 
 Adjacent `.env` or `config.local.json` discovery is relative to the executable's installation root
@@ -63,7 +62,7 @@ does not affect an already-running Desktop process. SDK/CI stdio tests are not a
 
 ## Claude Code
 
-From the extracted installation root on Linux/macOS:
+From the extracted installation root on Linux:
 
 ```bash
 claude mcp add --transport stdio --scope user numera-gen-mcp -- "$PWD/bin/numera-gen-mcp" bridge

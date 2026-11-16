@@ -214,31 +214,6 @@ fn text(path: &Path) -> io::Result<&str> {
     path.to_str()
         .ok_or_else(|| fail("Signing path must be Unicode."))
 }
-#[cfg(target_os = "macos")]
-fn keychain_state(context: &Context) -> io::Result<[Vec<u8>; 2]> {
-    Ok([
-        context.capture(
-            private_command(context, Path::new("/usr/bin/security")).args([
-                "list-keychains",
-                "-d",
-                "user",
-            ]),
-            30000,
-            15000,
-            1024 * 1024,
-        )?,
-        context.capture(
-            private_command(context, Path::new("/usr/bin/security")).args([
-                "default-keychain",
-                "-d",
-                "user",
-            ]),
-            30000,
-            15000,
-            1024 * 1024,
-        )?,
-    ])
-}
 
 pub fn sign(context: &Context, target: &str) -> io::Result<()> {
     context.hosted()?;
@@ -269,7 +244,7 @@ pub fn sign(context: &Context, target: &str) -> io::Result<()> {
         return Err(fail("Signing candidate already signed."));
     }
     let inputs = PrivateInputs::create(&context.root, &pfx.0, &password.0)?;
-    let operation = (|| {
+    let operation = (|| -> io::Result<()> {
         let mut manifest: Value = serde_json::from_slice(&inventory["manifest.json"])
             .map_err(|_| fail("Invalid signing candidate."))?;
         let pass = format!("file:{}", text(&inputs.password)?);
@@ -332,23 +307,6 @@ pub fn sign(context: &Context, target: &str) -> io::Result<()> {
                 }
                 result?;
             }
-        } else if target.contains("apple") {
-            #[cfg(target_os = "macos")]
-            {
-                let before = keychain_state(context)?;
-                let result = crate::signing_macos::sign(
-                    &pfx.0,
-                    &password.0,
-                    CERT_PIN,
-                    &files.iter().map(PathBuf::as_path).collect::<Vec<_>>(),
-                );
-                if keychain_state(context)? != before {
-                    return Err(fail("Signing changed keychain preferences."));
-                }
-                result?;
-            }
-            #[cfg(not(target_os = "macos"))]
-            return Err(fail("Native macOS signer required."));
         }
         for row in manifest["files"]
             .as_array_mut()

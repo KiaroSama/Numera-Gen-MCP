@@ -129,27 +129,6 @@ fn installed(program: &str) -> Option<PathBuf> {
 
 fn preinstalled_openssl(context: &Context) -> io::Result<PathBuf> {
     let mut candidates = Vec::new();
-    #[cfg(target_os = "macos")]
-    {
-        let brew = installed("brew")
-            .ok_or_else(|| fail("Preinstalled Homebrew OpenSSL 3 is unavailable."))?;
-        let prefix = context.capture(
-            private_command(context, brew)
-                .env("HOMEBREW_NO_AUTO_UPDATE", "1")
-                .env("HOMEBREW_NO_ANALYTICS", "1")
-                .args(["--prefix", "openssl@3"]),
-            15000,
-            10000,
-            65536,
-        )?;
-        let prefix = std::str::from_utf8(&prefix)
-            .map_err(|_| fail("Invalid OpenSSL prefix encoding."))?
-            .trim();
-        if prefix.contains(['\r', '\n']) {
-            return Err(fail("Invalid OpenSSL prefix."));
-        }
-        candidates.push(PathBuf::from(prefix).join("bin/openssl"));
-    }
     if let Some(path) = installed("openssl") {
         candidates.push(path);
     }
@@ -274,14 +253,6 @@ pub async fn tools(context: &Context, target: &str) -> io::Result<()> {
     crate::promotion::verify_prepared(context, target)?;
     let openssl = preinstalled_openssl(context)?;
     let mut values = BTreeMap::from([("NUMERA_OPENSSL", openssl)]);
-    if target.contains("apple") {
-        #[cfg(target_os = "macos")]
-        crate::signing_macos::qualify()?;
-        #[cfg(not(target_os = "macos"))]
-        return Err(fail(
-            "Native memory-only macOS signing capability unavailable.",
-        ));
-    }
     if target.contains("windows") {
         let bytes = crate::fetch::github_release(TOOL_URL, ARCHIVE_LIMIT).await?;
         if bytes.is_empty() || bytes.len() > ARCHIVE_LIMIT || sha(&bytes) != TOOL_SHA256 {

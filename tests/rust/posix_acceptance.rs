@@ -1,7 +1,7 @@
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(target_os = "linux")]
 mod common;
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(target_os = "linux")]
 mod posix {
     use super::common::Workspace;
     use numera_gen_mcp::{

@@ -31,8 +31,6 @@ pub mod signature_acceptance;
 pub mod signed_execution;
 pub mod signed_matrix;
 pub mod signing;
-#[cfg(target_os = "macos")]
-pub mod signing_macos;
 pub mod signing_tools;
 pub mod source_review;
 pub mod test_execution;

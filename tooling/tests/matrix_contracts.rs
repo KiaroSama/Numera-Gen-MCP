@@ -164,9 +164,10 @@ fn named_case_report_digest_must_appear_once_in_its_successful_exact_job_log() {
 }
 
 #[test]
-fn matrix_requires_six_native_targets_and_separate_instrumented_linux_without_duplicates() {
+fn matrix_requires_four_native_targets_and_separate_instrumented_linux_without_duplicates() {
     let expected = matrix::contexts();
-    assert_eq!(expected.len(), 7);
+    assert_eq!(expected.len(), 5);
+    assert!(expected.keys().all(|label| !label.contains("apple")));
     assert_eq!(
         expected["coverage"],
         ("x86_64-unknown-linux-gnu", "coverage")

@@ -137,7 +137,7 @@ fn signed_prepared_install_and_update_preserve_private_files_without_compilation
     fs::create_dir(&source).unwrap();
     fs::create_dir(&target).unwrap();
     signed_fixture::prepared(&source);
-    if cfg!(any(windows, target_os = "macos")) {
+    if cfg!(windows) {
         let args = vec![
             "Install".into(),
             "--root".into(),
@@ -318,7 +318,7 @@ fn installation_lock_and_unowned_collision_preserve_destination_bytes() {
         .unwrap();
     assert_eq!(
         error.code,
-        if cfg!(any(windows, target_os = "macos")) {
+        if cfg!(windows) {
             "invalid_artifact"
         } else {
             "installation_blocked"
@@ -439,7 +439,7 @@ fn actual_setup_cli_registers_selected_installation_not_unpacked_sibling() {
     )
     .unwrap();
     assert!(result.cleanup_verified);
-    if cfg!(any(windows, target_os = "macos")) {
+    if cfg!(windows) {
         assert_eq!(result.code, 1);
         assert_eq!(fs::read(&host).unwrap(), b"{\"retained\":true}");
         return;
@@ -498,7 +498,7 @@ fn native_register_and_remove_change_only_selected_fixture_entry() {
     } else {
         "numera-image-gen-mcp"
     });
-    if cfg!(any(windows, target_os = "macos")) {
+    if cfg!(windows) {
         let before = fs::read(&host).unwrap();
         let error = setup::execute(&args("Register"), &executable, &HashMap::new())
             .err()

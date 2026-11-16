@@ -58,7 +58,7 @@ fn fixture() -> (Value, Value, BTreeMap<String, Value>) {
             );
         }
     }
-    let source = json!({"schema_version":1,"component":"native-seven-context-execution",
+    let source = json!({"schema_version":1,"component":"native-five-context-execution",
         "source_sha":"a".repeat(40),"run_id":7,"run_attempt":1,"contexts":contexts,
         "cases":470,"suites":50,"source_review_sha256":"1".repeat(64),
         "tooling_source_review_sha256":"2".repeat(64),
@@ -101,24 +101,24 @@ fn final_join_requires_all_reviewed_native_coverage_and_genuine_signed_stage_con
                     .remove("coverage");
             }
             "missing-signed" => {
-                signed.remove("aarch64-apple-darwin");
+                signed.remove("aarch64-unknown-linux-gnu");
             }
             "runtime-review" => {
                 source["contexts"]["coverage"]["reviewed_named_execution"]["source_review"]["unique_assertions"] =
                     json!(410)
             }
             "tooling-review" => {
-                source["contexts"]["aarch64-apple-darwin"]["reviewed_tooling_execution"]["current_tooling_assertions_and_execution_verified"] =
+                source["contexts"]["aarch64-unknown-linux-gnu"]["reviewed_tooling_execution"]["current_tooling_assertions_and_execution_verified"] =
                     json!(false)
             }
             "review-bytes" => source["tooling_source_review_sha256"] = json!("4".repeat(64)),
             "source" => source["source_sha"] = json!("b".repeat(40)),
             "signature" => {
-                signed.get_mut("aarch64-apple-darwin").unwrap()["signed_stage_execution_verified"] =
+                signed.get_mut("aarch64-unknown-linux-gnu").unwrap()["signed_stage_execution_verified"] =
                     json!(false)
             }
             "sdk" => {
-                signed.get_mut("aarch64-apple-darwin").unwrap()["sdk_harnesses"]["tests/rust/sdk_acceptance.rs"]
+                signed.get_mut("aarch64-unknown-linux-gnu").unwrap()["sdk_harnesses"]["tests/rust/sdk_acceptance.rs"]
                     ["passed"] = json!(["unrelated"])
             }
             "coverage" => {

@@ -51,7 +51,7 @@ fn platforms(mapping: &str) -> &'static [&'static str] {
         "native/devtools/process_unix.rs::denied_group_kill_requires_closed_leader_and_definitive_live_group_absence"
         | "native/devtools/process_unix.rs::missing_group_does_not_probe_and_closed_observation_errors_never_mean_absence"
         | "tests/rust/sdk_acceptance/http.rs::abrupt_parent_stop_contains_actual_sdk_and_http_leaf_children" => {
-            &["linux", "darwin"]
+            &["linux"]
         }
         "tests/rust/devtool_supervisor.rs::actual_developer_cli_preserves_full_windows_child_exit_status"
         | "tests/rust/devtool_setup.rs::unsigned_update_is_rejected_before_replacing_a_locked_installation"
@@ -65,12 +65,12 @@ fn platforms(mapping: &str) -> &'static [&'static str] {
         }
         "tests/rust/identity_contracts.rs::identity_custody_refuses_unsupported_hosts_without_creating_files"
         | "tooling/tests/dpapi_fixture_contracts.rs::native_dpapi_fixture_is_not_a_plaintext_fallback_on_other_hosts" => {
-            &["linux", "darwin"]
+            &["linux"]
         }
         "tests/rust/artifact_signatures.rs::approved_manifest_does_not_authorize_unsigned_text_for_activation" => {
-            &["win32", "darwin"]
+            &["win32"]
         }
-        _ => &["win32", "linux", "darwin"],
+        _ => &["win32", "linux"],
     }
 }
 

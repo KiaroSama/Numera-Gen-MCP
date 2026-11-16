@@ -23,7 +23,7 @@ fn array<'a>(value: &'a Value, key: &str) -> io::Result<&'a Vec<Value>> {
 }
 
 /// Bind successful names to authenticated historical proposals, without approving their semantics.
-/// Artifact/run authentication and the final seven-context decision remain separate requirements.
+/// Artifact/run authentication and the final five-context decision remain separate requirements.
 pub fn bind_cases(
     rebind: &Value,
     identity: &Value,

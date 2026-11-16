@@ -13,7 +13,7 @@ Target repository https://github.com/KiaroSama/Numera-Gen-MCP. Example checkout 
 ## Native distribution requirements (2026-10-11)
 
 Preserve the full existing tool/config/provider/state/original-byte behavior while replacing the
-production Node implementation. Hosted CI builds ready Windows/Linux/macOS x86_64/ARM64 archives,
+production Node implementation. Hosted CI builds ready Windows/Linux x86_64/ARM64 archives (macOS removed in 0.4.0),
 SHA-256 checksums and license notices; normal installation requires download/extract/config only,
 never a local build or Node/Rust runtime installation. Native `bridge` is launched directly by the
 MCP host with `args: ["bridge"]`; no manual launcher startup is required. All managed temp/cache stays

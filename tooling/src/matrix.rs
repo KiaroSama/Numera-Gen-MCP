@@ -32,8 +32,6 @@ pub fn contexts() -> BTreeMap<&'static str, (&'static str, &'static str)> {
             "aarch64-unknown-linux-gnu",
             ("aarch64-unknown-linux-gnu", "built"),
         ),
-        ("x86_64-apple-darwin", ("x86_64-apple-darwin", "built")),
-        ("aarch64-apple-darwin", ("aarch64-apple-darwin", "built")),
         ("coverage", ("x86_64-unknown-linux-gnu", "coverage")),
     ])
 }
@@ -41,7 +39,7 @@ pub fn verify_contexts(observed: &BTreeMap<String, Value>) -> io::Result<()> {
     let expected = contexts();
     if observed.len() != expected.len() {
         return Err(fail(
-            "Exact six-native plus coverage execution matrix is incomplete.",
+            "Exact four-native plus coverage execution matrix is incomplete.",
         ));
     }
     let root = observed
@@ -509,8 +507,6 @@ pub fn check(context: &Context) -> io::Result<()> {
         )?;
         let os = if target.contains("windows") {
             "windows"
-        } else if target.contains("apple") {
-            "macos"
         } else {
             "linux"
         };
@@ -640,7 +636,7 @@ pub fn check(context: &Context) -> io::Result<()> {
             "Matrix source dependencies changed during collection.",
         ));
     }
-    let report = json!({"schema_version":1,"component":"native-seven-context-execution","source_sha":context.source_sha()?,
+    let report = json!({"schema_version":1,"component":"native-five-context-execution","source_sha":context.source_sha()?,
         "run_id":run_id,"run_attempt":attempt,"baseline":BASELINE,"historical_source_sha":SOURCE,
         "contexts":records,"cases":470,"suites":50,"current_named_execution_verified":true,
         "source_review_sha256":sha(&review_bytes),"current_assertion_review_verified":true,
@@ -651,7 +647,7 @@ pub fn check(context: &Context) -> io::Result<()> {
     context.write_new(".ci-work/native/execution-matrix.json", &bytes)?;
     println!(
         "{}",
-        json!({"component":"native-seven-context-execution","contexts":7,"cases":470,
+        json!({"component":"native-five-context-execution","contexts":5,"cases":470,
         "identity":root_identity,"report_sha256":sha(&bytes),
         "current_named_execution_verified":true,"semantic_parity_claimed":false,"qualification_verified":false})
     );

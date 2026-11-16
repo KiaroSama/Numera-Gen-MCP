@@ -501,7 +501,6 @@ async fn held_initialization_parent_timeout_contains_the_nested_bridge() {
         // Signal zero observes only; group cleanup must leave no live bridge.
         let status = unsafe { libc::kill(pid as i32, 0) };
         if status == 0 {
-            #[cfg(target_os = "linux")]
             {
                 match std::fs::read_to_string(format!("/proc/{pid}/stat")) {
                     Ok(text) => assert!(
@@ -513,22 +512,6 @@ async fn held_initialization_parent_timeout_contains_the_nested_bridge() {
                     ),
                     Err(error) => assert_eq!(error.kind(), std::io::ErrorKind::NotFound),
                 }
-            }
-            #[cfg(target_os = "macos")]
-            {
-                let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
-                let size = std::mem::size_of::<libc::proc_bsdinfo>();
-                // SAFETY: sized query-only structure for the fixture's observed child.
-                let bytes = unsafe {
-                    libc::proc_pidinfo(
-                        pid as i32,
-                        libc::PROC_PIDTBSDINFO,
-                        1,
-                        (&mut info as *mut libc::proc_bsdinfo).cast(),
-                        size as i32,
-                    )
-                };
-                assert!(bytes == 0 || (bytes as usize == size && info.pbi_status == 5));
             }
         } else {
             assert_eq!(

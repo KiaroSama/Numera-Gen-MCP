@@ -67,8 +67,6 @@ fn current_distribution_uses_new_identity_without_replacing_publisher_or_legacy_
         "aarch64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
     ] {
         assert_eq!(
             distribution::prefix(target, false).unwrap(),

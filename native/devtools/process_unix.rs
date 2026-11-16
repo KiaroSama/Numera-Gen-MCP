@@ -90,10 +90,7 @@ impl Owned {
         if result == -1 {
             return Err(io::Error::last_os_error());
         }
-        #[cfg(target_os = "linux")]
         let pid = unsafe { info.si_pid() };
-        #[cfg(target_os = "macos")]
-        let pid = info.si_pid;
         Ok(pid != 0)
     }
 
@@ -193,60 +190,6 @@ fn live_group(group: i32) -> io::Result<bool> {
             return Err(io::Error::other("Incomplete process accounting record."));
         }
         if fields[2].parse::<i32>().ok() == Some(group) && fields[0] != "Z" {
-            return Ok(true);
-        }
-    }
-    Ok(false)
-}
-
-#[cfg(target_os = "macos")]
-fn live_group(group: i32) -> io::Result<bool> {
-    // Apple sys/proc_info.h selector; libc exposes the function but not this constant.
-    const PROC_PGRP_ONLY: u32 = 2;
-    let mut pids = vec![0i32; 65536];
-    let size = std::mem::size_of_val(pids.as_slice());
-    // SAFETY: bounded initialized buffer; enumerate only the anchored owned group.
-    let bytes = unsafe {
-        libc::proc_listpids(
-            PROC_PGRP_ONLY,
-            group as u32,
-            pids.as_mut_ptr().cast(),
-            size as i32,
-        )
-    };
-    if bytes <= 0 || bytes as usize >= size {
-        return Err(io::Error::other(
-            "Cannot bound owned process-group accounting.",
-        ));
-    }
-    for pid in pids
-        .into_iter()
-        .take(bytes as usize / std::mem::size_of::<i32>())
-        .filter(|pid| *pid > 0)
-    {
-        let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
-        let size = std::mem::size_of::<libc::proc_bsdinfo>();
-        // SAFETY: sized query-only structure; arg1 includes the anchored unreaped zombie.
-        let bytes = unsafe {
-            libc::proc_pidinfo(
-                pid,
-                libc::PROC_PIDTBSDINFO,
-                1,
-                (&mut info as *mut libc::proc_bsdinfo).cast(),
-                size as i32,
-            )
-        };
-        if bytes == 0 {
-            let error = io::Error::last_os_error();
-            if error.raw_os_error() == Some(libc::ESRCH) {
-                continue;
-            }
-            return Err(error);
-        }
-        if bytes as usize != size {
-            return Err(io::Error::other("Incomplete owned process accounting."));
-        }
-        if info.pbi_pgid == group as u32 && info.pbi_status != 5 {
             return Ok(true);
         }
     }

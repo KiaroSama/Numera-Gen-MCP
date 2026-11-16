@@ -5,13 +5,11 @@ use std::{io, path::Path};
 
 /// Explicit historical-format fixture authoring. Existing fixtures are never replaced or refreshed.
 pub(super) fn write(root: &Path, crypto: &Crypto, pfx: &[u8], password: &[u8]) -> io::Result<()> {
-    const TARGETS: [&str; 6] = [
+    const TARGETS: [&str; 4] = [
         "x86_64-pc-windows-msvc",
         "aarch64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
     ];
     let logo =
         artifact::read(root, "docs/assets/logo.png", 8 * 1024 * 1024).map_err(|_| failure())?;

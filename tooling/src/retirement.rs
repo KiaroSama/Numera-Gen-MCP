@@ -168,7 +168,7 @@ pub fn authenticate_qualification(
         .collect::<BTreeMap<_, _>>();
     signed_matrix::verify_contexts(&records, identity)?;
     if signed["schema_version"] != 1
-        || signed["component"] != "native-signed-six-context-execution"
+        || signed["component"] != "native-signed-four-context-execution"
         || signed["source_sha"] != identity["source_sha"]
         || signed["run_id"] != identity["run_id"]
         || signed["run_attempt"] != identity["run_attempt"]
@@ -193,9 +193,9 @@ pub fn authenticate_qualification(
             .is_none_or(|id| id == 0)
         || qualification["runtime_cases"] != 470
         || qualification["runtime_suites"] != 50
-        || qualification["native_contexts"] != 6
+        || qualification["native_contexts"] != 4
         || qualification["coverage_contexts"] != 1
-        || qualification["signed_contexts"] != 6
+        || qualification["signed_contexts"] != 4
         || qualification["reviewer"] != "primary"
         || qualification["independent_review_claimed"] != false
         || qualification["qualification_verified"] != true

@@ -1,6 +1,6 @@
 # Configuration
 
-## Simple env setup (Windows, Linux, macOS)
+## Simple env setup (Windows, Linux)
 
 Copy [.env.example](../.env.example) to .env in the extracted installation root (parent of `bin/`). Never
 overwrite an existing private file. The native Rust parser preserves the established strict dotenv
@@ -30,7 +30,7 @@ with safe errors. Comments/quoted Unicode and multiline names retain the Node ut
 API keys cannot contain newlines. No raw tools arrays or hidden extra submissions.
 
 Plaintext keys are not encrypted: keep .env ignored, out of archives/packages/sync, private0600 on
-Linux/macOS and current-user ACL on Windows. Outputs/state/logs/inputs sit beside the selected file,
+Linux and current-user ACL on Windows. Outputs/state/logs/inputs sit beside the selected file,
 independent of the caller CWD. [Responses example](../examples/simple-responses.env.example).
 
 ## Save without restarting
@@ -46,7 +46,7 @@ At most64 snapshots are retained per process, including the initial one; further
 Storage roots, logging, file/security limits and global concurrency policy also require restart.
 
 Selection: explicit --config > NUMERA_CONFIG > adjacent .env > adjacent legacy config.local.json >
-per-user config.json. Windows per-user root: %LOCALAPPDATA%/Numera/ImageGen; Linux/macOS:
+per-user config.json. Windows per-user root: %LOCALAPPDATA%/Numera/ImageGen; Linux:
 $XDG_CONFIG_HOME/numera-image-gen (fallback ~/.config/numera-image-gen). These legacy per-user roots
 remain intentional compatibility locations for Numera Gen MCP; existing private config is not moved
 or renamed. Explicit missing/invalid file fails rather than selecting a fallback. Packed installs should use their own absolute --config path,

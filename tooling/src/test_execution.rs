@@ -316,8 +316,6 @@ pub fn execution_identity(environment: &Value, phase: &str, target: &str) -> io:
     };
     let platform = if target.contains("windows") {
         "win32"
-    } else if target.contains("apple") {
-        "darwin"
     } else {
         "linux"
     };

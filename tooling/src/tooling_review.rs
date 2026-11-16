@@ -62,7 +62,6 @@ pub fn verify(root: &Path, manifest: &Value, review: &Value) -> io::Result<Value
         "native/devtools/mod.rs",
         "native/devtools/artifact.rs",
         "native/devtools/signature_windows.rs",
-        "native/devtools/signature_macos.rs",
         "docs/testing/sdk-tooling-migration.json",
         "tooling/src/lib.rs",
         "tooling/src/commit_status.rs",

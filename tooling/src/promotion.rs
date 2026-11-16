@@ -52,7 +52,7 @@ pub fn validate_run(
 
 pub fn verify_execution(execution: &Value, identity: &Value) -> io::Result<()> {
     if execution["schema_version"] != 1
-        || execution["component"] != "native-seven-context-execution"
+        || execution["component"] != "native-five-context-execution"
         || execution["source_sha"] != identity["source_sha"]
         || execution["run_id"] != identity["run_id"]
         || execution["run_attempt"] != identity["run_attempt"]
@@ -351,7 +351,7 @@ pub(crate) fn load(context: &Context) -> io::Result<Original> {
     signed_execution::verify_logs(
         &logs,
         &identity,
-        &[("native-seven-context-execution", sha(bytes))],
+        &[("native-five-context-execution", sha(bytes))],
     )?;
     Ok(Original {
         identity,

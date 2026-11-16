@@ -24,7 +24,7 @@ fn unsigned_or_tampered_prepared_artifact_is_never_installable() {
     assert!(!workspace.0.join(".numera-install.lock").exists());
 }
 
-#[cfg(any(windows, target_os = "macos"))]
+#[cfg(windows)]
 #[test]
 fn approved_manifest_does_not_authorize_unsigned_text_for_activation() {
     use numera_gen_mcp::devtools::setup;

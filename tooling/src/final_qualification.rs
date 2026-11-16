@@ -21,7 +21,7 @@ pub fn bind(
     tooling_review_sha256: &str,
 ) -> io::Result<Value> {
     if original["schema_version"] != 1
-        || original["component"] != "native-seven-context-execution"
+        || original["component"] != "native-five-context-execution"
         || original["source_sha"] != signing_identity["source_sha"]
         || original["cases"] != 470
         || original["suites"] != 50
@@ -100,7 +100,7 @@ pub fn bind(
         "source_sha":original["source_sha"],"qualification_run_id":original["run_id"],
         "qualification_run_attempt":original["run_attempt"],"signing_identity":signing_identity,
         "source_review_sha256":runtime_review_sha256,"tooling_source_review_sha256":tooling_review_sha256,
-        "runtime_cases":470,"runtime_suites":50,"native_contexts":6,"coverage_contexts":1,
+        "runtime_cases":470,"runtime_suites":50,"native_contexts":4,"coverage_contexts":1,
         "signed_contexts":signed.len(),"coverage":coverage,
         "reviewer":"primary","independent_review_claimed":false,
         "qualification_verified":true,"retirement_authorized":false,"owner_host_changed":false,

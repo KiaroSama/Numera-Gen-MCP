@@ -60,7 +60,7 @@ already prepared hosted runner:
 | `fixtures`, `evidence-capture`, `evidence-verify` | Materialize independently retained public expected inputs and bind their provenance; never generate expectations from the implementation under test. |
 | `dpapi-fixture` | Hosted Windows-only synthetic CurrentUser ciphertext and the exact existing `config-dpapi.json` consumer shape; fixed public fixture value, not a secret-input interface. |
 | `inventory`, `stable`, `coverage`, `coverage-gate` | Check original tooling dispositions and Cargo suite discovery; run workspace gates and enforce production-runtime 85/80 floors. |
-| `ledger`, `case-execution`, `execution-matrix`, `signed-execution-matrix` | Authenticate historical 470-case/50-suite evidence, propose current mappings and bind current exact names per context and across seven hosted contexts. Source review, execution and final qualification retain separate evidence boundaries. |
+| `ledger`, `case-execution`, `execution-matrix`, `signed-execution-matrix` | Authenticate historical 470-case/50-suite evidence, propose current mappings and bind current exact names per context and across the hosted contexts (five since 0.4.0, seven in historical evidence). Source review, execution and final qualification retain separate evidence boundaries. |
 | `retirement-gate` | Read-only verification of an exact qualified parent, the deletion-only successor and that successor's own complete qualification; never deletes source or grants authority to do so. |
 | `licenses TARGET`, `prepare TARGET`, `stage TARGET` | Preserve actual dependency notices and create bounded allowlisted intermediates/prepared distributions. `prepare` is explicitly unsigned, not a completed app build. |
 | `signing-source TARGET`, `signing-tools TARGET`, `sign TARGET`, `package TARGET`, `signature-acceptance TARGET`, `extract-intermediate TARGET`, `extract-signed TARGET`, `activation TARGET` | Require their actual prerequisites, approved signer and existing protected authority; signature/extraction/isolated activation are independent gates, not authorization to edit a real host. |
@@ -107,7 +107,7 @@ checks completeness, registered test mappings, module boundaries and current byt
 manifest plus SDK helpers into its proposal. These are source-navigation bindings, not semantic
 approval; formatting requires reviewed range rebinding. The SDK provider retains its task owner during
 cleanup waits so cancellation cannot detach that owner; its event-driven cancellation contract is
-source-authored, not yet executed. `execution-matrix` runs after all seven contexts succeed.
+source-authored, not yet executed. `execution-matrix` runs after all five contexts (four native plus coverage) succeed.
 It sequentially reads same-repository GitHub run/attempt, artifact metadata and original job logs;
 compares raw archive sizes/digests before bounded in-memory member decoding; verifies each target's
 original golden bytes and permitted config-path relocation; and reconstructs every case binding
@@ -124,19 +124,19 @@ After genuine signature negatives, signed extraction, isolated activation and SD
 the signing job writes separate `signature-execution.json` and `signed-extraction-execution.json`
 receipts only after fixture cleanup. They bind the exact signing context, public provenance,
 manifest, tested binary, SDK report and extracted archive hashes. `signed-execution-matrix` waits for
-all six signing jobs, authenticates original report artifacts and unique receipt digests in each
-successful job log, and joins their SDK inventories to the authenticated seven-context report.
+all four signing jobs, authenticates original report artifacts and unique receipt digests in each
+successful job log, and joins their SDK inventories to the authenticated five-context report.
 It has read-only content/action access, commit-status write access for its own observed result,
 and no publisher inputs. Its signed-stage report stays
 separate from `current-qualification.json`, which requires the complete source-reviewed runtime and
-tooling assertions, seven current execution contexts, coverage floors and six signed contexts at the
+tooling assertions, five current execution contexts, coverage floors and four signed contexts at the
 exact source. Neither report grants retirement authority or claims independent review. These
 source-authored collectors still have no successful hosted invocation; current qualification remains
 pending. Final archive download and cryptographic verification remain separate delivery gates.
 
 The manual `operation=sign-qualified` route consumes an explicitly selected successful qualification
 run and attempt after main points to the identical SHA. It skips native/coverage suites, authenticates
-the original seven-context matrix and producing jobs, and downloads one exact original intermediate
+the original five-context matrix and producing jobs, and downloads one exact original intermediate
 artifact ID with digest failure enforced. Before signing inputs are read, staging and signing compare
 the original package-log digest, executed binary hash and complete retained tree. Each signed report
 artifact includes `signing-source.json`; the final collector independently reconstructs that receipt

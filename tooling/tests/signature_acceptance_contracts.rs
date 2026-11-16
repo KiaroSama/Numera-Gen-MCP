@@ -26,8 +26,6 @@ fn acceptance_requires_both_distinct_native_executables_on_every_supported_targe
         "aarch64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
     ] {
         let suffix = if target.contains("windows") {
             ".exe"

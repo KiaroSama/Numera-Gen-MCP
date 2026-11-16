@@ -2,10 +2,15 @@
 
 ## 0.4.0 - unreleased candidate
 
+macOS support is removed. Hosted macOS runners kept failing on capacity, so releases, CI,
+signing and setup docs now cover Windows and Linux on x64 and ARM64 only (four native targets plus
+coverage). The macOS runtime signer and Mach-O signature checks are gone; historical macOS evidence
+and the 0.2.0/0.3.0 macOS archives stay untouched. `docs/LINUX-MACOS.md` is now `docs/LINUX.md`.
+
 Windows MSVC builds embed the approved logo as the executable's own icon (`docs/assets/logo.ico`,
 seven PNG sizes from the logo, compiled into a `.res` by `build.rs` without extra dependencies).
-macOS and Linux distribute a bare executable in a zip, which has no file-icon slot; they gain the
-logo icon only once an `.app` bundle or AppImage/deb package exists. Manual CI jobs now post a pending
+Linux distributes a bare executable in an archive, which has no file-icon slot; it gains the logo
+icon only once an AppImage/deb package exists. Manual CI jobs now post a pending
 commit status when they start, so every qualification job shows beside its exact commit.
 Dependencies move to RMCP 3.10.0, rusqlite 0.42.0 (bundled SQLite 3.54.1) and ZIP 9.5.1; the RMCP
 `LICENSE` bytes are unchanged and the notices record the new crate checksum and source revision.

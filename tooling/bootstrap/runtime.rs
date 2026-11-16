@@ -198,11 +198,7 @@ impl Config {
         let path = path
             .to_str()
             .ok_or_else(|| fail("Hash input path must be Unicode."))?;
-        let output = if cfg!(target_os = "macos") {
-            self.capture("shasum", &["-a", "256", path], 4096)?
-        } else {
-            self.capture("sha256sum", &[path], 4096)?
-        };
+        let output = self.capture("sha256sum", &[path], 4096)?;
         checksum_output(&output)
     }
     pub fn toolchain(&self) -> io::Result<()> {

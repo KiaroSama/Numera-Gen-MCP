@@ -32,7 +32,7 @@ pub const ASSETS: &[&str] = &[
     "docs/WINDOWS-WSL.md",
     "docs/COMPATIBILITY.md",
     "docs/IMAGE-EDITING.md",
-    "docs/LINUX-MACOS.md",
+    "docs/LINUX.md",
     "docs/REQUIREMENTS.md",
     "docs/REFERENCES.md",
     "SECURITY.md",
@@ -62,8 +62,6 @@ pub fn target(value: &str) -> io::Result<()> {
         "aarch64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
     ]
     .contains(&value)
     {

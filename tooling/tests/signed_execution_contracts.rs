@@ -159,8 +159,6 @@ fn signed_matrix_requires_every_native_target_and_the_same_current_execution_sou
         identity["target"] = json!(target);
         identity["platform"] = json!(if target.contains("windows") {
             "win32"
-        } else if target.contains("apple") {
-            "darwin"
         } else {
             "linux"
         });

@@ -12,7 +12,7 @@ Current commands below use Numera Gen MCP's `numera-gen-mcp` binary. The immutab
 
 ## Start
 
-From the extracted installation root on Linux/macOS:
+From the extracted installation root on Linux:
 
 ```bash
 ./bin/numera-gen-mcp http
@@ -82,6 +82,6 @@ cancels local waiting but proves no upstream cancellation or refund. Recover exi
 with `get_job`, never resubmit uncertain paid work. Original image bytes and the existing journal
 remain shared across transports.
 
-Hosted Windows/Linux/macOS native matrices must exercise actual HTTP SDK clients, authentication,
+Hosted Windows/Linux native matrices must exercise actual HTTP SDK clients, authentication,
 Host/Origin rejection, ports/collisions, protocol/session handling, menu flows and shutdown. New
 fixtures remain unverified until their exact-SHA CI results pass. No Rust build is required locally.

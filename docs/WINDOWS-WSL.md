@@ -1,11 +1,11 @@
-# Native Windows, Linux and macOS
+# Native Windows and Linux
 
 Ready native archives are the installation target. At `7601b53`, qualification run `43571048279`,
 attempt 1 (eight jobs) and protected signing run `43592102769`, attempt 1 (six native targets plus the
 signed collector) both passed; together they cover the complete matrix.
 [0.3.0 verification](releases/0.3.0.md) separates verified artifacts from actual owner-host activation.
 
-Windows uses a native MSVC `.exe`; Linux and macOS use their native executables. Choose the matching
+Windows uses a native MSVC `.exe`; Linux uses its native executable. macOS support was removed in 0.4.0. Choose the matching
 x86_64 or ARM64 archive from the verified Release. Normal users do not install Node/npm/Rust/Python or
 build locally. The binary does not bundle ComfyUI, GPU drivers, models/checkpoints or custom nodes.
 
@@ -15,7 +15,7 @@ inside the installation root, never a global fallback. Preserve all private conf
 receipts/journals and migration snapshots during updates.
 
 Use native path syntax per host. Existing Windows DPAPI secret files require the same Windows user;
-DPAPI files cannot be decrypted on Linux/macOS. POSIX private secret files require owner-only permissions.
+DPAPI files cannot be decrypted on Linux. POSIX private secret files require owner-only permissions.
 Windows supports declared absolute local/UNC inputs and rejects device paths/alternate data streams;
 POSIX paths use allowed input roots and reject resolved escapes. Actual OS-specific behavior belongs to
 native CI fixtures, not an SDK-only or cross-compilation claim.

@@ -4,12 +4,12 @@
 
 <img src="docs/assets/logo.png" alt="Numera Gen MCP logo" width="240" />
 
-[![CI runs on GitHub Actions across seven native jobs](https://img.shields.io/badge/CI-GitHub%20Actions-2563eb)](.github/workflows/ci.yml)
+[![CI runs on GitHub Actions across four native jobs plus coverage](https://img.shields.io/badge/CI-GitHub%20Actions-2563eb)](.github/workflows/ci.yml)
 [![License GPL-3.0-or-later, the first-party grant](https://img.shields.io/badge/license-GPL--3.0--or--later-16a34a)](LICENSE)
 [![Latest release v0.3.0](https://img.shields.io/badge/release-v0.3.0-ea580c)](CHANGELOG.md)
 [![Measured CI coverage: 85.3% regions and 80.7% branches](https://img.shields.io/badge/coverage-regions%2085.3%25%20%7C%20branches%2080.7%25-059669)](docs/testing)
 [![Rust 1.99.1 pinned toolchain](https://img.shields.io/badge/rust-1.99.1-8b5cf6)](rust-toolchain.toml)
-[![Runs on Windows, macOS and Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-0891b2)](.github/workflows/ci.yml)
+[![Runs on Windows and Linux](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-0891b2)](.github/workflows/ci.yml)
 [![Distributed as a native binary](https://img.shields.io/badge/distribution-native%20binary-dc2626)](#installation-and-setup)
 [![Documentation in Markdown](https://img.shields.io/badge/docs-Markdown-4f46e5)](docs/CONFIGURATION.md)
 [![Tracked repository tree is 13.8 MB](https://img.shields.io/badge/repo%20size-13.8%20MB-ca8a04)](.)
@@ -39,7 +39,7 @@ an installable final release.
 The runtime, developer utility, CI driver and maintained tests are Rust. All 51 replaced
 Python/JavaScript/PowerShell source files have been removed; historical oracle archives remain
 immutable test data. One explicit manual qualification runs tests, Clippy, formatting, release
-builds and extracted-binary checks on Windows, Linux and macOS, each on x64 and ARM64, plus
+builds and extracted-binary checks on Windows and Linux, each on x64 and ARM64, plus
 production coverage and the authenticated execution collector. The commit's check list links to
 those actual jobs; source preparation is separate and never a test pass. Main-only signing promotes
 the same qualified binaries without rerunning the heavy suites. The workflow badge is an aggregate,
@@ -101,8 +101,6 @@ Choose the archive for your actual OS/CPU:
 | Windows | ARM64 | `numera-gen-mcp-0.3.0-aarch64-pc-windows-msvc.zip` |
 | Linux GNU | Intel/AMD 64-bit | `numera-gen-mcp-0.3.0-x86_64-unknown-linux-gnu.tar.gz` |
 | Linux GNU | ARM64 | `numera-gen-mcp-0.3.0-aarch64-unknown-linux-gnu.tar.gz` |
-| macOS | Intel | `numera-gen-mcp-0.3.0-x86_64-apple-darwin.tar.gz` |
-| macOS | Apple Silicon | `numera-gen-mcp-0.3.0-aarch64-apple-darwin.tar.gz` |
 
 Published compatibility and minimum OS versions must match that Release's actual native CI evidence.
 A Linux binary is not proof that Claude Desktop itself supports Linux.
@@ -131,26 +129,20 @@ Linux, from the download folder:
 sha256sum -c numera-gen-mcp-0.3.0-x86_64-unknown-linux-gnu.tar.gz.sha256
 ```
 
-macOS, replacing the archive filename for Intel if necessary:
-
-```bash
-shasum -a 256 -c numera-gen-mcp-0.3.0-aarch64-apple-darwin.tar.gz.sha256
-```
-
 Extract into a **new** directory using your OS archive extractor. Archives contain one top-level
 `numera-gen-mcp-0.3.0-<target>/` folder. That folder is the **installation root**: it contains
 `bin/`, `.env.example`, `docs/` and `manifest.json`. Open a terminal there for the relative commands
 below. You may give that extracted folder a stable installation name before registering it, for
 example `C:/tools/numera-gen-mcp` or `$HOME/tools/numera-gen-mcp`; keep its contents together.
 
-On Linux/macOS, `tar -xzf ARCHIVE.tar.gz` preserves executable permissions. Confirm the binary before
+On Linux, `tar -xzf ARCHIVE.tar.gz` preserves executable permissions. Confirm the binary before
 adding credentials (Windows PowerShell, from the installation root):
 
 ```powershell
 & './bin/numera-gen-mcp.exe' --version
 ```
 
-Linux/macOS:
+Linux:
 
 ```bash
 ./bin/numera-gen-mcp --version
@@ -175,7 +167,7 @@ Windows PowerShell:
 [IO.File]::Copy((Join-Path $PWD '.env.example'), (Join-Path $PWD '.env'), $false)
 ```
 
-Linux/macOS:
+Linux:
 
 ```bash
 (set -o noclobber; umask 077; cat .env.example > .env)
@@ -213,7 +205,7 @@ Native Gemini/Gemini Interactions/OpenRouter Images profiles are also available;
 not guessed from an endpoint/model ID.
 
 Outputs/state/logs/inputs sit beside the selected config. This plaintext-key file is ignored and
-excluded from packages: never share, sync or commit it. On Linux/macOS restrict access:
+excluded from packages: never share, sync or commit it. On Linux restrict access:
 
 ```bash
 chmod 600 .env
@@ -329,15 +321,14 @@ remain supported. If private configuration is elsewhere, add only this entry's `
 }
 ```
 
-Never put the API key in host settings or arguments. On macOS use an actual absolute POSIX executable
-path, such as `/Users/your-name/tools/numera-gen-mcp/bin/numera-gen-mcp`; `args` stays `["bridge"]`.
+Never put the API key in host settings or arguments; `args` stays `["bridge"]`.
 Use Desktop's Edit Config to locate its actual settings, fully quit/reopen the app and call
 `health_check` plus `list_connections` to confirm the selected configuration.
 [Claude clients](docs/CLAUDE.md) has the registration and reconnect details.
 
 #### Claude Code
 
-Linux/macOS, from the extracted installation root:
+Linux, from the extracted installation root:
 
 ```bash
 claude mcp add --transport stdio --scope user numera-gen-mcp -- "$PWD/bin/numera-gen-mcp" bridge
@@ -371,7 +362,7 @@ tool_timeout_sec = 360
 env = { NUMERA_CONFIG = "C:/tools/numera-gen-mcp/.env" }
 ```
 
-On Linux/macOS use actual absolute POSIX paths. The alternative CLI command below adds the stdio
+On Linux use actual absolute POSIX paths. The alternative CLI command below adds the stdio
 entry; set `tool_timeout_sec = 360` in its resulting table afterward, then restart/reconnect Codex:
 
 ```bash
@@ -398,7 +389,7 @@ These instructions are not registration performed by this repository task.
 
 #### Current-name replacement (0.3.0)
 
-The new build is `numera-gen-mcp.exe` on Windows and `numera-gen-mcp` on Linux/macOS; its exact
+The new build is `numera-gen-mcp.exe` on Windows and `numera-gen-mcp` on Linux; its exact
 host entry is `numera-gen-mcp`. **Do not switch until that build is signed, qualified and installed.**
 The commands above use the real 0.3.0 executable. An old 0.2.0 binary cannot be upgraded by renaming it.
 After the qualified new installation is verified, replace only the selected Numera entry:
@@ -437,7 +428,7 @@ PowerShell, replacing the absolute config path:
 & './bin/numera-gen-mcp.exe' readiness --config 'C:/tools/numera-gen-mcp/.env'
 ```
 
-Linux/macOS:
+Linux:
 
 ```bash
 ./bin/numera-gen-mcp readiness --config "$PWD/.env"
@@ -609,7 +600,7 @@ silently resizes output to match. [Dimension selection details](docs/CONFIGURATI
 ## Documentation
 
 [Configuration](docs/CONFIGURATION.md) · [OmniRoute](docs/OMNIROUTE.md) · [9router](docs/9ROUTER.md) ·
-[Claude](docs/CLAUDE.md) · [Codex](docs/CODEX.md) · [Windows/WSL](docs/WINDOWS-WSL.md) · [Linux/macOS](docs/LINUX-MACOS.md) ·
+[Claude](docs/CLAUDE.md) · [Codex](docs/CODEX.md) · [Windows/WSL](docs/WINDOWS-WSL.md) · [Linux](docs/LINUX.md) ·
 [Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) · [Requirements](docs/REQUIREMENTS.md) ·
 [References](docs/REFERENCES.md)
 

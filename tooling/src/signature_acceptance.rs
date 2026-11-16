@@ -75,7 +75,6 @@ fn command(context: &Context, program: &Path) -> Command {
 }
 
 fn completed(context: &Context, command: &mut Command, reject: bool) -> io::Result<Vec<u8>> {
-    let codesign = command.get_program() == std::ffi::OsStr::new("/usr/bin/codesign");
     let outcome = context.outcome(command, 30000, 15000, 1024 * 1024)?;
     if reject {
         require_rejection(
@@ -84,9 +83,6 @@ fn completed(context: &Context, command: &mut Command, reject: bool) -> io::Resu
             outcome.cleanup_verified,
         )?;
     } else if outcome.code != 0 || outcome.reason.is_some() || !outcome.cleanup_verified {
-        if codesign && outcome.code != 0 && outcome.reason.is_none() && outcome.cleanup_verified {
-            return Err(crate::signing::codesign_failure(&outcome.stderr));
-        }
         return Err(fail("Required signature acceptance command failed."));
     }
     Ok(outcome.stdout)
@@ -110,26 +106,6 @@ fn rejected<T>(result: numera_gen_mcp::error::Result<T>) -> io::Result<()> {
         return Err(fail("Invalid native signature was accepted."));
     }
     Ok(())
-}
-
-#[cfg(target_os = "macos")]
-fn keychains(context: &Context) -> io::Result<[Vec<u8>; 2]> {
-    Ok([
-        completed(
-            context,
-            command(context, Path::new("/usr/bin/security")).args(["list-keychains", "-d", "user"]),
-            false,
-        )?,
-        completed(
-            context,
-            command(context, Path::new("/usr/bin/security")).args([
-                "default-keychain",
-                "-d",
-                "user",
-            ]),
-            false,
-        )?,
-    ])
 }
 
 fn fixture_identity(
@@ -313,7 +289,7 @@ pub fn verify(context: &Context, target: &str) -> io::Result<()> {
             *byte ^= 1;
             let altered = scratch.path.join(format!("tampered-{filename}"));
             write_new(&altered, &tampered)?;
-            if target.contains("windows") || target.contains("apple") {
+            if target.contains("windows") {
                 rejected(artifact::verify_native(&altered))?;
             } else {
                 let mut tree = entries.clone();
@@ -370,49 +346,6 @@ pub fn verify(context: &Context, target: &str) -> io::Result<()> {
                     false,
                 )?;
                 rejected(artifact::verify_native(&wrong))?;
-            } else if target.contains("apple") {
-                #[cfg(target_os = "macos")]
-                {
-                    write_new(&unsigned, &read_regular(&original, MAX_BYTES)?)?;
-                    completed(
-                        context,
-                        command(context, Path::new("/usr/bin/codesign"))
-                            .arg("--remove-signature")
-                            .arg(&unsigned),
-                        false,
-                    )?;
-                    rejected(artifact::verify_native(&unsigned))?;
-                    let certificate = completed(
-                        context,
-                        command(context, &openssl)
-                            .args(["x509", "-in"])
-                            .arg(&cert)
-                            .args(["-outform", "DER"]),
-                        false,
-                    )?;
-                    let pfx = Secret(read_regular(&scratch.path.join("wrong.pfx"), 32768)?);
-                    let before = keychains(context)?;
-                    let signed = crate::signing_macos::sign(
-                        &pfx.0,
-                        &password.0,
-                        &sha(&certificate),
-                        &[unsigned.as_path()],
-                    );
-                    if keychains(context)? != before {
-                        return Err(fail("Wrong-signer fixture changed keychain preferences."));
-                    }
-                    signed?;
-                    completed(
-                        context,
-                        command(context, Path::new("/usr/bin/codesign"))
-                            .args(["--verify", "--strict"])
-                            .arg(&unsigned),
-                        false,
-                    )?;
-                    rejected(artifact::verify_native(&unsigned))?;
-                }
-                #[cfg(not(target_os = "macos"))]
-                return Err(fail("Native macOS fixture signer unavailable."));
             }
         }
         let _ = (&cert, &password);

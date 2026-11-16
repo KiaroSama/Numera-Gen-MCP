@@ -211,11 +211,7 @@ pub fn stable(context: &Context) -> io::Result<()> {
         ]),
         "release",
         900000,
-        if cfg!(target_os = "macos") {
-            360000
-        } else {
-            180000
-        },
+        180000,
         &mut failures,
     );
     let executable = context.relative(if cfg!(windows) {

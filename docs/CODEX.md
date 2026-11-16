@@ -22,7 +22,7 @@ tool_timeout_sec = 360
 env = { NUMERA_CONFIG = "C:/tools/numera-gen-mcp/.env", TEMP = "C:/tools/numera-gen-mcp/.runtime/temp", TMP = "C:/tools/numera-gen-mcp/.runtime/temp", TMPDIR = "C:/tools/numera-gen-mcp/.runtime/temp" }
 ```
 
-The paths are examples. Linux/macOS use the actual absolute POSIX binary and configuration paths.
+The paths are examples. Linux use the actual absolute POSIX binary and configuration paths.
 `NUMERA_CONFIG` can be omitted when the private `.env` is in the installation root (parent of `bin/`).
 Temporary files and cache are `<installation-root>/.runtime/temp` and `.runtime/cache`; changing
 `NUMERA_CONFIG` does not move them. Keep the executable inside the owning project's `bin/` and adapt
@@ -31,7 +31,7 @@ is a 0.3.0 candidate until its own qualification/release; do not rename a signed
 Never put an API key in the table. Restart/reconnect after command changes, then call `health_check`,
 `list_connections` and `list_models`. Settings reload does not authorize or resubmit an image.
 
-CLI registration from the extracted Linux/macOS installation root:
+CLI registration from the extracted Linux installation root:
 
 ```bash
 codex mcp add numera-gen-mcp -- "$PWD/bin/numera-gen-mcp" bridge

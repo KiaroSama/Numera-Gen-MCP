@@ -15,7 +15,7 @@ tooling suites. No existing Rust test has been removed. Tests still check provid
 real SDK stdio/HTTP sessions, persistence/recovery, bounded child processes, packaging and signatures.
 Production coverage floors remain 85% regions and 80% branches.
 
-A manual `qualify` dispatch checks out the selected branch's exact commit. All six Windows/Linux/macOS
+A manual `qualify` dispatch checks out the selected branch's exact commit. All four Windows/Linux
 x64/ARM64 contexts run quality gates, tests, release builds, dependency notice collection and
 extracted-binary SDK checks. The coverage job and authenticated execution collector complete the test
 batch. Source preparation is not qualification. Signing requires the protected environment and a

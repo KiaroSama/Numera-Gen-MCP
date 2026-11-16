@@ -22,10 +22,8 @@ fn bootstrap_policy_refuses_unknown_targets_flags_and_preparation_privilege_chan
         host_target("linux", "x86_64").unwrap(),
         "x86_64-unknown-linux-gnu"
     );
-    assert_eq!(
-        host_target("macos", "aarch64").unwrap(),
-        "aarch64-apple-darwin"
-    );
+    assert!(host_target("macos", "aarch64").is_err());
+    assert!(host_target("macos", "x86_64").is_err());
     assert_eq!(
         host_target("windows", "aarch64").unwrap(),
         "aarch64-pc-windows-msvc"
@@ -84,19 +82,20 @@ fn initial_hosted_build_uses_the_qualified_native_owner_in_every_context() {
         "aarch64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
     ] {
         assert!(action.contains(target));
         assert!(policy.contains(target));
+    }
+    for removed in ["apple-darwin", "macOS", "shasum"] {
+        assert!(!action.contains(removed));
+        assert!(!policy.contains(removed));
+        assert!(!runtime.contains(removed));
     }
     for digest in [
         "0128674d9c1a0aad8eb111dc4e45e7def89119f22369089d73729905a315e658",
         "e132f203a88251f3fa4e22a2bdfd7a25261453bc95af55a39f056c364ac0f8e0",
         "51a089b26e3bf9cdbf0631a56ee4644d96babc3ff3f1e0c1dab8948c53bbd56d",
         "62a07c39d57a18afe9dd144c722300b966b14655141655c60d300b89f5e7ad66",
-        "e2143157034ae30d2dbe6954e30fd76c8036c412a3b7407db83441e53b484d00",
-        "cb26ee662e19fbc12f33209e988a55817fb7dcbe0d94a1836c3475b8dc55cdc7",
     ] {
         assert!(action.contains(digest));
     }

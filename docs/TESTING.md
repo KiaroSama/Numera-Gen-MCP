@@ -3,7 +3,8 @@
 ## Current Rust workspace
 
 The manual `qualify` run checks the exact selected commit: formatting, strict Clippy, every discovered
-Rust harness, release builds and actual stdio/HTTP SDK checks on Windows, Linux and macOS (x64 and ARM64).
+Rust harness, release builds and actual stdio/HTTP SDK checks on Windows and Linux (x64 and ARM64).
+Version 0.4.0 removes macOS; macOS lines below are historical records.
 The original 50 suites / 470 cases and unit/integration/contract categories remain in the immutable
 parity inventory. None is dropped to accommodate Rust. All 51 former executable tooling files are
 replaced by Rust seams and scenario tests. Production coverage still requires 85% regions and

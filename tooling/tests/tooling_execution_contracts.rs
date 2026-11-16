@@ -14,7 +14,7 @@ fn original_tooling_dispositions_bind_current_source_and_named_harnesses_without
     for target in [
         "x86_64-unknown-linux-gnu",
         "x86_64-pc-windows-msvc",
-        "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
     ] {
         let fixture = Fixture::new(target);
         let result = fixture.bind().unwrap();

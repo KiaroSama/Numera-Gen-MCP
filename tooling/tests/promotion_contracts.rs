@@ -81,8 +81,6 @@ fn promoted_matrix_preserves_all_seven_original_identities_and_false_qualificati
         });
         current["platform"] = json!(if target.contains("windows") {
             "win32"
-        } else if target.contains("apple") {
-            "darwin"
         } else {
             "linux"
         });
@@ -92,7 +90,7 @@ fn promoted_matrix_preserves_all_seven_original_identities_and_false_qualificati
             "tooling_harness_execution":{"sdk_tested_binary_sha256":sha(b"original binary")}}),
         );
     }
-    let matrix = json!({"schema_version":1,"component":"native-seven-context-execution",
+    let matrix = json!({"schema_version":1,"component":"native-five-context-execution",
         "source_sha":"a".repeat(40),"run_id":7,"run_attempt":2,"cases":470,"suites":50,
         "contexts":contexts,"current_named_execution_verified":true,
         "current_assertion_review_verified":true,"semantic_parity_claimed":false,

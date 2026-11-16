@@ -52,8 +52,6 @@ pub fn target() -> &'static str {
         ("aarch64", "windows") => "aarch64-pc-windows-msvc",
         ("x86_64", "linux") => "x86_64-unknown-linux-gnu",
         ("aarch64", "linux") => "aarch64-unknown-linux-gnu",
-        ("x86_64", "macos") => "x86_64-apple-darwin",
-        ("aarch64", "macos") => "aarch64-apple-darwin",
         _ => "unsupported",
     }
 }
@@ -146,9 +144,7 @@ fn valid_version(version: &str) -> bool {
 pub fn verify_native(path: &Path) -> Result<()> {
     #[cfg(windows)]
     super::signature_windows::verify(path)?;
-    #[cfg(target_os = "macos")]
-    super::signature_macos::verify(path)?;
-    #[cfg(not(any(windows, target_os = "macos")))]
+    #[cfg(not(windows))]
     let _ = path;
     Ok(())
 }

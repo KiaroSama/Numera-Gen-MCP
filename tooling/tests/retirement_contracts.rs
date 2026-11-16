@@ -218,13 +218,13 @@ fn qualified(source: &str, run: u64) -> (Value, Value, Vec<u8>, Value, Vec<u8>) 
     let qualification = json!({"schema_version":1,"component":"native-current-qualification","source_sha":source,
         "qualification_run_id":run-1,"qualification_run_attempt":1,"signing_identity":identity,
         "source_review_sha256":"1".repeat(64),"tooling_source_review_sha256":"2".repeat(64),
-        "runtime_cases":470,"runtime_suites":50,"native_contexts":6,"coverage_contexts":1,"signed_contexts":6,
+        "runtime_cases":470,"runtime_suites":50,"native_contexts":4,"coverage_contexts":1,"signed_contexts":4,
         "coverage":{"report_sha256":"3".repeat(64),"metrics":[
             {"metric":"regions","count":100,"covered":85,"percent":85.0,"floor":85.0},
             {"metric":"branches","count":100,"covered":80,"percent":80.0,"floor":80.0}]},
         "reviewer":"primary","independent_review_claimed":false,"qualification_verified":true,
         "retirement_authorized":false,"owner_host_changed":false,"original_evidence_rewritten":false});
-    let signed = json!({"schema_version":1,"component":"native-signed-six-context-execution","source_sha":source,
+    let signed = json!({"schema_version":1,"component":"native-signed-four-context-execution","source_sha":source,
         "run_id":run,"run_attempt":1,"contexts":signed,"original_execution_identity":{"source_sha":source,"run_id":run-1,"run_attempt":1},
         "current_signed_stage_execution_verified":true,
         "semantic_parity_claimed":false,"qualification_verified":false,"retirement_authorized":false,"original_evidence_rewritten":false});

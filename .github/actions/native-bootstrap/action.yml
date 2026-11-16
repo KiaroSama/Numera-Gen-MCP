@@ -17,7 +17,7 @@ runs:
       if: >-
         github.repository != 'KiaroSama/Numera-Gen-MCP' ||
         github.event_name != 'workflow_dispatch' ||
-        fromJSON('{"Windows-X64":"x86_64-pc-windows-msvc","Windows-ARM64":"aarch64-pc-windows-msvc","Linux-X64":"x86_64-unknown-linux-gnu","Linux-ARM64":"aarch64-unknown-linux-gnu","macOS-X64":"x86_64-apple-darwin","macOS-ARM64":"aarch64-apple-darwin"}')[format('{0}-{1}', runner.os, runner.arch)] != inputs.target ||
+        fromJSON('{"Windows-X64":"x86_64-pc-windows-msvc","Windows-ARM64":"aarch64-pc-windows-msvc","Linux-X64":"x86_64-unknown-linux-gnu","Linux-ARM64":"aarch64-unknown-linux-gnu"}')[format('{0}-{1}', runner.os, runner.arch)] != inputs.target ||
         (inputs.coverage != 'true' && inputs.coverage != 'false') ||
         (inputs.build-task != 'true' && inputs.build-task != 'false') ||
         (inputs.build-task == 'false' && (github.job != 'source-preparation' || env.NUMERA_CI_OPERATION != 'source-preparation' || inputs.coverage != 'false')) ||
@@ -41,17 +41,10 @@ runs:
         --max-filesize 16777216 --noproxy '*' --proxy '' --output .ci-work/bootstrap/owner.archive
         "https://github.com/KiaroSama/Numera-Gen-MCP/releases/download/v0.2.0/$BOOTSTRAP_PREFIX.$BOOTSTRAP_SUFFIX"
     - name: Authenticate immutable owner on Windows and Linux
-      if: runner.os != 'macOS'
       shell: bash
       env:
         BOOTSTRAP_SHA256: ${{ fromJSON('{"x86_64-pc-windows-msvc":"0128674d9c1a0aad8eb111dc4e45e7def89119f22369089d73729905a315e658","aarch64-pc-windows-msvc":"e132f203a88251f3fa4e22a2bdfd7a25261453bc95af55a39f056c364ac0f8e0","x86_64-unknown-linux-gnu":"51a089b26e3bf9cdbf0631a56ee4644d96babc3ff3f1e0c1dab8948c53bbd56d","aarch64-unknown-linux-gnu":"62a07c39d57a18afe9dd144c722300b966b14655141655c60d300b89f5e7ad66"}')[inputs.target] }}
       run: printf '%s  %s\n' "$BOOTSTRAP_SHA256" .ci-work/bootstrap/owner.archive | sha256sum -c -
-    - name: Authenticate immutable owner on macOS
-      if: runner.os == 'macOS'
-      shell: bash
-      env:
-        BOOTSTRAP_SHA256: ${{ fromJSON('{"x86_64-apple-darwin":"e2143157034ae30d2dbe6954e30fd76c8036c412a3b7407db83441e53b484d00","aarch64-apple-darwin":"cb26ee662e19fbc12f33209e988a55817fb7dcbe0d94a1836c3475b8dc55cdc7"}')[inputs.target] }}
-      run: printf '%s  %s\n' "$BOOTSTRAP_SHA256" .ci-work/bootstrap/owner.archive | shasum -a 256 -c -
     - name: Extract only authenticated Windows developer owner
       if: runner.os == 'Windows'
       shell: bash
@@ -110,5 +103,4 @@ runs:
         BOOTSTRAP_TARGET: ${{ inputs.target }}
         BOOTSTRAP_COVERAGE: ${{ inputs.coverage }}
         BOOTSTRAP_BUILD_TASK: ${{ inputs.build-task }}
-        BOOTSTRAP_IDLE: ${{ runner.os == 'macOS' && '360000' || '180000' }}
-      run: '"$NUMERA_BOOTSTRAP_OWNER" bounded 900000 "$BOOTSTRAP_IDLE" --exec "$NUMERA_BOOTSTRAP_DRIVER" build-task'
+      run: '"$NUMERA_BOOTSTRAP_OWNER" bounded 900000 180000 --exec "$NUMERA_BOOTSTRAP_DRIVER" build-task'

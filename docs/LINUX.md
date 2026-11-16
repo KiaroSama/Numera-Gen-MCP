@@ -1,6 +1,7 @@
-# Linux and macOS setup
+# Linux setup
 
-The native target is a ready executable, not a source-build prerequisite. At `7601b53`,
+The native target is a ready executable, not a source-build prerequisite. Version 0.4.0 removes
+macOS support; Linux and Windows are the supported platforms. At `7601b53`,
 qualification run `43571048279`, attempt 1 (eight jobs) and protected signing run `43592102769`,
 attempt 1 (six native targets plus the signed collector) both passed, which together covers the
 complete matrix. [0.3.0 verification](releases/0.3.0.md) records artifacts and trust limits; install
@@ -11,7 +12,7 @@ The immutable historical 0.2.0 archives still contain `numera-image-gen-mcp`; su
 filename when using those signed assets. Migrate an old Numera host entry explicitly with a backup;
 do not automatically remove it or run both entries against the same state.
 
-1. Download the matching Linux/macOS x86_64 or ARM64 archive and `.sha256` from this repository's
+1. Download the matching Linux x86_64 or ARM64 archive and `.sha256` from this repository's
    Release. Verify the checksum, then extract into a writable installation folder.
 2. Copy `.env.example` to `.env` in the extracted root (parent of `bin/`) only if no private config exists.
    Set API_ENDPOINT, API_KEY and exact MODEL_1_ID/MODEL_1_NAME; preserve existing data/config.
@@ -53,8 +54,7 @@ defaults stay beside the selected private config. Preserve originals, receipts/j
 runtime until the owner has switched configuration and verified the actual native connection; then
 remove only inspected obsolete project-local dependencies/build/temp/cache, never global caches.
 
-Optional native `menu` provides direct HTTP start, port changes and connection guidance on both
-Linux and macOS. `http` defaults to `127.0.0.1:1969/mcp`, requires a private local Bearer token, and
+Optional native `menu` provides direct HTTP start, port changes and connection guidance on Linux. `http` defaults to `127.0.0.1:1969/mcp`, requires a private local Bearer token, and
 runs in foreground; Ctrl+C stops it. It is separate from automatic stdio `bridge` startup.
 [HTTP/menu details](HTTP.md) describe verified native transports and safe client authentication;
 actual owner reconnection remains separate from signed artifact verification.

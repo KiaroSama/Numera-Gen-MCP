@@ -78,7 +78,7 @@ fn only_manual_branch_source_runs_qualify_without_cancelling_original_evidence()
 }
 
 #[test]
-fn qualification_preserves_six_native_targets_coverage_and_original_report_collector() {
+fn qualification_preserves_four_native_targets_coverage_and_original_report_collector() {
     let workflow = source(".github/workflows/ci.yml");
     let native = block(&workflow, "native", 2);
     let signing = block(&workflow, "signing", 2);
@@ -87,8 +87,6 @@ fn qualification_preserves_six_native_targets_coverage_and_original_report_colle
         ("windows-11-arm", "aarch64-pc-windows-msvc"),
         ("ubuntu-latest", "x86_64-unknown-linux-gnu"),
         ("ubuntu-24.04-arm", "aarch64-unknown-linux-gnu"),
-        ("macos-15-intel", "x86_64-apple-darwin"),
-        ("macos-latest", "aarch64-apple-darwin"),
     ];
     for job in [native, signing] {
         let matrix = compact(block(job, "matrix", 6));

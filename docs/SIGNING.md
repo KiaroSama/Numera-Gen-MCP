@@ -66,10 +66,10 @@ No command creates an OS trust-store entry, changes a host registration or uploa
 
 ## What the signature must prove
 
-Windows executables require embedded Authenticode signatures; macOS executables require genuine
-certificate-backed Mach-O signatures. An ad-hoc Apple signature is not an owner signature. Linux
-standalone binaries use authenticated detached signatures or a signed manifest covering their exact
-bytes. A detached manifest supplements, never replaces, supported Windows/macOS embedded signatures.
+Windows executables require embedded Authenticode signatures. Linux standalone binaries use
+authenticated detached signatures or a signed manifest covering their exact bytes. A detached
+manifest supplements, never replaces, the Windows embedded signature. Version 0.4.0 removes macOS
+support, so no Mach-O signature is produced or required.
 Both the MCP executable and optional developer executable must satisfy their target contract.
 Windows verification checks Authenticode file integrity separately before evaluating the pinned
 certificate chain. Only the public-root trust error for the subsequently pinned self-signed
@@ -117,15 +117,9 @@ artifacts. Keep the existing encrypted exportable identity in access-restricted 
 retain its recovery information. Never upload a whole credential registry or private custody folder.
 Only exact separately authorized signing inputs may enter a reviewed protected GitHub environment.
 
-The current Rust candidate's macOS signer imports the selected PKCS12 identity into process memory
-only, using Apple's `kSecImportToMemoryOnly` on macOS 15 or newer. It never imports a keychain item
-or changes keychain search/default preferences or trust. The actual imported certificate must match
-the pinned DER fingerprint before signing. `tooling/src/signing_macos.rs` calls Apple's native signing
-service through the portable ownership choreography in `apple_signer.rs`; no Python child or
-interpreter fallback is used. Password bytes stay in memory at that boundary, never in process arguments.
-All owned CoreFoundation references are released on success or failure. Missing memory-only support
-fails before import; no persistence fallback exists. Default/search preferences are independently
-compared before and after signing. This Rust implementation still needs its own hosted qualification.
+Version 0.4.0 removes the macOS runtime signer (`tooling/src/signing_macos.rs`) together with macOS
+support. The portable memory-only ownership choreography in `apple_signer.rs` stays only as the
+fake-ABI contract that the historical macOS signing dispositions reference; no release uses it.
 The historical signed 0.2.0 release used the isolated Python helper and protected stdin; its verified
 results do not qualify the new Rust signer.
 
