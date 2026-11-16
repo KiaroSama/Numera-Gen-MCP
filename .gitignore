@@ -23,6 +23,7 @@
 /outputs/
 /state/
 /logs/
+/tooling/logs/
 /.scratch/
 /.ci-work/
 /.ci-cache/
