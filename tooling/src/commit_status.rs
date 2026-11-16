@@ -66,7 +66,9 @@ pub fn publish(context: &Context, outcome: &str, target: &str) -> io::Result<()>
         &std::env::var("GITHUB_RUN_ATTEMPT").unwrap_or_default(),
     )?;
     let endpoint = format!("repos/KiaroSama/Numera-Gen-MCP/statuses/{sha}");
-    context.capture(
+    // `gh api` prints nothing until the response arrives, so the idle bound equals the wall bound;
+    // a cold start on the emulated Windows ARM runner exceeded a shorter idle bound.
+    let posted = context.capture(
         context
             .command("gh")
             .args([
@@ -84,9 +86,23 @@ pub fn publish(context: &Context, outcome: &str, target: &str) -> io::Result<()>
             .env("GH_PROMPT_DISABLED", "1")
             .env("GH_PAGER", "cat")
             .env_remove("GH_DEBUG"),
-        30000,
-        15000,
+        45000,
+        45000,
         65536,
-    )?;
-    Ok(())
+    );
+    match posted {
+        Ok(_) => Ok(()),
+        // The pending announcement is advisory: the job's final always() status still binds, so a
+        // failed announcement must not fail qualification. Final results stay fatal.
+        Err(_) if outcome == "started" => {
+            context.logger.log(
+                "WARNING",
+                "task",
+                "Pending commit status was not posted; the final status still binds.",
+                numera_gen_mcp::compat::value::json!({"context": label}),
+            );
+            Ok(())
+        }
+        Err(error) => Err(error),
+    }
 }
