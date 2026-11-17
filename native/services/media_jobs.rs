@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     compat::value::{Value, json},
-    config::snapshot_credentials,
+    config::{PinnedConnection, snapshot_credentials},
     error::{NumeraError, Result},
     http::api::{Body, Operation},
     jobs::Receipt,
@@ -35,6 +35,17 @@ pub async fn get_until(
     refresh: bool,
     host_cancel: &CancellationToken,
     deadline: tokio::time::Instant,
+) -> Result<Receipt> {
+    get_until_pinned(generation, id, refresh, host_cancel, deadline, None).await
+}
+
+pub(super) async fn get_until_pinned(
+    generation: &Generation,
+    id: &str,
+    refresh: bool,
+    host_cancel: &CancellationToken,
+    deadline: tokio::time::Instant,
+    inherited: Option<&PinnedConnection>,
 ) -> Result<Receipt> {
     if !refresh {
         return locked(&generation.store)?.get(id);
@@ -68,12 +79,17 @@ pub async fn get_until(
                     connection["requestTimeoutMs"].as_u64().unwrap_or(300000),
                 ),
         );
-        let pinned = tokio::time::timeout_at(
-            deadline,
-            snapshot_credentials(&connection, &generation.env, &generation.runtime),
-        )
-        .await
-        .map_err(|_| media_wire::deadline_error())??;
+        // Keep the submitting operation's snapshot throughout its waiter. Independent refreshes
+        // still take fresh credentials and must match the durable destination/account identity.
+        let pinned = match inherited {
+            Some(pinned) => pinned.clone(),
+            None => tokio::time::timeout_at(
+                deadline,
+                snapshot_credentials(&connection, &generation.env, &generation.runtime),
+            )
+            .await
+            .map_err(|_| media_wire::deadline_error())??,
+        };
         if connection_identity(name, &pinned)? != locked(&generation.store)?.identity(id)? {
             return Err(NumeraError::new(
                 "permission_denied",

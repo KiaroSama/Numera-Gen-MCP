@@ -1,3 +1,5 @@
+#[path = "media_acceptance/audit.rs"]
+mod audit;
 #[allow(dead_code)]
 #[path = "sdk_acceptance/cleanup.rs"]
 mod cleanup;

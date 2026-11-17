@@ -205,3 +205,11 @@ https://github.com/Comfy-Org/ComfyUI/blob/5c460d8172fe30761ff67c0df3d5643bb74e0d
 A true cancellation boolean confirms dispatch only, not completion/refund. SDK2.3.1 patch release
 https://github.com/modelcontextprotocol/typescript-sdk/releases/tag/v2.3.1 retains stdio contracts.
 No third-party implementation copied.
+
+Media audit, checked 2026-11-18:
+https://fal.ai/models/fal-ai/hunyuan3d-v3/text-to-3d/api documents the optional GLB/FBX/OBJ/USDZ
+ModelUrls fields and request-ID-based queue status/result operations. A documented USDZ sidecar must
+not invalidate a verified primary GLB; it does not imply that Numera validates USDZ.
+https://docs.github.com/en/actions/concepts/security/github_token distinguishes explicit workflow
+dispatch from recursive push events. Qualification remains an explicit exact-source hosted operation.
+No upstream implementation was copied and no live paid generation was authorized by this research.

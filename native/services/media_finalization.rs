@@ -2,7 +2,7 @@ use super::{
     finalization::locked, generation::Generation, media_request::decode_data, media_requirements,
 };
 use crate::{
-    compat::value::json,
+    compat::value::{Value, json},
     error::{NumeraError, Result},
     files::output,
     http::assets,
@@ -27,12 +27,68 @@ fn check_reported_mime(reported: Option<&str>, verified: &str) -> Result<()> {
     Ok(())
 }
 
-fn error(receipt: &mut Receipt, error: NumeraError) -> Result<()> {
-    receipt.value["errors"]
+fn error(
+    receipt: &mut Receipt,
+    reason: NumeraError,
+    index: u32,
+    output_id: Option<&str>,
+) -> Result<()> {
+    let mut value = json!(reason);
+    value["artifact_index"] = json!(index);
+    if let Some(output_id) = output_id {
+        value["output_id"] = json!(output_id);
+    }
+    let errors = receipt.value["errors"]
         .as_array_mut()
-        .ok_or_else(NumeraError::storage)?
-        .push(json!(error));
+        .ok_or_else(NumeraError::storage)?;
+    if !errors.contains(&value) {
+        errors.push(value);
+    }
     Ok(())
+}
+
+fn recover_errors(receipt: &mut Receipt, resolved: impl Fn(&Value) -> bool) -> Result<()> {
+    let errors = receipt.value["errors"]
+        .as_array_mut()
+        .ok_or_else(NumeraError::storage)?;
+    let mut recovered = Vec::new();
+    errors.retain(|error| {
+        if resolved(error) {
+            recovered.push(error.clone());
+            false
+        } else {
+            true
+        }
+    });
+    if recovered.is_empty() {
+        return Ok(());
+    }
+    if receipt.value["recovered_errors"].is_null() {
+        receipt.value["recovered_errors"] = json!([]);
+    }
+    let history = receipt.value["recovered_errors"]
+        .as_array_mut()
+        .ok_or_else(NumeraError::storage)?;
+    for error in recovered {
+        if !history.contains(&error) {
+            history.push(error);
+        }
+    }
+    Ok(())
+}
+
+fn recover_published(receipt: &mut Receipt) -> Result<()> {
+    // Publication commits the output and its journal phase atomically. A crash before the final
+    // receipt update must not leave the already published original's download error active.
+    let published: Vec<String> = crate::error::array(&receipt.value["outputs"])
+        .iter()
+        .filter_map(|output| output["output_id"].as_str().map(str::to_owned))
+        .collect();
+    recover_errors(receipt, |error| {
+        error["output_id"]
+            .as_str()
+            .is_some_and(|id| published.iter().any(|saved| saved == id))
+    })
 }
 pub async fn finalize(
     generation: &Generation,
@@ -67,19 +123,22 @@ pub async fn finalize(
     } else {
         receipt.value["upstream_terminal"].clone()
     };
-    // Keep previous non-storage errors; only retry a retained local output, never a generation.
+    recover_published(&mut receipt)?;
+    // Indexed errors are resolved only after their own original is published. Preserve legacy
+    // non-storage errors; retry retained originals only, never a generation.
     if let Some(errors) = receipt.value["errors"].as_array_mut() {
         errors.retain(|v| {
-            !matches!(
-                v["code"].as_str(),
-                Some(
-                    "output_file_error"
-                        | "storage_error"
-                        | "cancelled"
-                        | "request_timeout"
-                        | "outcome_unknown"
+            v["artifact_index"].as_u64().is_some()
+                || !matches!(
+                    v["code"].as_str(),
+                    Some(
+                        "output_file_error"
+                            | "storage_error"
+                            | "cancelled"
+                            | "request_timeout"
+                            | "outcome_unknown"
+                    )
                 )
-            )
         });
     }
     if let Some(artifacts) = artifacts {
@@ -127,7 +186,7 @@ pub async fn finalize(
                 Ok(())
             })();
             if let Err(reason) = result {
-                error(&mut receipt, reason)?;
+                error(&mut receipt, reason, index as u32, None)?;
             }
         }
     }
@@ -191,7 +250,7 @@ pub async fn finalize(
             if !locked(&generation.store)?.owns(&id, Some(&receipt))? {
                 return Err(reason);
             }
-            error(&mut receipt, reason)?;
+            error(&mut receipt, reason, item.index, Some(&item.output_id))?;
             if cancel.is_cancelled()
                 || (observe_cancel && locked(&generation.store)?.cancelled(&id)?)
             {
@@ -201,11 +260,23 @@ pub async fn finalize(
             let current = locked(&generation.store)?.get(&id)?;
             receipt.value["outputs"] = current.value["outputs"].clone();
             receipt.value["deviations"] = current.value["deviations"].clone();
+            recover_errors(&mut receipt, |error| {
+                error["artifact_index"].as_u64() == Some(u64::from(item.index))
+            })?;
         }
     }
     media_requirements::reconcile_count(&mut receipt)?;
     let pending = locked(&generation.store)?.has_pending(&id)?;
     let count = crate::error::array(&receipt.value["outputs"]).len();
+    if !pending && count > 0 {
+        // Old receipts lack artifact indexes. Resolve their download errors conservatively:
+        // every retained original must have been published; unrelated errors remain active.
+        recover_errors(&mut receipt, |error| {
+            error["artifact_index"].is_null()
+                && error["code"] == "input_file_error"
+                && error["stage"] == "download"
+        })?;
+    }
     let errors = !crate::error::array(&receipt.value["errors"]).is_empty();
     let deviations = !crate::error::array(&receipt.value["deviations"]).is_empty();
     receipt.value["status"] = json!(if count == 0 && pending {
@@ -230,4 +301,55 @@ pub async fn finalize(
         json!({"count":count,"retained":pending,"status":receipt.status()}),
     );
     Ok(receipt)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recovery_is_artifact_scoped_deduplicated_and_preserves_history() {
+        let mut receipt = Receipt::new(json!({"errors":[],"outputs":[]}));
+        let failure = || NumeraError::new("input_file_error", "Unavailable.").stage("download");
+        error(&mut receipt, failure(), 0, Some("first")).unwrap();
+        error(&mut receipt, failure(), 0, Some("first")).unwrap();
+        error(&mut receipt, failure(), 1, Some("second")).unwrap();
+        assert_eq!(crate::error::array(&receipt.value["errors"]).len(), 2);
+        recover_published(&mut receipt).unwrap();
+        assert!(receipt.value["recovered_errors"].is_null());
+        receipt.value["outputs"] = json!([{"output_id":"first"}]);
+        recover_published(&mut receipt).unwrap();
+        assert_eq!(crate::error::array(&receipt.value["errors"]).len(), 1);
+        assert_eq!(receipt.value["errors"][0]["artifact_index"], 1);
+        assert_eq!(receipt.value["recovered_errors"][0]["artifact_index"], 0);
+        let previous = receipt.value.clone();
+        recover_published(&mut receipt).unwrap();
+        assert_eq!(receipt.value, previous);
+    }
+
+    #[test]
+    fn recovered_publication_never_clears_an_unpublished_validation_failure() {
+        let mut receipt = Receipt::new(json!({"errors":[],"outputs":[{"output_id":"first"}]}));
+        error(
+            &mut receipt,
+            NumeraError::new("input_file_error", "Unavailable.").stage("download"),
+            0,
+            Some("first"),
+        )
+        .unwrap();
+        error(
+            &mut receipt,
+            NumeraError::new("invalid_response", "Malformed sibling."),
+            1,
+            None,
+        )
+        .unwrap();
+        recover_published(&mut receipt).unwrap();
+        assert_eq!(crate::error::array(&receipt.value["errors"]).len(), 1);
+        assert_eq!(receipt.value["errors"][0]["code"], "invalid_response");
+        assert_eq!(
+            crate::error::array(&receipt.value["recovered_errors"]).len(),
+            1
+        );
+    }
 }

@@ -195,10 +195,10 @@ pub fn outputs(endpoint: &str, response: &Value) -> Result<Vec<Artifact>> {
                 if value.is_null() {
                     continue;
                 }
-                if !["glb", "obj", "fbx"].contains(&format.as_str()) {
+                if !["glb", "obj", "fbx", "usdz"].contains(&format.as_str()) {
                     return Err(invalid("Fal returned an unrecognized model variant role."));
                 }
-                // Only GLB has a structural validator; OBJ/FBX bytes would fail it and
+                // Only GLB has a structural validator; OBJ/FBX/USDZ bytes would fail it and
                 // downgrade an otherwise complete receipt to partial.
                 if format != "glb" {
                     continue;

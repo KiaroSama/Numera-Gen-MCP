@@ -172,3 +172,6 @@ Keep old local runtime/dependencies until the owner switches host config and the
 verified. Migration snapshots, original images, receipts, private configuration and Git history survive
 cleanup. [Migration acceptance](testing/MIGRATION-MATRIX.md) lists gaps; source existence is not evidence
 that any runtime or coverage gate passed.
+
+Media waiter credentials and artifact-scoped recovery, including interruption reconciliation, are
+specified in [Media recovery contracts](testing/MEDIA-RECOVERY.md).

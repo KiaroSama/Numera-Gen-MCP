@@ -269,8 +269,15 @@ pub async fn run(
             {
                 return locked(&generation.store)?.get(&id);
             }
-            let current =
-                super::media_jobs::get_until(generation, &id, true, host_cancel, deadline).await?;
+            let current = super::media_jobs::get_until_pinned(
+                generation,
+                &id,
+                true,
+                host_cancel,
+                deadline,
+                Some(&pinned),
+            )
+            .await?;
             if matches!(
                 current.status(),
                 "completed" | "partial" | "failed" | "cancelled"
