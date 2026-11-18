@@ -23,11 +23,12 @@ impl Config {
                     .collect()
             })
             .unwrap_or_default();
-        let model = model.filter(|m| m.is_string());
-        if name.is_some() || enabled.len() < 2 || model.is_none() {
+        let Some(model) = model.filter(|m| m.is_string()) else {
+            return self.select(name);
+        };
+        if name.is_some() || enabled.len() < 2 {
             return self.select(name);
         }
-        let model = model.unwrap_or(&Value::Null);
         let owners: Vec<&str> = enabled
             .iter()
             .filter(|(_, c)| {
