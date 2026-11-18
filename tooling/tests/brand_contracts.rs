@@ -74,7 +74,7 @@ fn current_distribution_uses_new_identity_without_replacing_publisher_or_legacy_
     ] {
         assert_eq!(
             distribution::prefix(target, false).unwrap(),
-            format!("numera-gen-mcp-0.4.0-{target}")
+            format!("numera-gen-mcp-0.5.0-{target}")
         );
     }
     assert_eq!(

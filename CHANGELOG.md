@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.5.0 - Unreleased
+
+One `.env` can now configure two providers. Beside the main `API_ENDPOINT`/`API_KEY`/`MODEL_n_*`
+section, an optional fal section uses `FAL_API_ENDPOINT`, `FAL_API_KEY` and `FAL_MODEL_n_*` (same
+fields as `MODEL_n_*`) and becomes a second connection named `fal` with fal's `Key` authentication and
+queue adapter. Either section may be empty, not both; with fal alone, `fal` is the default connection.
+`EDIT_*` and `ORCHESTRATION_MODEL` stay main-section settings. `.env.example` now carries both
+sections, and `fal.env.example` is removed: its eleven endpoints live on as `FAL_MODEL_1..11_*`.
+
+A tool call without `connection` is routed to the connection that lists the requested model ID, for
+`generate_image`, `edit_image`, `generate_media` and `get_model_capabilities`. An ID listed on both
+connections, or on neither when two are configured, is refused with `invalid_input` before any
+request is stored or sent. An explicit `connection` and every single-connection setup behave as
+before. Older files that set `PROFILE=fal` on the main keys still load as connection `default`;
+combining `PROFILE=fal` with `FAL_*` keys is rejected.
+
+Upgrade note: jobs created while fal was configured through the old single-section layout are stored
+under connection `default`. After switching to the merged file they no longer match that connection, so
+`get_job` refuses to poll them instead of resubmitting. Finish or collect those jobs first, or point
+`NUMERA_CONFIG` at the old file while recovering them.
+
+Media waiters keep the credentials they submitted with for every status poll, a recovered original
+clears only its own earlier download error, and a Hunyuan3D `usdz` sidecar no longer discards the
+verified GLB.
+
 ## 0.4.0 - 2026-11-16
 
 macOS support is removed. Hosted macOS runners kept failing on capacity, so releases, CI,
