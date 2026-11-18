@@ -6,7 +6,7 @@
 
 [![CI runs on GitHub Actions across four native jobs plus coverage](https://img.shields.io/badge/CI-GitHub%20Actions-2563eb)](.github/workflows/ci.yml)
 [![License GPL-3.0-or-later, the first-party grant](https://img.shields.io/badge/license-GPL--3.0--or--later-16a34a)](LICENSE)
-[![Latest release v0.4.0](https://img.shields.io/badge/release-v0.4.0-ea580c)](CHANGELOG.md)
+[![Latest release v0.5.0](https://img.shields.io/badge/release-v0.5.0-ea580c)](CHANGELOG.md)
 [![Measured CI coverage: 85.3% regions and 80.7% branches](https://img.shields.io/badge/coverage-regions%2085.3%25%20%7C%20branches%2080.7%25-059669)](docs/testing)
 [![Rust 1.100.0 pinned toolchain](https://img.shields.io/badge/rust-1.100.0-8b5cf6)](rust-toolchain.toml)
 [![Runs on Windows and Linux, each built for x64 and ARM64](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%C2%B7%20x64%20%7C%20ARM64-0891b2)](.github/workflows/ci.yml)
@@ -28,13 +28,15 @@ Keep your host chat model unchanged. Named connections separate native image pro
 forwarding, configured GPU ComfyUI workflows and exact fal queue endpoint contracts. No paid POST
 retries, hidden uploads, prompt enhancement or automatic provider/model fallback.
 
-**Version 0.4.0** removes macOS and supports Windows and Linux on x64 and ARM64. It routes the
-legacy image tools through fal and fixes several paid-request edge cases. Version 0.3.0 added
+**Version 0.5.0** lets one `.env` configure two providers: the main endpoint and an optional fal
+section (`FAL_API_ENDPOINT`, `FAL_API_KEY`, `FAL_MODEL_n_*`). Requests are routed by model ID. It runs
+on Windows and Linux, x64 and ARM64. Version 0.4.0 removed macOS and routed the legacy image tools
+through fal. Version 0.3.0 added
 multimedia generation, explicit output kinds/modes, twelve tools and Rust-only maintained tooling. First-party code is now **GPL-3.0-or-later**; source builds use
 **Rust 1.100.0**, while released binaries need no compiler or language runtime.
 
-Install only the signed [0.4.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.4.0)
-with its [verification record](docs/releases/0.4.0.md). Source or an unsigned CI intermediate is not
+Install only the signed [0.5.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.5.0)
+with its [verification record](docs/releases/0.5.0.md). Source or an unsigned CI intermediate is not
 an installable final release.
 
 The runtime, developer utility, CI driver and maintained tests are Rust. All 51 replaced
@@ -47,14 +49,14 @@ the same qualified binaries without rerunning the heavy suites. The workflow bad
 not proof that preparation, tests and signatures all ran; [test evidence](docs/TEST-RESULTS.md) records
 the exact source/run/attempt. [Rust migration](docs/RUST-MIGRATION.md) records scope and dispositions.
 
-The released 0.4.0 source at `582580b` passed all six qualification jobs in
-[run 43956183996](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43956183996), attempt 1:
-all 470 frozen cases across five runtime/coverage contexts, with **85.3403% region** and
-**80.6988% branch** coverage. The unchanged floors are 85% / 80%. Its four signed native targets
+The released 0.5.0 source at `ab667a7` passed all six qualification jobs in
+[run 44317635481](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/44317635481), attempt 1:
+all 470 frozen cases across five runtime/coverage contexts, with **85.6354% region** and
+**80.7309% branch** coverage. The unchanged floors are 85% / 80%. Its four signed native targets
 and the signed collector passed
-[run 43967661374](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/43967661374), attempt 1,
+[run 44323885497](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/44323885497), attempt 1,
 at the same commit with the existing signer. The
-[0.4.0 verification record](docs/releases/0.4.0.md) identifies the actual source, runs, targets and
+[0.5.0 verification record](docs/releases/0.5.0.md) identifies the actual source, runs, targets and
 checksums. [0.3.0](docs/releases/0.3.0.md) keeps its own record, including its macOS archives. Later edits are not covered by these results.
 
 [Historical 0.2.0](docs/releases/0.2.0.md) retains its original signed bytes and image-only template.
@@ -74,9 +76,9 @@ registration and interactive GUI use remain unverified.
 ## Installation and setup
 
 **Use a signed released binary, not a source build or unsigned CI intermediate.** The five steps
-below target **0.4.0** and its actual `numera-gen-mcp` executable. Require the published release's
+below target **0.5.0** and its actual `numera-gen-mcp` executable. Require the published release's
 exact-source qualification, signatures and matching checksums before installation; the
-[verification record](docs/releases/0.4.0.md) holds both. The immutable image-only **0.2.0** release
+[verification record](docs/releases/0.5.0.md) holds both. The immutable image-only **0.2.0** release
 retains `numera-image-gen-mcp` and its own template; never rename those signed bytes or copy media
 settings into that old version. [Historical installation and trust
 evidence](docs/releases/0.2.0.md) remains available.
@@ -87,7 +89,7 @@ ComfyUI needs its own configured installation. Nothing in setup authorizes a pai
 
 ### 1. Download the ready native build
 
-Download [native 0.4.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.4.0) from this
+Download [native 0.5.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.5.0) from this
 repository's Releases page and verify it against the published `.sha256` sidecar; an unavailable or
 unverified archive is not permission to use an unsigned artifact.
 Normal usage needs **no Node.js, npm, Rust toolchain, Python, compiler or local build**.
@@ -98,10 +100,10 @@ Choose the archive for your actual OS/CPU:
 
 | OS      | CPU                       | Archive suffix                                                         |
 | ------- | ------------------------- | ---------------------------------------------------------------------- |
-| Windows | Intel/AMD 64-bit | `numera-gen-mcp-0.4.0-x86_64-pc-windows-msvc.zip` |
-| Windows | ARM64 | `numera-gen-mcp-0.4.0-aarch64-pc-windows-msvc.zip` |
-| Linux GNU | Intel/AMD 64-bit | `numera-gen-mcp-0.4.0-x86_64-unknown-linux-gnu.tar.gz` |
-| Linux GNU | ARM64 | `numera-gen-mcp-0.4.0-aarch64-unknown-linux-gnu.tar.gz` |
+| Windows | Intel/AMD 64-bit | `numera-gen-mcp-0.5.0-x86_64-pc-windows-msvc.zip` |
+| Windows | ARM64 | `numera-gen-mcp-0.5.0-aarch64-pc-windows-msvc.zip` |
+| Linux GNU | Intel/AMD 64-bit | `numera-gen-mcp-0.5.0-x86_64-unknown-linux-gnu.tar.gz` |
+| Linux GNU | ARM64 | `numera-gen-mcp-0.5.0-aarch64-unknown-linux-gnu.tar.gz` |
 
 Published compatibility and minimum OS versions must match that Release's actual native CI evidence.
 A Linux binary is not proof that Claude Desktop itself supports Linux.
@@ -116,7 +118,7 @@ do not overwrite an existing private configuration or outputs.
 Windows PowerShell, replacing the downloaded filename:
 
 ```powershell
-$archive = './numera-gen-mcp-0.4.0-x86_64-pc-windows-msvc.zip'
+$archive = './numera-gen-mcp-0.5.0-x86_64-pc-windows-msvc.zip'
 $expected = ((Get-Content -LiteralPath "$archive.sha256" -Raw -Encoding utf8).Trim() -split '\s+')[0]
 if ($expected -notmatch '^[a-fA-F0-9]{64}$' -or (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash -ine $expected) { throw 'Release checksum mismatch; do not extract or run.' }
 ```
@@ -127,11 +129,11 @@ pins too; a matching checksum does not authenticate an untrusted replacement sid
 Linux, from the download folder:
 
 ```bash
-sha256sum -c numera-gen-mcp-0.4.0-x86_64-unknown-linux-gnu.tar.gz.sha256
+sha256sum -c numera-gen-mcp-0.5.0-x86_64-unknown-linux-gnu.tar.gz.sha256
 ```
 
 Extract into a **new** directory using your OS archive extractor. Archives contain one top-level
-`numera-gen-mcp-0.4.0-<target>/` folder. That folder is the **installation root**: it contains
+`numera-gen-mcp-0.5.0-<target>/` folder. That folder is the **installation root**: it contains
 `bin/`, `.env.example`, `docs/` and `manifest.json`. Open a terminal there for the relative commands
 below. You may give that extracted folder a stable installation name before registering it, for
 example `C:/tools/numera-gen-mcp` or `$HOME/tools/numera-gen-mcp`; keep its contents together.
@@ -149,7 +151,7 @@ Linux:
 ./bin/numera-gen-mcp --version
 ```
 
-Expect version `0.4.0`, publisher `KiaroSama` and the exact source SHA recorded in that Release.
+Expect version `0.5.0`, publisher `KiaroSama` and the exact source SHA recorded in that Release.
 Do not accept a different build source merely because its version string matches.
 Check [signature verification and self-signed trust limits](docs/SIGNING.md) before running a download;
 a checksum alone is not a public OS-trust certificate. Do not blindly bypass security warnings or

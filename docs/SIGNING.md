@@ -28,9 +28,9 @@ successful native, coverage and execution-matrix jobs in the same qualification 
 `sign-qualified` promotion of an original successful run/attempt at the identical SHA. Promotion
 skips those already executed suites; it authenticates their original matrix, jobs and intermediate
 bytes before signing. Source preparation cannot enter the protected environment or receive its inputs.
-The released 0.4.0 source `582580b` completed hosted qualification in run `43956183996`, attempt 1
-(six jobs) and protected signing promotion in run `43967661374`, attempt 1 (four native targets plus
-the signed collector). The [0.4.0 verification record](releases/0.4.0.md) binds both to that commit.
+The released 0.5.0 source `ab667a7` completed hosted qualification in run `44317635481`, attempt 1
+(six jobs) and protected signing promotion in run `44323885497`, attempt 1 (four native targets plus
+the signed collector). The [0.5.0 verification record](releases/0.5.0.md) binds both to that commit.
 A dispatch remains a separate, explicitly authorized action, and any later edit is not covered.
 
 ## Explicit local identity maintenance

@@ -3,18 +3,18 @@
 One-time host registration is required. After registration Claude launches the native executable
 itself with `args: ["bridge"]`; no launcher, daemon or manual server startup is needed. Numera is
 stdio MCP in `bridge` mode. The optional separate [direct HTTP mode](HTTP.md) listens locally on
-configurable port1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
+configurable port 1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
 
 All 470 frozen cases and all four real signature/package/extracted SDK checks passed at
-`582580b` / qualification run `43956183996`, attempt 1, with protected signing run `43967661374`,
-attempt 1. [0.4.0 verification](releases/0.4.0.md) records exact archives and deliberate self-signed
+`ab667a7` / qualification run `44317635481`, attempt 1, with protected signing run `44323885497`,
+attempt 1. [0.5.0 verification](releases/0.5.0.md) records exact archives and deliberate self-signed
 trust limits. CI and isolated native readiness are not actual Desktop reconnection. Install the
 verified binary before using the examples below; retain the previous runtime until the actual host
 connection is verified.
 
 The current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen-mcp` host entry.
-Release 0.4.0 ships that executable and was qualified and signed at `582580b`; the
-[0.4.0 verification record](releases/0.4.0.md) holds both runs. The immutable published 0.2.0 archives
+Release 0.5.0 ships that executable and was qualified and signed at `ab667a7`; the
+[0.5.0 verification record](releases/0.5.0.md) holds both runs. The immutable published 0.2.0 archives
 retain their legacy executable name; use that actual name for those archives, never rename signed bytes
 to imitate the new build. Saved `numera-gen` and `numera-image-gen` entries are not automatically
 renamed or removed: back them up and explicitly migrate the selected Numera entry rather than running

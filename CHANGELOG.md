@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0 - Unreleased
+## 0.5.0 - 2026-11-18
 
 One `.env` can now configure two providers. Beside the main `API_ENDPOINT`/`API_KEY`/`MODEL_n_*`
 section, an optional fal section uses `FAL_API_ENDPOINT`, `FAL_API_KEY` and `FAL_MODEL_n_*` (same
@@ -23,7 +23,7 @@ under connection `default`. After switching to the merged file they no longer ma
 
 Media waiters keep the credentials they submitted with for every status poll, a recovered original
 clears only its own earlier download error, and a Hunyuan3D `usdz` sidecar no longer discards the
-verified GLB.
+verified GLB. Source builds now pin Rust 1.100.0.
 
 ## 0.4.0 - 2026-11-16
 
