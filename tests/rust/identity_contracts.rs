@@ -12,7 +12,7 @@ use std::{fs, path::Path};
 fn runtime_package_license_and_rust_minimum_are_cargo_resolved() {
     assert_eq!(env!("CARGO_PKG_NAME"), "numera-gen-mcp");
     assert_eq!(env!("CARGO_PKG_LICENSE"), "GPL-3.0-or-later");
-    assert_eq!(env!("CARGO_PKG_RUST_VERSION"), "1.99.1");
+    assert_eq!(env!("CARGO_PKG_RUST_VERSION"), "1.100.0");
 }
 
 #[test]

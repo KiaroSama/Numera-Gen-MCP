@@ -220,7 +220,7 @@ impl Config {
         Ok(())
     }
     pub fn version(&self) -> io::Result<()> {
-        self.child("cargo", &["+1.99.1", "--version"])
+        self.child("cargo", &["+1.100.0", "--version"])
     }
     pub fn build_task(&self) -> io::Result<()> {
         if !self.build {
@@ -228,7 +228,7 @@ impl Config {
         }
         self.child(
             "cargo",
-            &["+1.99.1", "build", "--locked", "-p", "numera-task"],
+            &["+1.100.0", "build", "--locked", "-p", "numera-task"],
         )
     }
 }

@@ -32,18 +32,18 @@ impl Config {
     pub fn prepare_lock(&self) -> io::Result<()> {
         self.preparation()?;
         self.checkout(true)?;
-        self.child("cargo", &["+1.99.1", "generate-lockfile"])
+        self.child("cargo", &["+1.100.0", "generate-lockfile"])
     }
     pub fn prepare_format(&self, check: bool) -> io::Result<()> {
         self.preparation()?;
         self.checkout(false)?;
         if check {
-            self.child("cargo", &["+1.99.1", "fmt", "--all", "--", "--check"])?;
+            self.child("cargo", &["+1.100.0", "fmt", "--all", "--", "--check"])?;
             self.child(
                 "rustup",
                 &[
                     "run",
-                    "1.99.1",
+                    "1.100.0",
                     "rustfmt",
                     "--edition",
                     "2024",
@@ -52,12 +52,12 @@ impl Config {
                 ],
             )
         } else {
-            self.child("cargo", &["+1.99.1", "fmt", "--all"])?;
+            self.child("cargo", &["+1.100.0", "fmt", "--all"])?;
             self.child(
                 "rustup",
                 &[
                     "run",
-                    "1.99.1",
+                    "1.100.0",
                     "rustfmt",
                     "--edition",
                     "2024",

@@ -27,7 +27,7 @@ The reference branch already supersedes Cargo PRs #17–#21 with RMCP 3.9.0, rus
 libc 0.2.191, SHA2 0.11.1 and UUID 1.29.2. Current RMCP, rusqlite and UUID release notes were
 checked again. The official source-preparation run also resolved const-oid 0.10.3, crc32fast 1.5.5,
 rustls-pki-types 1.16.0 and sqlite-wasm-rs 0.6.3, with registry checksums committed in Cargo.lock.
-Their registry metadata preserves upstream licenses and Rust minimums below 1.99.1. The
+Their registry metadata preserves upstream licenses and Rust minimums below 1.100.0. The
 [rustls 1.16.0 notes](https://github.com/rustls/pki-types/releases/tag/v%2F1.16.0) document trailing-dot
 DNS canonicalization and rejection of hexadecimal final labels; origin-bound credential policy and
 existing network tests remain required. The SQLite WASM package is a transitive lock entry, not a
@@ -95,7 +95,7 @@ hosted disposable-key execution proof. Current native maintenance remains source
 
 ## Native migration references, checked 2026-10-11
 
-Rust1.99 stable manifest and Cargo environment reference govern hosted-only compiler/workspace cache
+Rust1.100 stable manifest and Cargo environment reference govern hosted-only compiler/workspace cache
 setup. RMCP3.5.1 official tag bc82eb861a5ae2e074183e1214dc2380ca454555 was read for ServerHandler,
 legacy negotiation, tool/result/resource models and Transport; its uncapped read path is bounded by
 Numera's stdio adapter. SDK Apache-2.0 notices remain required. Native runtime compatibility is not

@@ -122,7 +122,7 @@ fn initial_hosted_build_uses_the_qualified_native_owner_in_every_context() {
             "missing bootstrap boundary: {required}"
         );
     }
-    assert!(driver.contains("1.99.1") || runtime.contains("1.99.1"));
+    assert!(driver.contains("1.100.0") || runtime.contains("1.100.0"));
     assert!(runtime.contains("nightly-2026-10-10"));
     assert!(runtime.contains("--locked"));
     assert!(policy.contains("GITHUB_REPOSITORY"));
@@ -279,7 +279,7 @@ fn standalone_bootstrap_formatting_is_aggregated_and_retained_only_after_evidenc
         let expected = if check {
             vec![
                 "run",
-                "1.99.1",
+                "1.100.0",
                 "rustfmt",
                 "--check",
                 "--edition",
@@ -289,7 +289,7 @@ fn standalone_bootstrap_formatting_is_aggregated_and_retained_only_after_evidenc
         } else {
             vec![
                 "run",
-                "1.99.1",
+                "1.100.0",
                 "rustfmt",
                 "--edition",
                 "2024",

@@ -4,7 +4,7 @@ This change continues `chore/tooling-media` at `030297fbb9799e2b2a42501057e5e503
 in a separate PR against `main`. It does not merge or publish a release.
 
 The MCP runtime, developer utility, CI/bootstrap tools and maintained tests use Rust 2024 with
-Rust 1.99.1. The `numera-task` workspace package replaces all 51 Python, JavaScript and PowerShell
+Rust 1.100.0. The `numera-task` workspace package replaces all 51 Python, JavaScript and PowerShell
 tooling sources. Original file hashes, behavior scenarios, test identities and independently
 generated expected bytes remain in `docs/testing` and immutable oracle fixtures. Archived source
 is evidence and is never a runtime fallback or an executable CI dependency.

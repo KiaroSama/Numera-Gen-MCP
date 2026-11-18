@@ -67,9 +67,9 @@ runs:
         RUSTUP_TERM_COLOR: never
       run: |
         chmod 700 "$SEED_OWNER"
-        "$SEED_OWNER" bounded 600000 180000 --exec env -u RUSTUP_TOOLCHAIN rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy --no-self-update
-        "$SEED_OWNER" bounded 30000 20000 --exec env -u RUSTUP_TOOLCHAIN rustup default 1.99.1
-        "$SEED_OWNER" bounded 120000 45000 --exec env -u RUSTUP_TOOLCHAIN rustup run 1.99.1 rustc --edition=2024 --crate-type=bin tooling/bootstrap/main.rs -o "$SEED_DRIVER"
+        "$SEED_OWNER" bounded 600000 180000 --exec env -u RUSTUP_TOOLCHAIN rustup toolchain install 1.100.0 --profile minimal --component rustfmt --component clippy --no-self-update
+        "$SEED_OWNER" bounded 30000 20000 --exec env -u RUSTUP_TOOLCHAIN rustup default 1.100.0
+        "$SEED_OWNER" bounded 120000 45000 --exec env -u RUSTUP_TOOLCHAIN rustup run 1.100.0 rustc --edition=2024 --crate-type=bin tooling/bootstrap/main.rs -o "$SEED_DRIVER"
     - name: Validate Rust bootstrap policy and export exact owned paths
       shell: bash
       env:

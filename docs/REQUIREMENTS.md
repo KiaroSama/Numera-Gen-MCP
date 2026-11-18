@@ -78,7 +78,7 @@ and oracle bytes remain immutable test data.
 
 2026-11-11: current first-party code uses GNU GPL version 3 or, at the recipient's option, any later
 version (GPL-3.0-or-later). Canonical GPLv3 text and third-party/historical grants remain unchanged.
-Both package minimums and public labels declare Rust1.99.1, already the stable CI pin. Final README,
+Both package minimums and public labels declare Rust1.100.0, already the stable CI pin. Final README,
 exact-source qualification/signing, compatible signed download and practical reversible installation
 precede removal of inspected disposable generated extras. Keep one current compatible installation
 where safe; preserve private data/config/keys/outputs/receipts/history/fixtures and required rollback.

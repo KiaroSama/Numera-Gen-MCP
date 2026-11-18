@@ -6,14 +6,18 @@ use std::{fs, path::Path};
 fn first_party_license_and_rust_minimum_match_the_distribution_notice() {
     assert_eq!(env!("CARGO_PKG_NAME"), "numera-task");
     assert_eq!(env!("CARGO_PKG_LICENSE"), "GPL-3.0-or-later");
-    assert_eq!(env!("CARGO_PKG_RUST_VERSION"), "1.99.1");
+    assert_eq!(env!("CARGO_PKG_RUST_VERSION"), "1.100.0");
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let toolchain = fs::read_to_string(root.join("rust-toolchain.toml")).unwrap();
-    assert!(toolchain.lines().any(|line| line == "channel = \"1.99.1\""));
+    assert!(
+        toolchain
+            .lines()
+            .any(|line| line == "channel = \"1.100.0\"")
+    );
     let readme = fs::read_to_string(root.join("README.md")).unwrap();
     for notice in [
         "License GPL-3.0-or-later",
-        "Rust 1.99.1",
+        "Rust 1.100.0",
         "either version 3 of the License, or (at your option) any later version.",
     ] {
         assert!(readme.contains(notice));

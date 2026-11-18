@@ -8,7 +8,7 @@
 [![License GPL-3.0-or-later, the first-party grant](https://img.shields.io/badge/license-GPL--3.0--or--later-16a34a)](LICENSE)
 [![Latest release v0.4.0](https://img.shields.io/badge/release-v0.4.0-ea580c)](CHANGELOG.md)
 [![Measured CI coverage: 85.3% regions and 80.7% branches](https://img.shields.io/badge/coverage-regions%2085.3%25%20%7C%20branches%2080.7%25-059669)](docs/testing)
-[![Rust 1.99.1 pinned toolchain](https://img.shields.io/badge/rust-1.99.1-8b5cf6)](rust-toolchain.toml)
+[![Rust 1.100.0 pinned toolchain](https://img.shields.io/badge/rust-1.100.0-8b5cf6)](rust-toolchain.toml)
 [![Runs on Windows and Linux, each built for x64 and ARM64](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%C2%B7%20x64%20%7C%20ARM64-0891b2)](.github/workflows/ci.yml)
 [![Distributed as a native binary](https://img.shields.io/badge/distribution-native%20binary-dc2626)](#installation-and-setup)
 [![Documentation in Markdown](https://img.shields.io/badge/docs-Markdown-4f46e5)](docs/CONFIGURATION.md)
@@ -31,7 +31,7 @@ retries, hidden uploads, prompt enhancement or automatic provider/model fallback
 **Version 0.4.0** removes macOS and supports Windows and Linux on x64 and ARM64. It routes the
 legacy image tools through fal and fixes several paid-request edge cases. Version 0.3.0 added
 multimedia generation, explicit output kinds/modes, twelve tools and Rust-only maintained tooling. First-party code is now **GPL-3.0-or-later**; source builds use
-**Rust 1.99.1**, while released binaries need no compiler or language runtime.
+**Rust 1.100.0**, while released binaries need no compiler or language runtime.
 
 Install only the signed [0.4.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.4.0)
 with its [verification record](docs/releases/0.4.0.md). Source or an unsigned CI intermediate is not

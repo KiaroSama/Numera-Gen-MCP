@@ -1,6 +1,6 @@
 # Contributing
 
-The native target uses Rust1.99.1 stable/edition2024, a committed Cargo.lock, and
+The native target uses Rust1.100.0 stable/edition2024, a committed Cargo.lock, and
 responsibility-based modules below800 lines. Adapters stay pure; tools remain
 provider-agnostic. Update related fixtures/docs with behavior changes. Never add paid POST retries,
 provider fallback, prompt rewrites, hidden public uploads or unbounded queues/polling.
