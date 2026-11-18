@@ -18,6 +18,17 @@ contract; no Node runtime, dotenv dependency or process environment mutation is 
   declare comma-separated media kinds/transformations; both empty/absent preserves legacy image slots.
   A single nonempty declaration requires the other; duplicates, spaces and empty tokens reject.
   Three consistent slots are provided.
+- FAL_API_ENDPOINT, FAL_API_KEY and FAL_MODEL_1_* through FAL_MODEL_100_* (same fields as MODEL_n_*):
+  optional second section, expanded to connection `fal` with the fixed fal profile (adapter
+  `fal-queue`, Authorization: Key). Both FAL_API fields empty disable it, even with filled slots; one of
+  them alone rejects. There is no FAL_PROFILE, FAL_EDIT_* or FAL_ORCHESTRATION_MODEL. The main section
+  may stay empty when fal is configured, which makes `fal` the default connection; EDIT_* and
+  ORCHESTRATION_MODEL then reject. PROFILE=fal together with any FAL_* key rejects.
+
+With two connections, a call that omits `connection` is routed to the one whose enabled models list the
+requested exact ID. An ID on both, or on neither, rejects with invalid_input before storage, credential
+use or network I/O. Without a model the default connection is used; an explicit `connection` always
+wins. Job polling and recovery select the stored connection name and never re-route.
 
 At least one model must be enabled. First enabled slot is default; disabled IDs are denied and omitted
 from configured listing. Empty output settings mean provider defaults; explicit tool arguments win.
@@ -164,8 +175,8 @@ while the requested id stays the public receipt identity. Capabilities, defaults
 parameter evidence and the request identity all resolve against the edit model id; `generate` requests
 are unaffected. Legacy image models need no new fields. Other adapters can declare only their existing text-to-image/image-to-image paths.
 
-For fal use profile `fal` (full adapter `fal-queue`), `https://queue.fal.run`, Key authentication and
-an exact implemented endpoint. Only owned loopback HTTP origins are allowed for offline fixtures;
+For fal use the FAL_* dotenv section (or, in a single-section file, profile `fal`; full adapter
+`fal-queue`), `https://queue.fal.run`, Key authentication and an exact implemented endpoint. Only owned loopback HTTP origins are allowed for offline fixtures;
 remote plaintext HTTP, arbitrary production hosts and alternate ports are rejected. No automatic
 catalog API, file upload, account switch or SDK runtime is introduced.
 The [complete public fal example](../examples/fal.json) uses `secretEnv: "FAL_KEY"` and declares every

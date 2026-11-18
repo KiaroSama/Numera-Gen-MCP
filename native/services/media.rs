@@ -27,7 +27,13 @@ pub async fn run(
     host_cancel: &CancellationToken,
 ) -> Result<Receipt> {
     let request = Request::parse(raw)?;
-    let (name, selected) = generation.config.select(request.connection.as_deref())?;
+    let requested_model = request
+        .model
+        .as_deref()
+        .map(crate::compat::value::Value::from);
+    let (name, selected) = generation
+        .config
+        .select_for_model(request.connection.as_deref(), requested_model.as_ref())?;
     let model = request
         .model
         .as_deref()

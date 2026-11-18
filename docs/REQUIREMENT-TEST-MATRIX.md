@@ -24,6 +24,7 @@ exact commit's automatic CI and [test results](TEST-RESULTS.md) for measured evi
 | No paid POST replay and retained originals after uncertain outcomes | `tests/rust/sdk_acceptance.rs`, `detached_job_acceptance.rs`, `local_recovery_acceptance.rs` |
 | Actual SDK stdio/HTTP handshake, tools, resources, protocol eras and cleanup | `tests/rust/sdk_acceptance.rs`, `http_cleanup_acceptance.rs`, `transport_acceptance.rs` |
 | Compact configuration, foreign CWD, saved reloads and pinned credentials | `tests/rust/env_acceptance.rs`, `environment_snapshot_acceptance.rs`, `snapshot_races.rs` |
+| Dual-provider `.env` (`FAL_*` section), model-based connection routing and per-connection credentials | `tests/rust/env_acceptance.rs`, `native/config/env_fal.rs` and `native/config/route.rs` unit tests |
 | Read-only readiness and explicit host-registration transactions | `tests/rust/readiness_acceptance.rs`, `registration_contracts.rs`, `registration_acceptance.rs` |
 | POSIX private files, Unicode paths, symlinks and owned process groups | `tests/rust/posix_acceptance.rs`, `devtool_supervisor.rs`, `native/devtools/linux_snapshot_tests.rs` |
 | Windows native DPAPI, private ACLs, Unicode and owned worker abort | `tests/rust/dpapi_acceptance.rs`, `devtool_credentials.rs`, `common/dpapi_worker.rs` |

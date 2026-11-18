@@ -4,10 +4,14 @@
 use crate::compat::value::{Value, json};
 use crate::error::{NumeraError, Result};
 
-/// True when the selected connection is the fal queue adapter.
+/// True when the selected connection is the fal queue adapter. Uses the same model routing as the
+/// generation path so both agree on the connection; routing errors surface from that path.
 pub fn selected(config: &crate::config::Config, args: &Value) -> bool {
     config
-        .select(args.get("connection").and_then(Value::as_str))
+        .select_for_model(
+            args.get("connection").and_then(Value::as_str),
+            args.get("model"),
+        )
         .map(|(_, c)| c["adapter"] == "fal-queue")
         .unwrap_or(false)
 }

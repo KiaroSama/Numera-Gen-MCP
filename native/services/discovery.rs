@@ -163,7 +163,7 @@ impl Discovery {
         model: &JsString,
         cancel: &CancellationToken,
     ) -> Result<Value> {
-        let (id, c) = config.select(name)?;
+        let (id, c) = config.select_for_model(name, Some(&Value::from(model.clone())))?;
         let mut cap = capabilities::capabilities(&c, model);
         let mut advertised = Value::Null;
         if (c["gateway"] == "9router" || c["adapter"] == "openrouter-images")

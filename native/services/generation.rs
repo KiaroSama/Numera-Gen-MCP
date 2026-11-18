@@ -125,7 +125,9 @@ impl Generation {
                 ));
             }
         };
-        let (name, selected) = self.config.select(requested_connection)?;
+        let (name, selected) = self
+            .config
+            .select_for_model(requested_connection, original.get("model"))?;
         let pinned = snapshot_credentials(&selected, &self.env, &self.runtime).await?;
         let c = pinned.value();
         let headers = pinned.headers();

@@ -15,7 +15,9 @@ signing/negative checks and signed extracted SDK checks passed; owner-host cutov
 - `native/config/`: full/compact/dotenv config, defaults/precedence, private credentials/current-user
   Windows DPAPI and immutable last-good reload snapshots. Adjacent discovery is executable-relative,
   never caller CWD. Display names never replace exact model IDs. API credentials are pinned privately
-  for the operation and not serialized into receipts/logs.
+  for the operation and not serialized into receipts/logs. `env_fal.rs` splits the optional `FAL_*`
+  dotenv section into a second compact section expanded to connection `fal`; `route.rs` selects a
+  connection by requested model ID when a call omits `connection` (ambiguous/unknown IDs fail closed).
   `runtime_environment.rs` supplies an instance-owned shared selected-key source; immutable startup
   maps remain supported. A selected value is cloned under a short read lock before credential I/O.
   Accepted config generations share that source, while already-pinned headers remain independent.

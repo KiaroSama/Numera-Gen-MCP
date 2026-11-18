@@ -2,10 +2,12 @@ mod credentials;
 #[cfg(windows)]
 mod dpapi;
 mod env;
+mod env_fal;
 mod json;
 mod load;
 pub mod media;
 mod reload;
+mod route;
 mod runtime_environment;
 mod validate;
 
@@ -63,6 +65,7 @@ impl Config {
         if !flags.contains_key("openai-compat") && !validate::absolute(&file) {
             return Err(invalid("NUMERA_CONFIG must be absolute."));
         }
+        let mut is_env = false;
         let raw = if flags.contains_key("openai-compat") {
             load::compat_config(env)?
         } else {
@@ -79,6 +82,7 @@ impl Config {
                     .split_once(".env.")
                     .is_some_and(|(_, tail)| !tail.is_empty())
             {
+                is_env = true;
                 parse_env_config(text)?
             } else {
                 json::parse(text)?.take()
@@ -88,7 +92,12 @@ impl Config {
         if !raw.is_object() {
             return Err(invalid("Configuration must be a JSON object."));
         }
-        if raw.get("api_endpoint").is_some() || raw.get("api_key").is_some() {
+        // A fal-only dotenv file has no main api_endpoint/api_key; its nested fal section is still a
+        // compact configuration. JSON keeps its existing compact-vs-full detection.
+        if raw.get("api_endpoint").is_some()
+            || raw.get("api_key").is_some()
+            || (is_env && raw.get(env_fal::CONNECTION).is_some())
+        {
             let expanded = expand_simple(&mut raw, &file)?;
             drop_json(std::mem::replace(&mut raw.0, expanded));
         }
@@ -156,7 +165,33 @@ pub(crate) fn js_trim_utf16(units: &[u16]) -> &[u16] {
     &units[start..end]
 }
 
+/// Expands a simple configuration into connection `default` (main section) and/or connection `fal`
+/// (fal section). The main connection stays the default whenever it is configured.
 fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
+    let fal = env_fal::take(raw);
+    let mut connections = Object::new();
+    if env_fal::has_main(raw) {
+        connections.insert("default".into(), build_connection(raw)?);
+    }
+    if let Some(mut fal) = fal {
+        let connection = build_connection(&mut fal)?;
+        drop_json(fal);
+        connections.insert(env_fal::CONNECTION.into(), connection);
+    }
+    let default = if connections.get("default").is_some() {
+        "default"
+    } else {
+        env_fal::CONNECTION
+    };
+    let root = file.parent().unwrap_or(Path::new(""));
+    Ok(
+        json!({"schemaVersion":1,"defaultConnection":default, "outputDir":root.join("outputs").to_str().ok_or_else(|| invalid("Output path is not Unicode."))?,
+        "stateDir":root.join("state").to_str().ok_or_else(|| invalid("State path is not Unicode."))?, "logging":{"directory":root.join("logs").to_str().ok_or_else(|| invalid("Log path is not Unicode."))?},
+        "files":{"allowedInputRoots":[root.join("inputs").to_str().ok_or_else(|| invalid("Input path is not Unicode."))?]}, "connections":connections}),
+    )
+}
+
+fn build_connection(raw: &mut Value) -> Result<Value> {
     validate::default_and_validate(raw, true)?;
     let key = raw["api_key"]
         .as_utf16()
@@ -194,7 +229,6 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
     if enabled.is_empty() {
         return Err(invalid("Enable at least one configured model."));
     }
-    let root = file.parent().unwrap_or(Path::new(""));
     let origin = validate::url_origin(&String::from_utf16_lossy(
         raw["api_endpoint"]
             .as_utf16()
@@ -243,9 +277,5 @@ fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
             connection[target] = value.clone();
         }
     }
-    Ok(
-        json!({"schemaVersion":1,"defaultConnection":"default", "outputDir":root.join("outputs").to_str().ok_or_else(|| invalid("Output path is not Unicode."))?,
-        "stateDir":root.join("state").to_str().ok_or_else(|| invalid("State path is not Unicode."))?, "logging":{"directory":root.join("logs").to_str().ok_or_else(|| invalid("Log path is not Unicode."))?},
-        "files":{"allowedInputRoots":[root.join("inputs").to_str().ok_or_else(|| invalid("Input path is not Unicode."))?]}, "connections":{"default":connection}}),
-    )
+    Ok(connection)
 }

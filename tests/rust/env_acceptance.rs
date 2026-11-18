@@ -248,3 +248,137 @@ fn file_reload_retains_initial_arc_for_unchanged_storage_change_and_snapshot_ref
     assert!(Arc::ptr_eq(&reload.snapshots()[0], &original));
     drop(logger);
 }
+
+const FAL_SECTION: &str = "FAL_API_ENDPOINT=https://queue.fal.run\nFAL_API_KEY=\"synthetic-fal-key\"\nFAL_MODEL_4_ID=fal-ai/flux/dev\nFAL_MODEL_4_NAME=FLUX\nFAL_MODEL_4_ENABLED=true\nFAL_MODEL_4_OUTPUT_TYPES=image\nFAL_MODEL_4_MODES=text-to-image\n";
+
+#[test]
+fn shipped_env_example_loads_as_documented() {
+    let workspace = Workspace::new();
+    let template = include_str!("../../.env.example");
+    // The main endpoint placeholder is replaced like the media template contract does; the fal
+    // section ships disabled (empty FAL_API_ENDPOINT/FAL_API_KEY) with its model list intact.
+    let text = template.replace(
+        "https://YOUR_API_HOST/YOUR_API_PREFIX",
+        "https://example.invalid/v1",
+    );
+    assert_ne!(text, template, "template placeholder endpoint changed");
+    let config = load_file(&workspace, ".env", text.as_bytes()).unwrap();
+    assert_eq!(config.value["defaultConnection"], "default");
+    assert!(config.value["connections"].get("fal").is_none());
+    // Every fal endpoint of the former fal.env.example survives under FAL_MODEL_<N>_*.
+    for n in 1..=11 {
+        assert!(template.contains(&format!("\nFAL_MODEL_{n}_ID=\"fal-ai/")));
+    }
+    assert!(!template.contains("\nMODEL_4_ID=\"fal-ai/"));
+}
+
+#[test]
+fn merged_env_builds_two_isolated_connections() {
+    let workspace = Workspace::new();
+    let config = load_file(
+        &workspace,
+        ".env",
+        format!("{VALID}{FAL_SECTION}").as_bytes(),
+    )
+    .unwrap();
+    assert_eq!(config.value["defaultConnection"], "default");
+    let main = &config.value["connections"]["default"];
+    let fal = &config.value["connections"]["fal"];
+    assert_eq!(main["auth"]["type"], "bearer");
+    assert_eq!(main["auth"]["apiKey"], "synthetic-test-key");
+    assert_eq!(fal["adapter"], "fal-queue");
+    assert_eq!(fal["auth"]["type"], "key");
+    assert_eq!(fal["auth"]["apiKey"], "synthetic-fal-key");
+    assert_eq!(fal["defaultModel"], "fal-ai/flux/dev");
+    assert_eq!(
+        fal["configuredModels"],
+        json!([{"id":"fal-ai/flux/dev","name":"FLUX"}])
+    );
+    let (name, _) = config
+        .select_for_model(None, Some(&json!("fal-ai/flux/dev")))
+        .unwrap();
+    assert_eq!(name, "fal");
+    let (name, _) = config
+        .select_for_model(None, Some(&json!("family/image")))
+        .unwrap();
+    assert_eq!(name, "default");
+    let unknown = config
+        .select_for_model(None, Some(&json!("not/configured")))
+        .unwrap_err();
+    assert_eq!(unknown.code, "invalid_input");
+}
+
+#[tokio::test]
+async fn routed_requests_carry_only_their_own_connection_key() {
+    let workspace = Workspace::new();
+    let config = load_file(
+        &workspace,
+        ".env",
+        format!("{VALID}{FAL_SECTION}").as_bytes(),
+    )
+    .unwrap();
+    let runtime = numera_gen_mcp::runtime_paths::RuntimePaths::new(&workspace.0).unwrap();
+    for (model, expected, other) in [
+        (
+            "fal-ai/flux/dev",
+            "Key synthetic-fal-key",
+            "synthetic-test-key",
+        ),
+        (
+            "family/image",
+            "Bearer synthetic-test-key",
+            "synthetic-fal-key",
+        ),
+    ] {
+        let (_, connection) = config.select_for_model(None, Some(&json!(model))).unwrap();
+        let pinned =
+            numera_gen_mcp::config::snapshot_credentials(&connection, &HashMap::new(), &runtime)
+                .await
+                .unwrap();
+        let headers = pinned.headers();
+        assert_eq!(headers.len(), 1);
+        assert_eq!(headers["Authorization"], expected);
+        assert!(headers.values().all(|v| !v.contains(other)));
+    }
+}
+
+#[test]
+fn fal_only_env_makes_fal_the_default() {
+    let workspace = Workspace::new();
+    let text = format!("API_ENDPOINT=\nAPI_KEY=\n{FAL_SECTION}");
+    let config = load_file(&workspace, ".env", text.as_bytes()).unwrap();
+    assert_eq!(config.value["defaultConnection"], "fal");
+    assert!(config.value["connections"].get("default").is_none());
+    assert_eq!(config.select(None).unwrap().0, "fal");
+}
+
+#[test]
+fn legacy_fal_profile_file_still_loads_as_default() {
+    let workspace = Workspace::new();
+    let text = "API_ENDPOINT=https://queue.fal.run\nAPI_KEY=synthetic-test-key\nPROFILE=fal\nMODEL_1_ID=fal-ai/flux/dev\nMODEL_1_NAME=FLUX\nMODEL_1_OUTPUT_TYPES=image\nMODEL_1_MODES=text-to-image\n";
+    let config = load_file(&workspace, "fal.env", text.as_bytes()).unwrap();
+    assert_eq!(
+        config.value["connections"]["default"]["adapter"],
+        "fal-queue"
+    );
+    assert!(config.value["connections"].get("fal").is_none());
+}
+
+#[test]
+fn invalid_dual_provider_files_reject_without_key_disclosure() {
+    let workspace = Workspace::new();
+    for text in [
+        format!("{VALID}{FAL_SECTION}PROFILE=fal\n"),
+        format!("{VALID}FAL_API_ENDPOINT=https://queue.fal.run\n"),
+        format!("{VALID}FAL_PROFILE=fal\n"),
+        format!("{VALID}{FAL_SECTION}FAL_MODEL_101_ID=x\n"),
+        "API_ENDPOINT=\nAPI_KEY=\nFAL_API_ENDPOINT=\nFAL_API_KEY=\n".to_owned(),
+    ] {
+        let error = load_file(&workspace, ".env", text.as_bytes())
+            .err()
+            .expect("must reject");
+        assert_eq!(error.code, "invalid_configuration");
+        assert!(!error.to_string().contains("synthetic-fal-key"));
+        assert!(!error.to_string().contains("synthetic-test-key"));
+    }
+}

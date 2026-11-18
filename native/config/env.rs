@@ -29,7 +29,7 @@ pub fn read_config_text(file: &Path) -> Result<String> {
     read().map_err(|_| invalid("Cannot read configuration as a UTF-8 file up to 1 MiB."))
 }
 
-fn env_error() -> crate::error::NumeraError {
+pub(super) fn env_error() -> crate::error::NumeraError {
     invalid("Invalid env configuration. Check keys, values and unique assignments.")
 }
 
@@ -169,10 +169,13 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
         return Err(env_error());
     }
     let keys = strict_assignments(text)?;
-    let values = node_values(text);
+    let mut values = node_values(text);
     if keys.len() != values.len() {
         return Err(env_error());
     }
+    // FAL_* keys form a separate, optional provider section; the remaining keys keep the
+    // exact pre-0.5.0 grammar so every older file parses to the same result.
+    let fal = super::env_fal::split(&mut values);
     let top = [
         "API_ENDPOINT",
         "API_KEY",
@@ -184,13 +187,42 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
         "EDIT_MAX_REFERENCES",
         "EDIT_MASKS",
     ];
-    let mut slots: BTreeMap<u16, Object> = BTreeMap::new();
-    for (key, value) in &values {
-        if top.contains(&key.as_str()) {
-            continue;
+    let models = models(
+        values
+            .iter()
+            .filter(|(key, _)| !top.contains(&key.as_str())),
+        "MODEL_",
+    )?;
+    let mut raw = Object::new();
+    for (key, field) in [("API_ENDPOINT", "api_endpoint"), ("API_KEY", "api_key")] {
+        if let Some(value) = values.get(key) {
+            raw.insert(field.into(), json!(value));
         }
+    }
+    raw.insert("models".into(), models);
+    for (key, field) in [
+        ("PROFILE", "profile"),
+        ("ORCHESTRATION_MODEL", "orchestration_model"),
+    ] {
+        if let Some(value) = values.get(key).filter(|v| !v.is_empty()) {
+            raw.insert(field.into(), json!(value));
+        }
+    }
+    edit_settings(&values, &mut raw)?;
+    super::env_fal::attach(fal, &mut raw)?;
+    Ok(Value::Object(raw))
+}
+
+/// Parses `<prefix><N>_<FIELD>` slots (N 1..=100) into ordered model declarations. Every key
+/// handed in must be a slot key; anything else is an invalid configuration.
+pub(super) fn models<'a>(
+    entries: impl Iterator<Item = (&'a String, &'a String)>,
+    prefix: &str,
+) -> Result<Value> {
+    let mut slots: BTreeMap<u16, Object> = BTreeMap::new();
+    for (key, value) in entries {
         let (slot, field) = key
-            .strip_prefix("MODEL_")
+            .strip_prefix(prefix)
             .and_then(|s| s.split_once('_'))
             .ok_or_else(env_error)?;
         if slot.is_empty()
@@ -237,39 +269,25 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
     for model in slots.values() {
         super::media::validate_declaration(&Value::Object(model.clone()), "output_types")?;
     }
-    let mut raw = Object::new();
-    for (key, field) in [("API_ENDPOINT", "api_endpoint"), ("API_KEY", "api_key")] {
-        if let Some(value) = values.get(key) {
-            raw.insert(field.into(), json!(value));
-        }
-    }
-    raw.insert(
-        "models".into(),
-        Value::Array(
-            slots
-                .into_values()
-                // A numbered slot with no id and no name is an unused placeholder; the
-                // template ships several. Dropping it keeps the remaining filled slots
-                // listed instead of failing schema validation on an empty model.
-                .filter(|model| {
-                    ["id", "name"].iter().any(|field| {
-                        model
-                            .get(*field)
-                            .is_some_and(|value| !value.as_str().unwrap_or("").trim().is_empty())
-                    })
+    Ok(Value::Array(
+        slots
+            .into_values()
+            // A numbered slot with no id and no name is an unused placeholder; the
+            // template ships several. Dropping it keeps the remaining filled slots
+            // listed instead of failing schema validation on an empty model.
+            .filter(|model| {
+                ["id", "name"].iter().any(|field| {
+                    model
+                        .get(*field)
+                        .is_some_and(|value| !value.as_str().unwrap_or("").trim().is_empty())
                 })
-                .map(Value::Object)
-                .collect(),
-        ),
-    );
-    for (key, field) in [
-        ("PROFILE", "profile"),
-        ("ORCHESTRATION_MODEL", "orchestration_model"),
-    ] {
-        if let Some(value) = values.get(key).filter(|v| !v.is_empty()) {
-            raw.insert(field.into(), json!(value));
-        }
-    }
+            })
+            .map(Value::Object)
+            .collect(),
+    ))
+}
+
+fn edit_settings(values: &HashMap<String, String>, raw: &mut Object) -> Result<()> {
     let mut edit = Object::new();
     for (key, field) in [
         ("EDIT_MODE", "mode"),
@@ -295,7 +313,7 @@ pub fn parse_env_config(text: &str) -> Result<Value> {
     } else if !edit.is_empty() {
         return Err(env_error());
     }
-    Ok(Value::Object(raw))
+    Ok(())
 }
 
 fn boolean(value: &str) -> Result<bool> {

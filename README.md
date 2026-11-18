@@ -286,6 +286,29 @@ Do not enable this example blindly on a gateway. `edit_region` and `target_langu
 [advanced configuration](docs/CONFIGURATION.md) explain route limits and additional JSON settings.
 Save .env and call `list_models` again to apply a valid change; no image is submitted just by saving.
 
+#### Optional second provider: fal
+
+The same `.env` can hold a separate fal section beside the main provider. It becomes a second
+connection named `fal`, with its own endpoint, key and model list; the main section stays connection
+`default`. Fill both fal fields to enable it, or leave them empty to disable it:
+
+```dotenv
+FAL_API_ENDPOINT=https://queue.fal.run
+FAL_API_KEY=replace-with-your-private-fal-key
+FAL_MODEL_1_ID=fal-ai/flux/dev
+FAL_MODEL_1_NAME="FLUX dev (text-to-image)"
+FAL_MODEL_1_ENABLED=true
+FAL_MODEL_1_OUTPUT_TYPES=image
+FAL_MODEL_1_MODES=text-to-image
+```
+
+`FAL_MODEL_n_*` accepts the same fields as `MODEL_n_*`. The fal section always uses fal's native
+`Key` authentication and queue protocol, so it has no `PROFILE`; `EDIT_*` and `ORCHESTRATION_MODEL`
+apply to the main section only. Either section may be left empty, but not both; with only fal
+configured, `fal` is the default connection. A tool call without `connection` goes to the section that
+lists the requested model ID. An ID listed in both sections, or in neither, is refused before anything
+is sent, so pass `connection` explicitly in that case.
+
 ### 4. Register with your MCP client
 
 Registration is one-time. Preserve unrelated settings and back up the host file before merging only
@@ -524,18 +547,21 @@ The [full fal example](examples/fal.json) declares every implemented endpoint's 
 including image sidecars and the GLB geometry selection for Rodin. It reads the credential from `FAL_KEY`;
 no real credential belongs in a public example. Configuration alone does not submit a request.
 
-For compact dotenv configuration, select `PROFILE=fal`, the origin `https://queue.fal.run` and an exact implemented endpoint:
+For compact dotenv configuration, use the fal section with the origin `https://queue.fal.run` and an
+exact implemented endpoint:
 
 ```dotenv
-API_ENDPOINT=https://queue.fal.run
-API_KEY=replace-with-your-private-fal-key
-PROFILE=fal
-MODEL_1_ID=fal-ai/stable-audio
-MODEL_1_NAME="Audio generation"
-MODEL_1_ENABLED=true
-MODEL_1_OUTPUT_TYPES=audio
-MODEL_1_MODES=text-to-audio
+FAL_API_ENDPOINT=https://queue.fal.run
+FAL_API_KEY=replace-with-your-private-fal-key
+FAL_MODEL_1_ID=fal-ai/stable-audio
+FAL_MODEL_1_NAME="Audio generation"
+FAL_MODEL_1_ENABLED=true
+FAL_MODEL_1_OUTPUT_TYPES=audio
+FAL_MODEL_1_MODES=text-to-audio
 ```
+
+A pre-0.5.0 file that selects `PROFILE=fal` on the main `API_*`/`MODEL_n_*` keys still loads as
+connection `default`; it cannot be combined with `FAL_*` keys.
 
 A tool request for that explicit configuration is:
 
