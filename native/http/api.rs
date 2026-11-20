@@ -68,7 +68,9 @@ pub async fn request_statuses(
     limit: usize,
     allowed: &[u16],
 ) -> Result<ApiResponse> {
-    if allowed.iter().any(|status| ![400, 404].contains(status)) || wire.method != Method::PUT {
+    if allowed.iter().any(|status| ![400, 404].contains(status))
+        || !matches!(wire.method, Method::PUT | Method::DELETE)
+    {
         return Err(NumeraError::new(
             "invalid_input",
             "Only documented cancellation status bodies may be inspected.",

@@ -411,18 +411,17 @@ async fn omniroute_fal_gateway_submit_poll_result_cancel_and_probe() {
         assert_eq!(health["connections"][0]["reachable"], true);
         assert_eq!(health["connections"][0]["authentication_checked"], true);
 
-        let done = s::generate(
-            &app,
-            s::request("omni-1", s::IMAGE, "text-to-image", true, &[]),
-        )
-        .await;
+        let mut req1 = s::request("omni-1", s::IMAGE, "text-to-image", true, &[]);
+        req1.as_object_mut().unwrap().remove("connection");
+        let done = s::generate(&app, req1).await;
         s::verified(&app, &done, "image", mime, &original).await;
 
         let mut cancel_req = s::request("omni-cancel", s::IMAGE, "text-to-image", true, &[]);
+        cancel_req["connection"] = json!("fal");
         cancel_req["wait"] = json!(false);
         s::generate(&app, cancel_req).await;
         let cancelled = host::structured(
-            &app.call("cancel_job", json!({"request_id": "omni-cancel"}))
+            &app.call("cancel_job", json!({"request_id": "omni-cancel", "connection": "fal"}))
                 .await,
         );
         assert_eq!(
@@ -433,6 +432,7 @@ async fn omniroute_fal_gateway_submit_poll_result_cancel_and_probe() {
         assert_eq!(app.job("omni-cancel", false).await["status"], "cancelled");
 
         let mut bad_req = s::request("omni-bad", s::IMAGE, "text-to-image", true, &[]);
+        bad_req["connection"] = json!("fal");
         bad_req["wait"] = json!(false);
         let bad = s::generate(&app, bad_req).await;
         assert_eq!(bad["status"], "outcome_unknown");
