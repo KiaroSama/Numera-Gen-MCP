@@ -382,3 +382,58 @@ fn invalid_dual_provider_files_reject_without_key_disclosure() {
         assert!(!error.to_string().contains("synthetic-test-key"));
     }
 }
+
+const COMPACT_MAIN_JSON: &str = r#"{
+    "api_endpoint": "https://main.example/v1",
+    "api_key": "synthetic-main-key",
+    "models": [{"id": "main/model", "name": "Main"}]
+}"#;
+
+const COMPACT_INTERNAL_FAL_JSON: &str = r#"{
+    "api_endpoint": "https://main.example/v1",
+    "api_key": "synthetic-main-key",
+    "models": [{"id": "main/model", "name": "Main"}],
+    "fal": {
+        "api_endpoint": "https://other.example/v1",
+        "api_key": "synthetic-secondary-key",
+        "models": [{"id": "secondary/model", "name": "Secondary"}]
+    }
+}"#;
+
+#[test]
+fn compact_json_rejects_internal_dotenv_fal_section() {
+    let workspace = Workspace::new();
+    let config = load_file(&workspace, "config.json", COMPACT_MAIN_JSON.as_bytes()).unwrap();
+    assert_eq!(config.value["connections"].as_object().unwrap().len(), 1);
+    assert_eq!(config.select(None).unwrap().0, "default");
+    let error = load_file(
+        &workspace,
+        "config.json",
+        COMPACT_INTERNAL_FAL_JSON.as_bytes(),
+    )
+    .err()
+    .expect("Unknown compact JSON property must reject.");
+    assert_eq!(error.code, "invalid_configuration");
+    assert!(!error.to_string().contains("synthetic-main-key"));
+    assert!(!error.to_string().contains("synthetic-secondary-key"));
+}
+
+#[test]
+fn compact_json_fal_injection_keeps_last_valid_reload_snapshot() {
+    let workspace = Workspace::new();
+    let config = load_file(&workspace, "config.json", COMPACT_MAIN_JSON.as_bytes()).unwrap();
+    let mut reload = ConfigReload::new(
+        config,
+        workspace.0.join("config.json"),
+        Vec::new(),
+        environment(&workspace),
+    );
+    let original = reload.current();
+    let result = reload
+        .refresh_text(Some(COMPACT_INTERNAL_FAL_JSON), |_| true)
+        .unwrap();
+    assert_eq!(result.event, numera_gen_mcp::config::ReloadEvent::Invalid);
+    assert!(Arc::ptr_eq(&result.config, &original));
+    assert!(Arc::ptr_eq(&reload.current(), &original));
+    assert_eq!(reload.snapshots().len(), 1);
+}
