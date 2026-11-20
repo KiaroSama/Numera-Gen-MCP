@@ -434,7 +434,9 @@ async fn omniroute_fal_gateway_submit_poll_result_cancel_and_probe() {
         let mut bad_req = s::request("omni-bad", s::IMAGE, "text-to-image", true, &[]);
         bad_req["connection"] = json!("fal");
         bad_req["wait"] = json!(false);
-        let bad = s::generate(&app, bad_req).await;
+        let raw_bad = app.call_timeout("generate_media", bad_req, 10000).await;
+        assert_eq!(raw_bad["isError"], true);
+        let bad = host::structured(&raw_bad);
         assert_eq!(bad["status"], "outcome_unknown");
         assert_eq!(bad["acknowledgement_unverified"], true);
         assert_eq!(bad["upstream_job"]["id"], "job_bad");
