@@ -415,3 +415,66 @@ fn omniroute_fal_gateway_selects_bearer_and_rejects_mismatched_routes() {
     wrong_gateway["connections"]["test"]["gateway"] = json!("9router");
     reject(&workspace, &wrong_gateway);
 }
+
+fn omniroute_fal_config_formats(workspace: &Workspace, endpoint: &str) -> (Value, Value, String) {
+    let origin = url::Url::parse(endpoint)
+        .unwrap()
+        .origin()
+        .ascii_serialization();
+    let mut full = fal(workspace);
+    full["connections"]["test"]["baseUrl"] = json!(endpoint);
+    full["connections"]["test"]["gateway"] = json!("omniroute");
+    full["connections"]["test"]["auth"] =
+        json!({"type":"bearer","apiKey":"synthetic-media-key","origin":origin});
+    let compact = json!({
+        "api_endpoint": endpoint,
+        "api_key": "synthetic-media-key",
+        "profile": "fal",
+        "models": [{
+            "id": VIDEO,
+            "name": "Kling",
+            "output_types": ["video"],
+            "modes": ["text-to-video"]
+        }]
+    });
+    let dotenv = format!(
+        "FAL_API_ENDPOINT={endpoint}\nFAL_API_KEY=synthetic-media-key\nFAL_MODEL_1_ID={VIDEO}\nFAL_MODEL_1_NAME=Kling\nFAL_MODEL_1_OUTPUT_TYPES=video\nFAL_MODEL_1_MODES=text-to-video\n"
+    );
+    (full, compact, dotenv)
+}
+
+#[test]
+fn omniroute_fal_prefix_accepts_at_most_one_trailing_slash_in_all_config_formats() {
+    let workspace = Workspace::new();
+    for prefix in ["/v1", "/v1/", "/api/v1", "/api/v1/"] {
+        let endpoint = format!("https://gateway.example{prefix}");
+        let (full, compact, dotenv) = omniroute_fal_config_formats(&workspace, &endpoint);
+        for config in [
+            parse(&workspace, &full),
+            parse(&workspace, &compact),
+            Config::parse(&dotenv, &workspace.0.join(".env"), &[], &HashMap::new()).unwrap(),
+        ] {
+            let (_, connection) = config.select(None).unwrap();
+            assert_eq!(connection["adapter"], "fal-queue");
+            assert_eq!(connection["gateway"], "omniroute");
+            assert_eq!(connection["auth"]["type"], "bearer");
+            assert_eq!(connection["baseUrl"], endpoint.as_str());
+        }
+    }
+}
+
+#[test]
+fn omniroute_fal_prefix_rejects_repeated_trailing_slashes_in_all_config_formats() {
+    let workspace = Workspace::new();
+    for prefix in ["/v1//", "/v1///", "/api/v1//", "/api/v1///"] {
+        let endpoint = format!("https://gateway.example{prefix}");
+        let (full, compact, dotenv) = omniroute_fal_config_formats(&workspace, &endpoint);
+        reject(&workspace, &full);
+        reject(&workspace, &compact);
+        let error = Config::parse(&dotenv, &workspace.0.join(".env"), &[], &HashMap::new())
+            .err()
+            .expect("Repeated trailing slashes must reject before gateway requests.");
+        assert_eq!(error.code, "invalid_configuration");
+        assert!(!error.message.contains("synthetic-media-key"));
+    }
+}

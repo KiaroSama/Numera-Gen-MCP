@@ -661,7 +661,7 @@ fn omniroute_fal_gateway_wire_contracts_and_rejections() {
         fal::Cancel::Requested
     );
     assert_eq!(
-        fal::gateway_cancel(&json!({"error": {"message": "completed"}}), 400).unwrap(),
+        fal::gateway_cancel(&json!({"status": "ALREADY_COMPLETED"}), 400).unwrap(),
         fal::Cancel::AlreadyCompleted
     );
     assert_eq!(
@@ -684,4 +684,18 @@ fn omniroute_fal_gateway_wire_contracts_and_rejections() {
     assert_eq!(artifacts[0].url, "https://v3b.fal.media/files/b/x.png");
     assert!(fal::gateway_outputs(FLUX, &json!({"id": "job_1"})).is_err());
     assert!(fal::gateway_outputs(FLUX, &json!("not-an-object")).is_err());
+}
+
+#[test]
+fn omniroute_fal_cancellation_errors_do_not_prove_completion() {
+    for body in [
+        json!({"error": {"message": "Unexpected end of JSON input"}}),
+        json!({"error": {"message": "Fal upstream request failed (400)"}}),
+        json!({"error": null}),
+        json!({"status": "FAILED", "error": {"message": "Invalid request"}}),
+    ] {
+        let error = fal::gateway_cancel(&body, 400)
+            .expect_err("An unclassified gateway failure must not confirm completion.");
+        assert_eq!(error.code, "invalid_response");
+    }
 }

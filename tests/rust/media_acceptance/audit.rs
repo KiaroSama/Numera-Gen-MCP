@@ -449,3 +449,118 @@ async fn omniroute_fal_gateway_submit_poll_result_cancel_and_probe() {
     })
     .await;
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn omniroute_cancellation_error_does_not_claim_completed_job() {
+    host::scenario(30000, async {
+        let work = f::workspace();
+        let directory = f::directory(&work, "audit-omniroute-cancel-error");
+        let wire = Provider::new(|request, _| async move {
+            assert_eq!(
+                request.header("authorization"),
+                Some("Bearer synthetic-omniroute-cancel-error")
+            );
+            match (request.method.as_str(), request.path.as_str()) {
+                ("POST", "/v1/fal/run") => {
+                    let body = request.json();
+                    assert_eq!(body["endpoint_id"], s::IMAGE);
+                    assert_eq!(body["transport"], "queue");
+                    assert_eq!(request.header("idempotency-key"), Some("omni-cancel-error"));
+                    Ok(Reply::status(
+                        json!({
+                            "id": "job_cancel_error",
+                            "request_id": "upstream_cancel_error",
+                            "status": "IN_QUEUE",
+                            "status_url": "/v1/fal/jobs/job_cancel_error",
+                            "response_url": "/v1/fal/jobs/job_cancel_error?result=true",
+                            "cancel_url": "/v1/fal/jobs/job_cancel_error"
+                        }),
+                        202,
+                    ))
+                }
+                ("DELETE", "/v1/fal/jobs/job_cancel_error") => Ok(Reply::status(
+                    json!({"error": {"message": "Unexpected end of JSON input"}}),
+                    400,
+                )),
+                ("GET", "/v1/fal/jobs/job_cancel_error") => Ok(Reply::json(json!({
+                    "id": "job_cancel_error",
+                    "request_id": "upstream_cancel_error",
+                    "status": "IN_PROGRESS"
+                }))),
+                _ => panic!(
+                    "unexpected cancellation-error request: {} {}",
+                    request.method, request.path
+                ),
+            }
+        })
+        .await;
+        let config = f::config(
+            &directory,
+            json!({"local": {
+                "adapter": "fal-queue",
+                "gateway": "omniroute",
+                "baseUrl": format!("{}/v1", wire.origin),
+                "auth": {
+                    "type": "bearer",
+                    "apiKey": "synthetic-omniroute-cancel-error",
+                    "origin": wire.origin
+                },
+                "defaultModel": s::IMAGE,
+                "configuredModels": [{"id": s::IMAGE, "name": "FLUX"}],
+                "modelOverrides": {s::IMAGE: {
+                    "outputTypes": ["image"], "modes": ["text-to-image"]
+                }},
+                "requestTimeoutMs": 5000,
+                "maxConcurrentRequests": 4
+            }}),
+        );
+        let mut app = s::start(&directory, &config, "audit-omniroute-cancel-error").await;
+        let mut request = s::request("omni-cancel-error", s::IMAGE, "text-to-image", true, &[]);
+        request["wait"] = json!(false);
+        let submitted = s::generate(&app, request).await;
+        assert_eq!(submitted["status"], "running");
+        assert_eq!(submitted["upstream_job"]["id"], "job_cancel_error");
+        assert!(!f::store(&config).cancelled("omni-cancel-error").unwrap());
+
+        let raw = app
+            .call("cancel_job", json!({"request_id": "omni-cancel-error"}))
+            .await;
+        // Local waiting stops even when the gateway cancellation acknowledgement is invalid.
+        assert!(f::store(&config).cancelled("omni-cancel-error").unwrap());
+        assert_eq!(raw["isError"], true, "{raw}");
+        let rejected = host::structured(&raw);
+        assert_eq!(rejected["error"]["code"], "invalid_response");
+        assert_ne!(rejected["upstream_cancellation"], "already_completed");
+        assert_ne!(
+            rejected["upstream_cancellation"],
+            "confirmed_queued_removal"
+        );
+
+        let retained = app.job("omni-cancel-error", false).await;
+        assert_eq!(retained["status"], "running");
+        assert_eq!(retained["generation_outcome"], "running");
+        assert!(retained["upstream_terminal"].is_null());
+        assert_eq!(retained["upstream_job"], submitted["upstream_job"]);
+        assert!(retained["outputs"].as_array().unwrap().is_empty());
+        assert_eq!(wire.captured().len(), 2);
+
+        let refreshed = app.job("omni-cancel-error", true).await;
+        assert_eq!(refreshed["status"], "running");
+        assert_eq!(refreshed["generation_outcome"], "running");
+        assert!(refreshed["upstream_terminal"].is_null());
+        assert_eq!(refreshed["upstream_job"], submitted["upstream_job"]);
+        assert!(refreshed["outputs"].as_array().unwrap().is_empty());
+
+        app.close().await.unwrap();
+        assert!(!app.text().contains("synthetic-omniroute-cancel-error"));
+        assert_eq!(wire.posts(), 1);
+        let requests = wire.captured();
+        assert_eq!(requests.len(), 3, "no hidden result or asset requests");
+        assert_eq!(requests[0].method, "POST");
+        assert_eq!(requests[1].method, "DELETE");
+        assert_eq!(requests[2].method, "GET");
+        assert_eq!(requests[2].path, "/v1/fal/jobs/job_cancel_error");
+        wire.close().await;
+    })
+    .await;
+}
