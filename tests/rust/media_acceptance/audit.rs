@@ -421,7 +421,7 @@ async fn omniroute_fal_gateway_submit_poll_result_cancel_and_probe() {
         cancel_req["wait"] = json!(false);
         s::generate(&app, cancel_req).await;
         let cancelled = host::structured(
-            &app.call("cancel_job", json!({"request_id": "omni-cancel", "connection": "fal"}))
+            &app.call("cancel_job", json!({"request_id": "omni-cancel"}))
                 .await,
         );
         assert_eq!(
