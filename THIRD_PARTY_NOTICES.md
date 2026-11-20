@@ -10,8 +10,8 @@ The published 0.2.0 archives include their verified resolved license inventory; 
 [the exact release evidence](docs/releases/0.2.0.md). Version 0.3.0 is a separate distribution.
 The prior `a4b4600` source passed qualification and six-target signing; its results do not qualify
 later license/metadata revisions. Every final Release must identify its own exact qualified source
-and original signed artifacts. Current manifests select RMCP3.10.0, UUID1.29.2, flate2 1.1.11 and
-ZIP9.5.1. Preparation alone is neither runtime nor license qualification. Every ready archive must
+and original signed artifacts. Current manifests select RMCP3.10.0, rusqlite0.43.0, UUID1.29.2, flate2 1.1.11 and
+ZIP9.6.1. Preparation alone is neither runtime nor license qualification. Every ready archive must
 include the actual resolved dependency licenses/notices and bundled SQLite/codec notices; this document
 is not a substitute. RMCP, Tokio, reqwest, rusqlite, serde/serde_json, ICU4X, image, Base64, SHA2, chrono,
 regex, UUID, URL, ring and the tooling archive crates retain their upstream licenses.
