@@ -89,6 +89,14 @@ pub fn has_image_output(connection: &Value, model: &JsString) -> bool {
     })
 }
 
+pub(crate) fn is_omniroute_fal_endpoint(endpoint: &str) -> bool {
+    url::Url::parse(endpoint).ok().is_some_and(|url| {
+        matches!(url.scheme(), "http" | "https")
+            && url.host_str() != Some("queue.fal.run")
+            && matches!(url.path().trim_end_matches('/'), "/v1" | "/api/v1")
+    })
+}
+
 pub(crate) fn validate_connection(connection: &Value) -> Result<()> {
     let fal = connection["adapter"] == "fal-queue";
     if fal {
@@ -104,27 +112,43 @@ pub(crate) fn validate_connection(connection: &Value) -> Result<()> {
             .as_str()
             .and_then(|value| url::Url::parse(value).ok())
             .ok_or_else(|| invalid("Invalid fal queue origin."))?;
-        let loopback = base.scheme() == "http"
-            && matches!(base.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
-        if (!loopback
-            && (base.scheme() != "https"
-                || base.host_str() != Some("queue.fal.run")
-                || base.port().is_some()))
-            || base.path() != "/"
-            || connection["auth"]["type"] != "key"
-            || connection.get("gateway").is_some()
-            || connection.get("edit").is_some()
+        let forbidden_extras = connection.get("edit").is_some()
             || connection.get("orchestrationModel").is_some()
             || connection["paths"]
                 .as_object()
                 .is_some_and(|v| !v.is_empty())
             || connection["query"]
                 .as_object()
-                .is_some_and(|v| !v.is_empty())
-        {
-            return Err(invalid(
-                "fal-queue requires a queue origin, Key authentication and native endpoint paths.",
-            ));
+                .is_some_and(|v| !v.is_empty());
+        if let Some(gateway) = connection.get("gateway") {
+            let prefix = base.path().trim_end_matches('/');
+            if gateway != "omniroute"
+                || !matches!(base.scheme(), "http" | "https")
+                || base.host_str() == Some("queue.fal.run")
+                || !matches!(prefix, "/v1" | "/api/v1")
+                || connection["baseUrlMode"] != "api-prefix"
+                || connection["auth"]["type"] != "bearer"
+                || forbidden_extras
+            {
+                return Err(invalid(
+                    "OmniRoute fal-queue requires a /v1 gateway prefix and Bearer authentication.",
+                ));
+            }
+        } else {
+            let loopback = base.scheme() == "http"
+                && matches!(base.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
+            if (!loopback
+                && (base.scheme() != "https"
+                    || base.host_str() != Some("queue.fal.run")
+                    || base.port().is_some()))
+                || base.path() != "/"
+                || connection["auth"]["type"] != "key"
+                || forbidden_extras
+            {
+                return Err(invalid(
+                    "fal-queue requires a queue origin, Key authentication and native endpoint paths.",
+                ));
+            }
         }
     } else if connection["auth"]["type"] == "key" {
         return Err(invalid(

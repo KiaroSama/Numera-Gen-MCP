@@ -304,9 +304,10 @@ FAL_MODEL_1_OUTPUT_TYPES=image
 FAL_MODEL_1_MODES=text-to-image
 ```
 
-`FAL_MODEL_n_*` accepts the same fields as `MODEL_n_*`. The fal section always uses fal's native
-`Key` authentication and queue protocol, so it has no `PROFILE`; `EDIT_*` and `ORCHESTRATION_MODEL`
-apply to the main section only. Either section may be left empty, but not both; with only fal
+`FAL_MODEL_n_*` accepts the same fields as `MODEL_n_*`. `FAL_API_ENDPOINT` selects direct queue mode
+(`Key` authentication) for `https://queue.fal.run` or OmniRoute's `/v1/fal` gateway (`Bearer`
+authentication) for an HTTP(S) `/v1` or `/api/v1` prefix, so the fal section has no `PROFILE`; `EDIT_*`
+and `ORCHESTRATION_MODEL` apply to the main section only. Either section may be left empty, but not both; with only fal
 configured, `fal` is the default connection. A tool call without `connection` goes to the section that
 lists the requested model ID. An ID listed in both sections, or in neither, is refused before anything
 is sent, so pass `connection` explicitly in that case.
@@ -549,8 +550,8 @@ The [full fal example](examples/fal.json) declares every implemented endpoint's 
 including image sidecars and the GLB geometry selection for Rodin. It reads the credential from `FAL_KEY`;
 no real credential belongs in a public example. Configuration alone does not submit a request.
 
-For compact dotenv configuration, use the fal section with the origin `https://queue.fal.run` and an
-exact implemented endpoint:
+For compact dotenv configuration, use the fal section with `https://queue.fal.run` (or an OmniRoute
+`/v1` gateway prefix) and an exact implemented endpoint:
 
 ```dotenv
 FAL_API_ENDPOINT=https://queue.fal.run

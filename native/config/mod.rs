@@ -98,7 +98,7 @@ impl Config {
             || raw.get("api_key").is_some()
             || (is_env && raw.get(env_fal::CONNECTION).is_some())
         {
-            let expanded = expand_simple(&mut raw, &file)?;
+            let expanded = expand_simple(&mut raw, &file, is_env)?;
             drop_json(std::mem::replace(&mut raw.0, expanded));
         }
         load::overrides(&mut raw, &flags, env)?;
@@ -167,8 +167,10 @@ pub(crate) fn js_trim_utf16(units: &[u16]) -> &[u16] {
 
 /// Expands a simple configuration into connection `default` (main section) and/or connection `fal`
 /// (fal section). The main connection stays the default whenever it is configured.
-fn expand_simple(raw: &mut Value, file: &Path) -> Result<Value> {
-    let fal = env_fal::take(raw);
+fn expand_simple(raw: &mut Value, file: &Path, is_env: bool) -> Result<Value> {
+    // Only dotenv parsing may create the internal fal section. JSON must keep unknown keys
+    // until schema validation rejects them.
+    let fal = if is_env { env_fal::take(raw) } else { None };
     let mut connections = Object::new();
     if env_fal::has_main(raw) {
         connections.insert("default".into(), build_connection(raw)?);
@@ -229,12 +231,21 @@ fn build_connection(raw: &mut Value) -> Result<Value> {
     if enabled.is_empty() {
         return Err(invalid("Enable at least one configured model."));
     }
-    let origin = validate::url_origin(&String::from_utf16_lossy(
+    let endpoint = String::from_utf16_lossy(
         raw["api_endpoint"]
             .as_utf16()
             .ok_or_else(|| invalid("Invalid API endpoint."))?,
-    ))?;
-    let mut auth = json!({"type": if profile == "fal" { "key" } else if profile.starts_with("gemini") { "header" } else { "bearer" }, "apiKey":raw["api_key"], "origin":origin});
+    );
+    let origin = validate::url_origin(&endpoint)?;
+    let omniroute_fal = profile == "fal" && media::is_omniroute_fal_endpoint(&endpoint);
+    let auth_type = if profile == "fal" && !omniroute_fal {
+        "key"
+    } else if profile.starts_with("gemini") {
+        "header"
+    } else {
+        "bearer"
+    };
+    let mut auth = json!({"type": auth_type, "apiKey": raw["api_key"], "origin": origin});
     if profile.starts_with("gemini") {
         auth["header"] = json!("x-goog-api-key");
     }
@@ -268,6 +279,8 @@ fn build_connection(raw: &mut Value) -> Result<Value> {
     });
     if ["omniroute", "9router"].contains(&profile) {
         connection["gateway"] = json!(profile);
+    } else if omniroute_fal {
+        connection["gateway"] = json!("omniroute");
     }
     for (source, target) in [
         ("edit", "edit"),

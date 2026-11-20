@@ -213,3 +213,11 @@ not invalidate a verified primary GLB; it does not imply that Numera validates U
 https://docs.github.com/en/actions/concepts/security/github_token distinguishes explicit workflow
 dispatch from recursive push events. Qualification remains an explicit exact-source hosted operation.
 No upstream implementation was copied and no live paid generation was authorized by this research.
+
+OmniRoute fal native gateway, checked 2026-11-20:
+https://github.com/cheaper-inference/OmniRoute/releases/tag/v3.8.54 (`src/lib/fal/{http.ts,dispatch.ts,runtime.ts}`,
+`src/lib/db/fal.ts`, `open-sse/handlers/fal/{client.ts,output.ts}`, MIT) and
+https://fal.ai/docs/api-reference/inference-api/queue/submit-path document `POST /v1/fal/run`
+(`transport: "queue"`, `Idempotency-Key`), `GET /v1/fal/jobs/{id}`, `GET /v1/fal/jobs/{id}?result=true`
+(nested `output` payload), `DELETE /v1/fal/jobs/{id}` cancellation, and `GET /v1/fal/models`. No
+upstream code was copied.

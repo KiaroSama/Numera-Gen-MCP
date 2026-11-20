@@ -15,6 +15,9 @@ use std::{
 use tokio_util::sync::CancellationToken;
 
 pub fn prefix(c: &Value) -> &'static str {
+    if c["gateway"] == "omniroute" {
+        return "/v1";
+    }
     match c["adapter"].as_str().unwrap_or("") {
         "comfyui" | "fal-queue" => "",
         "gemini" | "gemini-interactions" => "/v1beta",

@@ -19,10 +19,12 @@ contract; no Node runtime, dotenv dependency or process environment mutation is 
   A single nonempty declaration requires the other; duplicates, spaces and empty tokens reject.
   Three consistent slots are provided.
 - FAL_API_ENDPOINT, FAL_API_KEY and FAL_MODEL_1_* through FAL_MODEL_100_* (same fields as MODEL_n_*):
-  optional second section, expanded to connection `fal` with the fixed fal profile (adapter
-  `fal-queue`, Authorization: Key). Both FAL_API fields empty disable it, even with filled slots; one of
-  them alone rejects. There is no FAL_PROFILE, FAL_EDIT_* or FAL_ORCHESTRATION_MODEL. The main section
-  may stay empty when fal is configured, which makes `fal` the default connection; EDIT_* and
+  optional second section, expanded to connection `fal` (adapter `fal-queue`). `https://queue.fal.run`
+  selects direct provider queue mode with Authorization: Key; an HTTP/HTTPS `/v1` or `/api/v1` gateway prefix
+  on another host (for example `http://localhost:20100/v1`) selects `gateway: "omniroute"` with Authorization:
+  Bearer against `/v1/fal/run` and `/v1/fal/jobs/{id}`. Both FAL_API fields empty disable it, even with filled
+  slots; one of them alone rejects. There is no FAL_PROFILE, FAL_EDIT_* or FAL_ORCHESTRATION_MODEL. The main
+  section may stay empty when fal is configured, which makes `fal` the default connection; EDIT_* and
   ORCHESTRATION_MODEL then reject. PROFILE=fal together with any FAL_* key rejects.
 
 With two connections, a call that omits `connection` is routed to the one whose enabled models list the
@@ -176,9 +178,12 @@ parameter evidence and the request identity all resolve against the edit model i
 are unaffected. Legacy image models need no new fields. Other adapters can declare only their existing text-to-image/image-to-image paths.
 
 For fal use the FAL_* dotenv section (or, in a single-section file, profile `fal`; full adapter
-`fal-queue`), `https://queue.fal.run`, Key authentication and an exact implemented endpoint. Only owned loopback HTTP origins are allowed for offline fixtures;
-remote plaintext HTTP, arbitrary production hosts and alternate ports are rejected. No automatic
-catalog API, file upload, account switch or SDK runtime is introduced.
+`fal-queue`). Direct mode requires `https://queue.fal.run`, Key authentication and an exact implemented
+endpoint (owned loopback HTTP origins are allowed only for offline fixtures). OmniRoute gateway mode
+(`gateway: "omniroute"`) requires an HTTP/HTTPS `/v1` or `/api/v1` prefix on a host other than
+`queue.fal.run` and Bearer authentication, submitting queued work to `/v1/fal/run` with `Idempotency-Key`
+and polling `/v1/fal/jobs/{id}` (`?result=true` for output, `DELETE` for cancellation, `/v1/fal/models`
+for health probes). No automatic catalog API, file upload, account switch or SDK runtime is introduced.
 The [complete public fal example](../examples/fal.json) uses `secretEnv: "FAL_KEY"` and declares every
 implemented model explicitly. Replace its three `/absolute/numera-gen-mcp` storage/log paths with
 absolute paths beneath your own installation before use. Copy it only to a new private configuration;

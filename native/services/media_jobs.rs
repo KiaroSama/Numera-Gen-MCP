@@ -149,13 +149,20 @@ pub(super) async fn get_until_pinned(
             deadline,
         )
         .await?;
-        if status["request_id"].as_str() != Some(handle.id.as_str()) {
+        let omniroute = media_wire::is_omniroute(connection);
+        let id_field = if omniroute { "id" } else { "request_id" };
+        if status[id_field].as_str() != Some(handle.id.as_str()) {
             return Err(NumeraError::new(
                 "invalid_response",
                 "Queue status belongs to another request.",
             ));
         }
-        match fal::status(&status)? {
+        let parsed_status = if omniroute {
+            fal::gateway_status(&status)?
+        } else {
+            fal::status(&status)?
+        };
+        match parsed_status {
             fal::Status::InQueue | fal::Status::InProgress => {
                 receipt.value["status"] = json!("running");
                 receipt.value["generation_outcome"] = json!("running");
@@ -186,6 +193,7 @@ pub(super) async fn get_until_pinned(
                 )
             }
             fal::Status::Completed { failed: false, .. } => {
+                let result_query = json!({"result": "true"});
                 let result_path =
                     media_wire::tracking(connection, &handle, &handle.response_url, "result")?;
                 let (_, result) = media_wire::request_until(
@@ -196,14 +204,18 @@ pub(super) async fn get_until_pinned(
                         prefix: "",
                         method: Method::GET,
                         body: Body::Empty,
-                        query: None,
+                        query: omniroute.then_some(&result_query),
                     },
                     &cancel,
                     false,
                     deadline,
                 )
                 .await?;
-                let artifacts = fal::outputs(&handle.endpoint, &result)?;
+                let artifacts = if omniroute {
+                    fal::gateway_outputs(&handle.endpoint, &result)?
+                } else {
+                    fal::outputs(&handle.endpoint, &result)?
+                };
                 // Finalization journals already received inline originals before observing cancel.
                 let publishing = cancel.child_token();
                 if !cancelled_before && locked(&generation.store)?.cancelled(id)? {
@@ -308,6 +320,7 @@ pub async fn cancel(
         ));
     }
     let handle = media_wire::stored(&receipt)?;
+    let omniroute = media_wire::is_omniroute(pinned.value());
     let path = media_wire::tracking(pinned.value(), &handle, &handle.cancel_url, "cancel")?;
     let (status, value) = media_wire::request_until(
         pinned.value(),
@@ -315,7 +328,11 @@ pub async fn cancel(
         Operation {
             operation: &path,
             prefix: "",
-            method: Method::PUT,
+            method: if omniroute {
+                Method::DELETE
+            } else {
+                Method::PUT
+            },
             body: Body::Empty,
             query: None,
         },
@@ -324,7 +341,11 @@ pub async fn cancel(
         deadline,
     )
     .await?;
-    let outcome = fal::cancel(&value, status)?;
+    let outcome = if omniroute {
+        fal::gateway_cancel(&value, status)?
+    } else {
+        fal::cancel(&value, status)?
+    };
     if outcome == fal::Cancel::Removed {
         // A completed response/journal won the race if it is already present. Otherwise the
         // upstream queued-removal confirmation may safely fence the old status waiter.

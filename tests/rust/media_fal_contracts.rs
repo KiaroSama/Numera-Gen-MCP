@@ -578,3 +578,110 @@ fn outputs_covers_remaining_endpoint_patterns_and_tracking_covers_local_origin()
     // handle with tracking URL value that is not a string rejects
     assert!(fal::handle(FLUX, &json!({"request_id":"x","cancel_url":true})).is_err());
 }
+
+#[test]
+fn omniroute_fal_gateway_wire_contracts_and_rejections() {
+    let handle = fal::gateway_handle(
+        FLUX,
+        &json!({
+            "id": "job_2e2cc325-5132-4096-81e9-f3426c79f771",
+            "request_id": "01a1f5e6-b360-7383-9c8e-f7bc4daea1f8",
+            "status": "IN_QUEUE",
+            "status_url": "/v1/fal/jobs/job_2e2cc325-5132-4096-81e9-f3426c79f771",
+            "response_url": "/v1/fal/jobs/job_2e2cc325-5132-4096-81e9-f3426c79f771?result=true",
+            "cancel_url": null
+        }),
+    )
+    .unwrap();
+    assert_eq!(handle.id, "job_2e2cc325-5132-4096-81e9-f3426c79f771");
+    assert_eq!(
+        handle.cancel_url,
+        "/v1/fal/jobs/job_2e2cc325-5132-4096-81e9-f3426c79f771"
+    );
+
+    let api_v1 = fal::gateway_handle(
+        FLUX,
+        &json!({
+            "id": "job_1",
+            "status_url": "http://localhost:20100/api/v1/fal/jobs/job_1",
+            "response_url": "http://localhost:20100/api/v1/fal/jobs/job_1?result=true",
+            "cancel_url": "http://localhost:20100/api/v1/fal/jobs/job_1"
+        }),
+    )
+    .unwrap();
+    assert_eq!(
+        api_v1.response_url,
+        "http://localhost:20100/api/v1/fal/jobs/job_1?result=true"
+    );
+
+    for bad in [
+        json!({"request_id": "only_upstream"}),
+        json!({"id": "job_1", "status_url": "/v1/fal/jobs/other"}),
+        json!({"id": "job_1", "response_url": "/v1/fal/jobs/job_1"}),
+        json!({"id": "job_1", "status_url": "/v1/fal/jobs/job_1?result=true"}),
+        json!({"id": "job_1", "status_url": "https://user:pass@gateway.example/v1/fal/jobs/job_1"}),
+        json!({"id": "job_1", "cancel_url": 123}),
+    ] {
+        assert!(fal::gateway_handle(FLUX, &bad).is_err(), "accepted {bad}");
+    }
+
+    assert_eq!(
+        fal::gateway_status(&json!({"id": "job_1", "status": "SUBMITTED"})).unwrap(),
+        fal::Status::InQueue
+    );
+    assert_eq!(
+        fal::gateway_status(&json!({"id": "job_1", "status": "IN_PROGRESS"})).unwrap(),
+        fal::Status::InProgress
+    );
+    assert_eq!(
+        fal::gateway_status(&json!({"id": "job_1", "status": "FAILED"})).unwrap(),
+        fal::Status::Completed {
+            failed: true,
+            error_type: None
+        }
+    );
+    assert_eq!(
+        fal::gateway_status(&json!({"id": "job_1", "status": "CANCELLED"})).unwrap(),
+        fal::Status::Completed {
+            failed: true,
+            error_type: Some("client_cancelled".into())
+        }
+    );
+    let unknown =
+        fal::gateway_status(&json!({"id": "job_1", "status": "SUBMISSION_UNKNOWN"})).unwrap_err();
+    assert_eq!(unknown.code, "outcome_unknown");
+    assert!(fal::gateway_status(&json!({"status": "SUBMITTED"})).is_err());
+
+    assert_eq!(
+        fal::gateway_cancel(&json!({"id": "job_1", "status": "CANCELLED"}), 200).unwrap(),
+        fal::Cancel::Removed
+    );
+    assert_eq!(
+        fal::gateway_cancel(&json!({"status": "CANCELLATION_REQUESTED"}), 202).unwrap(),
+        fal::Cancel::Requested
+    );
+    assert_eq!(
+        fal::gateway_cancel(&json!({"error": {"message": "completed"}}), 400).unwrap(),
+        fal::Cancel::AlreadyCompleted
+    );
+    assert_eq!(
+        fal::gateway_cancel(&json!({"error": {"message": "missing"}}), 404).unwrap(),
+        fal::Cancel::NotFound
+    );
+    assert!(fal::gateway_cancel(&json!({"status": "UNKNOWN"}), 200).is_err());
+
+    let artifacts = fal::gateway_outputs(
+        FLUX,
+        &json!({
+            "id": "job_1",
+            "status": "COMPLETED",
+            "artifacts": [{"path": "$.images[0]", "url": "https://v3b.fal.media/files/b/x.png"}],
+            "output": {"images": [{"url": "https://v3b.fal.media/files/b/x.png", "content_type": "image/png"}]}
+        }),
+    )
+    .unwrap();
+    assert_eq!(artifacts.len(), 1);
+    assert_eq!(artifacts[0].url, "https://v3b.fal.media/files/b/x.png");
+    assert!(fal::gateway_outputs(FLUX, &json!({"id": "job_1"})).is_err());
+    assert!(fal::gateway_outputs(FLUX, &json!("not-an-object")).is_err());
+}

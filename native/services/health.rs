@@ -81,6 +81,8 @@ pub async fn health(
                     api::Operation {
                         operation: if c["adapter"] == "comfyui" {
                             "system_stats"
+                        } else if c["adapter"] == "fal-queue" && c["gateway"] == "omniroute" {
+                            "fal/models"
                         } else {
                             "models"
                         },

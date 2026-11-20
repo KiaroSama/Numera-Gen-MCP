@@ -364,3 +364,54 @@ async fn configured_media_discovery_is_offline_and_keeps_evidence_and_dimensions
     .await
     .unwrap();
 }
+
+#[test]
+fn omniroute_fal_gateway_selects_bearer_and_rejects_mismatched_routes() {
+    let workspace = Workspace::new();
+    for endpoint in [
+        "http://localhost:20100/v1",
+        "https://gateway.example/v1",
+        "https://gateway.example/api/v1",
+    ] {
+        let env_text = format!(
+            "API_ENDPOINT=https://main.example/v1\nAPI_KEY=synthetic-media-key\nMODEL_1_ID=family/image\nMODEL_1_NAME=Main\nFAL_API_ENDPOINT={endpoint}\nFAL_API_KEY=synthetic-media-key\nFAL_MODEL_1_ID={VIDEO}\nFAL_MODEL_1_NAME=Kling\nFAL_MODEL_1_OUTPUT_TYPES=video\nFAL_MODEL_1_MODES=text-to-video\n"
+        );
+        let config =
+            Config::parse(&env_text, &workspace.0.join(".env"), &[], &HashMap::new()).unwrap();
+        let connection = &config.value["connections"]["fal"];
+        assert_eq!(connection["adapter"], "fal-queue");
+        assert_eq!(connection["gateway"], "omniroute");
+        assert_eq!(connection["auth"]["type"], "bearer");
+        assert_eq!(connection["baseUrl"], endpoint);
+    }
+
+    let mut valid_full = fal(&workspace);
+    valid_full["connections"]["test"]["baseUrl"] = json!("http://localhost:20100/v1");
+    valid_full["connections"]["test"]["gateway"] = json!("omniroute");
+    valid_full["connections"]["test"]["auth"] =
+        json!({"type":"bearer","apiKey":"synthetic-media-key","origin":"http://localhost:20100"});
+    let loaded = parse(&workspace, &valid_full);
+    assert_eq!(loaded.value["connections"]["test"]["gateway"], "omniroute");
+
+    for bad_base in [
+        "https://queue.fal.run/v1",
+        "http://localhost:20100",
+        "https://gateway.example/v2",
+    ] {
+        let mut bad = valid_full.clone();
+        let origin = url::Url::parse(bad_base)
+            .unwrap()
+            .origin()
+            .ascii_serialization();
+        bad["connections"]["test"]["baseUrl"] = json!(bad_base);
+        bad["connections"]["test"]["auth"]["origin"] = json!(origin);
+        reject(&workspace, &bad);
+    }
+    let mut wrong_auth = valid_full.clone();
+    wrong_auth["connections"]["test"]["auth"]["type"] = json!("key");
+    reject(&workspace, &wrong_auth);
+
+    let mut wrong_gateway = valid_full;
+    wrong_gateway["connections"]["test"]["gateway"] = json!("9router");
+    reject(&workspace, &wrong_gateway);
+}

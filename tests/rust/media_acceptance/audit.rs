@@ -284,3 +284,166 @@ fn unknown_hunyuan_variant_and_excessive_artifacts_remain_rejected() {
     assert!(fal::outputs(s::MESH, &output).is_err());
     assert!(fal::outputs(s::IMAGE, &json!({"images":vec![good;65]})).is_err());
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn omniroute_fal_gateway_submit_poll_result_cancel_and_probe() {
+    host::scenario(30000, async {
+        let work = f::workspace();
+        let directory = f::directory(&work, "audit-omniroute-fal");
+        let (_, mime, original) = s::data("image");
+        let bytes = original.clone();
+        let asset = Provider::new(move |request, _| {
+            let bytes = bytes.clone();
+            async move {
+                assert_eq!(request.method, "GET");
+                assert_eq!(request.header("authorization"), None);
+                Ok(Reply::bytes(200, mime, bytes))
+            }
+        })
+        .await;
+        let asset_url = format!("{}/original.png", asset.origin);
+        let polls = Arc::new(AtomicUsize::new(0));
+        let polls_ref = polls.clone();
+        let wire = Provider::new(move |request, _| {
+            let asset_url = asset_url.clone();
+            let polls = polls_ref.clone();
+            async move {
+                assert_eq!(
+                    request.header("authorization"),
+                    Some("Bearer synthetic-omniroute")
+                );
+                assert_eq!(request.header("x-fal-no-retry"), None);
+                if request.method == "GET" && request.path == "/v1/fal/models" {
+                    return Ok(Reply::json(json!({"models":[{"endpoint_id":s::IMAGE}]})));
+                }
+                if request.method == "POST" && request.path == "/v1/fal/run" {
+                    let body = request.json();
+                    assert_eq!(body["endpoint_id"], s::IMAGE);
+                    assert_eq!(body["transport"], "queue");
+                    let idem = request.header("idempotency-key").expect("Idempotency-Key");
+                    if idem == "omni-bad" {
+                        return Ok(Reply::status(
+                            json!({
+                                "id": "job_bad",
+                                "status": "IN_QUEUE",
+                                "status_url": "https://evil.example/v1/fal/jobs/job_bad"
+                            }),
+                            202,
+                        ));
+                    }
+                    let job = if idem == "omni-cancel" {
+                        "job_cancel"
+                    } else {
+                        assert_eq!(idem, "omni-1");
+                        "job_1"
+                    };
+                    return Ok(Reply::status(
+                        json!({
+                            "id": job,
+                            "request_id": "upstream-fal-req-1",
+                            "status": "IN_QUEUE",
+                            "status_url": format!("/v1/fal/jobs/{job}"),
+                            "response_url": format!("/v1/fal/jobs/{job}?result=true"),
+                            "cancel_url": format!("/v1/fal/jobs/{job}")
+                        }),
+                        202,
+                    ));
+                }
+                if request.method == "DELETE" && request.path == "/v1/fal/jobs/job_cancel" {
+                    return Ok(Reply::json(json!({"id":"job_cancel","status":"CANCELLED"})));
+                }
+                if request.method == "GET" && request.path == "/v1/fal/jobs/job_1" {
+                    let waiting = polls.fetch_add(1, Ordering::SeqCst) == 0;
+                    return Ok(Reply::json(json!({
+                        "id": "job_1",
+                        "request_id": "upstream-fal-req-1",
+                        "status": if waiting { "SUBMITTED" } else { "COMPLETED" }
+                    })));
+                }
+                if request.method == "GET" && request.path == "/v1/fal/jobs/job_1?result=true" {
+                    return Ok(Reply::json(json!({
+                        "id": "job_1",
+                        "status": "COMPLETED",
+                        "artifacts": [{"path": "$.images[0]", "url": asset_url}],
+                        "output": s::output(s::IMAGE, &asset_url, mime)
+                    })));
+                }
+                panic!(
+                    "unexpected OmniRoute fal request: {} {}",
+                    request.method, request.path
+                );
+            }
+        })
+        .await;
+
+        let base = format!("{}/v1", wire.origin);
+        let config = f::normalized(
+            &directory,
+            &json!({
+                "schemaVersion": 1,
+                "defaultConnection": "fal",
+                "outputDir": directory.join("outputs"),
+                "stateDir": directory.join("state"),
+                "logging": {"directory": directory.join("logs")},
+                "files": {
+                    "allowedInputRoots": [directory.join("inputs")],
+                    "assetAllowances": [{"origin": asset.origin, "pathPrefix": "/original.png"}]
+                },
+                "connections": {
+                    "fal": {
+                        "adapter": "fal-queue",
+                        "gateway": "omniroute",
+                        "baseUrl": base,
+                        "auth": {"type": "bearer", "apiKey": "synthetic-omniroute", "origin": wire.origin},
+                        "defaultModel": s::IMAGE,
+                        "configuredModels": [{"id": s::IMAGE, "name": "FLUX"}],
+                        "modelOverrides": {s::IMAGE: {"outputTypes": ["image"], "modes": ["text-to-image"]}},
+                        "requestTimeoutMs": 5000,
+                        "maxConcurrentRequests": 4
+                    }
+                }
+            }),
+        );
+        let mut app = s::start(&directory, &config, "audit-omniroute-fal").await;
+
+        let health = host::structured(&app.call("health_check", json!({"probe": true})).await);
+        assert_eq!(health["connections"][0]["name"], "fal");
+        assert_eq!(health["connections"][0]["reachable"], true);
+        assert_eq!(health["connections"][0]["authentication_checked"], true);
+
+        let done = s::generate(
+            &app,
+            s::request("omni-1", s::IMAGE, "text-to-image", true, &[]),
+        )
+        .await;
+        s::verified(&app, &done, "image", mime, &original).await;
+
+        let mut cancel_req = s::request("omni-cancel", s::IMAGE, "text-to-image", true, &[]);
+        cancel_req["wait"] = json!(false);
+        s::generate(&app, cancel_req).await;
+        let cancelled = host::structured(
+            &app.call("cancel_job", json!({"request_id": "omni-cancel"}))
+                .await,
+        );
+        assert_eq!(
+            cancelled["upstream_cancellation"],
+            "confirmed_queued_removal"
+        );
+        assert_eq!(cancelled["refund_verified"], false);
+        assert_eq!(app.job("omni-cancel", false).await["status"], "cancelled");
+
+        let mut bad_req = s::request("omni-bad", s::IMAGE, "text-to-image", true, &[]);
+        bad_req["wait"] = json!(false);
+        let bad = s::generate(&app, bad_req).await;
+        assert_eq!(bad["status"], "outcome_unknown");
+        assert_eq!(bad["acknowledgement_unverified"], true);
+        assert_eq!(bad["upstream_job"]["id"], "job_bad");
+
+        assert_eq!(wire.posts(), 3);
+        assert!(!app.text().contains("synthetic-omniroute"));
+        app.close().await.unwrap();
+        wire.close().await;
+        asset.close().await;
+    })
+    .await;
+}

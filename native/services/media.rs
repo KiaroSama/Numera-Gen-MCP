@@ -165,14 +165,32 @@ pub async fn run(
             "Media submission intent persisted.",
             json!({"mode":request.mode}),
         );
+        let omniroute = media_wire::is_omniroute(connection);
+        let mut submit_headers = pinned.headers();
+        if omniroute {
+            let idem = if !id.is_empty()
+                && id.len() <= 128
+                && id.bytes().all(|b| (0x21..=0x7e).contains(&b))
+            {
+                id.clone()
+            } else {
+                crate::compat::hash::sha256(id.as_bytes())
+            };
+            submit_headers.insert("Idempotency-Key".into(), idem);
+        }
+        let submit_body = if omniroute {
+            json!({"endpoint_id": model, "transport": "queue", "input": parameters})
+        } else {
+            parameters
+        };
         let (_, response) = media_wire::request_until(
             connection,
-            &pinned.headers(),
+            &submit_headers,
             Operation {
-                operation: &model,
+                operation: if omniroute { "fal/run" } else { &model },
                 prefix: "",
                 method: Method::POST,
-                body: Body::Json(parameters),
+                body: Body::Json(submit_body),
                 query: None,
             },
             &cancel,
@@ -181,7 +199,11 @@ pub async fn run(
         )
         .await?;
         let parsed = (|| {
-            let handle = fal::handle(&model, &response)?;
+            let handle = if omniroute {
+                fal::gateway_handle(&model, &response)?
+            } else {
+                fal::handle(&model, &response)?
+            };
             for (raw, suffix) in [
                 (&handle.status_url, "status"),
                 (&handle.response_url, "result"),
@@ -196,9 +218,16 @@ pub async fn run(
             Err(_) => {
                 // An unsafe acknowledgement is uncertain after POST; retain only a canonical ID,
                 // never its untrusted tracking destinations and never a new submission.
-                if let Some(id) = response.get("request_id")
-                    && let Ok(handle) = fal::handle(&model, &serde_json::json!({"request_id":id}))
-                {
+                let fallback = if omniroute {
+                    response.get("id").and_then(|job_id| {
+                        fal::gateway_handle(&model, &serde_json::json!({"id": job_id})).ok()
+                    })
+                } else {
+                    response.get("request_id").and_then(|job_id| {
+                        fal::handle(&model, &serde_json::json!({"request_id": job_id})).ok()
+                    })
+                };
+                if let Some(handle) = fallback {
                     receipt.value["upstream_job"] = media_wire::job(&handle)?;
                 }
                 receipt.value["acknowledgement_unverified"] = json!(true);

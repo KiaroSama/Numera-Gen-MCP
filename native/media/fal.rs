@@ -280,3 +280,108 @@ fn collect(
     }
     Ok(())
 }
+
+// The network owner additionally binds every tracking URL to its pinned gateway origin.
+pub fn gateway_handle(endpoint: &str, response: &Value) -> Result<Handle> {
+    spec(endpoint)?;
+    let id = identifier(&response["id"])?;
+    let v1 = format!("/v1/fal/jobs/{id}");
+    let api_v1 = format!("/api/v1/fal/jobs/{id}");
+    let tracking = |key: &str, result_query: bool| -> Result<String> {
+        let suffix = if result_query { "?result=true" } else { "" };
+        let expected_v1 = format!("{v1}{suffix}");
+        let expected_api = format!("{api_v1}{suffix}");
+        match response.get(key) {
+            None | Some(Value::Null) => Ok(expected_v1),
+            Some(Value::String(value)) if value == &expected_v1 || value == &expected_api => {
+                Ok(value.clone())
+            }
+            Some(Value::String(value)) if value.len() <= 4096 => {
+                let url = url::Url::parse(value)
+                    .map_err(|_| invalid("Invalid gateway fal tracking URL."))?;
+                let expected_q = result_query.then_some("result=true");
+                if !matches!(url.scheme(), "http" | "https")
+                    || url.host_str().is_none_or(|h| h == "queue.fal.run")
+                    || !url.username().is_empty()
+                    || url.password().is_some()
+                    || (url.path() != v1 && url.path() != api_v1)
+                    || url.query() != expected_q
+                    || url.fragment().is_some()
+                {
+                    return Err(invalid(
+                        "Gateway fal tracking URL does not match its job identifier.",
+                    ));
+                }
+                Ok(value.clone())
+            }
+            _ => Err(invalid("Invalid gateway fal tracking URL field.")),
+        }
+    };
+    Ok(Handle {
+        id: id.into(),
+        endpoint: endpoint.into(),
+        status_url: tracking("status_url", false)?,
+        response_url: tracking("response_url", true)?,
+        cancel_url: tracking("cancel_url", false)?,
+    })
+}
+
+pub fn gateway_status(value: &Value) -> Result<Status> {
+    identifier(&value["id"])?;
+    let error_type = match value.get("error_type") {
+        None | Some(Value::Null) => None,
+        Some(Value::String(s))
+            if s.len() <= 128 && s.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_') =>
+        {
+            Some(s.clone())
+        }
+        _ => return Err(invalid("Invalid fal queue error type.")),
+    };
+    let failed = value.get("error").is_some_and(|e| !e.is_null()) || error_type.is_some();
+    match value["status"].as_str() {
+        Some("IN_QUEUE" | "SUBMITTED") if !failed => Ok(Status::InQueue),
+        Some("IN_PROGRESS") if !failed => Ok(Status::InProgress),
+        Some("COMPLETED") => Ok(Status::Completed { failed, error_type }),
+        Some("FAILED") => Ok(Status::Completed {
+            failed: true,
+            error_type,
+        }),
+        Some("CANCELLED") => Ok(Status::Completed {
+            failed: true,
+            error_type: Some("client_cancelled".into()),
+        }),
+        Some("SUBMISSION_UNKNOWN") => Err(crate::error::NumeraError::new(
+            "outcome_unknown",
+            "Gateway submission outcome is unknown; inspect the existing job and never resubmit.",
+        )
+        .stage("generation")),
+        _ => Err(invalid("Unknown or inconsistent gateway fal job status.")),
+    }
+}
+
+pub fn gateway_cancel(value: &Value, http_status: u16) -> Result<Cancel> {
+    match (http_status, value["status"].as_str()) {
+        (200, Some("CANCELLED" | "OK")) => Ok(Cancel::Removed),
+        (202, Some("CANCELLATION_REQUESTED")) => Ok(Cancel::Requested),
+        (400, status) if status == Some("ALREADY_COMPLETED") || value.get("error").is_some() => {
+            Ok(Cancel::AlreadyCompleted)
+        }
+        (404, status) if status == Some("NOT_FOUND") || value.get("error").is_some() => {
+            Ok(Cancel::NotFound)
+        }
+        _ => Err(invalid(
+            "Fal cancellation was not confirmed by a matching status/body.",
+        )),
+    }
+}
+
+pub fn gateway_outputs(endpoint: &str, response: &Value) -> Result<Vec<Artifact>> {
+    if !response.is_object() {
+        return Err(invalid("Fal result must be an object."));
+    }
+    let payload = response
+        .get("output")
+        .filter(|v| v.is_object())
+        .ok_or_else(|| invalid("Gateway fal result omitted native output object."))?;
+    outputs(endpoint, payload)
+}

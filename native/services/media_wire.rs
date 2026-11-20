@@ -7,6 +7,10 @@ use crate::{
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
+pub fn is_omniroute(connection: &Value) -> bool {
+    connection["gateway"] == "omniroute"
+}
+
 pub fn tracking(
     connection: &Value,
     handle: &fal::Handle,
@@ -19,6 +23,49 @@ pub fn tracking(
             .ok_or_else(NumeraError::runtime)?,
     )
     .map_err(|_| NumeraError::new("invalid_configuration", "Invalid queue origin."))?;
+    let raw_path = raw.split('?').next().unwrap_or(raw);
+    if raw.len() > 4096
+        || raw.chars().any(|c| c.is_control() || c == '\\')
+        || ["%2e", "%2f", "%5c"]
+            .iter()
+            .any(|s| raw.to_ascii_lowercase().contains(s))
+        || raw_path.split('/').any(|part| matches!(part, "." | ".."))
+    {
+        return Err(NumeraError::new(
+            "permission_denied",
+            "Existing queue URL contains an unsafe path encoding.",
+        ));
+    }
+    let url = base
+        .join(raw)
+        .map_err(|_| NumeraError::new("permission_denied", "Invalid existing queue URL."))?;
+    if is_omniroute(connection) {
+        fal::gateway_handle(&handle.endpoint, &serde_json::json!({"id": handle.id}))?;
+        let expected_v1 = format!("/v1/fal/jobs/{}", handle.id);
+        let expected_prefix = format!(
+            "{}/fal/jobs/{}",
+            base.path().trim_end_matches('/'),
+            handle.id
+        );
+        let valid_query = match suffix {
+            "result" => matches!(url.query(), None | Some("result=true")),
+            "status" | "cancel" => url.query().is_none(),
+            _ => return Err(NumeraError::runtime()),
+        };
+        if url.origin() != base.origin()
+            || (url.path() != expected_v1 && url.path() != expected_prefix)
+            || !url.username().is_empty()
+            || url.password().is_some()
+            || !valid_query
+            || url.fragment().is_some()
+        {
+            return Err(NumeraError::new(
+                "permission_denied",
+                "Existing queue URL differs from its original destination/request; no credentials were sent.",
+            ));
+        }
+        return Ok(format!("fal/jobs/{}", handle.id));
+    }
     let expected = fal::handle(
         &handle.endpoint,
         &serde_json::json!({"request_id":handle.id}),
@@ -29,21 +76,6 @@ pub fn tracking(
         "result" => expected.response_url,
         _ => return Err(NumeraError::runtime()),
     };
-    if raw.len() > 4096
-        || raw.chars().any(|c| c.is_control() || c == '\\')
-        || ["%2e", "%2f", "%5c"]
-            .iter()
-            .any(|s| raw.to_ascii_lowercase().contains(s))
-        || raw.split('/').any(|part| matches!(part, "." | ".."))
-    {
-        return Err(NumeraError::new(
-            "permission_denied",
-            "Existing queue URL contains an unsafe path encoding.",
-        ));
-    }
-    let url = base
-        .join(raw)
-        .map_err(|_| NumeraError::new("permission_denied", "Invalid existing queue URL."))?;
     if url.origin() != base.origin()
         || url.path() != expected
         || !url.username().is_empty()
@@ -83,12 +115,17 @@ pub async fn request_until(
     if tokio::time::Instant::now() >= deadline {
         return Err(deadline_error());
     }
+    let omniroute = is_omniroute(connection);
     let mut headers = headers.clone();
-    headers.insert("X-Fal-No-Retry".into(), "1".into());
-    headers.insert("X-Fal-Store-IO".into(), "0".into());
+    if !omniroute {
+        headers.insert("X-Fal-No-Retry".into(), "1".into());
+        headers.insert("X-Fal-Store-IO".into(), "0".into());
+    }
     let query = crate::compat::value::json!({"logs":"0"});
+    let default_query =
+        (!cancellation && !omniroute && wire.operation.ends_with("/status")).then_some(&query);
     let wire = Operation {
-        query: (!cancellation && wire.operation.ends_with("/status")).then_some(&query),
+        query: wire.query.or(default_query),
         ..wire
     };
     let operation = async {
