@@ -93,7 +93,10 @@ pub(crate) fn is_omniroute_fal_endpoint(endpoint: &str) -> bool {
     url::Url::parse(endpoint).ok().is_some_and(|url| {
         matches!(url.scheme(), "http" | "https")
             && url.host_str() != Some("queue.fal.run")
-            && matches!(url.path().trim_end_matches('/'), "/v1" | "/api/v1")
+            && matches!(
+                url.path().strip_suffix('/').unwrap_or(url.path()),
+                "/v1" | "/api/v1"
+            )
     })
 }
 
@@ -121,7 +124,7 @@ pub(crate) fn validate_connection(connection: &Value) -> Result<()> {
                 .as_object()
                 .is_some_and(|v| !v.is_empty());
         if let Some(gateway) = connection.get("gateway") {
-            let prefix = base.path().trim_end_matches('/');
+            let prefix = base.path().strip_suffix('/').unwrap_or(base.path());
             if gateway != "omniroute"
                 || !matches!(base.scheme(), "http" | "https")
                 || base.host_str() == Some("queue.fal.run")

@@ -363,9 +363,7 @@ pub fn gateway_cancel(value: &Value, http_status: u16) -> Result<Cancel> {
     match (http_status, value["status"].as_str()) {
         (200, Some("CANCELLED" | "OK")) => Ok(Cancel::Removed),
         (202, Some("CANCELLATION_REQUESTED")) => Ok(Cancel::Requested),
-        (400, status) if status == Some("ALREADY_COMPLETED") || value.get("error").is_some() => {
-            Ok(Cancel::AlreadyCompleted)
-        }
+        (400, Some("ALREADY_COMPLETED")) => Ok(Cancel::AlreadyCompleted),
         (404, status) if status == Some("NOT_FOUND") || value.get("error").is_some() => {
             Ok(Cancel::NotFound)
         }
