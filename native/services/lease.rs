@@ -24,11 +24,13 @@ impl Lease {
         let receipt = Arc::new(Mutex::new(receipt));
         let current = receipt.clone();
         let task = tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_millis(if observe_cancel {
+            let period = Duration::from_millis(if observe_cancel {
                 200
             } else {
                 Store::LEASE_MS as u64 / 3
-            }));
+            });
+            let mut interval =
+                tokio::time::interval_at(tokio::time::Instant::now() + period, period);
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             let mut renewed = tokio::time::Instant::now();
             loop {

@@ -8,17 +8,24 @@ const STRING_ID: &str = "numera-utf16:";
 
 #[derive(Clone, Debug)]
 pub struct OriginalArguments {
-    pub arguments: Arc<JsValue>,
+    pub arguments: Arc<Mutex<Option<JsValue>>>,
     pub response: Arc<Mutex<Option<crate::compat::value::Value>>>,
     pub expected_id: Option<serde_json::Value>,
 }
 impl OriginalArguments {
     pub fn new(arguments: JsValue) -> Self {
         Self {
-            arguments: Arc::new(arguments),
+            arguments: Arc::new(Mutex::new(Some(arguments))),
             response: Arc::new(Mutex::new(None)),
             expected_id: None,
         }
+    }
+
+    pub fn take_arguments(&self) -> Option<JsValue> {
+        self.arguments
+            .lock()
+            .ok()
+            .and_then(|mut guard| guard.take())
     }
 }
 fn invalid() -> NumeraError {

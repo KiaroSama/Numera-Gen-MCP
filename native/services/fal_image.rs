@@ -17,6 +17,18 @@ pub fn selected(config: &crate::config::Config, args: &Value) -> bool {
 }
 
 pub fn to_media_request(args: &Value, operation: &str) -> Result<Value> {
+    let mut cleaned = args.clone();
+    if let Some(obj) = cleaned.as_object_mut() {
+        let nulls: Vec<_> = obj
+            .iter()
+            .filter(|(_, v)| v.is_null())
+            .map(|(k, _)| k.clone())
+            .collect();
+        for k in nulls {
+            obj.remove(&k);
+        }
+    }
+    let parsed = crate::files::editing::request(super::request::parse(cleaned)?, operation)?;
     for key in [
         "size",
         "quality",
@@ -25,11 +37,14 @@ pub fn to_media_request(args: &Value, operation: &str) -> Result<Value> {
         "frame_duration_ms",
         "aspect_ratio",
         "mask",
+        "mask_mode",
         "edit_region",
         "upscale",
         "target_language",
+        "preserve_subject",
+        "preserve_style",
     ] {
-        if args.get(key).is_some_and(|v| !v.is_null()) {
+        if parsed.get(key).is_some_and(|v| !v.is_null()) {
             return Err(NumeraError::new(
                 "unsupported_parameter",
                 &format!(
@@ -38,7 +53,7 @@ pub fn to_media_request(args: &Value, operation: &str) -> Result<Value> {
             ));
         }
     }
-    let refs = args["reference_images"]
+    let refs = parsed["reference_images"]
         .as_array()
         .cloned()
         .unwrap_or_default();
@@ -50,18 +65,18 @@ pub fn to_media_request(args: &Value, operation: &str) -> Result<Value> {
     }
     let mut out = json!({
         "mode": if refs.is_empty() { "text-to-image" } else { "image-to-image" },
-        "prompt": args["prompt"],
+        "prompt": parsed["prompt"],
     });
     let mut parameters = json!({});
     for key in ["image_size", "output_format", "seed", "negative_prompt"] {
-        if let Some(v) = args.get(key).filter(|v| !v.is_null()) {
+        if let Some(v) = parsed.get(key).filter(|v| !v.is_null()) {
             parameters[key] = v.clone();
         }
     }
-    if args["count"].as_u64().is_some_and(|n| n > 1) {
-        parameters["num_images"] = args["count"].clone();
+    if parsed["count"].as_u64().is_some_and(|n| n > 1) {
+        parameters["num_images"] = parsed["count"].clone();
     }
-    if let Some(options) = args["provider_options"].as_object() {
+    if let Some(options) = parsed["provider_options"].as_object() {
         for (k, v) in options {
             if let Some(o) = parameters.as_object_mut() {
                 o.insert(k.clone(), v.clone());
@@ -91,7 +106,7 @@ pub fn to_media_request(args: &Value, operation: &str) -> Result<Value> {
         "output_subdirectory",
         "filename_prefix",
     ] {
-        if let Some(v) = args.get(key).filter(|v| !v.is_null()) {
+        if let Some(v) = parsed.get(key).filter(|v| !v.is_null()) {
             out[key] = v.clone();
         }
     }

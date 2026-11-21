@@ -1,5 +1,9 @@
-use crate::compat::value::{JsString, Value};
-use crate::{files::images::Image, http::api::Body};
+use crate::compat::value::{JsString, Object, Value};
+use crate::{
+    error::{NumeraError, Result},
+    files::images::Image,
+    http::api::Body,
+};
 use base64::{Engine, engine::general_purpose::STANDARD};
 
 pub struct Input<'a> {
@@ -58,4 +62,26 @@ pub fn mime_data(image: &Image) -> String {
         image.mime,
         STANDARD.encode(&image.bytes)
     )
+}
+
+pub fn merge_provider_options(
+    target: &mut Object,
+    options: Option<&Object>,
+    reserved: &[&str],
+) -> Result<()> {
+    let Some(options) = options else {
+        return Ok(());
+    };
+    for (key, value) in options {
+        if let Some(name) = key.as_str()
+            && reserved.contains(&name)
+        {
+            return Err(NumeraError::new(
+                "unsupported_parameter",
+                &format!("provider_options cannot override reserved key {name}."),
+            ));
+        }
+        target.insert(key.clone(), value.clone());
+    }
+    Ok(())
 }

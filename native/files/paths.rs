@@ -152,7 +152,7 @@ fn output_directory_observed(
         .map(safe_relative)
         .transpose()?
         .map(str::to_owned)
-        .unwrap_or_else(|| chrono::Utc::now().format("%Y-%m-%d").to_string());
+        .unwrap_or_else(crate::time_utc::date_ymd);
     let mut current = base.clone();
     for part in subdirectory.split(['/', '\\']) {
         current.push(part);

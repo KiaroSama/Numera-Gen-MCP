@@ -47,7 +47,12 @@ pub fn operation_url(
         || operation.chars().any(|c| "\\?#\0".contains(c))
         || operation.split('/').any(|part| {
             let decoded = percent_encoding::percent_decode_str(part).decode_utf8();
-            decoded.is_err() || decoded.is_ok_and(|v| v == "." || v == "..")
+            decoded.is_err()
+                || decoded.is_ok_and(|v| {
+                    v.contains('\\')
+                        || v.contains('\0')
+                        || v.split(['/', '\\']).any(|sub| sub == "." || sub == "..")
+                })
         })
     {
         return Err(error("Invalid relative operation path."));

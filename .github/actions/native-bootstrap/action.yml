@@ -10,6 +10,9 @@ inputs:
   build-task:
     description: Build the locked task runner; only source-preparation may disable this
     default: 'true'
+  use-cache:
+    description: Restore and save Cargo caches on qualify jobs only; signing and release jobs never enable caching
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -20,6 +23,8 @@ runs:
         fromJSON('{"Windows-X64":"x86_64-pc-windows-msvc","Windows-ARM64":"aarch64-pc-windows-msvc","Linux-X64":"x86_64-unknown-linux-gnu","Linux-ARM64":"aarch64-unknown-linux-gnu"}')[format('{0}-{1}', runner.os, runner.arch)] != inputs.target ||
         (inputs.coverage != 'true' && inputs.coverage != 'false') ||
         (inputs.build-task != 'true' && inputs.build-task != 'false') ||
+        (inputs.use-cache != 'true' && inputs.use-cache != 'false') ||
+        (inputs.use-cache == 'true' && env.NUMERA_CI_OPERATION != 'qualify') ||
         (inputs.build-task == 'false' && (github.job != 'source-preparation' || env.NUMERA_CI_OPERATION != 'source-preparation' || inputs.coverage != 'false')) ||
         (env.NUMERA_CI_OPERATION == 'source-preparation' && (inputs.build-task != 'false' || inputs.coverage != 'false' || github.job != 'source-preparation'))
       shell: bash
@@ -96,6 +101,18 @@ runs:
         BOOTSTRAP_COVERAGE: ${{ inputs.coverage }}
         BOOTSTRAP_BUILD_TASK: ${{ inputs.build-task }}
       run: '"$NUMERA_BOOTSTRAP_OWNER" bounded 30000 20000 --exec "$NUMERA_BOOTSTRAP_DRIVER" version'
+    - name: Cache Cargo registry and workspace build artifacts on qualify runs only
+      if: inputs.use-cache == 'true' && env.NUMERA_CI_OPERATION == 'qualify'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5.0.5
+      with:
+        path: |
+          .ci-cache/cargo/registry/index
+          .ci-cache/cargo/registry/cache
+          .ci-cache/cargo/git/db
+          target
+        key: numera-cargo-v1-${{ inputs.target }}-${{ inputs.coverage }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+        restore-keys: |
+          numera-cargo-v1-${{ inputs.target }}-${{ inputs.coverage }}-
     - name: Build the exact locked workspace task once
       if: inputs.build-task == 'true'
       shell: bash

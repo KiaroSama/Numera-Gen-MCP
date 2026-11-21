@@ -171,6 +171,9 @@ impl Generation {
             status.result.ok_or_else(NumeraError::runtime)?
         } else {
             let built = built.ok_or_else(NumeraError::runtime)?;
+            let max_bytes = config["files"]["maxAggregateBytes"]
+                .as_u64()
+                .unwrap_or(100 * 1024 * 1024) as usize;
             let response = api::request_observed(
                 c,
                 headers,
@@ -182,9 +185,7 @@ impl Generation {
                     query: None,
                 },
                 cancel,
-                config["files"]["maxAggregateBytes"]
-                    .as_u64()
-                    .unwrap_or(100 * 1024 * 1024) as usize,
+                max_bytes,
                 |client_build_ms, pre_send_ms, timeout_ms| {
                     self.logger.log(
                         "INFO",
@@ -198,14 +199,25 @@ impl Generation {
             if let Some(id) = response.request_id {
                 receipt.value["upstream_request_id"] = json!(id);
             }
-            let mut normalized = adapters::normalize::response(c, response.bytes, &response.mime)?;
+            let mut normalized = adapters::normalize::response_with_limit(
+                c,
+                response.bytes,
+                &response.mime,
+                max_bytes,
+            )?;
             if let Some(job) = &normalized.job {
                 receipt.value["upstream_job"] = json!({"id":job.id,"kind":job.kind});
                 receipt.value["status"] = json!("running");
                 locked(&self.store)?.update(receipt)?;
+                if input.request["wait"] == false {
+                    return Ok(receipt.clone());
+                }
             }
+            let mut poll_attempt = 0u32;
             while let Some(job) = normalized.job.take() {
-                wait(cancel, 500).await?;
+                let delay_ms = super::polling::backoff_ms(poll_attempt, 250, 2_000);
+                poll_attempt = poll_attempt.saturating_add(1);
+                wait(cancel, delay_ms).await?;
                 let raw = api::json(
                     c,
                     headers,

@@ -123,7 +123,7 @@ pub async fn submit(
                 operation: "upload/image",
                 prefix: "",
                 method: Method::POST,
-                body: Body::Multipart(Form::new().part("image", part)),
+                body: Body::Multipart(Form::new().text("type", "input").part("image", part)),
                 query: None,
             },
             cancel,

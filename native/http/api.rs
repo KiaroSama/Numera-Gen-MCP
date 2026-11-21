@@ -6,6 +6,7 @@ use crate::{
 use reqwest::{Client, Method, header::HeaderValue, multipart::Form};
 use std::{
     collections::HashMap,
+    sync::{Mutex, OnceLock},
     time::{Duration, Instant},
 };
 use tokio_util::sync::CancellationToken;
@@ -30,6 +31,72 @@ pub struct ApiResponse {
     pub request_id: Option<String>,
 }
 
+fn pooled_default_client() -> Result<Client> {
+    static DEFAULT: OnceLock<std::result::Result<Client, ()>> = OnceLock::new();
+    DEFAULT
+        .get_or_init(|| {
+            Client::builder()
+                .redirect(reqwest::redirect::Policy::none())
+                .no_proxy()
+                .pool_idle_timeout(Duration::from_secs(60))
+                .pool_max_idle_per_host(8)
+                .build()
+                .map_err(|_| ())
+        })
+        .clone()
+        .map_err(|()| {
+            NumeraError::new(
+                "invalid_configuration",
+                "Cannot initialize configured API transport.",
+            )
+        })
+}
+
+fn pooled_proxy_client(proxy_url: &str, proxy_auth: Option<&str>) -> Result<Client> {
+    static PROXIES: OnceLock<Mutex<HashMap<String, Client>>> = OnceLock::new();
+    let cache = PROXIES.get_or_init(|| Mutex::new(HashMap::new()));
+    let mut key_material = String::with_capacity(proxy_url.len() + 64);
+    key_material.push_str(proxy_url);
+    key_material.push('\0');
+    if let Some(auth) = proxy_auth {
+        key_material.push_str(auth);
+    }
+    let key = crate::compat::hash::sha256(key_material.as_bytes());
+    drop(key_material);
+    if let Ok(guard) = cache.lock()
+        && let Some(existing) = guard.get(&key)
+    {
+        return Ok(existing.clone());
+    }
+    let mut proxy_agent = reqwest::Proxy::all(proxy_url)
+        .map_err(|_| NumeraError::new("invalid_configuration", "Invalid proxy configuration."))?;
+    if let Some(value) = proxy_auth {
+        let header = HeaderValue::from_str(value)
+            .map_err(|_| NumeraError::new("invalid_configuration", "Invalid proxy credential."))?;
+        proxy_agent = proxy_agent.custom_http_auth(header);
+    }
+    let built = Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .no_proxy()
+        .pool_idle_timeout(Duration::from_secs(60))
+        .pool_max_idle_per_host(8)
+        .proxy(proxy_agent)
+        .build()
+        .map_err(|_| {
+            NumeraError::new(
+                "invalid_configuration",
+                "Cannot initialize configured API transport.",
+            )
+        })?;
+    if let Ok(mut guard) = cache.lock() {
+        if guard.len() >= 16 {
+            guard.clear();
+        }
+        guard.insert(key, built.clone());
+    }
+    Ok(built)
+}
+
 pub fn client(timeout: Duration) -> reqwest::ClientBuilder {
     Client::builder()
         .no_proxy()
@@ -45,7 +112,27 @@ pub async fn request(
     cancel: &CancellationToken,
     limit: usize,
 ) -> Result<ApiResponse> {
-    request_observed(connection, headers, wire, cancel, limit, |_, _, _| {}).await
+    request_observed_with_proxy(connection, headers, None, wire, cancel, limit, |_, _, _| {}).await
+}
+
+pub async fn request_with_proxy(
+    connection: &Value,
+    headers: &HashMap<String, String>,
+    proxy_auth: Option<&str>,
+    wire: Operation<'_>,
+    cancel: &CancellationToken,
+    limit: usize,
+) -> Result<ApiResponse> {
+    request_observed_with_proxy(
+        connection,
+        headers,
+        proxy_auth,
+        wire,
+        cancel,
+        limit,
+        |_, _, _| {},
+    )
+    .await
 }
 
 /// Observes preparation only; the callback does not establish that a request was sent.
@@ -57,12 +144,56 @@ pub async fn request_observed(
     limit: usize,
     prepared: impl FnOnce(u64, u64, u64) + Send,
 ) -> Result<ApiResponse> {
-    request_inner(connection, headers, wire, cancel, limit, &[], prepared).await
+    request_inner(
+        connection,
+        headers,
+        None,
+        wire,
+        cancel,
+        limit,
+        &[],
+        prepared,
+    )
+    .await
+}
+
+pub async fn request_observed_with_proxy(
+    connection: &Value,
+    headers: &HashMap<String, String>,
+    proxy_auth: Option<&str>,
+    wire: Operation<'_>,
+    cancel: &CancellationToken,
+    limit: usize,
+    prepared: impl FnOnce(u64, u64, u64) + Send,
+) -> Result<ApiResponse> {
+    request_inner(
+        connection,
+        headers,
+        proxy_auth,
+        wire,
+        cancel,
+        limit,
+        &[],
+        prepared,
+    )
+    .await
 }
 
 pub async fn request_statuses(
     connection: &Value,
     headers: &HashMap<String, String>,
+    wire: Operation<'_>,
+    cancel: &CancellationToken,
+    limit: usize,
+    allowed: &[u16],
+) -> Result<ApiResponse> {
+    request_statuses_with_proxy(connection, headers, None, wire, cancel, limit, allowed).await
+}
+
+pub async fn request_statuses_with_proxy(
+    connection: &Value,
+    headers: &HashMap<String, String>,
+    proxy_auth: Option<&str>,
     wire: Operation<'_>,
     cancel: &CancellationToken,
     limit: usize,
@@ -79,6 +210,7 @@ pub async fn request_statuses(
     request_inner(
         connection,
         headers,
+        proxy_auth,
         wire,
         cancel,
         limit,
@@ -88,9 +220,11 @@ pub async fn request_statuses(
     .await
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn request_inner(
     connection: &Value,
     headers: &HashMap<String, String>,
+    proxy_auth: Option<&str>,
     wire: Operation<'_>,
     cancel: &CancellationToken,
     limit: usize,
@@ -135,32 +269,35 @@ async fn request_inner(
         prefix,
         &Value::Object(params),
     )?;
-    let mut builder = client(Duration::from_millis(timeout));
-    if let Some(proxy) = connection.get("proxy") {
-        let mut proxy_agent = reqwest::Proxy::all(String::from_utf16_lossy(
-            proxy["url"].as_utf16().ok_or_else(NumeraError::runtime)?,
-        ))
-        .map_err(|_| NumeraError::new("invalid_configuration", "Invalid proxy configuration."))?;
-        if let Some(env) = proxy["secretEnv"].as_str()
-            && let Ok(value) = std::env::var(env)
-        {
-            let header = HeaderValue::from_str(&value).map_err(|_| {
-                NumeraError::new("invalid_configuration", "Invalid proxy credential.")
-            })?;
-            proxy_agent = proxy_agent.custom_http_auth(header);
-        }
-        builder = builder.proxy(proxy_agent);
-    }
     let building = Instant::now();
-    let client = builder.build().map_err(|_| {
-        NumeraError::new(
-            "invalid_configuration",
-            "Cannot initialize configured API transport.",
-        )
-    })?;
+    let client = if let Some(proxy) = connection.get("proxy") {
+        let proxy_url =
+            String::from_utf16_lossy(proxy["url"].as_utf16().ok_or_else(NumeraError::runtime)?);
+        let auth = if let Some(secret_env) = proxy.get("secretEnv") {
+            if secret_env.as_str().is_none_or(str::is_empty) {
+                return Err(NumeraError::new(
+                    "invalid_configuration",
+                    "Invalid proxy secretEnv configuration.",
+                ));
+            }
+            Some(proxy_auth.ok_or_else(|| {
+                NumeraError::new(
+                    "missing_credentials",
+                    "Proxy credential was not resolved for this request.",
+                )
+            })?)
+        } else {
+            None
+        };
+        pooled_proxy_client(&proxy_url, auth)?
+    } else {
+        pooled_default_client()?
+    };
     let client_build_ms = building.elapsed().as_millis() as u64;
     let expects_body = method != Method::HEAD;
-    let mut request = client.request(method, url);
+    let mut request = client
+        .request(method, url)
+        .timeout(Duration::from_millis(timeout));
     for (name, value) in headers {
         request = request.header(name, value);
     }
@@ -213,19 +350,17 @@ async fn request_inner(
             .get("x-request-id")
             .and_then(|v| v.to_str().ok())
             .map(str::to_owned);
-        let mut bytes = BoundedBytes::new(
-            response.content_length(),
-            expects_body && !matches!(status, 204 | 205),
-            limit,
-        )?;
-        let mut stream = mime
-            .contains("text/event-stream")
+        let read_body = expects_body && !matches!(status, 204 | 205);
+        let mut bytes = BoundedBytes::new(response.content_length(), read_body, limit)?;
+        let mut stream = (read_body && mime.to_ascii_lowercase().contains("text/event-stream"))
             .then(|| sse::Reader::new(limit));
-        while let Some(chunk) = response.chunk().await.map_err(network_error)? {
-            if let Some(stream) = stream.as_mut() {
-                stream.push(&chunk)?;
-            } else {
-                bytes.push(&chunk, None)?;
+        if read_body {
+            while let Some(chunk) = response.chunk().await.map_err(network_error)? {
+                if let Some(stream) = stream.as_mut() {
+                    stream.push(&chunk)?;
+                } else {
+                    bytes.push(&chunk, None)?;
+                }
             }
         }
         let bytes = if let Some(stream) = stream {
@@ -252,7 +387,25 @@ pub async fn json(
     wire: Operation<'_>,
     cancel: &CancellationToken,
 ) -> Result<Value> {
-    let response = request(connection, headers, wire, cancel, 16 * 1024 * 1024).await?;
+    json_with_proxy(connection, headers, None, wire, cancel).await
+}
+
+pub async fn json_with_proxy(
+    connection: &Value,
+    headers: &HashMap<String, String>,
+    proxy_auth: Option<&str>,
+    wire: Operation<'_>,
+    cancel: &CancellationToken,
+) -> Result<Value> {
+    let response = request_with_proxy(
+        connection,
+        headers,
+        proxy_auth,
+        wire,
+        cancel,
+        16 * 1024 * 1024,
+    )
+    .await?;
     std::str::from_utf8(&response.bytes)
         .ok()
         .and_then(|text| Value::parse_with_limit(text, 16 * 1024 * 1024).ok())

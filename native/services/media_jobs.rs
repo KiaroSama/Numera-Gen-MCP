@@ -211,10 +211,13 @@ pub(super) async fn get_until_pinned(
                     deadline,
                 )
                 .await?;
+                let fal_contract = pinned.value()["modelOverrides"]
+                    .get(handle.endpoint.as_str())
+                    .and_then(|entry| entry.get("falContract"));
                 let artifacts = if omniroute {
-                    fal::gateway_outputs(&handle.endpoint, &result)?
+                    fal::gateway_outputs_with_override(&handle.endpoint, fal_contract, &result)?
                 } else {
-                    fal::outputs(&handle.endpoint, &result)?
+                    fal::outputs_with_override(&handle.endpoint, fal_contract, &result)?
                 };
                 // Finalization journals already received inline originals before observing cancel.
                 let publishing = cancel.child_token();

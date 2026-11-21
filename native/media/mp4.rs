@@ -3,13 +3,13 @@ use crate::error::Result;
 use serde_json::{Value, json};
 
 #[derive(Clone, Copy)]
-struct Atom<'a> {
-    kind: [u8; 4],
-    body: &'a [u8],
-    start: usize,
+pub(super) struct Atom<'a> {
+    pub kind: [u8; 4],
+    pub body: &'a [u8],
+    pub start: usize,
 }
 
-fn be32(bytes: &[u8], offset: usize) -> Result<u32> {
+pub(super) fn be32(bytes: &[u8], offset: usize) -> Result<u32> {
     let b = bytes
         .get(offset..offset + 4)
         .ok_or_else(|| invalid("Truncated MP4 field."))?;
@@ -18,7 +18,7 @@ fn be32(bytes: &[u8], offset: usize) -> Result<u32> {
     ))
 }
 
-fn be64(bytes: &[u8], offset: usize) -> Result<u64> {
+pub(super) fn be64(bytes: &[u8], offset: usize) -> Result<u64> {
     let b = bytes
         .get(offset..offset + 8)
         .ok_or_else(|| invalid("Truncated MP4 field."))?;
@@ -27,7 +27,7 @@ fn be64(bytes: &[u8], offset: usize) -> Result<u64> {
     ))
 }
 
-fn atoms(bytes: &[u8], base: usize) -> Result<Vec<Atom<'_>>> {
+pub(super) fn atoms(bytes: &[u8], base: usize) -> Result<Vec<Atom<'_>>> {
     let mut out = Vec::new();
     let mut offset = 0usize;
     while offset < bytes.len() {
@@ -63,7 +63,7 @@ fn atoms(bytes: &[u8], base: usize) -> Result<Vec<Atom<'_>>> {
     Ok(out)
 }
 
-fn one<'a>(boxes: &[Atom<'a>], kind: &[u8; 4]) -> Result<Atom<'a>> {
+pub(super) fn one<'a>(boxes: &[Atom<'a>], kind: &[u8; 4]) -> Result<Atom<'a>> {
     let mut items = boxes.iter().filter(|b| &b.kind == kind);
     let item = *items
         .next()
@@ -74,14 +74,14 @@ fn one<'a>(boxes: &[Atom<'a>], kind: &[u8; 4]) -> Result<Atom<'a>> {
     Ok(item)
 }
 
-fn full(atom: Atom<'_>, minimum: usize) -> Result<()> {
+pub(super) fn full(atom: Atom<'_>, minimum: usize) -> Result<()> {
     if atom.body.len() < minimum || atom.body[0] != 0 {
         return Err(invalid("Unsupported or truncated MP4 full box version."));
     }
     Ok(())
 }
 
-fn table(atom: Atom<'_>, entry_size: usize, prefix: usize) -> Result<usize> {
+pub(super) fn table(atom: Atom<'_>, entry_size: usize, prefix: usize) -> Result<usize> {
     full(atom, prefix)?;
     let count = be32(atom.body, prefix - 4)? as usize;
     if count > 1000000
@@ -218,6 +218,9 @@ fn hvcc(b: &[u8]) -> Result<usize> {
         return Err(invalid("Invalid MP4 HEVC decoder configuration."));
     }
     let length = usize::from(b[21] & 3) + 1;
+    if length == 3 {
+        return Err(invalid("Reserved MP4 HEVC NAL length size."));
+    }
     let mut offset = 23usize;
     let mut parameter_types = Vec::new();
     for _ in 0..b[22] {
@@ -281,7 +284,7 @@ fn sample(bytes: &[u8], codec: &Codec, max_pixels: u64) -> Result<()> {
         offset += codec.nal_length;
         let end = offset
             .checked_add(size)
-            .filter(|n| size >= (if hevc { 3 } else { 2 }) && *n <= bytes.len())
+            .filter(|n| size >= (if hevc { 2 } else { 1 }) && *n <= bytes.len())
             .ok_or_else(|| invalid("MP4 NAL payload exceeds its sample."))?;
         let header = bytes[offset];
         if header & 0x80 != 0 {
@@ -291,11 +294,20 @@ fn sample(bytes: &[u8], codec: &Codec, max_pixels: u64) -> Result<()> {
             if bytes[offset + 1] & 7 == 0 {
                 return Err(invalid("MP4 HEVC temporal identifier is invalid."));
             }
-            coded_picture |= ((header >> 1) & 63) <= 31;
+            let kind = (header >> 1) & 63;
+            let header_only = matches!(kind, 36 | 37);
+            if !header_only && size < 3 {
+                return Err(invalid("MP4 NAL payload exceeds its sample."));
+            }
+            coded_picture |= kind <= 31;
         } else {
             let kind = header & 31;
             if kind == 0 || kind >= 24 {
                 return Err(invalid("Invalid MP4 AVC NAL unit type."));
+            }
+            let header_only = matches!(kind, 10 | 11);
+            if !header_only && size < 2 {
+                return Err(invalid("MP4 NAL payload exceeds its sample."));
             }
             coded_picture |= (1..=5).contains(&kind);
         }
@@ -390,6 +402,9 @@ fn track(
     if timed_count != count as u64 || timed_duration != u64::from(duration) {
         return Err(invalid("MP4 timing does not match sample count/duration."));
     }
+    if boxes.iter().filter(|b| &b.kind == b"ctts").count() > 1 {
+        return Err(invalid("Duplicate MP4 composition timing boxes."));
+    }
     if let Some(ctts) = boxes.iter().find(|b| &b.kind == b"ctts").copied() {
         if ctts.body.first().is_none_or(|v| *v > 1) || ctts.body.len() < 8 {
             return Err(invalid("Invalid MP4 composition timing box."));
@@ -450,6 +465,9 @@ fn track(
             return Err(invalid("MP4 sample-to-chunk mapping is invalid."));
         }
         mappings.push((first, samples, description - 1));
+    }
+    if boxes.iter().filter(|b| &b.kind == b"stss").count() > 1 {
+        return Err(invalid("Duplicate MP4 sync sample boxes."));
     }
     if let Some(stss) = boxes.iter().find(|b| &b.kind == b"stss").copied() {
         let entries = table(stss, 4, 8)?;
@@ -584,12 +602,47 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
         .filter(|b| &b.kind == b"trak")
         .copied()
         .collect();
-    if tracks.len() != 1 {
+    if tracks.is_empty() || tracks.len() > 2 {
         return Err(invalid(
-            "The structural MP4 validator currently accepts one visual track only.",
+            "MP4 validator accepts one visual track and at most one audio track.",
         ));
     }
-    let (width, height, duration_ms, sample_count) = track(tracks[0], &mdat, bytes, max_pixels)?;
+    let mut video_track = None;
+    let mut audio_track = None;
+    for t in tracks {
+        match super::mp4_audio::handler_type(t)? {
+            kind if &kind == b"vide" => {
+                if video_track.is_some() {
+                    return Err(invalid("MP4 contains multiple visual tracks."));
+                }
+                video_track = Some(t);
+            }
+            kind if &kind == b"soun" => {
+                if audio_track.is_some() {
+                    return Err(invalid("MP4 contains multiple audio tracks."));
+                }
+                audio_track = Some(t);
+            }
+            _ => {
+                return Err(invalid("MP4 contains an unsupported track handler type."));
+            }
+        }
+    }
+    let video = video_track.ok_or_else(|| invalid("MP4 visual track is missing."))?;
+    let (width, height, duration_ms, sample_count) = track(video, &mdat, bytes, max_pixels)?;
+    if let Some(audio) = audio_track {
+        let audio = super::mp4_audio::inspect_audio(audio, &mdat, bytes)?;
+        return Ok(json!({
+            "width": width,
+            "height": height,
+            "duration_ms": duration_ms.max(audio.duration_ms),
+            "sample_count": sample_count,
+            "track_count": 2,
+            "audio_codec": audio.codec,
+            "audio_samples": audio.sample_count,
+            "validation": "structural"
+        }));
+    }
     Ok(
         json!({"width":width,"height":height,"duration_ms":duration_ms,"sample_count":sample_count,"track_count":1,"validation":"structural"}),
     )

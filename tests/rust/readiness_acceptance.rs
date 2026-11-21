@@ -326,7 +326,7 @@ async fn executable_readiness_probes_get_only_and_never_discloses_the_exact_cata
     assert_eq!(result["connection_ready"], true);
     assert_eq!(result["catalog_count"], 1);
     assert_eq!(result["generation_verified"], false);
-    assert_eq!(result["tool_count"], 12);
+    assert_eq!(result["tool_count"], 13);
     assert!(
         !methods.is_empty(),
         "Read-only probe must contact its local fixture."
@@ -344,7 +344,7 @@ async fn executable_readiness_probes_get_only_and_never_discloses_the_exact_cata
         .find(|event| event["component"] == "readiness" && event["cleanup_verified"] == true)
         .expect("actual stdio readiness must report verified child cleanup");
     assert_eq!(cleanup["stdio_verified"], true);
-    assert_eq!(cleanup["tool_count"], 12);
+    assert_eq!(cleanup["tool_count"], 13);
     let pid = cleanup["pid"].as_u64().expect("owned readiness child PID");
     assert!(pid > 0 && pid != u64::from(std::process::id()));
     assert_eq!(cleanup["exit_success"], true);

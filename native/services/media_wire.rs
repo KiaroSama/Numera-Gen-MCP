@@ -39,8 +39,15 @@ pub fn tracking(
     let url = base
         .join(raw)
         .map_err(|_| NumeraError::new("permission_denied", "Invalid existing queue URL."))?;
+    let fal_contract = connection["modelOverrides"]
+        .get(handle.endpoint.as_str())
+        .and_then(|entry| entry.get("falContract"));
     if is_omniroute(connection) {
-        fal::gateway_handle(&handle.endpoint, &serde_json::json!({"id": handle.id}))?;
+        fal::gateway_handle_with_override(
+            &handle.endpoint,
+            fal_contract,
+            &serde_json::json!({"id": handle.id}),
+        )?;
         let expected_v1 = format!("/v1/fal/jobs/{}", handle.id);
         let expected_prefix = format!(
             "{}/fal/jobs/{}",
@@ -66,8 +73,9 @@ pub fn tracking(
         }
         return Ok(format!("fal/jobs/{}", handle.id));
     }
-    let expected = fal::handle(
+    let expected = fal::handle_with_override(
         &handle.endpoint,
+        fal_contract,
         &serde_json::json!({"request_id":handle.id}),
     )?;
     let expected = match suffix {

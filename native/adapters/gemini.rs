@@ -81,11 +81,17 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
             }
             generation["imageConfig"] = image_config;
         }
-        if let (Some(object), Some(options)) = (
-            generation.as_object_mut(),
-            r["provider_options"].as_object(),
-        ) {
-            object.extend(options.clone());
+        let reserved: &[&str] = if generation.get("imageConfig").is_some() {
+            &["responseModalities", "imageConfig"]
+        } else {
+            &["responseModalities"]
+        };
+        if let Some(object) = generation.as_object_mut() {
+            super::types::merge_provider_options(
+                object,
+                r["provider_options"].as_object(),
+                reserved,
+            )?;
         }
         let model_text = model.checked_str()?;
         let engine = model_text.strip_prefix("models/").unwrap_or(model_text);
@@ -112,9 +118,15 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
         format["mime_type"] = json!(format!("image/{value}"));
     }
     let mut body = json!({"model":model,"store":false,"input":inputs,"response_format":format});
-    if let (Some(object), Some(options)) = (body.as_object_mut(), r["provider_options"].as_object())
-    {
-        object.extend(options.clone());
+    if r["wait"] == false {
+        body["background"] = json!(true);
+    }
+    if let Some(object) = body.as_object_mut() {
+        super::types::merge_provider_options(
+            object,
+            r["provider_options"].as_object(),
+            &["model", "store", "input", "response_format"],
+        )?;
     }
     Ok(Prepared::json("interactions", "/v1beta", body))
 }

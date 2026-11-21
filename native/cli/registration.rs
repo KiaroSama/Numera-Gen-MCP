@@ -371,6 +371,75 @@ fn write_new(path: &Path, bytes: &[u8], mode: u32) -> Result<fs::File> {
     Ok(file)
 }
 
+fn reclaim_stale_lock(path: &Path) -> bool {
+    let Ok(meta) = fs::symlink_metadata(path) else {
+        return false;
+    };
+    if !meta.is_file() || meta.len() > 4096 {
+        return false;
+    }
+    let stale_age = meta
+        .modified()
+        .ok()
+        .and_then(|t| t.elapsed().ok())
+        .is_some_and(|age| age > std::time::Duration::from_secs(300));
+    let dead_pid = fs::read(path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .and_then(|val| val.get("pid").and_then(serde_json::Value::as_u64))
+        .and_then(|pid| u32::try_from(pid).ok())
+        .filter(|&pid| pid > 0)
+        .is_some_and(|pid| !process_alive(pid));
+    if dead_pid || stale_age {
+        fs::remove_file(path).is_ok()
+    } else {
+        false
+    }
+}
+
+#[cfg(windows)]
+fn process_alive(pid: u32) -> bool {
+    use std::ffi::c_void;
+    #[link(name = "kernel32")]
+    unsafe extern "system" {
+        fn OpenProcess(access: u32, inherit: i32, pid: u32) -> *mut c_void;
+        fn GetExitCodeProcess(handle: *mut c_void, code: *mut u32) -> i32;
+        fn CloseHandle(handle: *mut c_void) -> i32;
+    }
+    // SAFETY: OpenProcess/GetExitCodeProcess/CloseHandle take plain integer/pointer arguments.
+    unsafe {
+        let handle = OpenProcess(0x1000, 0, pid);
+        if handle.is_null() {
+            return false;
+        }
+        let mut code = 0u32;
+        let ok = GetExitCodeProcess(handle, &mut code) != 0;
+        CloseHandle(handle);
+        ok && code == 259
+    }
+}
+
+#[cfg(unix)]
+fn process_alive(pid: u32) -> bool {
+    unsafe extern "C" {
+        fn kill(pid: i32, sig: i32) -> i32;
+    }
+    let Ok(pid) = i32::try_from(pid) else {
+        return false;
+    };
+    // SAFETY: signal 0 checks process existence without delivering a signal.
+    let rc = unsafe { kill(pid, 0) };
+    if rc == 0 {
+        return true;
+    }
+    std::io::Error::last_os_error().raw_os_error() == Some(1)
+}
+
+#[cfg(not(any(unix, windows)))]
+fn process_alive(_pid: u32) -> bool {
+    true
+}
+
 pub fn register(
     client: &str,
     remove: bool,
@@ -432,13 +501,15 @@ pub fn register(
         "{}.numera-lock",
         file.file_name().unwrap_or_default().to_string_lossy()
     ));
-    let lock_file = write_new(
-        &lock_path,
-        json!({"pid":std::process::id(),"started":chrono::Utc::now().to_rfc3339()})
-            .to_string()
-            .as_bytes(),
-        0o600,
-    )?;
+    let lock_payload =
+        json!({"pid":std::process::id(),"started":crate::time_utc::rfc3339_seconds()}).to_string();
+    let lock_file = match write_new(&lock_path, lock_payload.as_bytes(), 0o600) {
+        Ok(file) => file,
+        Err(error) if error.code == "REGISTRATION_LOCKED" && reclaim_stale_lock(&lock_path) => {
+            write_new(&lock_path, lock_payload.as_bytes(), 0o600)?
+        }
+        Err(error) => return Err(error),
+    };
     let lock = Lock {
         signature: signature(
             &lock_file

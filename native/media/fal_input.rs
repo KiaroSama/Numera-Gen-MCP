@@ -121,7 +121,8 @@ fn valid_parameter(key: &str, value: &Value, endpoint: &str) -> bool {
         | "use_rife"
         | "enable_pbr"
         | "TAPose"
-        | "use_hyper" => value.is_boolean(),
+        | "use_hyper"
+        | "mask_away_clip" => value.is_boolean(),
         "seed" if endpoint == "fal-ai/hyper3d/rodin" => value.is_null() || integer(0, 65535),
         "seed" => {
             value.is_null()
@@ -130,13 +131,16 @@ fn valid_parameter(key: &str, value: &Value, endpoint: &str) -> bool {
                     .as_f64()
                     .is_some_and(|n| crate::compat::value::Number(n).as_i64().is_some())
         }
+        "duration" if endpoint == "fal-ai/mmaudio-v2" => number(1.0, 30.0),
         "duration" => choice(&["5", "10"]),
+        "num_steps" => integer(1, 100),
+        "cfg_strength" => number(0.0, 20.0),
         "aspect_ratio" => choice(&["16:9", "9:16", "1:1"]),
         "output_format" => choice(&["jpeg", "png"]),
         "acceleration" => choice(&["none", "regular", "high"]),
         "negative_prompt" => value
             .as_str()
-            .is_some_and(|v| v.len() <= 32768 && !v.contains('\0')),
+            .is_some_and(|v| v.encode_utf16().count() <= 32768 && !v.contains('\0')),
         "image_size" | "video_size" => size(value),
         "num_images" => integer(1, 4),
         "cfg_scale"

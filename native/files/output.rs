@@ -279,6 +279,10 @@ fn read_bytes(path: &Path, config: &Value) -> Result<Vec<u8>> {
 
 pub fn owned_media(config: &Value, store: &Store, id: &str) -> Result<(Value, Vec<u8>)> {
     let output = store.output(id)?;
+    owned_media_from_record(config, output)
+}
+
+pub fn owned_media_from_record(config: &Value, output: Value) -> Result<(Value, Vec<u8>)> {
     let root = fs::canonicalize(
         config["outputDir"]
             .as_str()
@@ -344,6 +348,10 @@ pub fn owned_media(config: &Value, store: &Store, id: &str) -> Result<(Value, Ve
 
 pub fn owned(config: &Value, store: &Store, id: &str) -> Result<(Value, Image)> {
     let output = store.output(id)?;
+    owned_from_record(config, output)
+}
+
+pub fn owned_from_record(config: &Value, output: Value) -> Result<(Value, Image)> {
     let root = fs::canonicalize(
         config["outputDir"]
             .as_str()

@@ -37,10 +37,31 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
             }] = value.clone();
         }
     }
-    if let (Some(object), Some(options)) =
-        (fields.as_object_mut(), r["provider_options"].as_object())
-    {
-        object.extend(options.clone());
+    if let Some(options) = r["provider_options"].as_object() {
+        if let Some(provider_opt) = options.get("provider") {
+            let Some(provider_obj) = provider_opt.as_object() else {
+                return Err(NumeraError::new(
+                    "unsupported_parameter",
+                    "provider_options.provider must be an object.",
+                ));
+            };
+            if provider_obj
+                .get("allow_fallbacks")
+                .is_some_and(|v| v != &json!(false))
+            {
+                return Err(NumeraError::new(
+                    "unsupported_parameter",
+                    "provider_options.provider.allow_fallbacks cannot be enabled.",
+                ));
+            }
+        }
+        if let Some(object) = fields.as_object_mut() {
+            super::types::merge_provider_options(
+                object,
+                Some(options),
+                &["model", "prompt", "input_references"],
+            )?;
+        }
     }
     if let Some(provider) = fields["provider"].as_object_mut() {
         provider.insert("allow_fallbacks".into(), json!(false));

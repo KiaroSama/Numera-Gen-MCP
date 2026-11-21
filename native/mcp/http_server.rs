@@ -279,13 +279,16 @@ async fn handle(
     let result = state.service.handle(wire).await;
     drop(guard);
     let (mut parts, body) = result.into_parts();
-    let successful = parts.status.is_success() && parts.status != StatusCode::ACCEPTED;
-    let sse = parts
+    let content_type = parts
         .headers
         .get(hyper::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
-        .is_some_and(|v| v.contains("text/event-stream"));
-    let body = if successful {
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    let sse = content_type.contains("text/event-stream");
+    let json_like = sse || content_type.contains("application/json");
+    let wrap = parts.status != StatusCode::ACCEPTED && (parts.status.is_success() || json_like);
+    let body = if wrap {
         parts.headers.remove(hyper::header::CONTENT_LENGTH);
         super::js_http_body::JsonBody::new(body, sse, 128 * 1024 * 1024, original).boxed()
     } else {
@@ -364,7 +367,22 @@ pub async fn serve(
             _=stop.cancelled()=>break Ok(()),
             completed=tasks.join_next(),if !tasks.is_empty()=>{if completed.is_some_and(|r|r.is_err()){break Err(NumeraError::runtime());}},
             accepted=listener.accept()=>{
-                let (socket,_)=match accepted {Ok(value)=>value,Err(_)=>break Err(NumeraError::new("network_error","Local HTTP accept failed."))};
+                let (socket,_)=match accepted {
+                    Ok(value)=>value,
+                    Err(error) if matches!(
+                        error.kind(),
+                        std::io::ErrorKind::ConnectionReset
+                            | std::io::ErrorKind::ConnectionAborted
+                            | std::io::ErrorKind::BrokenPipe
+                            | std::io::ErrorKind::Interrupted
+                            | std::io::ErrorKind::WouldBlock
+                            | std::io::ErrorKind::TimedOut
+                    ) || matches!(error.raw_os_error(), Some(24 | 23 | 10024)) => {
+                        tokio::time::sleep(Duration::from_millis(50)).await;
+                        continue;
+                    }
+                    Err(_)=>break Err(NumeraError::new("network_error","Local HTTP accept failed.")),
+                };
                 if tasks.len()>=max_connections {drop(socket);continue;}
                 let state=state.clone();let close=stop.clone();
                 tasks.spawn(async move {

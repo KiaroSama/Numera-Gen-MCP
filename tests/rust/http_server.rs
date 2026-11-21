@@ -197,7 +197,7 @@ async fn real_http_endpoint_rejects_unsafe_clients_and_serves_the_existing_ten_t
         } else {
             serde_json::from_str(&text).unwrap()
         };
-        assert_eq!(value["result"]["tools"].as_array().unwrap().len(), 12);
+        assert_eq!(value["result"]["tools"].as_array().unwrap().len(), 13);
         let response = client.post(&url).bearer_auth(token)
             .header("accept", "application/json, text/event-stream")
             .header("content-type", "application/json")

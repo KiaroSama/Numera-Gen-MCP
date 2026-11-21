@@ -53,6 +53,12 @@ impl ConfigReload {
         &self.snapshots
     }
 
+    pub fn prune_unused(&mut self) {
+        let current = &self.current;
+        self.snapshots
+            .retain(|snap| Arc::ptr_eq(snap, current) || Arc::strong_count(snap) > 1);
+    }
+
     pub fn refresh(
         &mut self,
         logger: &Logger,

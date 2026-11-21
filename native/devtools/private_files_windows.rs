@@ -465,6 +465,14 @@ pub fn create_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 pub fn create_file(path: &Path) -> io::Result<File> {
+    create_file_with_share(path, 0)
+}
+
+pub fn create_file_shared(path: &Path) -> io::Result<File> {
+    create_file_with_share(path, 1) // FILE_SHARE_READ: owner-only DACL still isolates other users
+}
+
+fn create_file_with_share(path: &Path, share_mode: u32) -> io::Result<File> {
     let descriptor = CurrentUser::new()?.descriptor(false)?;
     // SAFETY: CREATE_NEW receives a live complete descriptor and a noninheritable handle.
     let attributes = Attributes {
@@ -476,7 +484,7 @@ pub fn create_file(path: &Path) -> io::Result<File> {
         CreateFileW(
             wide(path)?.as_ptr(),
             0xC0020000,
-            0,
+            share_mode,
             &attributes,
             1,
             0x00200080,
@@ -488,4 +496,47 @@ pub fn create_file(path: &Path) -> io::Result<File> {
     }
     let file = unsafe { File::from_raw_handle(raw) };
     Ok(file)
+}
+
+/// Applies an owner-only protected DACL to an existing current-user-owned file or directory.
+pub fn restrict_path(path: &Path, directory: bool) -> io::Result<()> {
+    let mut options = OpenOptions::new();
+    options
+        .access_mode(0x00060000)
+        .share_mode(7)
+        .custom_flags(0x00200000 | if directory { 0x02000000 } else { 0 });
+    let file = options.open(path)?;
+    regular(&file, directory)?;
+    let user = CurrentUser::new()?;
+    if !Security::new(&file)?.inspect(&user)?.owner_current_user {
+        return Err(io::Error::other(
+            "Foreign private path ownership cannot be changed.",
+        ));
+    }
+    let descriptor = user.descriptor(directory)?;
+    let mut present = 0;
+    let mut dacl = ptr::null_mut();
+    let mut defaulted = 0;
+    if unsafe { GetSecurityDescriptorDacl(descriptor.0, &mut present, &mut dacl, &mut defaulted) }
+        == 0
+        || present == 0
+        || dacl.is_null()
+    {
+        return Err(io::Error::last_os_error());
+    }
+    let result = unsafe {
+        SetSecurityInfo(
+            file.as_raw_handle(),
+            1,
+            0x80000004,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            dacl,
+            ptr::null_mut(),
+        )
+    };
+    if result != 0 {
+        return Err(io::Error::from_raw_os_error(result as i32));
+    }
+    Ok(())
 }

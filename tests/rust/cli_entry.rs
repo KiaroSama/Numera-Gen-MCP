@@ -90,7 +90,7 @@ async fn actual_native_menu_maintenance_and_invalid_http_flags_preserve_host_con
         assert!(output.status.success());
         let report: Value = serde_json::from_slice(&output.stdout).unwrap();
         assert_eq!(report["generation_verified"], false);
-        assert_eq!(report["tool_count"], 12);
+        assert_eq!(report["tool_count"], 13);
         for args in [
             vec!["http".into(), "--port=0".into()],
             vec!["readiness".into(), "--unknown".into()],

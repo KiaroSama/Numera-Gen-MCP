@@ -115,9 +115,22 @@ fn compile(ico: &[u8]) -> io::Result<Vec<u8>> {
     Ok(out)
 }
 
+fn rustc_version() -> String {
+    let rustc = env::var_os("RUSTC").unwrap_or_else(|| "rustc".into());
+    std::process::Command::new(rustc)
+        .arg("--version")
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .and_then(|stdout| stdout.split_whitespace().nth(1).map(str::to_owned))
+        .unwrap_or_else(|| "unknown".into())
+}
+
 fn main() -> io::Result<()> {
     println!("cargo:rerun-if-changed={ICON}");
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rustc-env=NUMERA_RUSTC_VERSION={}", rustc_version());
     let os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     let environment = env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
     if os != "windows" || environment != "msvc" {

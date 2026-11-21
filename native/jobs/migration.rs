@@ -3,7 +3,6 @@ use crate::{
     error::{NumeraError, Result},
     runtime_paths::private_directory,
 };
-use chrono::Utc;
 use rusqlite::Connection;
 use std::{
     fs,
@@ -77,32 +76,32 @@ pub fn open(directory: &Path) -> Result<Connection> {
         private_file(&backup)?;
         let bytes = fs::read(&backup).map_err(|_| NumeraError::storage())?;
         let metadata = serde_json::json!({"schema_version":version,"target_schema_version":2,
-            "created_at":Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis,true),
+            "created_at":crate::time_utc::rfc3339_millis(),
             "sha256":sha256(&bytes)});
         let manifest = backup.with_extension("sqlite.json");
         use std::io::Write;
-        let mut options = fs::OpenOptions::new();
-        options.write(true).create_new(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        let mut file = options.open(manifest).map_err(|_| NumeraError::storage())?;
+        let mut file = crate::devtools::private_files::create_private_file(&manifest)
+            .map_err(|_| NumeraError::storage())?;
         writeln!(file, "{metadata}")
             .and_then(|_| file.sync_all())
             .map_err(|_| NumeraError::storage())?;
     }
     connection
-        .execute_batch("BEGIN IMMEDIATE")
+        .execute_batch("PRAGMA foreign_keys=ON; BEGIN IMMEDIATE")
         .map_err(|_| NumeraError::storage())?;
     let result = (|| -> rusqlite::Result<()> {
+        let locked_columns: Vec<String> = connection
+            .prepare("PRAGMA table_info(requests)")?
+            .query_map([], |r| r.get(1))?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        let locked_generation = locked_columns.iter().any(|v| v == "generation");
         connection.execute_batch("CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,identity TEXT NOT NULL,receipt TEXT NOT NULL,owner TEXT,lease INTEGER,cancel INTEGER NOT NULL DEFAULT 0,generation INTEGER NOT NULL DEFAULT 1,reservation INTEGER NOT NULL DEFAULT 0);
+            CREATE INDEX IF NOT EXISTS requests_reserved ON requests(id) WHERE reservation > 0;
             CREATE TABLE IF NOT EXISTS outputs(id TEXT PRIMARY KEY,request_id TEXT NOT NULL,metadata TEXT NOT NULL);
             CREATE INDEX IF NOT EXISTS output_request ON outputs(request_id);
             CREATE TABLE IF NOT EXISTS continuation(id TEXT PRIMARY KEY,scope TEXT NOT NULL,value TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS result_journal(request_id TEXT NOT NULL,item INTEGER NOT NULL CHECK(item>=0 AND item<10),output_id TEXT NOT NULL UNIQUE,target TEXT,bytes BLOB,url TEXT,sha256 TEXT,phase TEXT NOT NULL,PRIMARY KEY(request_id,item));")?;
-        if !columns.is_empty() && !generation {
+        if !locked_columns.is_empty() && !locked_generation {
             connection.execute_batch("ALTER TABLE requests ADD COLUMN generation INTEGER NOT NULL DEFAULT 1;ALTER TABLE requests ADD COLUMN reservation INTEGER NOT NULL DEFAULT 0;")?;
         }
         // Add media overflow without rewriting the legacy schema2 table or its image limit.
@@ -118,13 +117,5 @@ pub fn open(directory: &Path) -> Result<Connection> {
 }
 
 fn private_file(path: &Path) -> Result<()> {
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o600))
-            .map_err(|_| NumeraError::storage())?;
-    }
-    #[cfg(not(unix))]
-    let _ = path;
-    Ok(())
+    crate::devtools::private_files::restrict_file(path).map_err(|_| NumeraError::storage())
 }

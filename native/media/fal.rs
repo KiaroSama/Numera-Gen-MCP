@@ -69,9 +69,73 @@ fn identifier(value: &Value) -> Result<&str> {
         .ok_or_else(|| invalid("Invalid or missing fal request identifier; do not resubmit."))
 }
 
+pub fn contract_with_override(
+    endpoint: &str,
+    mode: &str,
+    fal_contract: Option<&crate::compat::value::Value>,
+) -> Result<Contract> {
+    if let Some(raw) = fal_contract {
+        return super::fal_dynamic::contract(endpoint, mode, raw);
+    }
+    contract(endpoint, mode)
+}
+
+pub fn prepare_with_override(
+    endpoint: &str,
+    mode: &str,
+    fal_contract: Option<&crate::compat::value::Value>,
+    prompt: Option<&str>,
+    references: &[Reference],
+    parameters: &Value,
+) -> Result<Value> {
+    if let Some(raw) = fal_contract {
+        return super::fal_dynamic::prepare(endpoint, mode, raw, prompt, references, parameters);
+    }
+    prepare(endpoint, mode, prompt, references, parameters)
+}
+
+pub fn outputs_with_override(
+    endpoint: &str,
+    fal_contract: Option<&crate::compat::value::Value>,
+    response: &Value,
+) -> Result<Vec<Artifact>> {
+    if let Some(raw) = fal_contract {
+        return super::fal_dynamic::outputs(endpoint, raw, response);
+    }
+    outputs(endpoint, response)
+}
+
+pub fn handle_with_override(
+    endpoint: &str,
+    fal_contract: Option<&crate::compat::value::Value>,
+    response: &Value,
+) -> Result<Handle> {
+    if let Some(raw) = fal_contract {
+        super::fal_dynamic::parse(endpoint, raw)?;
+        return handle_unchecked(endpoint, response);
+    }
+    handle(endpoint, response)
+}
+
+pub fn gateway_handle_with_override(
+    endpoint: &str,
+    fal_contract: Option<&crate::compat::value::Value>,
+    response: &Value,
+) -> Result<Handle> {
+    if let Some(raw) = fal_contract {
+        super::fal_dynamic::parse(endpoint, raw)?;
+        return gateway_handle_unchecked(endpoint, response);
+    }
+    gateway_handle(endpoint, response)
+}
+
 // The network owner must additionally bind every absolute URL to its pinned queue origin.
 pub fn handle(endpoint: &str, response: &Value) -> Result<Handle> {
     spec(endpoint)?;
+    handle_unchecked(endpoint, response)
+}
+
+fn handle_unchecked(endpoint: &str, response: &Value) -> Result<Handle> {
     let id = identifier(&response["request_id"])?;
     let mut parts = endpoint.split('/');
     let owner = parts.next().ok_or_else(|| invalid("Invalid fal owner."))?;
@@ -148,29 +212,18 @@ pub fn cancel(value: &Value, http_status: u16) -> Result<Cancel> {
 }
 
 pub fn outputs(endpoint: &str, response: &Value) -> Result<Vec<Artifact>> {
-    spec(endpoint)?;
+    let s = spec(endpoint)?;
     if !response.is_object() {
         return Err(invalid("Fal result must be an object."));
     }
     let mut result = Vec::new();
-    let primary = match endpoint {
-        "fal-ai/flux/dev" | "fal-ai/flux/dev/image-to-image" => {
-            ("images", Kind::Image, "image", true)
-        }
-        "fal-ai/stable-audio" => ("audio_file", Kind::Audio, "audio", false),
-        "fal-ai/stable-audio-25/audio-to-audio" => ("audio", Kind::Audio, "audio", false),
-        "fal-ai/trellis" | "fal-ai/hyper3d/rodin" => ("model_mesh", Kind::Model3d, "model", false),
-        "fal-ai/hunyuan3d-v3/text-to-3d" | "fal-ai/trellis-2/retexture" => {
-            ("model_glb", Kind::Model3d, "model", false)
-        }
-        _ => ("video", Kind::Video, "video", false),
-    };
+    let primary = s.primary;
     collect(
         &mut result,
-        &response[primary.0],
-        primary.1,
-        primary.2,
-        primary.3,
+        &response[primary.field],
+        primary.kind,
+        primary.role,
+        primary.array,
         true,
     )?;
     if endpoint == "fal-ai/hyper3d/rodin" {
@@ -184,7 +237,7 @@ pub fn outputs(endpoint: &str, response: &Value) -> Result<Vec<Artifact>> {
         )?;
     }
     if endpoint == "fal-ai/hunyuan3d-v3/text-to-3d" {
-        if let Some(variants) = response.get("model_urls") {
+        if let Some(variants) = response.get("model_urls").filter(|v| !v.is_null()) {
             let variants = variants
                 .as_object()
                 .ok_or_else(|| invalid("Fal model variants must be an object."))?;
@@ -281,9 +334,24 @@ fn collect(
     Ok(())
 }
 
+pub(super) fn collect_artifacts(
+    result: &mut Vec<Artifact>,
+    field: &Value,
+    kind: Kind,
+    role: &str,
+    array: bool,
+    required: bool,
+) -> Result<()> {
+    collect(result, field, kind, role, array, required)
+}
+
 // The network owner additionally binds every tracking URL to its pinned gateway origin.
 pub fn gateway_handle(endpoint: &str, response: &Value) -> Result<Handle> {
     spec(endpoint)?;
+    gateway_handle_unchecked(endpoint, response)
+}
+
+fn gateway_handle_unchecked(endpoint: &str, response: &Value) -> Result<Handle> {
     let id = identifier(&response["id"])?;
     let v1 = format!("/v1/fal/jobs/{id}");
     let api_v1 = format!("/api/v1/fal/jobs/{id}");
@@ -364,7 +432,9 @@ pub fn gateway_cancel(value: &Value, http_status: u16) -> Result<Cancel> {
         (200, Some("CANCELLED" | "OK")) => Ok(Cancel::Removed),
         (202, Some("CANCELLATION_REQUESTED")) => Ok(Cancel::Requested),
         (400, Some("ALREADY_COMPLETED")) => Ok(Cancel::AlreadyCompleted),
-        (404, status) if status == Some("NOT_FOUND") || value.get("error").is_some() => {
+        (404, status)
+            if status == Some("NOT_FOUND") || value.get("error").is_some_and(|e| !e.is_null()) =>
+        {
             Ok(Cancel::NotFound)
         }
         _ => Err(invalid(
@@ -374,6 +444,14 @@ pub fn gateway_cancel(value: &Value, http_status: u16) -> Result<Cancel> {
 }
 
 pub fn gateway_outputs(endpoint: &str, response: &Value) -> Result<Vec<Artifact>> {
+    gateway_outputs_with_override(endpoint, None, response)
+}
+
+pub fn gateway_outputs_with_override(
+    endpoint: &str,
+    fal_contract: Option<&crate::compat::value::Value>,
+    response: &Value,
+) -> Result<Vec<Artifact>> {
     if !response.is_object() {
         return Err(invalid("Fal result must be an object."));
     }
@@ -381,5 +459,5 @@ pub fn gateway_outputs(endpoint: &str, response: &Value) -> Result<Vec<Artifact>
         .get("output")
         .filter(|v| v.is_object())
         .ok_or_else(|| invalid("Gateway fal result omitted native output object."))?;
-    outputs(endpoint, payload)
+    outputs_with_override(endpoint, fal_contract, payload)
 }

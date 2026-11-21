@@ -48,10 +48,12 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
             }
         }
         let mut body = json!({"model":model,"messages":[{"role":"user","content":content}],"modalities":["image","text"],"image_config":config});
-        if let (Some(object), Some(options)) =
-            (body.as_object_mut(), r["provider_options"].as_object())
-        {
-            object.extend(options.clone());
+        if let Some(object) = body.as_object_mut() {
+            super::types::merge_provider_options(
+                object,
+                r["provider_options"].as_object(),
+                &["model", "messages", "modalities", "image_config"],
+            )?;
         }
         return Ok(Prepared::json("chat/completions", "/v1", body));
     }
@@ -92,9 +94,15 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
             .map(|image| json!({"type":"input_image","image_url":mime_data(image)})),
     );
     let mut body = json!({"model":orchestration,"store":false,"input":[{"role":"user","content":content}],"tools":[tool],"tool_choice":{"type":"image_generation"}});
-    if let (Some(object), Some(options)) = (body.as_object_mut(), r["provider_options"].as_object())
-    {
-        object.extend(options.clone());
+    if r["wait"] == false {
+        body["background"] = json!(true);
+    }
+    if let Some(object) = body.as_object_mut() {
+        super::types::merge_provider_options(
+            object,
+            r["provider_options"].as_object(),
+            &["model", "store", "input", "tools", "tool_choice"],
+        )?;
     }
     Ok(Prepared::json("responses", "/v1", body))
 }

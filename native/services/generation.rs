@@ -36,6 +36,33 @@ pub struct Generation {
     pub env: Environment,
     pub active: Arc<Mutex<HashMap<String, CancellationToken>>>,
 }
+pub(super) struct ActiveGuard<'a> {
+    active: &'a Mutex<HashMap<String, CancellationToken>>,
+    id: String,
+}
+
+impl<'a> ActiveGuard<'a> {
+    pub(super) fn register(
+        active: &'a Mutex<HashMap<String, CancellationToken>>,
+        id: String,
+        cancel: CancellationToken,
+    ) -> Result<Self> {
+        active
+            .lock()
+            .map_err(|_| NumeraError::runtime())?
+            .insert(id.clone(), cancel);
+        Ok(Self { active, id })
+    }
+}
+
+impl Drop for ActiveGuard<'_> {
+    fn drop(&mut self) {
+        if let Ok(mut active) = self.active.lock() {
+            active.remove(&self.id);
+        }
+    }
+}
+
 impl Generation {
     pub async fn source(
         &self,
@@ -47,13 +74,11 @@ impl Generation {
             .as_u64()
             .unwrap_or(20 * 1024 * 1024) as usize;
         if source["type"] == "output_id" {
-            let (_, image) = output::owned(
-                config,
-                &*locked(&self.store)?,
-                source["output_id"]
-                    .as_str()
-                    .ok_or_else(NumeraError::runtime)?,
-            )?;
+            let output_id = source["output_id"]
+                .as_str()
+                .ok_or_else(NumeraError::runtime)?;
+            let record = locked(&self.store)?.output(output_id)?;
+            let (_, image) = output::owned_from_record(config, record)?;
             if image.bytes.len() > limit {
                 return Err(NumeraError::new(
                     "invalid_input",
@@ -195,10 +220,15 @@ impl Generation {
                 ));
             }
         }
-        if request["wait"] == false && c["adapter"] != "comfyui" {
+        if request["wait"] == false
+            && !matches!(
+                c["adapter"].as_str(),
+                Some("comfyui" | "openai-responses" | "gemini-interactions")
+            )
+        {
             return Err(NumeraError::new(
                 "unsupported_operation",
-                "wait=false requires a recoverable ComfyUI job.",
+                "wait=false requires an asynchronous recoverable adapter (comfyui, openai-responses, gemini-interactions).",
             ));
         }
         let cancel = host_cancel.child_token();
@@ -327,7 +357,7 @@ impl Generation {
             hashed["workflow"] = workflow.clone();
         }
         let hash = fingerprint(&hashed)?;
-        let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+        let now = crate::time_utc::rfc3339_millis();
         let mut required = json!({"count":request["count"],"output_subdirectory":request["output_subdirectory"].as_str().unwrap_or(&now[..10])});
         for key in ["size", "output_format", "background", "filename_prefix"] {
             if let Some(value) = request.get(key) {
@@ -379,10 +409,13 @@ impl Generation {
         if !prepared.fresh {
             return Ok(receipt);
         }
-        self.active
-            .lock()
-            .map_err(|_| NumeraError::runtime())?
-            .insert(id.clone(), cancel.clone());
+        let _active_guard = match ActiveGuard::register(&self.active, id.clone(), cancel.clone()) {
+            Ok(guard) => guard,
+            Err(error) => {
+                let _ = locked(&self.store).and_then(|mut s| s.release(&id, Some(&receipt)));
+                return Err(error);
+            }
+        };
         let lease = Lease::start(self.store.clone(), receipt.clone(), cancel.clone(), true);
         let result = tokio::time::timeout_at(
             deadline,
@@ -412,18 +445,17 @@ impl Generation {
             )
             .stage("network")),
         };
+        let release_receipt = receipt.clone();
         let result = match result {
             Ok(receipt) => Ok(receipt),
             Err(error) => self.record_error(&id, receipt, error, cancel.is_cancelled()),
         };
         lease.close().await;
-        if let Ok(mut active) = self.active.lock() {
-            active.remove(&id);
-        }
+        drop(_active_guard);
         if let Ok(receipt) = &result {
             locked(&self.store)?.release(&id, Some(receipt))?;
         } else {
-            locked(&self.store)?.release(&id, None)?;
+            locked(&self.store)?.release(&id, Some(&release_receipt))?;
         }
         result
     }

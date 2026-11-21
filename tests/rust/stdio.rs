@@ -100,7 +100,7 @@ fn bridge_runs_without_launcher_from_foreign_cwd_and_closes_on_eof() {
     let tools = response["result"]["tools"]
         .as_array()
         .expect("twelve tools");
-    assert_eq!(tools.len(), 12);
+    assert_eq!(tools.len(), 13);
     for name in [
         "health_check",
         "list_connections",

@@ -3,13 +3,18 @@ use crate::error::{NumeraError, Result};
 
 /// The same public request contract as schemas/image-request.schema.json, with UTF-16 lengths.
 pub fn parse(mut value: Value) -> Result<Value> {
-    static SCHEMA: std::sync::OnceLock<serde_json::Value> = std::sync::OnceLock::new();
+    static RAW: std::sync::OnceLock<serde_json::Value> = std::sync::OnceLock::new();
+    static SCHEMA: std::sync::OnceLock<crate::compat::js_schema::Schema<'static>> =
+        std::sync::OnceLock::new();
     let schema = SCHEMA.get_or_init(|| {
-        serde_json::from_str(include_str!("../../schemas/image-request.schema.json"))
-            .expect("bundled request schema")
+        let raw = RAW.get_or_init(|| {
+            serde_json::from_str(include_str!("../../schemas/image-request.schema.json"))
+                .expect("bundled request schema")
+        });
+        crate::compat::js_schema::Schema::compile(raw).expect("compiled request schema")
     });
     let mut authoritative = value.to_js();
-    crate::compat::js_schema::Schema::compile(schema)?
+    schema
         .default_and_validate(&mut authoritative)
         .map_err(|_| {
             NumeraError::new(

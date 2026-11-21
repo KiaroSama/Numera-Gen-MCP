@@ -17,10 +17,12 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
         mask,
     } = input;
     let mut fields = json!({"model":model, "prompt":r["prompt"], "n":r["count"]});
-    if let (Some(object), Some(options)) =
-        (fields.as_object_mut(), r["provider_options"].as_object())
-    {
-        object.extend(options.clone());
+    if let Some(object) = fields.as_object_mut() {
+        super::types::merge_provider_options(
+            object,
+            r["provider_options"].as_object(),
+            &["model", "prompt"],
+        )?;
     }
     let allowed = c["modelOverrides"][*model]["supportedParameters"]
         .as_array()
@@ -76,7 +78,9 @@ pub fn request(input: &Input<'_>) -> Result<Prepared> {
             "Editing requires source images.",
         ));
     }
-    if c["gateway"] == "9router" {
+    if c["gateway"] == "9router"
+        && c.get("edit").and_then(|e| e["mode"].as_str()) != Some("multipart")
+    {
         if mask.is_some() {
             return Err(NumeraError::new(
                 "unsupported_operation",

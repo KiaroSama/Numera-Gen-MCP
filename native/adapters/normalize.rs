@@ -273,7 +273,10 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
     }
     result.upstream_model = string(&value["model"]);
     result.upstream_id = string(&value["id"]);
-    result.usage = value.get("usage").cloned();
+    result.usage = value
+        .get("usage")
+        .or_else(|| value.get("usageMetadata"))
+        .cloned();
     if !signatures.is_empty() {
         result.continuation = Some(json!({"signatures":signatures}));
     }
@@ -281,7 +284,17 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
 }
 
 pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normalized> {
-    let image_mime = mime.split(';').next().unwrap_or("");
+    response_with_limit(connection, bytes, mime, 128 * 1024 * 1024)
+}
+
+pub fn response_with_limit(
+    connection: &Value,
+    bytes: Vec<u8>,
+    mime: &str,
+    stream_limit: usize,
+) -> Result<Normalized> {
+    let lower_mime = mime.to_ascii_lowercase();
+    let image_mime = lower_mime.split(';').next().unwrap_or("").trim();
     if ["image/png", "image/jpeg", "image/webp", "image/gif"].contains(&image_mime) {
         return Ok(Normalized {
             images: vec![ResultItem {
@@ -291,14 +304,14 @@ pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normal
             ..Default::default()
         });
     }
-    if !mime.contains("text/event-stream") {
+    if !lower_mime.contains("text/event-stream") {
         let text = std::str::from_utf8(&bytes)
             .map_err(|_| error("invalid_response", "Invalid response UTF-8."))?;
         let value = Value::parse_with_limit(text, 128 * 1024 * 1024)
             .map_err(|_| error("invalid_response", "Image response is not valid JSON."))?;
         return normalize(connection, &value);
     }
-    let events = sse::events(&bytes, 16 * 1024 * 1024)?;
+    let events = sse::events(&bytes, stream_limit)?;
     if connection["adapter"] == "openai-responses"
         && let Some(event) = events
             .iter()
@@ -368,10 +381,30 @@ pub fn response(connection: &Value, bytes: Vec<u8>, mime: &str) -> Result<Normal
                 })?;
             normalize(connection, &done.data["response"])
         }
-        "gemini" => normalize(
-            connection,
-            &json!({"candidates":events.iter().filter(|e|truthy(&e.data["candidates"])).flat_map(|e|array(&e.data["candidates"]).iter()).collect::<Vec<_>>()}),
-        ),
+        "gemini" => {
+            let mut merged = json!({
+                "candidates": events
+                    .iter()
+                    .filter(|e| truthy(&e.data["candidates"]))
+                    .flat_map(|e| array(&e.data["candidates"]).iter())
+                    .collect::<Vec<_>>()
+            });
+            if let Some(feedback) = events
+                .iter()
+                .rev()
+                .find_map(|e| e.data.get("promptFeedback").filter(|v| !v.is_null()))
+            {
+                merged["promptFeedback"] = feedback.clone();
+            }
+            if let Some(usage) = events
+                .iter()
+                .rev()
+                .find_map(|e| e.data.get("usageMetadata").filter(|v| !v.is_null()))
+            {
+                merged["usageMetadata"] = usage.clone();
+            }
+            normalize(connection, &merged)
+        }
         _ => Err(error(
             "unsupported_operation",
             "Streaming contract is not implemented for this adapter.",

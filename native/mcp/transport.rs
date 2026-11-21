@@ -1,6 +1,6 @@
 use rmcp::{
     RoleServer,
-    model::{ClientRequest, ErrorCode, JsonRpcMessage},
+    model::{ClientNotification, ClientRequest, ErrorCode, JsonRpcMessage},
     service::{RxJsonRpcMessage, TxJsonRpcMessage},
     transport::Transport,
 };
@@ -146,8 +146,23 @@ impl Transport<RoleServer> for Stdio {
                         }
                         continue;
                     }
+                    if let JsonRpcMessage::Notification(notification) = &message
+                        && let ClientNotification::CancelledNotification(cancelled) =
+                            &notification.notification
+                        && let Ok(key) = serde_json::to_string(&cancelled.params.request_id)
+                    {
+                        self.responses.lock().await.remove(&key);
+                    }
                     if let Some((key, original)) = registration {
                         let mut responses = self.responses.lock().await;
+                        responses.retain(|_, pending| {
+                            Arc::strong_count(&pending.response) > 1
+                                || pending
+                                    .response
+                                    .lock()
+                                    .ok()
+                                    .is_some_and(|guard| guard.is_some())
+                        });
                         if responses.len() >= 128 || responses.contains_key(&key) {
                             self.stop.cancel();
                             return None;

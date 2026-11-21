@@ -393,6 +393,47 @@
                 "editModel": {
                   "type": "string",
                   "minLength": 1
+                },
+                "falContract": {
+                  "type": "object",
+                  "properties": {
+                    "outputField": { "type": "string", "minLength": 1, "maxLength": 64 },
+                    "outputArray": { "type": "boolean" },
+                    "outputKind": { "type": "string", "enum": ["image", "video", "audio", "3d"] },
+                    "prompt": { "type": "boolean" },
+                    "reference": {
+                      "type": "object",
+                      "properties": {
+                        "role": { "type": "string", "minLength": 1, "maxLength": 64 },
+                        "kind": { "type": "string", "enum": ["image", "video", "audio", "3d"] },
+                        "wireField": { "type": "string", "minLength": 1, "maxLength": 64 }
+                      },
+                      "required": ["role", "kind", "wireField"],
+                      "additionalProperties": false
+                    },
+                    "allowedParameters": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "type": { "type": "string", "enum": ["boolean", "integer", "number", "enum", "string"] },
+                          "min": { "type": "number" },
+                          "max": { "type": "number" },
+                          "maxLength": { "type": "integer", "minimum": 1, "maximum": 32768 },
+                          "values": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 64,
+                            "items": { "type": "string", "maxLength": 128 }
+                          }
+                        },
+                        "required": ["type"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["outputField", "outputKind"],
+                  "additionalProperties": false
                 }
               },
               "required": ["defaults", "capabilities"],

@@ -144,7 +144,7 @@ async fn inspect(
         .map_err(|_| unavailable())?
         .map_err(|_| unavailable())?;
     report["tool_count"] = json!(tools.tools.len());
-    if tools.tools.len() != 12
+    if tools.tools.len() != 13
         || [
             "health_check",
             "list_connections",
@@ -153,6 +153,7 @@ async fn inspect(
             "generate_image",
             "edit_image",
             "get_job",
+            "list_jobs",
             "cancel_job",
             "list_outputs",
             "get_output_info",
@@ -253,7 +254,7 @@ pub async fn run(
     let config = config::load_config(&["--config".into(), file.clone()], env, root)?;
     let (name, _) = config.select(flags.get("connection").map(String::as_str))?;
     let mut report = json!({
-        "checked_at":chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis,true),
+        "checked_at":crate::time_utc::rfc3339_millis(),
         "tool_count":0,"local_ready":false,"credentials_ready":false,
         "connection_ready":null,"catalog_count":null,"catalog_complete":null,
         "selected_model_found":null,"generation_verified":false

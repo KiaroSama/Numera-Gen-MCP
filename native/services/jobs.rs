@@ -269,8 +269,9 @@ pub async fn get(
                     .as_array_mut()
                     .ok_or_else(NumeraError::runtime)?
                     .push(json!(error));
+                let has_outputs = !crate::error::array(&receipt.value["outputs"]).is_empty();
                 receipt.value["status"] = json!(if locked(&generation.store)?.has_pending(id)? {
-                    "failed"
+                    if has_outputs { "partial" } else { "failed" }
                 } else {
                     "running"
                 });
@@ -315,25 +316,27 @@ pub async fn cancel(
     let mut requested = false;
     let mut cancelled = Value::Null;
     if !receipt.value["upstream_job"].is_null() {
-        let name = receipt.value["connection"]
-            .as_str()
-            .ok_or_else(NumeraError::runtime)?;
-        let (_, selected) = generation.config.select(Some(name))?;
-        let pinned = snapshot_credentials(&selected, &generation.env, &generation.runtime).await?;
-        if connection_identity(name, &pinned)? != locked(&generation.store)?.identity(id)? {
-            return Err(NumeraError::new(
-                "permission_denied",
-                "Existing job destination/account identity changed; cancellation is not authorized.",
-            ));
-        }
         let job = job(&receipt)?;
         if job.kind == "comfyui" {
+            let name = receipt.value["connection"]
+                .as_str()
+                .ok_or_else(NumeraError::runtime)?;
+            let (_, selected) = generation.config.select(Some(name))?;
+            let pinned =
+                snapshot_credentials(&selected, &generation.env, &generation.runtime).await?;
+            if connection_identity(name, &pinned)? != locked(&generation.store)?.identity(id)? {
+                return Err(NumeraError::new(
+                    "permission_denied",
+                    "Existing job destination/account identity changed; cancellation is not authorized.",
+                ));
+            }
             let c = pinned.value();
             let headers = pinned.headers();
             let encoded = adapters::encode_component(job.id.checked_str()?);
-            let value = api::json(
+            let value = api::json_with_proxy(
                 c,
                 &headers,
+                pinned.proxy_auth(),
                 api::Operation {
                     operation: &format!("api/jobs/{encoded}/cancel"),
                     prefix: "",
@@ -352,9 +355,10 @@ pub async fn cancel(
                 Value::Null
             };
             if value["cancelled"] == true {
-                let status = api::json(
+                let status = api::json_with_proxy(
                     c,
                     &headers,
+                    pinned.proxy_auth(),
                     api::Operation {
                         operation: &format!("api/jobs/{encoded}"),
                         prefix: "",

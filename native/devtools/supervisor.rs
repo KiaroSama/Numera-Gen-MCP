@@ -193,7 +193,7 @@ fn run_inner(
     }
     let mut ledger = Ledger {
         file,
-        started: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
+        started: crate::time_utc::rfc3339_millis(),
         run_id: uuid::Uuid::new_v4().to_string(),
     };
     let command_cwd = crate::runtime_paths::command_path(&cwd);
@@ -342,7 +342,7 @@ fn run_inner(
     };
     ledger.record(
         json!({"event":"finish","pid":pid,"exit_code":code,"cleanup_verified":verified,
-        "finished":chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis,true)}),
+        "finished":crate::time_utc::rfc3339_millis()}),
     )?;
     logger.log(
         if code == 0 { "INFO" } else { "ERROR" },

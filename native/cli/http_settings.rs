@@ -324,8 +324,15 @@ fn atomic_write(directory: &Path, target: &Path, text: &str, expected: Option<&s
         return Err(denied());
     }
     let temporary = Temporary(directory.join(format!(".http-{}.tmp", Uuid::new_v4())));
-    let mut file = opened_private(&temporary.0, true, true)?.ok_or_else(denied)?;
-    restrict(&temporary.0)?;
+    #[cfg(windows)]
+    let mut file =
+        crate::devtools::private_files::create_private_file(&temporary.0).map_err(|_| denied())?;
+    #[cfg(not(windows))]
+    let mut file = {
+        let f = opened_private(&temporary.0, true, true)?.ok_or_else(denied)?;
+        restrict(&temporary.0)?;
+        f
+    };
     file.write_all(text.as_bytes())
         .and_then(|_| file.sync_all())
         .map_err(|_| NumeraError::storage())?;

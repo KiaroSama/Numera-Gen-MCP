@@ -71,7 +71,16 @@ pub async fn run(
     }
     let effective = media_request::effective_parameters(&selected, &model, &request)?;
     // Contract validation precedes every source read/GET, including malformed native defaults.
-    media_request::preflight(&model, &request, &effective, &generation.config.value)?;
+    let fal_contract_preflight = selected["modelOverrides"]
+        .get(model.as_str())
+        .and_then(|entry| entry.get("falContract"));
+    media_request::preflight_with_contract(
+        &model,
+        &request,
+        &effective,
+        &generation.config.value,
+        fal_contract_preflight,
+    )?;
     let cancel = host_cancel.child_token();
     let deadline = tokio::time::Instant::now()
         + Duration::from_millis(selected["requestTimeoutMs"].as_u64().unwrap_or(300000));
@@ -88,9 +97,13 @@ pub async fn run(
     )
     .await
     .map_err(|_| media_wire::deadline_error())??;
-    let body = fal::prepare(
+    let fal_contract = pinned.value()["modelOverrides"]
+        .get(model.as_str())
+        .and_then(|entry| entry.get("falContract"));
+    let body = fal::prepare_with_override(
         &model,
         &request.mode,
+        fal_contract,
         request.prompt.as_deref(),
         &references,
         &effective,
@@ -104,7 +117,7 @@ pub async fn run(
         .request_id
         .clone()
         .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
-    let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+    let now = crate::time_utc::rfc3339_millis();
     let expected_media = media_requirements::snapshot(&model, &effective)?;
     let initial = Receipt::new(
         json!({"request_id":id,"connection":name,"adapter":"fal-queue","operation":"media","mode":request.mode,
@@ -130,15 +143,17 @@ pub async fn run(
     if !prepared.fresh {
         return Ok(receipt);
     }
-    match generation.active.lock() {
-        Ok(mut active) => {
-            active.insert(id.clone(), cancel.clone());
+    let _active_guard = match super::generation::ActiveGuard::register(
+        &generation.active,
+        id.clone(),
+        cancel.clone(),
+    ) {
+        Ok(guard) => guard,
+        Err(error) => {
+            let _ = locked(&generation.store).and_then(|mut s| s.release(&id, Some(&receipt)));
+            return Err(error);
         }
-        Err(_) => {
-            locked(&generation.store)?.release(&id, Some(&receipt))?;
-            return Err(NumeraError::runtime());
-        }
-    }
+    };
     let lease = Lease::start(
         generation.store.clone(),
         receipt.clone(),
@@ -200,9 +215,9 @@ pub async fn run(
         .await?;
         let parsed = (|| {
             let handle = if omniroute {
-                fal::gateway_handle(&model, &response)?
+                fal::gateway_handle_with_override(&model, fal_contract, &response)?
             } else {
-                fal::handle(&model, &response)?
+                fal::handle_with_override(&model, fal_contract, &response)?
             };
             for (raw, suffix) in [
                 (&handle.status_url, "status"),
@@ -220,11 +235,21 @@ pub async fn run(
                 // never its untrusted tracking destinations and never a new submission.
                 let fallback = if omniroute {
                     response.get("id").and_then(|job_id| {
-                        fal::gateway_handle(&model, &serde_json::json!({"id": job_id})).ok()
+                        fal::gateway_handle_with_override(
+                            &model,
+                            fal_contract,
+                            &serde_json::json!({"id": job_id}),
+                        )
+                        .ok()
                     })
                 } else {
                     response.get("request_id").and_then(|job_id| {
-                        fal::handle(&model, &serde_json::json!({"request_id": job_id})).ok()
+                        fal::handle_with_override(
+                            &model,
+                            fal_contract,
+                            &serde_json::json!({"request_id": job_id}),
+                        )
+                        .ok()
                     })
                 };
                 if let Some(handle) = fallback {
@@ -288,15 +313,15 @@ pub async fn run(
         }
     })();
     lease.close().await;
-    if let Ok(mut active) = generation.active.lock() {
-        active.remove(&id);
-    }
-    locked(&generation.store)?.release(&id, None)?;
+    drop(_active_guard);
+    locked(&generation.store)?.release(&id, Some(&receipt))?;
     let receipt = result?;
     if request.wait
         && receipt.value["upstream_job"]["kind"] == "fal"
         && receipt.status() != "outcome_unknown"
     {
+        let mut last_errors = crate::error::array(&receipt.value["errors"]).len();
+        let mut attempt = 0u32;
         loop {
             if tokio::time::Instant::now() >= deadline
                 || host_cancel.is_cancelled()
@@ -313,13 +338,19 @@ pub async fn run(
                 Some(&pinned),
             )
             .await?;
+            let current_errors = crate::error::array(&current.value["errors"]).len();
             if matches!(
                 current.status(),
-                "completed" | "partial" | "failed" | "cancelled"
-            ) {
+                "completed" | "partial" | "failed" | "cancelled" | "outcome_unknown"
+            ) || current.value["storage_outcome"] == "partial_or_failed"
+                || current_errors > last_errors
+            {
                 return Ok(current);
             }
-            tokio::select! {_=host_cancel.cancelled()=>return Ok(current),_=tokio::time::sleep_until((tokio::time::Instant::now()+Duration::from_millis(500)).min(deadline))=>{}}
+            last_errors = current_errors;
+            let delay = Duration::from_millis(super::polling::backoff_ms(attempt, 250, 2_000));
+            attempt = attempt.saturating_add(1);
+            tokio::select! {_=host_cancel.cancelled()=>return Ok(current),_=tokio::time::sleep_until((tokio::time::Instant::now()+delay).min(deadline))=>{}}
         }
     }
     Ok(receipt)

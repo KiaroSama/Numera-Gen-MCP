@@ -1,6 +1,6 @@
 use super::failure;
 use crate::devtools::private_files::Secret;
-use chrono::{Datelike, TimeZone, Utc};
+use crate::time_utc;
 use ring::{
     rand::{SecureRandom, SystemRandom},
     signature,
@@ -79,10 +79,10 @@ fn key(api: &Api) -> io::Result<Owned<'_>> {
     }
     Ok(owned)
 }
-fn date(api: &Api, value: Ref) -> io::Result<chrono::DateTime<Utc>> {
+fn date(api: &Api, value: Ref) -> io::Result<jiff::Timestamp> {
     let mut output = Tm::default();
     yes(unsafe { (api.ASN1_TIME_to_tm)(value, &mut output) })?;
-    Utc.with_ymd_and_hms(
+    time_utc::from_ymd_hms(
         output.year + 1900,
         (output.month + 1) as u32,
         output.day as u32,
@@ -90,7 +90,6 @@ fn date(api: &Api, value: Ref) -> io::Result<chrono::DateTime<Utc>> {
         output.min as u32,
         output.sec as u32,
     )
-    .single()
     .ok_or_else(failure)
 }
 fn public(api: &Api, key: Ref) -> io::Result<Vec<u8>> {
@@ -138,15 +137,9 @@ fn self_signed<'a>(api: &'a Api, key: &Owned<'a>) -> io::Result<Owned<'a>> {
     yes(unsafe {
         (api.ASN1_INTEGER_set_uint64)((api.X509_get_serialNumber)(certificate.value), serial)
     })?;
-    let now = Utc::now();
-    let start = now - chrono::Duration::minutes(10);
-    let end = now
-        .with_year(now.year() + 1)
-        .or_else(|| {
-            now.with_day(28)
-                .and_then(|date| date.with_year(now.year() + 1))
-        })
-        .ok_or_else(failure)?;
+    let now = time_utc::now();
+    let start = time_utc::sub_minutes(now, 10).ok_or_else(failure)?;
+    let end = time_utc::plus_one_year(now).ok_or_else(failure)?;
     for (value, date) in [
         (
             unsafe { (api.X509_getm_notBefore)(certificate.value) },
@@ -154,7 +147,7 @@ fn self_signed<'a>(api: &'a Api, key: &Owned<'a>) -> io::Result<Owned<'a>> {
         ),
         (unsafe { (api.X509_getm_notAfter)(certificate.value) }, end),
     ] {
-        let encoded = text(&date.format("%Y%m%d%H%M%SZ").to_string())?;
+        let encoded = text(&time_utc::format_x509_utc(date))?;
         yes(unsafe { (api.ASN1_TIME_set_string_X509)(value, encoded.as_ptr()) })?;
     }
     yes(unsafe { (api.X509_set_pubkey)(certificate.value, key.value) })?;
@@ -237,14 +230,14 @@ fn verify(
     let metadata_date = |name: &str| {
         metadata[name]
             .as_str()
-            .and_then(|value| chrono::DateTime::parse_from_rfc3339(value).ok())
-            .map(|date| date.with_timezone(&Utc))
+            .and_then(time_utc::parse_rfc3339)
             .ok_or_else(failure)
     };
+    let now = time_utc::now();
     if metadata_date("not_before")? != before
         || metadata_date("not_after")? != after
-        || Utc::now() < before
-        || Utc::now() > after
+        || now < before
+        || now > after
     {
         return Err(failure());
     }
@@ -337,8 +330,8 @@ impl Crypto {
         let metadata = json!({"publisher":"KiaroSama","product":"Numera Gen MCP","algorithm":"rsa-pkcs1-sha256",
             "certificate_thumbprint":thumbprint,
             "public_key_sha256":digest(&key),"certificate_sha256":digest(&cert),
-            "not_before":date(api, unsafe { (api.X509_getm_notBefore)(certificate.value) })?.to_rfc3339(),
-            "not_after":date(api, unsafe { (api.X509_getm_notAfter)(certificate.value) })?.to_rfc3339(),
+            "not_before":time_utc::format_rfc3339_seconds(date(api, unsafe { (api.X509_getm_notBefore)(certificate.value) })?),
+            "not_after":time_utc::format_rfc3339_seconds(date(api, unsafe { (api.X509_getm_notAfter)(certificate.value) })?),
             "trust":"self-signed; not public OS trust, Apple Developer ID or notarization",
             "timestamp":"none; verification requires current certificate validity"});
         verify(

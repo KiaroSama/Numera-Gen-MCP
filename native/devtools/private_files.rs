@@ -14,9 +14,71 @@ mod windows;
 pub(crate) use windows::Attributes;
 #[cfg(windows)]
 pub use windows::{
-    PrivateSecurity, RegistryAccess, inspect_private, lock_parents, open_registry,
+    PrivateSecurity, RegistryAccess, inspect_private, lock_parents, open_registry, restrict_path,
     restrict_registry,
 };
+
+pub fn restrict_directory(path: &Path) -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700))
+    }
+    #[cfg(windows)]
+    {
+        windows::restrict_path(path, true)
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        let _ = path;
+        Ok(())
+    }
+}
+
+pub fn restrict_file(path: &Path) -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o600))
+    }
+    #[cfg(windows)]
+    {
+        windows::restrict_path(path, false)
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        let _ = path;
+        Ok(())
+    }
+}
+
+pub fn create_private_file(path: &Path) -> io::Result<File> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(path)
+    }
+    #[cfg(windows)]
+    {
+        let resolved = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            std::env::current_dir()?.join(path)
+        };
+        windows::create_file_shared(&resolved)
+    }
+    #[cfg(not(any(unix, windows)))]
+    {
+        std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+    }
+}
 
 pub struct Secret(pub Vec<u8>);
 impl Drop for Secret {

@@ -245,7 +245,7 @@ fn actual_promotion_stage_and_sign_refuse_changed_original_bytes_before_private_
                     numera_gen_mcp::build_identity::LOGO.to_vec(),
                 ),
             ]);
-            let manifest = json!({"version":"0.5.0","target":target,"source_sha":"a".repeat(40),
+            let manifest = json!({"version":"1.0.0","target":target,"source_sha":"a".repeat(40),
                 "publisher":"KiaroSama","binary_sha256":sha(b"inert original binary"),
                 "files":entries.iter().map(|(path,bytes)|json!({"path":path,
                     "bytes":bytes.len(),"sha256":sha(bytes)})).collect::<Vec<_>>()});

@@ -98,6 +98,21 @@ pub fn definitions() -> Result<Vec<Tool>> {
             object(json!({"request_id":string()}), &["request_id"]),
         ),
         (
+            "list_jobs",
+            "List redacted summaries of owned persistent job receipts with optional status filter and bounded pagination.",
+            object(
+                json!({
+                    "status": {
+                        "type": "string",
+                        "enum": ["running", "outcome_unknown", "completed", "partial", "failed", "cancelled"]
+                    },
+                    "offset": { "type": "integer", "minimum": 0, "default": 0 },
+                    "limit": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 }
+                }),
+                &[],
+            ),
+        ),
+        (
             "list_outputs",
             "List only Numera-owned output records with bounded pagination.",
             object(pagination(), &[]),
@@ -120,7 +135,7 @@ pub fn definitions() -> Result<Vec<Tool>> {
                 .ok_or_else(NumeraError::runtime)?;
             let read = !matches!(
                 name,
-                "generate_image" | "edit_image" | "generate_media" | "cancel_job"
+                "generate_image" | "edit_image" | "generate_media" | "get_job" | "cancel_job"
             );
             let annotations = ToolAnnotations::new()
                 .read_only(read)
@@ -128,7 +143,11 @@ pub fn definitions() -> Result<Vec<Tool>> {
                 .idempotent(read || name == "cancel_job")
                 .open_world(!matches!(
                     name,
-                    "list_outputs" | "get_output_info" | "get_media_output_info"
+                    "list_connections"
+                        | "list_jobs"
+                        | "list_outputs"
+                        | "get_output_info"
+                        | "get_media_output_info"
                 ));
             Ok(Tool::new(name, description, Arc::new(schema))
                 .with_annotations(annotations)

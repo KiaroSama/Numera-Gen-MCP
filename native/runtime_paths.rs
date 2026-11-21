@@ -106,11 +106,6 @@ pub fn command_path(path: &Path) -> PathBuf {
 
 pub fn private_directory(path: &Path) -> Result<()> {
     fs::create_dir_all(path).map_err(|_| NumeraError::storage())?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o700))
-            .map_err(|_| NumeraError::storage())?;
-    }
+    crate::devtools::private_files::restrict_directory(path).map_err(|_| NumeraError::storage())?;
     Ok(())
 }

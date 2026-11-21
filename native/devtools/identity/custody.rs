@@ -115,7 +115,7 @@ fn create(root: &Path, options: &Options) -> io::Result<Value> {
         &material.password.0,
     )?;
     let password = std::str::from_utf8(&material.password.0).map_err(|_| failure())?;
-    let entry = Secret(format!("\n## Native artifact signing\n- Secret: NUMERA_SIGNING_PFX_PASSWORD\n- Purpose: approved KiaroSama self-signed native artifact signing only.\n- Service: protected final hosted signing; not configured remotely by this command.\n- Source: owner-authorized project identity creation.\n- Updated UTC: {}\n- Private binary custody: .runtime/signing/publisher.pfx (encrypted; preserve for recovery).\n- Password value: {password}\n- Recovery: use this same PFX/password; never rotate on a failed build. No OS trust installation.\n", chrono::Utc::now().to_rfc3339()).into_bytes());
+    let entry = Secret(format!("\n## Native artifact signing\n- Secret: NUMERA_SIGNING_PFX_PASSWORD\n- Purpose: approved KiaroSama self-signed native artifact signing only.\n- Service: protected final hosted signing; not configured remotely by this command.\n- Source: owner-authorized project identity creation.\n- Updated UTC: {}\n- Private binary custody: .runtime/signing/publisher.pfx (encrypted; preserve for recovery).\n- Password value: {password}\n- Recovery: use this same PFX/password; never rotate on a failed build. No OS trust installation.\n", crate::time_utc::rfc3339_seconds()).into_bytes());
     registry.file.seek(SeekFrom::End(0))?;
     registry.file.write_all(&entry.0)?;
     registry.file.sync_all()?;

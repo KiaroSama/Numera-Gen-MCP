@@ -198,10 +198,10 @@ pub fn verify(directory: &Path) -> Result<Prepared> {
     let date = |name: &str| {
         identity[name]
             .as_str()
-            .and_then(|value| chrono::DateTime::parse_from_rfc3339(value).ok())
+            .and_then(crate::time_utc::parse_rfc3339)
             .ok_or_else(invalid)
     };
-    let now = chrono::Utc::now();
+    let now = crate::time_utc::now();
     if sha256(key) != crate::build_identity::SIGNER
         || identity["publisher"] != crate::build_identity::PUBLISHER
         || now < date("not_before")?

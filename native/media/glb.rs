@@ -122,12 +122,27 @@ pub(super) fn inspect(bytes: &[u8], max_pixels: u64) -> Result<Value> {
     if document["asset"]["version"].as_str() != Some("2.0") || !document.is_object() {
         return Err(invalid("GLB needs a glTF 2.0 asset declaration."));
     }
-    if !array(&document, "extensionsRequired")?.is_empty()
-        || !array(&document, "skins")?.is_empty()
+    const SAFE_EXTENSIONS: &[&str] = &[
+        "KHR_materials_pbrSpecularGlossiness",
+        "KHR_materials_unlit",
+        "KHR_materials_ior",
+        "KHR_materials_specular",
+        "KHR_materials_clearcoat",
+        "KHR_materials_sheen",
+        "KHR_materials_transmission",
+        "KHR_materials_emissive_strength",
+        "KHR_texture_transform",
+        "KHR_lights_punctual",
+    ];
+    let required_extensions = array(&document, "extensionsRequired")?;
+    if required_extensions.iter().any(|ext| {
+        ext.as_str()
+            .is_none_or(|name| !SAFE_EXTENSIONS.contains(&name))
+    }) || !array(&document, "skins")?.is_empty()
         || !array(&document, "animations")?.is_empty()
     {
         return Err(invalid(
-            "GLB required extensions, skins and animations are not supported by this structural validator.",
+            "GLB unsupported required extensions, skins and animations are not supported by this structural validator.",
         ));
     }
     let buffers = array(&document, "buffers")?;

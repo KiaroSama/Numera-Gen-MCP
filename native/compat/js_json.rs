@@ -7,6 +7,7 @@ use icu_locale::locale;
 use std::{cmp::Ordering, collections::HashMap};
 
 pub const MAX_JSON_BYTES: usize = 1024 * 1024;
+pub const MAX_JSON_DEPTH: usize = 1024;
 
 #[derive(Default)]
 pub enum JsValue {
@@ -342,6 +343,12 @@ pub fn parse_bounded(text: &str, limit: usize) -> Result<JsValue> {
         }
         match parser.peek() {
             Some(b'[' | b'{') => {
+                if frames.len() >= MAX_JSON_DEPTH {
+                    return Err(NumeraError::new(
+                        "invalid_json",
+                        "JSON nesting exceeds depth limit.",
+                    ));
+                }
                 let object = parser.consume(b'{');
                 if !object {
                     parser.position += 1;

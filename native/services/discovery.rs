@@ -26,11 +26,11 @@ pub fn prefix(c: &Value) -> &'static str {
     }
 }
 fn time() -> String {
-    chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+    crate::time_utc::rfc3339_millis()
 }
 #[derive(Default)]
 pub struct Discovery {
-    cache: HashMap<String, (Instant, Value)>,
+    cache: std::sync::Mutex<HashMap<String, (Instant, Value)>>,
 }
 
 impl Discovery {
@@ -43,9 +43,28 @@ impl Discovery {
         refresh: bool,
         cancel: &CancellationToken,
     ) -> Result<Value> {
+        self.list_shared(config, runtime, env, name, refresh, cancel)
+            .await
+    }
+
+    pub async fn list_shared(
+        &self,
+        config: &Config,
+        runtime: &RuntimePaths,
+        env: &impl EnvironmentSource,
+        name: Option<&str>,
+        refresh: bool,
+        cancel: &CancellationToken,
+    ) -> Result<Value> {
         let (id, c) = config.select(name)?;
-        let old = self.cache.get(&id);
-        if !refresh && let Some((until, catalog)) = old.filter(|(until, _)| *until > Instant::now())
+        let old = self
+            .cache
+            .lock()
+            .ok()
+            .and_then(|cache| cache.get(&id).cloned());
+        if !refresh
+            && let Some((until, catalog)) =
+                old.as_ref().filter(|(until, _)| *until > Instant::now())
         {
             let _ = until;
             let mut catalog = catalog.clone();
@@ -95,13 +114,15 @@ impl Discovery {
         let action=async {
             let pinned=snapshot_credentials(&c,env,runtime).await?;
             let headers=pinned.headers();
+            let mut model_indices: HashMap<JsString, usize> = HashMap::new();
             for page in 0..20 {
                 let mut query=json!({});
                 if let Some(cursor)=&cursor {query[if c["adapter"].as_str().is_some_and(|s|s.starts_with("gemini")){"pageToken"}else{"after"}]=json!(cursor);}
                 if c["gateway"]=="omniroute" && operation=="models" {query["limit"]=json!("100");}
-                let value=api::json(
+                let value=api::json_with_proxy(
                     pinned.value(),
                     &headers,
+                    pinned.proxy_auth(),
                     api::Operation {
                         operation: &operation,
                         prefix: prefix(&c),
@@ -121,8 +142,12 @@ impl Discovery {
                     let Some(model)=item["id"].as_js_string().or_else(||item["name"].as_js_string()) else {continue;};
                     if model.is_empty() || (c["gateway"]=="omniroute" && operation=="models" && item["type"]!="image"){continue;}
                     let models=result["models"].as_array_mut().ok_or_else(NumeraError::runtime)?;
-                    if let Some(existing)=models.iter_mut().find(|v|v["id"]==model) {existing["metadata"]["advertised"]=item.clone();}
-                    else {models.push(json!({"id":model,"metadata":item}));}
+                    if let Some(&idx) = model_indices.get(model) {
+                        models[idx]["metadata"]["advertised"] = item.clone();
+                    } else {
+                        model_indices.insert(model.clone(), models.len());
+                        models.push(json!({"id":model,"metadata":item}));
+                    }
                 }
                 if c["gateway"]=="omniroute" && operation==route {
                     operation="models".into();result["warnings"].as_array_mut().ok_or_else(NumeraError::runtime)?.push(json!("Image specialty catalog does not preserve pagination; explicitly supplementing with paginated unified image entries."));continue;
@@ -151,10 +176,15 @@ impl Discovery {
                     .push(json!("Using stale catalog; availability is unknown."));
             }
         }
-        self.cache.insert(
-            id,
-            (Instant::now() + Duration::from_secs(60), result.clone()),
-        );
+        if result["complete"] == true
+            && !cancel.is_cancelled()
+            && let Ok(mut cache) = self.cache.lock()
+        {
+            cache.insert(
+                id,
+                (Instant::now() + Duration::from_secs(60), result.clone()),
+            );
+        }
         Ok(result)
     }
 
@@ -186,9 +216,10 @@ impl Discovery {
                 )
             };
             let query = (c["gateway"] == "9router").then(|| json!({"id":model}));
-            if let Ok(value) = api::json(
+            if let Ok(value) = api::json_with_proxy(
                 pinned.value(),
                 &pinned.headers(),
+                pinned.proxy_auth(),
                 api::Operation {
                     operation: &operation,
                     prefix: if c["gateway"] == "9router" {

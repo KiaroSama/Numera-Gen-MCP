@@ -88,7 +88,22 @@ impl Store {
             ));
         }
         self.fence(id, None)?;
-        let used:i64=self.db.query_row("SELECT COALESCE(SUM(MAX(reservation,COALESCE((SELECT SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)) FROM all_result_journal WHERE request_id=requests.id),0))),0) FROM requests WHERE id!=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
+        let used: i64 = self
+            .db
+            .query_row(
+                "WITH active_ids AS (
+                    SELECT id FROM requests WHERE reservation > 0 AND id != ?1
+                    UNION
+                    SELECT request_id AS id FROM result_journal WHERE request_id != ?1
+                    UNION
+                    SELECT request_id AS id FROM media_result_overflow WHERE request_id != ?1
+                )
+                SELECT COALESCE(SUM(MAX(r.reservation, COALESCE((SELECT SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)) FROM all_result_journal WHERE request_id=r.id),0))),0)
+                FROM active_ids a JOIN requests r ON r.id = a.id",
+                [id],
+                |r| r.get(0),
+            )
+            .map_err(|_| NumeraError::storage())?;
         let retained:i64=self.db.query_row("SELECT COALESCE(SUM(COALESCE(length(bytes),0)+COALESCE(length(CAST(url AS BLOB)),0)),0) FROM all_result_journal WHERE request_id=?",[id],|r|r.get(0)).map_err(|_|NumeraError::storage())?;
         let reserve = bytes.max(retained);
         if used.checked_add(reserve).is_none_or(|v| v > budget) {

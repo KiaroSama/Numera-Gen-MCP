@@ -14,6 +14,7 @@ fn error(code: &str, message: &str) -> NumeraError {
 /// Retain final frames only; total incoming bytes remain bounded including discarded progress.
 pub struct Reader {
     pending: Vec<u8>,
+    scan_offset: usize,
     total: usize,
     limit: usize,
     finals: Vec<Event>,
@@ -22,6 +23,7 @@ impl Reader {
     pub fn new(limit: usize) -> Self {
         Self {
             pending: Vec::new(),
+            scan_offset: 0,
             total: 0,
             limit,
             finals: Vec::new(),
@@ -38,10 +40,15 @@ impl Reader {
                 "Stream exceeds aggregate byte limit.",
             ));
         }
+        let previous_len = self.pending.len();
         self.pending.extend_from_slice(bytes);
         let mut consumed = 0;
-        while let Some((start, length)) = boundary(&self.pending[consumed..]) {
-            let end = consumed + start;
+        let mut search_from = previous_len.saturating_sub(3).max(self.scan_offset);
+        while search_from < self.pending.len() {
+            let Some((rel_start, length)) = boundary(&self.pending[search_from..]) else {
+                break;
+            };
+            let end = search_from + rel_start;
             let text = std::str::from_utf8(&self.pending[consumed..end])
                 .map_err(|_| error("invalid_response", "Invalid stream UTF-8."))?;
             if let Some(event) = frame(text, true)? {
@@ -51,9 +58,13 @@ impl Reader {
                 }
             }
             consumed = end + length;
+            search_from = consumed;
         }
         if consumed != 0 {
             self.pending.drain(..consumed);
+            self.scan_offset = 0;
+        } else {
+            self.scan_offset = self.pending.len().saturating_sub(3);
         }
         // A partial UTF-8 character is allowed only at the end of the current chunk.
         if std::str::from_utf8(&self.pending).is_err_and(|e| e.error_len().is_some()) {
@@ -144,7 +155,12 @@ fn frame(text: &str, filtering: bool) -> Result<Option<Event>> {
     }
     let kind = lines
         .iter()
-        .find_map(|line| line.strip_prefix("event:").map(crate::config::js_trim))
+        .rev()
+        .find_map(|line| {
+            line.strip_prefix("event:")
+                .map(crate::config::js_trim)
+                .filter(|v| !v.is_empty())
+        })
         .map(str::to_owned)
         .unwrap_or_else(|| {
             value["type"]
@@ -159,6 +175,9 @@ fn frame(text: &str, filtering: bool) -> Result<Option<Event>> {
                 .unwrap_or("")
                 .to_owned()
         });
+    if kind.chars().any(|c| c.is_control()) {
+        return Err(error("invalid_response", "Invalid streaming event name."));
+    }
     if filtering && kind == "error" {
         return Err(error(
             "outcome_unknown",
@@ -186,7 +205,8 @@ pub fn events(bytes: &[u8], limit: usize) -> Result<Vec<Event>> {
             "Stream exceeds aggregate byte limit.",
         ));
     }
-    let text = String::from_utf8_lossy(bytes);
+    let text = std::str::from_utf8(bytes)
+        .map_err(|_| error("invalid_response", "Invalid stream UTF-8."))?;
     if !text.ends_with("\n\n") && !text.ends_with("\r\n\r\n") {
         return Err(error(
             "outcome_unknown",

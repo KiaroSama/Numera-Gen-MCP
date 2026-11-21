@@ -15,6 +15,7 @@ mod media_requirements;
 mod media_wire;
 pub mod model_policy;
 pub mod polling;
+pub mod progress;
 pub mod request;
 pub mod requirements;
 mod submission;

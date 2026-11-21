@@ -6,18 +6,18 @@
 
 [![CI runs on GitHub Actions across four native jobs plus coverage](https://img.shields.io/badge/CI-GitHub%20Actions-2563eb)](.github/workflows/ci.yml)
 [![License GPL-3.0-or-later, the first-party grant](https://img.shields.io/badge/license-GPL--3.0--or--later-16a34a)](LICENSE)
-[![Latest release v0.5.0](https://img.shields.io/badge/release-v0.5.0-ea580c)](CHANGELOG.md)
+[![Latest release v1.0.0](https://img.shields.io/badge/release-v1.0.0-ea580c)](CHANGELOG.md)
 [![Measured CI coverage: 85.3% regions and 80.7% branches](https://img.shields.io/badge/coverage-regions%2085.3%25%20%7C%20branches%2080.7%25-059669)](docs/testing)
 [![Rust 1.100.0 pinned toolchain](https://img.shields.io/badge/rust-1.100.0-8b5cf6)](rust-toolchain.toml)
 [![Runs on Windows and Linux, each built for x64 and ARM64](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%C2%B7%20x64%20%7C%20ARM64-0891b2)](.github/workflows/ci.yml)
 [![Distributed as a native binary](https://img.shields.io/badge/distribution-native%20binary-dc2626)](#installation-and-setup)
 [![Documentation in Markdown](https://img.shields.io/badge/docs-Markdown-4f46e5)](docs/CONFIGURATION.md)
-[![Tracked repository tree is 13.8 MB](https://img.shields.io/badge/repo%20size-13.8%20MB-ca8a04)](.)
+[![Tracked repository tree is 14.2 MB](https://img.shields.io/badge/repo%20size-14.2%20MB-ca8a04)](.)
 [![Built with the rmcp 3.10.0 MCP SDK](https://img.shields.io/badge/built%20with-rmcp%203.10.0-be185d)](Cargo.toml)
 [![Job receipts stored in SQLite](https://img.shields.io/badge/receipts-SQLite-0f766e)](native/jobs/store.rs)
 [![MCP transports: stdio and local HTTP](https://img.shields.io/badge/MCP-stdio%20%7C%20HTTP-7651a8)](docs/ARCHITECTURE.md)
 [![Media formats: PNG, JPEG, WebP and GIF images, MP4 video, WAV audio and GLB 3D](https://img.shields.io/badge/media%20formats-PNG%20JPEG%20WebP%20GIF%20%C2%B7%20MP4%20%C2%B7%20WAV%20%C2%B7%20GLB-65a30d)](#video-audio-and-3d)
-[![Image and video modes: text-to-image, image-to-image with editing and masks, text-to-video, image-to-video and video-to-video](https://img.shields.io/badge/image%20%26%20video%20modes-text%E2%86%92image%20%C2%B7%20image%E2%86%92image%20%28edit%2C%20mask%29%20%C2%B7%20text%E2%86%92video%20%C2%B7%20image%E2%86%92video%20%C2%B7%20video%E2%86%92video-3068b7)](#video-audio-and-3d)
+[![Image and video modes: text-to-image, image-to-image with editing and masks, text-to-video, image-to-video, video-to-video and video-to-audio](https://img.shields.io/badge/image%20%26%20video%20modes-text%E2%86%92image%20%C2%B7%20image%E2%86%92image%20%28edit%2C%20mask%29%20%C2%B7%20text%E2%86%92video%20%C2%B7%20image%E2%86%92video%20%C2%B7%20video%E2%86%92video%20%C2%B7%20video%E2%86%92audio-3068b7)](#video-audio-and-3d)
 [![Audio and 3D modes: text-to-audio, audio-to-audio, video-to-audio, text-to-3D, image-to-3D and 3D-to-3D](https://img.shields.io/badge/audio%20%26%203D%20modes-text%E2%86%92audio%20%C2%B7%20audio%E2%86%92audio%20%C2%B7%20video%E2%86%92audio%20%C2%B7%20text%E2%86%923D%20%C2%B7%20image%E2%86%923D%20%C2%B7%203D%E2%86%923D-475569)](#video-audio-and-3d)
 [![Support donations](https://img.shields.io/badge/Support-donations-d04a9a)](#donate)
 
@@ -89,7 +89,7 @@ ComfyUI needs its own configured installation. Nothing in setup authorizes a pai
 
 ### 1. Download the ready native build
 
-Download [native 0.5.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.5.0) from this
+Download [native 1.0.0](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v1.0.0) from this
 repository's Releases page and verify it against the published `.sha256` sidecar; an unavailable or
 unverified archive is not permission to use an unsigned artifact.
 Normal usage needs **no Node.js, npm, Rust toolchain, Python, compiler or local build**.
@@ -100,10 +100,10 @@ Choose the archive for your actual OS/CPU:
 
 | OS      | CPU                       | Archive suffix                                                         |
 | ------- | ------------------------- | ---------------------------------------------------------------------- |
-| Windows | Intel/AMD 64-bit | `numera-gen-mcp-0.5.0-x86_64-pc-windows-msvc.zip` |
-| Windows | ARM64 | `numera-gen-mcp-0.5.0-aarch64-pc-windows-msvc.zip` |
-| Linux GNU | Intel/AMD 64-bit | `numera-gen-mcp-0.5.0-x86_64-unknown-linux-gnu.tar.gz` |
-| Linux GNU | ARM64 | `numera-gen-mcp-0.5.0-aarch64-unknown-linux-gnu.tar.gz` |
+| Windows | Intel/AMD 64-bit | `numera-gen-mcp-1.0.0-x86_64-pc-windows-msvc.zip` |
+| Windows | ARM64 | `numera-gen-mcp-1.0.0-aarch64-pc-windows-msvc.zip` |
+| Linux GNU | Intel/AMD 64-bit | `numera-gen-mcp-1.0.0-x86_64-unknown-linux-gnu.tar.gz` |
+| Linux GNU | ARM64 | `numera-gen-mcp-1.0.0-aarch64-unknown-linux-gnu.tar.gz` |
 
 Published compatibility and minimum OS versions must match that Release's actual native CI evidence.
 A Linux binary is not proof that Claude Desktop itself supports Linux.
@@ -118,7 +118,7 @@ do not overwrite an existing private configuration or outputs.
 Windows PowerShell, replacing the downloaded filename:
 
 ```powershell
-$archive = './numera-gen-mcp-0.5.0-x86_64-pc-windows-msvc.zip'
+$archive = './numera-gen-mcp-1.0.0-x86_64-pc-windows-msvc.zip'
 $expected = ((Get-Content -LiteralPath "$archive.sha256" -Raw -Encoding utf8).Trim() -split '\s+')[0]
 if ($expected -notmatch '^[a-fA-F0-9]{64}$' -or (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash -ine $expected) { throw 'Release checksum mismatch; do not extract or run.' }
 ```
@@ -129,11 +129,11 @@ pins too; a matching checksum does not authenticate an untrusted replacement sid
 Linux, from the download folder:
 
 ```bash
-sha256sum -c numera-gen-mcp-0.5.0-x86_64-unknown-linux-gnu.tar.gz.sha256
+sha256sum -c numera-gen-mcp-1.0.0-x86_64-unknown-linux-gnu.tar.gz.sha256
 ```
 
 Extract into a **new** directory using your OS archive extractor. Archives contain one top-level
-`numera-gen-mcp-0.5.0-<target>/` folder. That folder is the **installation root**: it contains
+`numera-gen-mcp-1.0.0-<target>/` folder. That folder is the **installation root**: it contains
 `bin/`, `.env.example`, `docs/` and `manifest.json`. Open a terminal there for the relative commands
 below. You may give that extracted folder a stable installation name before registering it, for
 example `C:/tools/numera-gen-mcp` or `$HOME/tools/numera-gen-mcp`; keep its contents together.
@@ -151,7 +151,7 @@ Linux:
 ./bin/numera-gen-mcp --version
 ```
 
-Expect version `0.5.0`, publisher `KiaroSama` and the exact source SHA recorded in that Release.
+Expect version `1.0.0`, publisher `KiaroSama` and the exact source SHA recorded in that Release.
 Do not accept a different build source merely because its version string matches.
 Check [signature verification and self-signed trust limits](docs/SIGNING.md) before running a download;
 a checksum alone is not a public OS-trust certificate. Do not blindly bypass security warnings or
@@ -467,7 +467,7 @@ successful generation or actual host reconnection.
 
 After restarting the MCP client, ask it to call `health_check` with `probe=false`, `list_connections`
 and `list_models` with `refresh=false`. Inspect `get_model_capabilities` for the exact selected model.
-Expect twelve tools (0.3.0 and later), the selected connection and your configured model name. Only if you
+Expect thirteen tools (1.0.0 and later), the selected connection and your configured model name. Only if you
 want to test the provider's read-only catalog, add `--probe` to the readiness command; it performs
 provider GETs but never submits a generation. Readiness does not prove model entitlement or quality.
 Logs go to stderr/files, never MCP stdout.
@@ -528,11 +528,14 @@ tools, dedicated OpenRouter Images, opt-in chat image output and explicitly boun
 [Compatibility/limitations](docs/COMPATIBILITY.md) distinguish protocol evidence from account/model
 availability. Antigravity refs are blocked at the examined gateway versions that drop input images.
 
-12 source-defined tools: health_check, list_connections, list_models, get_model_capabilities,
-generate_image, edit_image, get_job, cancel_job, list_outputs, get_output_info, generate_media and
+13 source-defined tools: health_check, list_connections, list_models, get_model_capabilities,
+generate_image, edit_image, get_job, list_jobs, cancel_job, list_outputs, get_output_info, generate_media and
 get_media_output_info. The published 0.2.0 has only the original ten. Use one request_id per logical operation
 and reuse it on host retries. Unknown outcomes never automatically resubmit. Native batches require
 verified limits. Edit sources are typed output_id/path/url/data_url objects; no ambiguous strings.
+Long-running requests emit MCP `notifications/progress` updates when the client supplies a `progressToken`,
+and `openai-responses` / `gemini-interactions` accept `wait: false` for background job creation while
+keeping `store: false`.
 
 Saved originals provide owned IDs, paths, actual MIME/dimensions/bytes/alpha/SHA256. Optional bounded
 previews are derivatives. Local paths are not automatically accessible to cloud hosts. Prompts/input
@@ -584,14 +587,15 @@ Submit through `generate_media` only after authorizing the destination and cost.
 `role` and exactly one `output_id`, `path`, `url` or `data_url`. Numera validates original bytes and
 forwards inline data only where that exact endpoint implements the role; it makes no hidden upload.
 
-Implemented endpoint bindings cover text/image-to-image, text/image/video-to-video, text/audio-to-audio,
-and text/image/3D-to-3D paths individually, not all possible conversions. Unsupported endpoint/mode,
-reference, parameter or format fails explicitly. Initial original-byte validation covers PNG/JPEG/WebP/GIF,
-PCM/IEEE-float WAV, self-contained single-visual-track nonfragmented MP4, and a bounded self-contained
-GLB 2.0 mesh subset. Audio tracks in MP4, fragmented video, compressed/animated/skinned GLB and other
-media formats are not supported by these validators. Structural validation is not full decode,
-rendering, semantic quality or live-provider proof. Provider artifacts outside these limits can yield
-partial or failed storage after generation; inspect the receipt, never resubmit automatically.
+Implemented endpoint bindings cover text/image-to-image, text/image/video-to-video, text/audio/video-to-audio
+(including `fal-ai/mmaudio-v2`), and text/image/3D-to-3D paths individually, plus opt-in `falContract`
+definitions for custom fal endpoints. Unsupported endpoint/mode, reference, parameter or format fails
+explicitly. Original-byte validation covers PNG/JPEG/WebP/GIF, PCM/IEEE-float/WAVE_FORMAT_EXTENSIBLE WAV,
+self-contained nonfragmented MP4 (visual track plus optional `mp4a`/`Opus` audio track), and a bounded
+self-contained GLB 2.0 mesh subset (including safe Khronos material/texture extensions). Fragmented video,
+compressed/animated/skinned GLB and other media formats are not supported by these validators. Structural
+validation is not full decode, rendering, semantic quality or live-provider proof. Provider artifacts outside
+these limits can yield partial or failed storage after generation; inspect the receipt, never resubmit automatically.
 For the exact Flux dev image endpoints, explicit effective `num_images`, `output_format` and numeric
 `image_size` requirements are saved with the request. Mismatching originals remain unchanged and
 produce `deviations` with overall `partial` status; successful storage remains `completed`.

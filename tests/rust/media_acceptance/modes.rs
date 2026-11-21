@@ -83,7 +83,7 @@ pub async fn run() {
                 let tools = host::bounded(5000, host.client().list_tools(None))
                     .await
                     .unwrap();
-                assert_eq!(tools.tools.len(), 12);
+                assert_eq!(tools.tools.len(), 13);
                 for name in [
                     "health_check",
                     "list_connections",

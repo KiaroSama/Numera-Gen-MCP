@@ -101,7 +101,10 @@ impl ServerHandler for Handler {
                     .cloned()
             });
         let args = if let Some(original) = &original {
-            Value::from_js(&original.arguments)
+            original
+                .take_arguments()
+                .map(|arguments| Value::from_js(&arguments))
+                .unwrap_or_else(|| Value::Object(Default::default()))
         } else {
             Value::from_serde(&serde_json::Value::Object(
                 request.arguments.unwrap_or_default(),
@@ -116,6 +119,12 @@ impl ServerHandler for Handler {
             "Tool started.",
             json!({"tool":name,"call_id":id}),
         );
+        let progress = context.meta.get_progress_token().map(|token| {
+            std::sync::Arc::new(crate::services::progress::ProgressReporter::new(
+                token,
+                context.peer.clone(),
+            ))
+        });
         let mut return_mode = String::from("files");
         let action = async {
             if !matches!(name, "generate_image" | "edit_image")
@@ -137,9 +146,22 @@ impl ServerHandler for Handler {
                 .as_str()
                 .unwrap_or("files")
                 .into();
-            self.application
+            if let Some(reporter) = &progress
+                && matches!(name, "generate_image" | "edit_image" | "generate_media")
+            {
+                reporter.report("Submitting request").await;
+            }
+            let result = self
+                .application
                 .call_snapshot(snapshot, name, args.clone(), &context.ct)
-                .await
+                .await;
+            if let Some(reporter) = &progress
+                && matches!(name, "generate_image" | "edit_image" | "generate_media")
+                && result.is_ok()
+            {
+                reporter.report("Finalizing").await;
+            }
+            result
         }
         .await;
         let (mut value, failed) = match action {
@@ -152,7 +174,7 @@ impl ServerHandler for Handler {
                 (json!({"error":error}), true)
             }
         };
-        let mut content = vec![ContentBlock::text(value.to_string())];
+        let mut content = Vec::new();
         if matches!(name, "generate_image" | "edit_image" | "generate_media") && !failed {
             let outputs = crate::error::array(&value["outputs"]).to_vec();
             let previews =
@@ -217,6 +239,7 @@ impl ServerHandler for Handler {
                 Err(error) => value["preview_error"] = json!(error),
             }
         }
+        content.insert(0, ContentBlock::text(value.to_string()));
         let failed = failed
             || (matches!(name, "generate_image" | "edit_image" | "generate_media")
                 && matches!(value["status"].as_str(), Some("failed" | "outcome_unknown")));

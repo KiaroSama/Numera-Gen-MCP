@@ -29,10 +29,12 @@ struct Snapshots {
     generations: Vec<Arc<Generation>>,
     current: Arc<Generation>,
     owners: HashMap<String, Arc<Generation>>,
+    discoveries: HashMap<u64, Arc<Discovery>>,
+    generation_ids: HashMap<usize, u64>,
+    next_id: u64,
 }
 pub struct Application {
     snapshots: Mutex<Snapshots>,
-    discoveries: tokio::sync::Mutex<HashMap<usize, Discovery>>,
     pub store: SharedStore,
     pub logger: Arc<Logger>,
     pub stop: CancellationToken,
@@ -59,14 +61,17 @@ impl Application {
             env: env.into(),
             active: Arc::new(Mutex::new(HashMap::new())),
         });
+        let initial_ptr = Arc::as_ptr(&generation) as usize;
         Ok(Self {
             snapshots: Mutex::new(Snapshots {
                 reload,
                 generations: vec![generation.clone()],
                 current: generation,
                 owners: HashMap::new(),
+                discoveries: HashMap::from([(1, Arc::new(Discovery::default()))]),
+                generation_ids: HashMap::from([(initial_ptr, 1)]),
+                next_id: 2,
             }),
-            discoveries: tokio::sync::Mutex::new(HashMap::new()),
             store,
             logger,
             stop,
@@ -88,8 +93,35 @@ impl Application {
                     env: old.env.clone(),
                     active: Arc::new(Mutex::new(HashMap::new())),
                 });
+                let id = snapshots.next_id;
+                snapshots.next_id = snapshots.next_id.saturating_add(1);
+                snapshots
+                    .generation_ids
+                    .insert(Arc::as_ptr(&generation) as usize, id);
+                snapshots
+                    .discoveries
+                    .insert(id, Arc::new(Discovery::default()));
                 snapshots.generations.push(generation.clone());
                 snapshots.current = generation;
+            }
+            let current = snapshots.current.clone();
+            snapshots.generations.retain(|g| {
+                Arc::ptr_eq(g, &current)
+                    || Arc::strong_count(g) > 1
+                    || g.active.lock().is_ok_and(|a| !a.is_empty())
+            });
+            let live_ptrs: HashSet<usize> = snapshots
+                .generations
+                .iter()
+                .map(|g| Arc::as_ptr(g) as usize)
+                .collect();
+            snapshots
+                .generation_ids
+                .retain(|ptr, _| live_ptrs.contains(ptr));
+            let live_ids: HashSet<u64> = snapshots.generation_ids.values().copied().collect();
+            snapshots.discoveries.retain(|id, _| live_ids.contains(id));
+            if let Some(reload) = snapshots.reload.as_mut() {
+                reload.prune_unused();
             }
         }
         Ok(snapshots.current.clone())
@@ -186,10 +218,26 @@ impl Application {
             ),
             "list_models" => {
                 let (offset, limit) = pagination(&args)?;
-                let mut discoveries = self.discoveries.lock().await;
-                let discovery = discoveries.entry(Arc::as_ptr(config) as usize).or_default();
+                let discovery = {
+                    let mut snapshots =
+                        self.snapshots.lock().map_err(|_| NumeraError::runtime())?;
+                    let ptr = Arc::as_ptr(&generation) as usize;
+                    let id = if let Some(&id) = snapshots.generation_ids.get(&ptr) {
+                        id
+                    } else {
+                        let id = snapshots.next_id;
+                        snapshots.next_id = snapshots.next_id.saturating_add(1);
+                        snapshots.generation_ids.insert(ptr, id);
+                        id
+                    };
+                    snapshots
+                        .discoveries
+                        .entry(id)
+                        .or_insert_with(|| Arc::new(Discovery::default()))
+                        .clone()
+                };
                 let mut result = discovery
-                    .list(
+                    .list_shared(
                         config,
                         &generation.runtime,
                         &generation.env,
@@ -229,7 +277,12 @@ impl Application {
             }
             "generate_media" => {
                 let receipt = crate::services::media::run(&generation, args, cancel).await?;
-                if !receipt.value["upstream_job"].is_null() {
+                if !receipt.value["upstream_job"].is_null()
+                    && !matches!(
+                        receipt.status(),
+                        "completed" | "partial" | "failed" | "cancelled"
+                    )
+                {
                     self.snapshots
                         .lock()
                         .map_err(|_| NumeraError::runtime())?
@@ -243,8 +296,8 @@ impl Application {
                 if uuid::Uuid::parse_str(id).is_err() {
                     return Err(invalid());
                 }
-                let (mut metadata, _) =
-                    output::owned_media(&config.value, &*locked(&self.store)?, id)?;
+                let record = locked(&self.store)?.output(id)?;
+                let (mut metadata, _) = output::owned_media_from_record(&config.value, record)?;
                 metadata["verified"] = json!(true);
                 Ok(metadata)
             }
@@ -260,7 +313,12 @@ impl Application {
                 } else {
                     generation.run(args, operation, cancel).await?
                 };
-                if !receipt.value["upstream_job"].is_null() {
+                if !receipt.value["upstream_job"].is_null()
+                    && !matches!(
+                        receipt.status(),
+                        "completed" | "partial" | "failed" | "cancelled"
+                    )
+                {
                     self.snapshots
                         .lock()
                         .map_err(|_| NumeraError::runtime())?
@@ -283,11 +341,16 @@ impl Application {
                             "completed" | "partial" | "failed" | "cancelled"
                         );
                     let owner = self.owner(id, upstream).await?;
-                    return Ok(
-                        crate::services::media_jobs::get(&owner, id, refresh, cancel)
-                            .await?
-                            .value,
-                    );
+                    let done =
+                        crate::services::media_jobs::get(&owner, id, refresh, cancel).await?;
+                    if matches!(
+                        done.status(),
+                        "completed" | "partial" | "failed" | "cancelled"
+                    ) && let Ok(mut snapshots) = self.snapshots.lock()
+                    {
+                        snapshots.owners.remove(id);
+                    }
+                    return Ok(done.value);
                 }
                 let local = refresh && { locked(&self.store)?.needs_local_recovery(id)? };
                 if local {
@@ -300,9 +363,15 @@ impl Application {
                     && !receipt.value["upstream_job"].is_null()
                     && !matches!(receipt.status(), "completed" | "partial" | "failed");
                 let owner = self.owner(id, upstream).await?;
-                Ok(jobs::get(owner.as_ref(), id, refresh, cancel, None)
-                    .await?
-                    .value)
+                let done = jobs::get(owner.as_ref(), id, refresh, cancel, None).await?;
+                if matches!(
+                    done.status(),
+                    "completed" | "partial" | "failed" | "cancelled"
+                ) && let Ok(mut snapshots) = self.snapshots.lock()
+                {
+                    snapshots.owners.remove(id);
+                }
+                Ok(done.value)
             }
             "cancel_job" => {
                 let id = required_string(&args, "request_id")?;
@@ -315,13 +384,43 @@ impl Application {
                             "completed" | "partial" | "failed" | "cancelled"
                         );
                     let owner = self.owner(id, upstream).await?;
-                    return crate::services::media_jobs::cancel(&owner, id, cancel).await;
+                    let outcome = crate::services::media_jobs::cancel(&owner, id, cancel).await?;
+                    if let Ok(mut snapshots) = self.snapshots.lock() {
+                        snapshots.owners.remove(id);
+                    }
+                    return Ok(outcome);
                 }
                 locked(&self.store)?.cancel(id)?;
                 let owner = self
                     .owner(id, receipt.value["upstream_job"]["kind"] == "comfyui")
                     .await?;
-                jobs::cancel(&owner, id, cancel).await
+                let outcome = jobs::cancel(&owner, id, cancel).await?;
+                if let Ok(mut snapshots) = self.snapshots.lock() {
+                    snapshots.owners.remove(id);
+                }
+                Ok(outcome)
+            }
+            "list_jobs" => {
+                let status = optional_string(&args, "status")?;
+                if let Some(status) = status
+                    && !matches!(
+                        status,
+                        "running"
+                            | "outcome_unknown"
+                            | "completed"
+                            | "partial"
+                            | "failed"
+                            | "cancelled"
+                    )
+                {
+                    return Err(invalid());
+                }
+                let (offset, limit) = pagination(&args)?;
+                let all = locked(&self.store)?.list_jobs(status, offset as u32, limit as u32)?;
+                Ok(json!({
+                    "jobs": all.iter().take(limit).collect::<Vec<_>>(),
+                    "next_offset": if all.len() > limit { json!(offset + limit) } else { Value::Null }
+                }))
             }
             "list_outputs" => {
                 let (offset, limit) = pagination(&args)?;
@@ -335,7 +434,8 @@ impl Application {
                 if uuid::Uuid::parse_str(id).is_err() {
                     return Err(invalid());
                 }
-                let (mut result, _) = output::owned(&config.value, &*locked(&self.store)?, id)?;
+                let record = locked(&self.store)?.output(id)?;
+                let (mut result, _) = output::owned_from_record(&config.value, record)?;
                 result["verified"] = json!(true);
                 Ok(result)
             }
@@ -345,15 +445,18 @@ impl Application {
 
     pub fn original_media(&self, id: &str) -> Result<(Value, Vec<u8>)> {
         let generation = self.current()?;
-        output::owned_media(&generation.config.value, &*locked(&self.store)?, id)
+        let record = locked(&self.store)?.output(id)?;
+        output::owned_media_from_record(&generation.config.value, record)
     }
     pub fn original(&self, id: &str) -> Result<images::Image> {
         let generation = self.current()?;
-        Ok(output::owned(&generation.config.value, &*locked(&self.store)?, id)?.1)
+        let record = locked(&self.store)?.output(id)?;
+        Ok(output::owned_from_record(&generation.config.value, record)?.1)
     }
     pub fn preview(&self, id: &str) -> Result<Value> {
         let generation = self.current()?;
-        let image = output::owned(&generation.config.value, &*locked(&self.store)?, id)?.1;
+        let record = locked(&self.store)?.output(id)?;
+        let image = output::owned_from_record(&generation.config.value, record)?.1;
         images::preview(&image, &generation.config.value)
     }
     pub fn return_mode(&self) -> Result<String> {

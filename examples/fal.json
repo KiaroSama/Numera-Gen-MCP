@@ -73,6 +73,10 @@
         "fal-ai/trellis-2/retexture": {
           "outputTypes": ["3d"],
           "modes": ["3d-to-3d"]
+        },
+        "fal-ai/mmaudio-v2": {
+          "outputTypes": ["video", "audio"],
+          "modes": ["video-to-audio", "video-to-video"]
         }
       }
     }

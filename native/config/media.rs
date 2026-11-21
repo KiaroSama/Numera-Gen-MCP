@@ -163,6 +163,11 @@ pub(crate) fn validate_connection(connection: &Value) -> Result<()> {
             if !validate_declaration(value, "outputTypes")? {
                 continue;
             }
+            if value.get("falContract").is_some() && !fal {
+                return Err(invalid(
+                    "falContract is reserved for fal-queue connections.",
+                ));
+            }
             let outputs = list(&value["outputTypes"], OUTPUT_TYPES)?;
             let mut implemented_outputs = HashSet::new();
             for mode in list(&value["modes"], MODES)? {
@@ -170,7 +175,12 @@ pub(crate) fn validate_connection(connection: &Value) -> Result<()> {
                     let endpoint = model.checked_str().map_err(|_| {
                         invalid("Fal model IDs must be valid Unicode endpoint identifiers.")
                     })?;
-                    let contract = crate::media::fal::contract(endpoint, mode).map_err(|_| {
+                    let contract = crate::media::fal::contract_with_override(
+                        endpoint,
+                        mode,
+                        value.get("falContract"),
+                    )
+                    .map_err(|_| {
                         invalid("The declared fal endpoint and mode have no implemented contract.")
                     })?;
                     for kind in contract.output_types {

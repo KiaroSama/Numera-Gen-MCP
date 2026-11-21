@@ -1,5 +1,68 @@
 # Changelog
 
+## 1.0.0 - 2026-11-21
+
+Version 1.0.0 hardens network, credential, storage and parser boundaries, cuts runtime dependencies,
+and expands MCP and media support across all four native targets (Windows x64/ARM64, Linux x64/ARM64).
+
+### Security and isolation
+
+- `js_json::parse()` enforces a 1024-level nesting ceiling, and `serde_json` no longer enables
+  `unbounded_depth`, preventing stack overflow from deeply nested JSON payloads.
+- Asset fetching blocks IPv4-compatible, NAT64 (`64:ff9b::/96`, `64:ff9b:1::/48`), 6to4 (`2002::/16`),
+  RFC 5737/7535/9637 documentation, site-local (`fec0::/10`), and discard (`100::/64`) ranges,
+  rejects HTTPS-to-HTTP downgrades and percent-encoded path traversal in `assetAllowances` and
+  `operation_url`, pins all validated DNS addresses with `.resolve_to_addrs()`, and honors the
+  configured download timeout.
+- `provider_options` now merges through a shared allowlist check so callers cannot overwrite
+  `store: false`, `provider.allow_fallbacks: false`, `tools`, `tool_choice`, `responseModalities`,
+  `imageConfig`, `model`, `input`, `prompt`, or `input_references`.
+- `PinnedConnection` resolves `proxy.secretEnv` fail-closed from the injected `EnvironmentSource`,
+  zeroizes header and proxy secrets on drop, and stops reading `std::env::var` in `http::api`.
+- Structured log redaction now scrubs `Key <token>`, `Basic <token>`, `x-api-key` /
+  `x-goog-api-key` / `authorization` / `proxy-authorization` header values, and `data:*;base64,...`
+  payloads. Windows directories, logs, config writes and SQLite files use owner-only protected DACLs.
+- MCP stdio transport reclaims dropped in-flight argument payloads on `CancelledNotification` and
+  post-completion so large base64 requests do not stay pinned in memory.
+
+### Reliability and performance
+
+- Active generation and media slots use an RAII `ActiveGuard` and release with the exact `Receipt`
+  on every exit path. Wait loops terminate cleanly on `outcome_unknown` and error growth instead of
+  spinning.
+- SQLite `Store::update()` enforces `changed == 1` with `AND lease > ?`, `save_continuation()`
+  runs inside a fenced `BEGIN IMMEDIATE` transaction, `migration::open()` enables
+  `PRAGMA foreign_keys = ON` and re-checks schema columns inside the write transaction, and a partial
+  index `requests_reserved` accelerates admission checks.
+- `generate_image` and `edit_image` on `fal-queue` validate through the editing request contract and
+  reject untranslated fields (`mask_mode`, `preserve_subject`, `preserve_style`).
+- SSE streaming uses an O(N) scan cursor, enforces strict UTF-8 decoding, keeps the last non-empty
+  `event:` header, preserves Gemini `promptFeedback` and `usageMetadata`, and handles case-insensitive
+  MIME types and empty-body `HEAD`/`204`/`205` responses.
+- `health_check` skips `GET /models` on direct `fal-queue` endpoints and reports the compile-time
+  `rustc` version from `build.rs`. `fal::outputs()` accepts `"model_urls": null`, and
+  `gateway_cancel()` requires a non-null `"error"` message before treating 404 as not found.
+- HTTP clients are pooled across requests (keyed by proxy configuration), polling uses exponential
+  backoff (`250ms..2000ms`), schema validation compiles once via `OnceLock`, and `ConfigReload`
+  prunes unused snapshots after reloads.
+- Runtime UTC formatting and SHA-256 hashing now use `jiff 1.0.1` (UTC offset only) and
+  `ring::digest::SHA256`, removing `chrono` and direct `sha2` from runtime library dependencies.
+
+### Features
+
+- Added `list_jobs` (13th MCP tool) returning paginated redacted job summaries without exposing
+  prompts or credentials, plus `wait: false` async handling for `openai-responses` and
+  `gemini-interactions` (preserving `store: false`).
+- Added MCP `notifications/progress` emission during long-running polling when the client supplies
+  a `progressToken`.
+- Added built-in `fal-ai/mmaudio-v2` support for `video-to-audio` and `video-to-video` (11 media
+  modes total).
+- Expanded media inspection: muxed MP4 (`vide` + optional `soun` `mp4a`/`Opus` tracks),
+  `WAV WAVE_FORMAT_EXTENSIBLE` (`0xFFFE` PCM/IEEE-float GUIDs), safe Khronos `GLB` material/texture
+  extensions, header-only AVC/HEVC NAL units, and `"gif"` in `simple-config.schema.json`.
+- Added opt-in `modelOverrides.<id>.falContract` so users can register custom `fal.ai` endpoints
+  with strict parameter allowlists without weakening built-in endpoint contracts.
+
 ## 0.5.0 - 2026-11-18
 
 One `.env` can now configure two providers. Beside the main `API_ENDPOINT`/`API_KEY`/`MODEL_n_*`

@@ -1,6 +1,6 @@
 [package]
 name = "numera-gen-mcp"
-version = "0.5.0"
+version = "1.0.0"
 edition = "2024"
 rust-version = "1.100.0"
 license = "GPL-3.0-or-later"
@@ -34,7 +34,7 @@ http-body-util = "=0.1.5"
 subtle = "=2.6.1"
 ring = "=0.17.14"
 base64 = "=0.23.1"
-chrono = { version = "=0.4.45", default-features = false, features = ["clock", "serde"] }
+jiff = { version = "=1.0.1", default-features = false, features = ["std"] }
 icu_collator = "=2.3.1"
 icu_locale = "=2.3.1"
 regex = "=1.13.1"
@@ -46,11 +46,13 @@ percent-encoding = "=2.3.2"
 image = { version = "=0.25.10", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 ryu-js = "=1.0.3"
 serde = { version = "=1.0.229", features = ["derive"] }
-serde_json = { version = "=1.0.154", features = ["preserve_order", "unbounded_depth", "raw_value"] }
-sha2 = "=0.11.1"
+serde_json = { version = "=1.0.154", features = ["preserve_order", "raw_value"] }
 thiserror = "=2.0.21"
 url = "=2.5.8"
 uuid = { version = "=1.29.2", features = ["v4", "serde"] }
+
+[dev-dependencies]
+chrono = { version = "=0.4.45", default-features = false, features = ["clock", "serde"] }
 
 [[test]]
 name = "media_acceptance"
@@ -71,6 +73,22 @@ path = "tests/rust/media_fal_contracts.rs"
 [[test]]
 name = "media_output_contracts"
 path = "tests/rust/media_output_contracts.rs"
+
+[[test]]
+name = "v1_security_regressions"
+path = "tests/rust/v1_security_regressions.rs"
+
+[[test]]
+name = "v1_bug_regressions"
+path = "tests/rust/v1_bug_regressions.rs"
+
+[[test]]
+name = "v1_perf_concurrency"
+path = "tests/rust/v1_perf_concurrency.rs"
+
+[[test]]
+name = "v1_features_acceptance"
+path = "tests/rust/v1_features_acceptance.rs"
 
 [[test]]
 name = "sdk_acceptance"

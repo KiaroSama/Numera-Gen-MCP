@@ -45,3 +45,13 @@ Sources: [generation mapping](https://github.com/diegosouzapw/OmniRoute/blob/c1e
 Troubleshooting: confirm gateway version/account/project/key/model route. A skipped non-chat model
 check is not a failed image-generation test. Unknown billing outcome is inspected, never automatically
 retried. Detailed immutable sources: [REFERENCES.md](REFERENCES.md).
+
+## OmniRoute `/v1/fal` queue gateway
+
+OmniRoute also exposes a fal queue gateway under `/v1/fal` (for example `http://127.0.0.1:20100/v1/fal`).
+Configure that connection with `FAL_API_ENDPOINT` (or `adapter: "fal-queue"`, `baseUrlMode: "api-prefix"`,
+`gateway: "omniroute"`). Numera sends `Bearer` auth through OmniRoute, polls status/result URLs relative
+to that prefix, and treats a `404` cancel response as not found only when the JSON body carries a non-null
+`"error"` string. Direct `https://queue.fal.run` connections continue to use `Key` auth and skip `GET /models`
+during `health_check`.
+

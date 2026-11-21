@@ -1,9 +1,11 @@
 pub mod fal;
 mod fal_contract;
+mod fal_dynamic;
 mod fal_input;
 mod glb;
 mod inspect;
 mod mp4;
+mod mp4_audio;
 mod wav;
 
 use crate::error::NumeraError;

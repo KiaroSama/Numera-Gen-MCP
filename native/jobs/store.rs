@@ -1,6 +1,5 @@
 use crate::compat::value::{Value, json};
 use crate::error::{NumeraError, Result};
-use chrono::Utc;
 use rusqlite::{Connection, OptionalExtension, params};
 use std::{collections::HashMap, path::Path};
 use uuid::Uuid;
@@ -63,7 +62,7 @@ pub struct Store {
 }
 
 pub(super) fn timestamp() -> String {
-    Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+    crate::time_utc::rfc3339_millis()
 }
 pub(super) fn busy(status: &str) -> bool {
     matches!(status, "prepared" | "submitting" | "running" | "finalizing")
@@ -75,7 +74,7 @@ pub(super) fn terminal(status: &str) -> bool {
 impl Store {
     pub const LEASE_MS: i64 = 30000;
     pub fn open(directory: &Path) -> Result<Self> {
-        Self::open_with_lease_clock(directory, || Utc::now().timestamp_millis())
+        Self::open_with_lease_clock(directory, crate::time_utc::now_millis)
     }
 
     /// Supplies lease time only; receipt timestamps and I/O deadlines remain real-time.
@@ -91,7 +90,7 @@ impl Store {
         directory: &Path,
         persistence: impl super::Persistence + 'static,
     ) -> Result<Self> {
-        Self::open_with_ports(directory, || Utc::now().timestamp_millis(), persistence)
+        Self::open_with_ports(directory, crate::time_utc::now_millis, persistence)
     }
 
     fn open_with_ports(
@@ -245,8 +244,25 @@ impl Store {
             .stage("storage"));
         }
         receipt.touch();
-        self.db.execute("UPDATE requests SET receipt=?,reservation=CASE WHEN ? THEN reservation ELSE 0 END WHERE id=? AND owner=? AND generation=?",
-            params![receipt.value.to_string(),busy(receipt.status()),id,self.owner,receipt.generation]).map_err(|_|NumeraError::storage())?;
+        let changed = self.db.execute(
+            "UPDATE requests SET receipt=?,reservation=CASE WHEN ? THEN reservation ELSE 0 END WHERE id=? AND owner=? AND generation=? AND lease>?",
+            params![
+                receipt.value.to_string(),
+                busy(receipt.status()),
+                id,
+                self.owner,
+                receipt.generation,
+                self.lease_now()
+            ],
+        )
+        .map_err(|_| NumeraError::storage())?;
+        if changed != 1 {
+            return Err(NumeraError::new(
+                "outcome_unknown",
+                "Receipt lease expired or writer generation was superseded; stale writes are fenced.",
+            )
+            .stage("storage"));
+        }
         Ok(())
     }
 
@@ -359,6 +375,50 @@ impl Store {
         )
         .map_err(|_| NumeraError::storage())
     }
+
+    pub fn list_jobs(&self, status: Option<&str>, offset: u32, limit: u32) -> Result<Vec<Value>> {
+        let mut statement = self
+            .db
+            .prepare("SELECT receipt FROM requests ORDER BY rowid DESC")
+            .map_err(|_| NumeraError::storage())?;
+        let rows = statement
+            .query_map([], |r| r.get::<_, String>(0))
+            .map_err(|_| NumeraError::storage())?;
+        let mut matched = Vec::new();
+        let mut skipped = 0u32;
+        let target = usize::try_from(limit).unwrap_or(20).saturating_add(1);
+        for row in rows {
+            let text = row.map_err(|_| NumeraError::storage())?;
+            let receipt = Value::parse_with_limit(&text, 128 * 1024 * 1024)
+                .map_err(|_| NumeraError::storage())?;
+            let row_status = receipt["status"].as_str().unwrap_or("");
+            if let Some(filter) = status
+                && row_status != filter
+            {
+                continue;
+            }
+            if skipped < offset {
+                skipped += 1;
+                continue;
+            }
+            let output_count = receipt["outputs"].as_array().map_or(0, Vec::len);
+            let has_upstream_job = !receipt["upstream_job"].is_null();
+            matched.push(json!({
+                "request_id": receipt["request_id"],
+                "status": receipt["status"],
+                "connection": receipt["connection"],
+                "model": receipt.get("model").cloned().unwrap_or(Value::Null),
+                "created_at": receipt["created_at"],
+                "updated_at": receipt["updated_at"],
+                "output_count": output_count,
+                "has_upstream_job": has_upstream_job,
+            }));
+            if matched.len() >= target {
+                break;
+            }
+        }
+        Ok(matched)
+    }
     pub fn list_outputs(&self, offset: u32, limit: u32) -> Result<Vec<Value>> {
         let mut stmt = self
             .db
@@ -375,7 +435,6 @@ impl Store {
             .collect()
     }
     pub fn save_continuation(&self, id: &str, scope: &str, value: &Value) -> Result<()> {
-        self.fence(id, None)?;
         let text = value.to_string();
         if text.len() > 1024 * 1024 {
             return Err(NumeraError::new(
@@ -383,8 +442,29 @@ impl Store {
                 "Continuation metadata exceeds private state limit.",
             ));
         }
-        self.db.execute("INSERT INTO continuation VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET scope=excluded.scope,value=excluded.value",params![id,scope,text]).map_err(|_|NumeraError::storage())?;
-        Ok(())
+        self.db
+            .execute_batch("BEGIN IMMEDIATE")
+            .map_err(|_| NumeraError::storage())?;
+        let outcome = (|| -> Result<()> {
+            self.fence(id, None)?;
+            self.db
+                .execute(
+                    "INSERT INTO continuation VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET scope=excluded.scope,value=excluded.value",
+                    params![id, scope, text],
+                )
+                .map_err(|_| NumeraError::storage())?;
+            Ok(())
+        })();
+        match outcome {
+            Ok(()) => self
+                .db
+                .execute_batch("COMMIT")
+                .map_err(|_| NumeraError::storage()),
+            Err(error) => {
+                let _ = self.db.execute_batch("ROLLBACK");
+                Err(error)
+            }
+        }
     }
     pub fn continuation(&self, id: &str, scope: &str) -> Result<Value> {
         let row: Option<(String, String)> = self

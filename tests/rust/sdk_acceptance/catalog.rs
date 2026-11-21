@@ -42,7 +42,7 @@ pub async fn tools() {
     let catalog = host::bounded(5000, host.client().list_tools(None))
         .await
         .unwrap();
-    assert_eq!(catalog.tools.len(), 12);
+    assert_eq!(catalog.tools.len(), 13);
     let mut names = catalog
         .tools
         .iter()
@@ -58,6 +58,7 @@ pub async fn tools() {
         "edit_image",
         "get_job",
         "cancel_job",
+        "list_jobs",
         "list_outputs",
         "get_output_info",
         "generate_media",

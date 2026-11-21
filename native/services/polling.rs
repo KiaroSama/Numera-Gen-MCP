@@ -1,6 +1,11 @@
 use std::{future::Future, time::Duration};
 use tokio_util::sync::CancellationToken;
 
+/// Computes bounded exponential backoff in milliseconds.
+pub fn backoff_ms(attempt: u32, base_ms: u64, cap_ms: u64) -> u64 {
+    base_ms.saturating_mul(1u64 << attempt.min(6)).min(cap_ms)
+}
+
 /// Poll immediately; cancellation stops the next poll, not a completed result.
 pub async fn wait<T, E, F, Fut>(
     cancel: &CancellationToken,
@@ -11,6 +16,7 @@ where
     F: FnMut() -> Fut,
     Fut: Future<Output = Result<Option<T>, E>>,
 {
+    let mut attempt = 0u32;
     loop {
         if cancel.is_cancelled() {
             return Err(cancelled());
@@ -18,9 +24,11 @@ where
         if let Some(result) = poll().await? {
             return Ok(result);
         }
+        let delay = Duration::from_millis(backoff_ms(attempt, 250, 2_000));
+        attempt = attempt.saturating_add(1);
         tokio::select! {
             _ = cancel.cancelled() => return Err(cancelled()),
-            _ = tokio::time::sleep(Duration::from_millis(500)) => {},
+            _ = tokio::time::sleep(delay) => {},
         }
     }
 }

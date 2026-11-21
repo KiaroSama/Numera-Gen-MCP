@@ -2,6 +2,13 @@ use super::invalid;
 use crate::error::Result;
 use serde_json::{Value, json};
 
+const SUBTYPE_PCM: [u8; 16] = [
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71,
+];
+const SUBTYPE_IEEE_FLOAT: [u8; 16] = [
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71,
+];
+
 fn u16_at(bytes: &[u8], offset: usize) -> Result<u16> {
     let field = bytes
         .get(offset..offset + 2)
@@ -63,12 +70,31 @@ pub(super) fn inspect(bytes: &[u8]) -> Result<Value> {
             if format.is_some() || size < 16 {
                 return Err(invalid("WAV needs one complete format chunk."));
             }
-            let code = u16_at(body, 0)?;
+            let raw_code = u16_at(body, 0)?;
             let channels = u16_at(body, 2)?;
             let rate = u32_at(body, 4)?;
             let byte_rate = u32_at(body, 8)?;
             let align = u16_at(body, 12)?;
             let bits = u16_at(body, 14)?;
+            let code = if raw_code == 0xFFFE {
+                if size != 40 || u16_at(body, 16)? != 22 {
+                    return Err(invalid("WAV extensible format header length is invalid."));
+                }
+                let valid_bits = u16_at(body, 18)?;
+                if valid_bits == 0 || valid_bits > bits {
+                    return Err(invalid("WAV extensible valid bits per sample is invalid."));
+                }
+                match body.get(24..40) {
+                    Some(guid) if guid == SUBTYPE_PCM => 1u16,
+                    Some(guid) if guid == SUBTYPE_IEEE_FLOAT => 3u16,
+                    _ => return Err(invalid("Unsupported WAV extensible subformat.")),
+                }
+            } else {
+                if size != 16 && (size < 18 || usize::from(u16_at(body, 16)?) + 18 != size) {
+                    return Err(invalid("WAV format extension length is inconsistent."));
+                }
+                raw_code
+            };
             if channels == 0
                 || channels > 64
                 || rate == 0
@@ -78,9 +104,6 @@ pub(super) fn inspect(bytes: &[u8]) -> Result<Value> {
                 return Err(invalid(
                     "Unsupported or invalid WAV encoding, channels or sample rate.",
                 ));
-            }
-            if size != 16 && (size < 18 || usize::from(u16_at(body, 16)?) + 18 != size) {
-                return Err(invalid("WAV format extension length is inconsistent."));
             }
             let expected_align = channels
                 .checked_mul(bits / 8)

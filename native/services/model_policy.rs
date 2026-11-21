@@ -20,7 +20,7 @@ fn accepts(descriptor: &Value, value: &Value) -> bool {
                 && descriptor["min"].as_f64().is_some_and(|min| n >= min)
                 && descriptor["max"].as_f64().is_some_and(|max| n <= max)
         }),
-        Some("boolean") => true,
+        Some("boolean") => value.is_boolean(),
         _ => false,
     }
 }

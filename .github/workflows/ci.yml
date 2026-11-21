@@ -125,6 +125,7 @@ jobs:
         timeout-minutes: 30
         with:
           target: ${{ matrix.target }}
+          use-cache: 'true'
       - name: Show this job as pending beside the commit
         timeout-minutes: 1
         env:
@@ -212,6 +213,7 @@ jobs:
         with:
           target: x86_64-unknown-linux-gnu
           coverage: 'true'
+          use-cache: 'true'
       - name: Show this job as pending beside the commit
         timeout-minutes: 1
         env:
@@ -283,6 +285,7 @@ jobs:
         timeout-minutes: 30
         with:
           target: x86_64-unknown-linux-gnu
+          use-cache: 'true'
       - name: Show this job as pending beside the commit
         timeout-minutes: 1
         env:

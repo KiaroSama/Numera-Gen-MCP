@@ -204,9 +204,15 @@ still fails validation without conversion.
 | `fal-ai/trellis` | `image-to-3d` | 3d |
 | `fal-ai/hyper3d/rodin` | `text-to-3d`, `image-to-3d` | 3d, image |
 | `fal-ai/trellis-2/retexture` | `3d-to-3d` | 3d |
+| `fal-ai/mmaudio-v2` | `video-to-audio`, `video-to-video` | video, audio |
 
-Vocabulary alone does not implement `video-to-audio` or another conversion. Retexture requires both a
-`mesh` kind3d and `image` kindimage reference; image/audio/video transforms require their exact input
+Retexture requires both a `mesh` kind3d and `image` kindimage reference; `fal-ai/mmaudio-v2` requires a
+`video` reference and accepts bounded `duration`, `num_steps`, `cfg_strength`, `mask_away_clip`, `seed`,
+and `negative_prompt` parameters. Custom non-built-in fal endpoints can declare an opt-in
+`modelOverrides.<id>.falContract` block (`outputField`, `outputArray`, `outputKind`, optional
+`prompt`/`references`/`allowedParameters` with strict type/range/enum bounds); built-in endpoint IDs and
+path-traversal IDs are rejected. Compact `simple-config.schema.json` also accepts `"gif"` as a default
+`output_format`. image/audio/video transforms require their exact input
 role. Native `parameters` are endpoint-specific: for example Stable Audio uses `seconds_total`,
 Audio25 uses `total_seconds`, and Kling uses string `duration`. Connection defaults, model defaults,
 then explicit parameters merge before preflight and request fingerprinting. Unsupported parameters,

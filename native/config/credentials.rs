@@ -10,6 +10,18 @@ use std::{collections::HashMap, fs::File, io::Read, path::Path};
 pub struct PinnedConnection {
     value: Value,
     headers: HashMap<String, String>,
+    proxy_auth: Option<String>,
+}
+
+fn zeroize_string(mut value: String) {
+    // SAFETY: zeroing raw UTF-8 bytes before immediate drop leaves no readable bytes.
+    unsafe {
+        for byte in value.as_bytes_mut() {
+            std::ptr::write_volatile(byte, 0);
+        }
+    }
+    std::sync::atomic::compiler_fence(std::sync::atomic::Ordering::SeqCst);
+    drop(value);
 }
 
 impl Clone for PinnedConnection {
@@ -17,12 +29,20 @@ impl Clone for PinnedConnection {
         Self {
             value: super::clone_json(&self.value),
             headers: self.headers.clone(),
+            proxy_auth: self.proxy_auth.clone(),
         }
     }
 }
 impl Drop for PinnedConnection {
     fn drop(&mut self) {
         super::drop_json(std::mem::take(&mut self.value));
+        for (key, value) in self.headers.drain() {
+            zeroize_string(key);
+            zeroize_string(value);
+        }
+        if let Some(auth) = self.proxy_auth.take() {
+            zeroize_string(auth);
+        }
     }
 }
 
@@ -33,6 +53,9 @@ impl PinnedConnection {
     pub fn headers(&self) -> HashMap<String, String> {
         self.headers.clone()
     }
+    pub fn proxy_auth(&self) -> Option<&str> {
+        self.proxy_auth.as_deref()
+    }
 }
 
 pub async fn snapshot_credentials(
@@ -41,10 +64,33 @@ pub async fn snapshot_credentials(
     runtime: &RuntimePaths,
 ) -> Result<PinnedConnection> {
     let headers = credentials(connection, env, runtime).await?;
+    let proxy_auth = resolve_proxy_auth(connection, env)?;
     Ok(PinnedConnection {
         value: super::clone_json(connection),
         headers,
+        proxy_auth,
     })
+}
+
+fn resolve_proxy_auth(connection: &Value, env: &impl EnvironmentSource) -> Result<Option<String>> {
+    let Some(proxy) = connection.get("proxy") else {
+        return Ok(None);
+    };
+    let Some(secret_env) = proxy.get("secretEnv") else {
+        return Ok(None);
+    };
+    let Some(name) = secret_env.as_str().filter(|s| !s.is_empty()) else {
+        return Err(invalid("Invalid proxy secretEnv configuration."));
+    };
+    let value = env
+        .value(name)?
+        .filter(|v| !v.is_empty() && !v.contains(['\r', '\n', '\0']))
+        .ok_or_else(|| {
+            missing("The configured proxy credential environment variable is missing or empty.")
+        })?;
+    reqwest::header::HeaderValue::from_str(&value)
+        .map_err(|_| invalid("Invalid proxy credential."))?;
+    Ok(Some(value))
 }
 
 pub async fn credentials(

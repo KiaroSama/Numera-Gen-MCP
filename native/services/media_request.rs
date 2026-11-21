@@ -50,11 +50,18 @@ pub fn invalid(message: &str) -> NumeraError {
 }
 impl Request {
     pub fn parse(raw: Value) -> Result<Self> {
-        let schema: Json =
-            serde_json::from_str(include_str!("../../schemas/media-request.schema.json"))
-                .map_err(|_| NumeraError::runtime())?;
+        static RAW: std::sync::OnceLock<Json> = std::sync::OnceLock::new();
+        static SCHEMA: std::sync::OnceLock<crate::compat::js_schema::Schema<'static>> =
+            std::sync::OnceLock::new();
+        let schema = SCHEMA.get_or_init(|| {
+            let raw = RAW.get_or_init(|| {
+                serde_json::from_str(include_str!("../../schemas/media-request.schema.json"))
+                    .expect("bundled media request schema")
+            });
+            crate::compat::js_schema::Schema::compile(raw).expect("compiled media request schema")
+        });
         let mut authoritative = raw.to_js();
-        crate::compat::js_schema::Schema::compile(&schema)?
+        schema
             .default_and_validate(&mut authoritative)
             .map_err(|_| invalid("Media request does not match its public schema."))?;
         let request: Self = serde_json::from_value(Value::from_js(&authoritative).to_serde()?)
@@ -200,6 +207,16 @@ pub fn effective_parameters(connection: &Value, model: &str, request: &Request) 
 }
 
 pub fn preflight(model: &str, request: &Request, parameters: &Json, config: &Value) -> Result<()> {
+    preflight_with_contract(model, request, parameters, config, None)
+}
+
+pub fn preflight_with_contract(
+    model: &str,
+    request: &Request,
+    parameters: &Json,
+    config: &Value,
+    fal_contract: Option<&Value>,
+) -> Result<()> {
     if request.references.len() as u64 > config["files"]["maxReferences"].as_u64().unwrap_or(14) {
         return Err(invalid("Media reference count exceeds configuration."));
     }
@@ -212,9 +229,10 @@ pub fn preflight(model: &str, request: &Request, parameters: &Json, config: &Val
             url: "validated-before-transfer".into(),
         })
         .collect();
-    fal::prepare(
+    fal::prepare_with_override(
         model,
         &request.mode,
+        fal_contract,
         request.prompt.as_deref(),
         &references,
         parameters,
@@ -254,7 +272,8 @@ pub async fn references(
             return Err(super::generation::cancelled());
         }
         let bytes = if let Some(id) = &reference.output_id {
-            let (owned, bytes) = output::owned_media(config, &*locked(&generation.store)?, id)?;
+            let record = locked(&generation.store)?.output(id)?;
+            let (owned, bytes) = output::owned_media_from_record(config, record)?;
             if owned["kind"].as_str().unwrap_or("image") != reference.kind.as_str() {
                 return Err(invalid("Owned reference kind differs."));
             }

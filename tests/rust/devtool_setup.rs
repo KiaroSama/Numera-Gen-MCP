@@ -289,7 +289,7 @@ fn actual_diagnose_cli_reports_only_local_readiness_and_never_generation() {
     assert_eq!(report["credentials_ready"], true);
     assert_eq!(report["generation_verified"], false);
     assert!(report["connection_ready"].is_null());
-    assert_eq!(report["tool_count"], 12);
+    assert_eq!(report["tool_count"], 13);
     assert_eq!(report["blockers"], serde_json::json!([]));
     assert!(!workspace.0.join("node_modules").exists());
     assert!(!workspace.0.join("manifest.json").exists());
