@@ -119,5 +119,142 @@ async fn plan020_application_list_jobs_and_concurrent_calls_do_not_deadlock() {
     assert!(a.is_ok());
     let jobs = b.unwrap();
     assert_eq!(jobs["jobs"], json!([]));
+    // Seed 3 receipts and exercise list_jobs filters, pagination, has_more, and error branches.
+    {
+        let mut store = Store::open(&dir.join("state")).unwrap();
+        for (i, st) in ["running", "completed", "failed"].iter().enumerate() {
+            let (_, mut rec) = store
+                .prepare(
+                    Receipt::new(json!({
+                        "request_id": format!("app-j-{i}"),
+                        "connection": "c",
+                        "model": "m",
+                        "adapter": "openai-images",
+                        "operation": "generate",
+                        "status": "prepared",
+                        "generation_outcome": "not_submitted",
+                        "outputs": [],
+                        "errors": [],
+                        "warnings": [],
+                        "deviations": []
+                    })),
+                    &format!("ah-{i}"),
+                    "ident",
+                )
+                .unwrap();
+            rec.value["status"] = json!(*st);
+            store.update(&mut rec).unwrap();
+        }
+    }
+    let page1 = app
+        .call("list_jobs", json!({"limit": 1, "offset": 0}), &cancel)
+        .await
+        .unwrap();
+    assert_eq!(page1["jobs"].as_array().unwrap().len(), 1);
+    assert_eq!(page1["next_offset"], json!(1));
+    let filtered = app
+        .call(
+            "list_jobs",
+            json!({"status": "completed", "limit": 10}),
+            &cancel,
+        )
+        .await
+        .unwrap();
+    assert_eq!(filtered["jobs"].as_array().unwrap().len(), 1);
+    assert!(filtered["next_offset"].is_null());
+    assert!(
+        app.call("list_jobs", json!({"status": "bogus"}), &cancel)
+            .await
+            .is_err()
+    );
+    assert!(
+        app.call("list_jobs", json!({"limit": 0}), &cancel)
+            .await
+            .is_err()
+    );
+    assert!(
+        app.call("list_jobs", json!({"offset": -1}), &cancel)
+            .await
+            .is_err()
+    );
+    assert!(
+        app.call("nonexistent_tool", json!({}), &cancel)
+            .await
+            .is_err()
+    );
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn v1_extra_branch_coverage_assets_and_fal_outputs() {
+    use numera_gen_mcp::{http::assets, media::fal};
+
+    for priv_ip in [
+        "0.0.0.0",
+        "10.0.0.1",
+        "100.64.0.1",
+        "127.0.0.1",
+        "169.254.169.254",
+        "172.16.0.1",
+        "192.168.1.1",
+        "198.18.0.1",
+        "224.0.0.1",
+        "240.0.0.1",
+        "255.255.255.255",
+        "::",
+        "::1",
+        "fe80::1",
+        "fc00::1",
+        "fd00::1",
+        "ff02::1",
+        "[::1]",
+        "not-an-ip",
+    ] {
+        let res = assets::private_address(priv_ip);
+        assert!(res, "case {priv_ip}");
+    }
+
+    // Cover built-in fal::outputs & gateway_outputs across endpoints
+    let flux = fal::outputs(
+        "fal-ai/flux/dev",
+        &serde_json::json!({"images": [{"url": "https://v3.fal.media/a.png", "content_type": "image/png"}]}),
+    )
+    .unwrap();
+    assert_eq!(flux.len(), 1);
+    let audio = fal::outputs(
+        "fal-ai/stable-audio",
+        &serde_json::json!({"audio_file": {"url": "https://v3.fal.media/a.wav", "content_type": "audio/wav"}}),
+    )
+    .unwrap();
+    assert_eq!(audio.len(), 1);
+    let video = fal::outputs(
+        "fal-ai/kling-video/v2.5-turbo/pro/text-to-video",
+        &serde_json::json!({"video": {"url": "https://v3.fal.media/v.mp4", "content_type": "video/mp4"}}),
+    )
+    .unwrap();
+    assert_eq!(video.len(), 1);
+    let trellis = fal::outputs(
+        "fal-ai/trellis",
+        &serde_json::json!({"model_mesh": {"url": "https://v3.fal.media/m.glb", "content_type": "model/gltf-binary"}}),
+    )
+    .unwrap();
+    assert_eq!(trellis.len(), 1);
+    let hunyuan = fal::outputs(
+        "fal-ai/hunyuan3d-v3/text-to-3d",
+        &serde_json::json!({
+            "model_glb": {"url": "https://v3.fal.media/m.glb"},
+            "model_urls": {"obj": {"url": "https://v3.fal.media/m.obj"}, "usdz": {"url": "https://v3.fal.media/m.usdz"}}
+        }),
+    )
+    .unwrap();
+    assert_eq!(hunyuan.len(), 1);
+    assert!(fal::outputs("fal-ai/flux/dev", &serde_json::json!("bad")).is_err());
+    assert!(fal::outputs("fal-ai/hunyuan3d-v3/text-to-3d", &serde_json::json!({"model_glb": {"url": "https://v3.fal.media/m.glb"}, "model_urls": "bad"})).is_err());
+    let gw = fal::gateway_outputs(
+        "fal-ai/flux/dev",
+        &serde_json::json!({"output": {"images": [{"url": "https://v3.fal.media/gw.png"}]}}),
+    )
+    .unwrap();
+    assert_eq!(gw.len(), 1);
+    assert!(fal::gateway_outputs("fal-ai/flux/dev", &serde_json::json!({})).is_err());
 }
