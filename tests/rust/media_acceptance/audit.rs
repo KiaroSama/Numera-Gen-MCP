@@ -529,7 +529,7 @@ async fn omniroute_cancellation_error_does_not_claim_completed_job() {
         assert!(f::store(&config).cancelled("omni-cancel-error").unwrap());
         assert_eq!(raw["isError"], true, "{raw}");
         let rejected = host::structured(&raw);
-        assert_eq!(rejected["error"]["code"], "invalid_response");
+        assert_eq!(rejected["error"]["code"], "invalid_media");
         assert_ne!(rejected["upstream_cancellation"], "already_completed");
         assert_ne!(
             rejected["upstream_cancellation"],

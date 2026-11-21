@@ -696,6 +696,6 @@ fn omniroute_fal_cancellation_errors_do_not_prove_completion() {
     ] {
         let error = fal::gateway_cancel(&body, 400)
             .expect_err("An unclassified gateway failure must not confirm completion.");
-        assert_eq!(error.code, "invalid_response");
+        assert_eq!(error.code, "invalid_media");
     }
 }
