@@ -7,7 +7,7 @@ use icu_locale::locale;
 use std::{cmp::Ordering, collections::HashMap};
 
 pub const MAX_JSON_BYTES: usize = 1024 * 1024;
-pub const MAX_JSON_DEPTH: usize = 1024;
+pub const MAX_JSON_DEPTH: usize = 16384;
 
 #[derive(Default)]
 pub enum JsValue {

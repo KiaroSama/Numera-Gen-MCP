@@ -7,8 +7,8 @@ and expands MCP and media support across all four native targets (Windows x64/AR
 
 ### Security and isolation
 
-- `js_json::parse()` enforces a 1024-level nesting ceiling, and `serde_json` no longer enables
-  `unbounded_depth`, preventing stack overflow from deeply nested JSON payloads.
+- `js_json::parse()` enforces a 16384-level nesting ceiling, and `serde_json` no longer enables
+  `unbounded_depth`, bounding deeply nested JSON payloads while keeping iterative 8192-deep parity.
 - Asset fetching blocks IPv4-compatible, NAT64 (`64:ff9b::/96`, `64:ff9b:1::/48`), 6to4 (`2002::/16`),
   RFC 5737/7535/9637 documentation, site-local (`fec0::/10`), and discard (`100::/64`) ranges,
   rejects HTTPS-to-HTTP downgrades and percent-encoded path traversal in `assetAllowances` and
@@ -59,7 +59,7 @@ and expands MCP and media support across all four native targets (Windows x64/AR
   modes total).
 - Expanded media inspection: muxed MP4 (`vide` + optional `soun` `mp4a`/`Opus` tracks),
   `WAV WAVE_FORMAT_EXTENSIBLE` (`0xFFFE` PCM/IEEE-float GUIDs), safe Khronos `GLB` material/texture
-  extensions, header-only AVC/HEVC NAL units, and `"gif"` in `simple-config.schema.json`.
+  extensions, and header-only AVC/HEVC NAL units.
 - Added opt-in `modelOverrides.<id>.falContract` so users can register custom `fal.ai` endpoints
   with strict parameter allowlists without weakening built-in endpoint contracts.
 

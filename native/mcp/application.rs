@@ -104,24 +104,26 @@ impl Application {
                 snapshots.generations.push(generation.clone());
                 snapshots.current = generation;
             }
-            let current = snapshots.current.clone();
-            snapshots.generations.retain(|g| {
-                Arc::ptr_eq(g, &current)
-                    || Arc::strong_count(g) > 1
-                    || g.active.lock().is_ok_and(|a| !a.is_empty())
-            });
-            let live_ptrs: HashSet<usize> = snapshots
-                .generations
-                .iter()
-                .map(|g| Arc::as_ptr(g) as usize)
-                .collect();
-            snapshots
-                .generation_ids
-                .retain(|ptr, _| live_ptrs.contains(ptr));
-            let live_ids: HashSet<u64> = snapshots.generation_ids.values().copied().collect();
-            snapshots.discoveries.retain(|id, _| live_ids.contains(id));
-            if let Some(reload) = snapshots.reload.as_mut() {
-                reload.prune_unused();
+            if snapshots.generations.len() >= 64 {
+                let current = snapshots.current.clone();
+                snapshots.generations.retain(|g| {
+                    Arc::ptr_eq(g, &current)
+                        || Arc::strong_count(g) > 1
+                        || g.active.lock().is_ok_and(|a| !a.is_empty())
+                });
+                let live_ptrs: HashSet<usize> = snapshots
+                    .generations
+                    .iter()
+                    .map(|g| Arc::as_ptr(g) as usize)
+                    .collect();
+                snapshots
+                    .generation_ids
+                    .retain(|ptr, _| live_ptrs.contains(ptr));
+                let live_ids: HashSet<u64> = snapshots.generation_ids.values().copied().collect();
+                snapshots.discoveries.retain(|id, _| live_ids.contains(id));
+                if let Some(reload) = snapshots.reload.as_mut() {
+                    reload.prune_unused();
+                }
             }
         }
         Ok(snapshots.current.clone())

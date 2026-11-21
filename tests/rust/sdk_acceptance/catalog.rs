@@ -219,7 +219,7 @@ pub async fn two_hosts() {
             .unwrap()
             .tools
             .len(),
-        12
+        13
     );
     let args = json!({"prompt":"تصویر بدون بازنویسی 123","request_id":"same-logical-id"});
     let (first, second) = tokio::join!(

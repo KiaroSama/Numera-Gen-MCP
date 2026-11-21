@@ -76,7 +76,7 @@ pub async fn run() {
                 .unwrap()
                 .tools
                 .len(),
-            12
+            13
         );
         host.close().await.unwrap();
     }

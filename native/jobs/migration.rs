@@ -96,7 +96,6 @@ pub fn open(directory: &Path) -> Result<Connection> {
             .collect::<rusqlite::Result<Vec<_>>>()?;
         let locked_generation = locked_columns.iter().any(|v| v == "generation");
         connection.execute_batch("CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,identity TEXT NOT NULL,receipt TEXT NOT NULL,owner TEXT,lease INTEGER,cancel INTEGER NOT NULL DEFAULT 0,generation INTEGER NOT NULL DEFAULT 1,reservation INTEGER NOT NULL DEFAULT 0);
-            CREATE INDEX IF NOT EXISTS requests_reserved ON requests(id) WHERE reservation > 0;
             CREATE TABLE IF NOT EXISTS outputs(id TEXT PRIMARY KEY,request_id TEXT NOT NULL,metadata TEXT NOT NULL);
             CREATE INDEX IF NOT EXISTS output_request ON outputs(request_id);
             CREATE TABLE IF NOT EXISTS continuation(id TEXT PRIMARY KEY,scope TEXT NOT NULL,value TEXT NOT NULL);
@@ -104,6 +103,9 @@ pub fn open(directory: &Path) -> Result<Connection> {
         if !locked_columns.is_empty() && !locked_generation {
             connection.execute_batch("ALTER TABLE requests ADD COLUMN generation INTEGER NOT NULL DEFAULT 1;ALTER TABLE requests ADD COLUMN reservation INTEGER NOT NULL DEFAULT 0;")?;
         }
+        connection.execute_batch(
+            "CREATE INDEX IF NOT EXISTS requests_reserved ON requests(id) WHERE reservation > 0;",
+        )?;
         // Add media overflow without rewriting the legacy schema2 table or its image limit.
         connection.execute_batch("CREATE TABLE IF NOT EXISTS media_result_overflow(request_id TEXT NOT NULL,item INTEGER NOT NULL CHECK(item>=10 AND item<64),output_id TEXT NOT NULL UNIQUE,target TEXT,bytes BLOB,url TEXT,sha256 TEXT,phase TEXT NOT NULL,PRIMARY KEY(request_id,item));
             CREATE VIEW IF NOT EXISTS all_result_journal AS SELECT request_id,item,output_id,target,bytes,url,sha256,phase FROM result_journal UNION ALL SELECT request_id,item,output_id,target,bytes,url,sha256,phase FROM media_result_overflow;

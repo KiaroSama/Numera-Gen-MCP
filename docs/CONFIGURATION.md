@@ -211,8 +211,7 @@ Retexture requires both a `mesh` kind3d and `image` kindimage reference; `fal-ai
 and `negative_prompt` parameters. Custom non-built-in fal endpoints can declare an opt-in
 `modelOverrides.<id>.falContract` block (`outputField`, `outputArray`, `outputKind`, optional
 `prompt`/`references`/`allowedParameters` with strict type/range/enum bounds); built-in endpoint IDs and
-path-traversal IDs are rejected. Compact `simple-config.schema.json` also accepts `"gif"` as a default
-`output_format`. image/audio/video transforms require their exact input
+path-traversal IDs are rejected. Image/audio/video transforms require their exact input
 role. Native `parameters` are endpoint-specific: for example Stable Audio uses `seconds_total`,
 Audio25 uses `total_seconds`, and Kling uses string `duration`. Connection defaults, model defaults,
 then explicit parameters merge before preflight and request fingerprinting. Unsupported parameters,

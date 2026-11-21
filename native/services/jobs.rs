@@ -316,20 +316,19 @@ pub async fn cancel(
     let mut requested = false;
     let mut cancelled = Value::Null;
     if !receipt.value["upstream_job"].is_null() {
+        let name = receipt.value["connection"]
+            .as_str()
+            .ok_or_else(NumeraError::runtime)?;
+        let (_, selected) = generation.config.select(Some(name))?;
+        let pinned = snapshot_credentials(&selected, &generation.env, &generation.runtime).await?;
+        if connection_identity(name, &pinned)? != locked(&generation.store)?.identity(id)? {
+            return Err(NumeraError::new(
+                "permission_denied",
+                "Existing job destination/account identity changed; cancellation is not authorized.",
+            ));
+        }
         let job = job(&receipt)?;
         if job.kind == "comfyui" {
-            let name = receipt.value["connection"]
-                .as_str()
-                .ok_or_else(NumeraError::runtime)?;
-            let (_, selected) = generation.config.select(Some(name))?;
-            let pinned =
-                snapshot_credentials(&selected, &generation.env, &generation.runtime).await?;
-            if connection_identity(name, &pinned)? != locked(&generation.store)?.identity(id)? {
-                return Err(NumeraError::new(
-                    "permission_denied",
-                    "Existing job destination/account identity changed; cancellation is not authorized.",
-                ));
-            }
             let c = pinned.value();
             let headers = pinned.headers();
             let encoded = adapters::encode_component(job.id.checked_str()?);

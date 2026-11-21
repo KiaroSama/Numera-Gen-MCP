@@ -273,10 +273,11 @@ pub fn normalize(connection: &Value, value: &Value) -> Result<Normalized> {
     }
     result.upstream_model = string(&value["model"]);
     result.upstream_id = string(&value["id"]);
-    result.usage = value
-        .get("usage")
-        .or_else(|| value.get("usageMetadata"))
-        .cloned();
+    result.usage = value.get("usage").cloned().or_else(|| {
+        matches!(adapter, "gemini" | "gemini-interactions")
+            .then(|| value.get("usageMetadata").cloned())
+            .flatten()
+    });
     if !signatures.is_empty() {
         result.continuation = Some(json!({"signatures":signatures}));
     }

@@ -75,20 +75,20 @@
     "tests/rust/transport_acceptance.rs": "969ae47c3cd63678f877a5320f036e92d3321b3e8c7654c3cbebf8f0f546572f",
     "tests/rust/upscale_acceptance.rs": "fdcde33a786f2bec94339f457ee78253c64030f11f9b4e212f7b2f13d04284b0",
     "tests/rust/workflow.rs": "f15bb4f211792b6c7fb2bdfdd4a217b5b41d8615c3678138897be3e97369bddd",
-    "docs/testing/sdk-tooling-migration.json": "d2f2d776fde764fd97631c68e726e5eba33042cf409325dbf670744ecb590d95",
+    "docs/testing/sdk-tooling-migration.json": "f47d33833637af23a17935133298d0e8e945d86e4dcd04679e61c3cd88e67a5e",
     "tests/rust/sdk_acceptance.rs": "2cb3499fba72571537fe897c7590d8220d18c6df9a4f84727136ccf593979529",
-    "tests/rust/sdk_acceptance/catalog.rs": "b6bdb86a0b6a76bdb5823c3f4d9e4c4a3de8d299b02db4e502e981ef7272ad03",
+    "tests/rust/sdk_acceptance/catalog.rs": "421a1a7b569f9d9e9a12624c008f122a23c9efbcb23a85230d17961c273ae612",
     "tests/rust/sdk_acceptance/cleanup.rs": "bce730a1e6dbc5808a9c17f78ec457cc79473e2d884ed061068ed9381cfd4521",
     "tests/rust/sdk_acceptance/cleanup_contracts.rs": "6bd889ac3d84381cc3329a4c47d4bc73383ac508e41664ef879656d45a02c301",
-    "tests/rust/sdk_acceptance/configuration.rs": "fc9eb91e365094c51ebe0eabbe3cad977916846aa7cb0385d89dc4a53db08356",
+    "tests/rust/sdk_acceptance/configuration.rs": "3010bdca9b1614a0540155d962883d391c8d940fa0ed18ec9f694891aa915065",
     "tests/rust/sdk_acceptance/contracts.rs": "fe077784a6f99a5a34bb3971e825797f7255852c76b29e86e02010086ed12f11",
     "tests/rust/sdk_acceptance/fixtures.rs": "9de9ced1d0d6727540c64d063892bb0389b3292f63436c97030a900a1ee62b0d",
     "tests/rust/sdk_acceptance/host.rs": "880db0e2e3df9a53c7e2274191ea4e018b15e60c8ca4aa47f068fcab71ce509e",
-    "tests/rust/sdk_acceptance/http.rs": "7f7de0f630d69cec258771b8073a10ea70bf82bae059ac1ed884f02349685a78",
+    "tests/rust/sdk_acceptance/http.rs": "1024ed6e0cc61a3d41ad84ce9fc0ca878d35a2ecd17a0e0f26d59a4dd2872cc1",
     "tests/rust/sdk_acceptance/lifecycle.rs": "256e5d7a3b10e910a8b19857bdbdd276a82f2fb11b1e2565419736a4af2b0556",
     "tests/rust/sdk_acceptance/provider.rs": "ac74405a0c736e85aef2701b0655783d2d25adc699a75300cfc7d02923d3e4b3",
     "tests/rust/sdk_acceptance/races.rs": "9fc94cad0492a59156ce95a37e74f60f08416551a75c175ebb26686031c79941",
-    "tests/rust/sdk_acceptance/recovery.rs": "104004be29c186a07fc332dba3ef3b8993b7b3f6b95bd0db33926caeeb3473d0",
+    "tests/rust/sdk_acceptance/recovery.rs": "be326df2a61e00d20f9dd5636866372be64be9ba24e1ab35de24bad83750b605",
     "tests/rust/sdk_acceptance/reload.rs": "9e59da8fcc1356675f4495e5db3a2ff0728d30b861e5630f8ea3e28fd9cce8f4",
     "tests/rust/sdk_acceptance/terminal.rs": "b6df2aaf2afd36bc993a3ea810cd6164991e0ddc24584bf24abaddd16c42a1a7",
     "tests/rust/sdk_acceptance/transport.rs": "2dd8319323fda0acb5bcf4debb393d964009af14cdac42ab07dcfb54b01f863d"
@@ -1276,7 +1276,7 @@
             166,
             252
           ],
-          "excerpt_sha256": "6e79fb701e54a832c448099ab590b445dde3f61e6e84928426a9d8931a02233b"
+          "excerpt_sha256": "7d06218dd30af7ba7150d80098bac8ebca124274f9c70191e11baab3639a4da7"
         }
       ]
     },
@@ -1292,7 +1292,7 @@
             346,
             398
           ],
-          "excerpt_sha256": "51426b9db38bb4247c9202e6d4ff708c2fd40e77c7e3a702e7148a4332db0e8d"
+          "excerpt_sha256": "cff2e19e1691f6503b507d0ae5d56f6d2809ed0c03f236d5177c3be3d714742c"
         }
       ]
     },
@@ -1308,7 +1308,7 @@
             346,
             398
           ],
-          "excerpt_sha256": "51426b9db38bb4247c9202e6d4ff708c2fd40e77c7e3a702e7148a4332db0e8d"
+          "excerpt_sha256": "cff2e19e1691f6503b507d0ae5d56f6d2809ed0c03f236d5177c3be3d714742c"
         }
       ]
     },
@@ -1324,7 +1324,7 @@
             346,
             398
           ],
-          "excerpt_sha256": "51426b9db38bb4247c9202e6d4ff708c2fd40e77c7e3a702e7148a4332db0e8d"
+          "excerpt_sha256": "cff2e19e1691f6503b507d0ae5d56f6d2809ed0c03f236d5177c3be3d714742c"
         }
       ]
     },
@@ -1600,5 +1600,6 @@
         }
       ]
     }
-  ]
+  ],
+  "manifest_sha256": "f47d33833637af23a17935133298d0e8e945d86e4dcd04679e61c3cd88e67a5e"
 }

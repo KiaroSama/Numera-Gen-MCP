@@ -197,7 +197,7 @@ pub async fn run() {
                 .unwrap()
                 .tools
                 .len(),
-            12
+            13
         );
         let templates = host::bounded(5000, client.list_resource_templates(None))
             .await

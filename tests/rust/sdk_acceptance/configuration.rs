@@ -373,7 +373,7 @@ pub async fn negotiation() {
                     .unwrap()
                     .tools
                     .len(),
-                12
+                13
             );
             assert_eq!(
                 serde_json::to_value(host.client().peer_info().unwrap().as_ref()).unwrap()["protocolVersion"],

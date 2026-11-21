@@ -114,7 +114,18 @@ impl Discovery {
         let action=async {
             let pinned=snapshot_credentials(&c,env,runtime).await?;
             let headers=pinned.headers();
-            let mut model_indices: HashMap<JsString, usize> = HashMap::new();
+            let mut model_indices: HashMap<JsString, usize> = result["models"]
+                .as_array()
+                .map(|models| {
+                    models
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(i, m)| {
+                            m["id"].as_js_string().map(|id| (id.clone(), i))
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
             for page in 0..20 {
                 let mut query=json!({});
                 if let Some(cursor)=&cursor {query[if c["adapter"].as_str().is_some_and(|s|s.starts_with("gemini")){"pageToken"}else{"after"}]=json!(cursor);}
@@ -162,6 +173,7 @@ impl Discovery {
             }
             Ok::<(),NumeraError>(())
         }.await;
+        let succeeded = action.is_ok();
         if let Err(error) = action {
             result["complete"] = json!(false);
             result["warnings"]
@@ -176,7 +188,7 @@ impl Discovery {
                     .push(json!("Using stale catalog; availability is unknown."));
             }
         }
-        if result["complete"] == true
+        if succeeded
             && !cancel.is_cancelled()
             && let Ok(mut cache) = self.cache.lock()
         {

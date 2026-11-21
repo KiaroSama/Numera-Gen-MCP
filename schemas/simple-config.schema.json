@@ -55,7 +55,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["png", "jpeg", "webp", "gif"]
+                "enum": ["png", "jpeg", "webp"]
               },
               {
                 "type": "null"
