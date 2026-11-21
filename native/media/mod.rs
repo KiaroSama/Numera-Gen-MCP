@@ -1,6 +1,6 @@
 pub mod fal;
 mod fal_contract;
-mod fal_dynamic;
+pub mod fal_dynamic;
 mod fal_input;
 mod glb;
 mod inspect;

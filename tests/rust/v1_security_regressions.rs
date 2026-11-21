@@ -298,3 +298,36 @@ fn plan007_original_arguments_take_frees_payload_once() {
     assert!(original.take_arguments().is_some());
     assert!(original.take_arguments().is_none());
 }
+
+#[tokio::test]
+async fn plan002_asset_fetch_rejects_non_http_and_oversized_response() {
+    let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let server = tokio::spawn(async move {
+        if let Ok((mut stream, _)) = listener.accept().await {
+            let mut buf = [0u8; 1024];
+            let _ = stream.read(&mut buf).await;
+            let _ = stream
+                .write_all(b"HTTP/1.1 302 Found\r\nLocation: http://127.0.0.1/secret\r\nContent-Length: 0\r\n\r\n")
+                .await;
+        }
+    });
+    let config = json!({
+        "files": {
+            "downloadTimeoutMs": 5000,
+            "assetAllowances": [{"origin": format!("http://allowed.test:{port}"), "pathPrefix": "/allowed"}]
+        }
+    });
+    let cancel = CancellationToken::new();
+    let err = assets::fetch_with_resolver(
+        &JsString::from(format!("http://allowed.test:{port}/allowed/redir.png").as_str()),
+        &config,
+        1024,
+        &cancel,
+        |_, _| async { Ok(vec![IpAddr::V4(Ipv4Addr::LOCALHOST)]) },
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(err.code, "unsafe_destination");
+    let _ = server.await;
+}

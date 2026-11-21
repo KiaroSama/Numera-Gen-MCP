@@ -341,5 +341,8 @@ pub fn outputs(endpoint: &str, raw: &CompatValue, response: &Value) -> Result<Ve
         dynamic.output_array,
         true,
     )?;
+    if result.is_empty() {
+        return Err(invalid("Fal result did not contain the declared output."));
+    }
     Ok(result)
 }

@@ -223,3 +223,78 @@ fn plan017_tool_annotations_and_backoff_bounds() {
     let _ = media::inspect(Kind::Audio, b"bad", 1024, 1024).unwrap_err();
     let _ = Value::Null;
 }
+
+#[test]
+fn plan011_sse_reader_incremental_chunks_control_chars_and_limits() {
+    let mut reader = sse::Reader::new(4096);
+    reader.push(b"event: response.in_progress\r\n").unwrap();
+    reader.push(b"data: {\"a\":1}\r\n\r\n").unwrap();
+    reader.push(b": keepalive comment\n\n").unwrap();
+    reader.push(b"event: done\ndata: [DONE]\n\n").unwrap();
+    let bytes = reader.finish().unwrap();
+    let events = sse::events(&bytes, 4096).unwrap();
+    assert_eq!(events.len(), 2);
+    assert_eq!(events[0].kind, "response.in_progress");
+    assert_eq!(events[1].kind, "done");
+
+    // Control char in event name rejected
+    assert!(sse::events(b"event: bad\x01name\ndata: {}\n\n", 1024).is_err());
+
+    // Size limit enforced
+    let mut tiny = sse::Reader::new(8);
+    assert!(tiny.push(b"data: 1234567890\n\n").is_err());
+}
+
+#[test]
+fn plan024_and_032_fal_specs_and_list_jobs_pagination() {
+    // Cover all SPECS outputs/contracts including mmaudio-v2 video-to-video & Rodin/Hunyuan sidecars
+    assert!(fal::contract("fal-ai/mmaudio-v2", "video-to-video").is_ok());
+    assert!(fal::contract("fal-ai/mmaudio-v2", "text-to-image").is_err());
+    let mm_out = fal::outputs(
+        "fal-ai/mmaudio-v2",
+        &serde_json::json!({"video": {"url": "https://v3.fal.media/muxed.mp4", "content_type": "video/mp4"}}),
+    )
+    .unwrap();
+    assert_eq!(mm_out.len(), 1);
+
+    let rodin_out = fal::outputs(
+        "fal-ai/hyper3d/rodin",
+        &serde_json::json!({
+            "model_mesh": {"url": "https://v3.fal.media/m.glb"},
+            "textures": [{"url": "https://v3.fal.media/t.png"}]
+        }),
+    )
+    .unwrap();
+    assert_eq!(rodin_out.len(), 2);
+
+    // Multi-job Store::list_jobs filtering & pagination
+    let dir = std::env::temp_dir().join(format!("numera-listjobs-{}", uuid::Uuid::new_v4()));
+    let mut store = Store::open(&dir).unwrap();
+    for (idx, status) in ["running", "completed", "failed"].iter().enumerate() {
+        let (_, mut rec) = store
+            .prepare(
+                Receipt::new(json!({
+                    "request_id": format!("j-{idx}"),
+                    "connection": "c",
+                    "adapter": "openai-images",
+                    "operation": "generate",
+                    "status": "prepared",
+                    "generation_outcome": "not_submitted",
+                    "outputs": [],
+                    "errors": [],
+                    "warnings": [],
+                    "deviations": []
+                })),
+                &format!("h-{idx}"),
+                "id",
+            )
+            .unwrap();
+        rec.value["status"] = json!(*status);
+        store.update(&mut rec).unwrap();
+    }
+    assert_eq!(store.list_jobs(None, 0, 10).unwrap().len(), 3);
+    // Store::list_jobs returns up to limit+1 rows so Application can compute has_more.
+    assert_eq!(store.list_jobs(None, 1, 1).unwrap().len(), 2);
+    assert_eq!(store.list_jobs(Some("failed"), 0, 10).unwrap().len(), 1);
+    let _ = std::fs::remove_dir_all(&dir);
+}

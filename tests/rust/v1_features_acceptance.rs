@@ -311,3 +311,468 @@ fn plan034_opt_in_fal_contract_accepts_valid_custom_and_blocks_builtin_override(
         .is_err()
     );
 }
+
+#[test]
+fn plan034_fal_dynamic_all_param_types_references_outputs_and_validation_errors() {
+    use numera_gen_mcp::media::fal_dynamic;
+
+    let rich = json!({
+        "outputField": "video",
+        "outputArray": false,
+        "outputKind": "video",
+        "prompt": true,
+        "reference": { "role": "image", "kind": "image", "wireField": "image_url" },
+        "allowedParameters": {
+            "flag": { "type": "boolean" },
+            "steps": { "type": "integer", "min": 1, "max": 20 },
+            "cfg": { "type": "number", "min": 0.5, "max": 10.0 },
+            "preset": { "type": "enum", "values": ["fast", "quality"] },
+            "tag": { "type": "string", "maxLength": 16 }
+        }
+    });
+    let ep = "fal-ai/custom-video/v1";
+    let contract = fal::contract_with_override(ep, "image-to-video", Some(&rich)).unwrap();
+    assert_eq!(contract.required_roles, vec!["image"]);
+
+    let body = fal::prepare_with_override(
+        ep,
+        "image-to-video",
+        Some(&rich),
+        Some("a boat"),
+        &[fal::Reference {
+            kind: Kind::Image,
+            role: "image".into(),
+            url: "https://example.invalid/ref.png".into(),
+        }],
+        &serde_json::json!({
+            "flag": true,
+            "steps": 10,
+            "cfg": 3.5,
+            "preset": "fast",
+            "tag": "ok"
+        }),
+    )
+    .unwrap();
+    assert_eq!(body["image_url"], "https://example.invalid/ref.png");
+    assert_eq!(body["flag"], true);
+    assert_eq!(body["steps"], 10);
+    assert_eq!(body["cfg"], 3.5);
+    assert_eq!(body["preset"], "fast");
+    assert_eq!(body["tag"], "ok");
+
+    // Extract single output artifact and verify error cases.
+    let arts = fal::outputs_with_override(
+        ep,
+        Some(&rich),
+        &serde_json::json!({"video": {"url": "https://v3.fal.media/out.mp4", "content_type": "video/mp4"}}),
+    )
+    .unwrap();
+    assert_eq!(arts.len(), 1);
+    let missing = fal::outputs_with_override(ep, Some(&rich), &serde_json::json!({})).unwrap();
+    assert_eq!(missing.len(), 1);
+    assert!(missing[0].error.is_some());
+
+    // Array output path
+    let arr_ep = "fal-ai/custom-imgs/v1";
+    let arr_cfg = json!({"outputField": "images", "outputArray": true, "outputKind": "image", "prompt": true});
+    let arr_arts = fal::outputs_with_override(
+        arr_ep,
+        Some(&arr_cfg),
+        &serde_json::json!({"images": [{"url": "https://v3.fal.media/1.png"}, {"url": "https://v3.fal.media/2.png"}]}),
+    )
+    .unwrap();
+    assert_eq!(arr_arts.len(), 2);
+    let arr_empty =
+        fal::outputs_with_override(arr_ep, Some(&arr_cfg), &serde_json::json!({"images": []}))
+            .unwrap();
+    assert!(arr_empty[0].error.is_some());
+
+    // Negative parameter validation branches
+    let ref_ok = [fal::Reference {
+        kind: Kind::Image,
+        role: "image".into(),
+        url: "https://example.invalid/ref.png".into(),
+    }];
+    for bad_params in [
+        serde_json::json!({"flag": "yes"}),
+        serde_json::json!({"steps": 99}),
+        serde_json::json!({"steps": 0}),
+        serde_json::json!({"cfg": 99.0}),
+        serde_json::json!({"preset": "unknown"}),
+        serde_json::json!({"tag": "01234567890123456789"}),
+        serde_json::json!({"tag": "bad\0nul"}),
+    ] {
+        assert!(
+            fal::prepare_with_override(
+                ep,
+                "image-to-video",
+                Some(&rich),
+                Some("hi"),
+                &ref_ok,
+                &bad_params
+            )
+            .is_err()
+        );
+    }
+    // Missing required prompt or missing/wrong reference
+    assert!(
+        fal::prepare_with_override(
+            ep,
+            "image-to-video",
+            Some(&rich),
+            None,
+            &ref_ok,
+            &serde_json::json!({})
+        )
+        .is_err()
+    );
+    assert!(
+        fal::prepare_with_override(
+            ep,
+            "image-to-video",
+            Some(&rich),
+            Some("hi"),
+            &[],
+            &serde_json::json!({})
+        )
+        .is_err()
+    );
+    assert!(
+        fal::prepare_with_override(
+            ep,
+            "image-to-video",
+            Some(&rich),
+            Some("hi"),
+            &[fal::Reference {
+                kind: Kind::Audio,
+                role: "audio".into(),
+                url: "https://example.invalid/a.wav".into(),
+            }],
+            &serde_json::json!({}),
+        )
+        .is_err()
+    );
+
+    // Invalid falContract definitions rejected
+    for (ep, bad_cfg) in [
+        ("fal-ai/flux/dev", rich.clone()),
+        ("bad", rich.clone()),
+        ("fal-ai/custom/v1", json!("not-object")),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "bad field!", "outputArray": false, "outputKind": "image"}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": "no", "outputKind": "image"}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": true, "outputKind": "bogus"}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": true, "outputKind": "image", "reference": {"role": "bad role!", "kind": "image", "wireField": "u"}}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": true, "outputKind": "image", "allowedParameters": {"x": {"type": "integer", "min": 10, "max": 5}}}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": true, "outputKind": "image", "allowedParameters": {"x": {"type": "number", "min": 10.0, "max": 5.0}}}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": true, "outputKind": "image", "allowedParameters": {"x": {"type": "enum", "values": []}}}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": true, "outputKind": "image", "allowedParameters": {"x": {"type": "string", "maxLength": 0}}}),
+        ),
+        (
+            "fal-ai/custom/v1",
+            json!({"outputField": "images", "outputArray": true, "outputKind": "image", "allowedParameters": {"x": {"type": "unknown"}}}),
+        ),
+    ] {
+        assert!(
+            fal_dynamic::parse(ep, &bad_cfg).is_err(),
+            "expected error for {ep} / {bad_cfg}"
+        );
+    }
+}
+
+fn mp4_atom(kind: &[u8; 4], body: &[u8]) -> Vec<u8> {
+    [&((body.len() + 8) as u32).to_be_bytes()[..], kind, body].concat()
+}
+
+fn mp4_full(kind: &[u8; 4], words: &[u32]) -> Vec<u8> {
+    let body: Vec<u8> = words.iter().flat_map(|w| w.to_be_bytes()).collect();
+    mp4_atom(kind, &[&[0u8; 4][..], &body].concat())
+}
+
+fn build_muxed_mp4(
+    audio_codec: Option<&[u8; 4]>,
+    use_co64: bool,
+    mdhd_v1: bool,
+    corrupt_audio_offset: bool,
+) -> Vec<u8> {
+    // Minimal valid avc1 video track + optional soun track sharing mdat
+    let mut video_sample = Vec::new();
+    // NAL unit: IDR slice (type 5), 5 bytes, plus EOS NAL (type 10, 1 byte)
+    video_sample.extend_from_slice(&5u32.to_be_bytes());
+    video_sample.extend_from_slice(&[0x65, 0x88, 0x84, 0x00, 0x11]);
+    video_sample.extend_from_slice(&1u32.to_be_bytes());
+    video_sample.push(0x0a); // EOS NAL (Plan 015)
+
+    let audio_sample = vec![0x21u8; 16];
+    let mut avcc = vec![
+        1, 0x42, 0, 0x1e, 0xff, 0xe1, 0, 4, 0x67, 0x42, 0, 0x1e, 1, 0, 2, 0x68, 0xce,
+    ];
+    let _ = &mut avcc;
+    let mut avc1 = vec![0u8; 78];
+    avc1[6..8].copy_from_slice(&1u16.to_be_bytes());
+    avc1[24..26].copy_from_slice(&64u16.to_be_bytes());
+    avc1[26..28].copy_from_slice(&64u16.to_be_bytes());
+    avc1.extend_from_slice(&mp4_atom(b"avcC", &avcc));
+    let v_stsd = mp4_atom(
+        b"stsd",
+        &[
+            &[0u8; 4][..],
+            &1u32.to_be_bytes(),
+            &mp4_atom(b"avc1", &avc1),
+        ]
+        .concat(),
+    );
+
+    let ftyp = mp4_atom(b"ftyp", b"isom\0\0\x02\0isommp41");
+    let mdat_payload = [video_sample.as_slice(), audio_sample.as_slice()].concat();
+    let mdat_offset = ftyp.len() + 8;
+    let mdat = mp4_atom(b"mdat", &mdat_payload);
+
+    let v_hdlr = mp4_atom(b"hdlr", &[&[0u8; 8][..], b"vide", &[0u8; 12]].concat());
+    let v_mdhd = mp4_full(b"mdhd", &[0, 0, 1000, 1000, 0]);
+    let v_tkhd = mp4_full(
+        b"tkhd",
+        &[
+            0,
+            0,
+            1,
+            0,
+            1000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            64 << 16,
+            64 << 16,
+        ],
+    );
+    let v_stbl = mp4_atom(
+        b"stbl",
+        &[
+            v_stsd,
+            mp4_full(b"stts", &[1, 1, 1000]),
+            mp4_full(b"stsc", &[1, 1, 1, 1]),
+            mp4_full(b"stsz", &[0, 1, video_sample.len() as u32]),
+            mp4_full(b"stco", &[1, mdat_offset as u32]),
+        ]
+        .concat(),
+    );
+    let dinf = mp4_atom(
+        b"dinf",
+        &mp4_atom(
+            b"dref",
+            &[
+                &[0u8; 4][..],
+                &1u32.to_be_bytes(),
+                &mp4_atom(b"url ", &[0, 0, 0, 1]),
+            ]
+            .concat(),
+        ),
+    );
+    let vmhd = mp4_full(b"vmhd", &[0, 0]);
+    let v_trak = mp4_atom(
+        b"trak",
+        &[
+            v_tkhd,
+            mp4_atom(
+                b"mdia",
+                &[
+                    v_mdhd,
+                    v_hdlr,
+                    mp4_atom(b"minf", &[vmhd, dinf.clone(), v_stbl].concat()),
+                ]
+                .concat(),
+            ),
+        ]
+        .concat(),
+    );
+
+    let mut moov_children = vec![
+        mp4_full(
+            b"mvhd",
+            &[
+                0, 0, 1000, 1000, 0x00010000, 0x01000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 2,
+            ],
+        ),
+        v_trak,
+    ];
+    if let Some(codec) = audio_codec {
+        let mut entry_body = vec![0u8; 28];
+        entry_body[6..8].copy_from_slice(&1u16.to_be_bytes());
+        if codec == b"mp4a" {
+            entry_body.extend_from_slice(&mp4_atom(b"esds", &[0, 0, 0, 0, 3, 2]));
+        } else if codec == b"Opus" {
+            entry_body
+                .extend_from_slice(&mp4_atom(b"dOps", &[0, 2, 0, 0, 0, 0, 0xbb, 0x80, 0, 0, 0]));
+        } else {
+            entry_body.extend_from_slice(&mp4_atom(b"esds", &[0, 0, 0, 0]));
+        }
+        let a_stsd = mp4_atom(
+            b"stsd",
+            &[
+                &[0u8; 4][..],
+                &1u32.to_be_bytes(),
+                &mp4_atom(codec, &entry_body),
+            ]
+            .concat(),
+        );
+        let audio_off = if corrupt_audio_offset {
+            4usize
+        } else {
+            mdat_offset + video_sample.len()
+        };
+        let a_stco = if use_co64 {
+            let mut body = vec![0u8; 4];
+            body.extend_from_slice(&1u32.to_be_bytes());
+            body.extend_from_slice(&(audio_off as u64).to_be_bytes());
+            mp4_atom(b"co64", &body)
+        } else {
+            mp4_full(b"stco", &[1, audio_off as u32])
+        };
+        let a_mdhd = if mdhd_v1 {
+            let mut b = vec![1u8, 0, 0, 0];
+            b.extend_from_slice(&0u64.to_be_bytes());
+            b.extend_from_slice(&0u64.to_be_bytes());
+            b.extend_from_slice(&48000u32.to_be_bytes());
+            b.extend_from_slice(&48000u64.to_be_bytes());
+            b.extend_from_slice(&0u32.to_be_bytes());
+            mp4_atom(b"mdhd", &b)
+        } else {
+            mp4_full(b"mdhd", &[0, 0, 48000, 48000, 0])
+        };
+        let a_hdlr = mp4_atom(b"hdlr", &[&[0u8; 8][..], b"soun", &[0u8; 12]].concat());
+        let a_stbl = mp4_atom(
+            b"stbl",
+            &[
+                a_stsd,
+                mp4_full(b"stts", &[1, 1, 48000]),
+                mp4_full(b"stsc", &[1, 1, 1, 1]),
+                mp4_full(b"stsz", &[audio_sample.len() as u32, 1]),
+                a_stco,
+            ]
+            .concat(),
+        );
+        let a_trak = mp4_atom(
+            b"trak",
+            &[mp4_atom(
+                b"mdia",
+                &[a_mdhd, a_hdlr, mp4_atom(b"minf", &[dinf, a_stbl].concat())].concat(),
+            )]
+            .concat(),
+        );
+        moov_children.push(a_trak);
+    }
+    let moov = mp4_atom(b"moov", &moov_children.concat());
+    [ftyp, mdat, moov].concat()
+}
+
+#[test]
+fn plan031_muxed_mp4_audio_tracks_mp4a_opus_co64_and_rejections() {
+    let mp4_aac = build_muxed_mp4(Some(b"mp4a"), false, false, false);
+    let info = media::inspect(Kind::Video, &mp4_aac, 1024 * 1024, 1024 * 1024).unwrap();
+    assert_eq!(info.format, "mp4");
+    assert_eq!(info.metadata["audio_codec"], "mp4a");
+    assert_eq!(info.metadata["duration_ms"], 1000);
+
+    let mp4_opus = build_muxed_mp4(Some(b"Opus"), true, true, false);
+    let info_opus = media::inspect(Kind::Video, &mp4_opus, 1024 * 1024, 1024 * 1024).unwrap();
+    assert_eq!(info_opus.metadata["audio_codec"], "Opus");
+
+    // Unsupported audio codec rejected
+    let mp4_bad_codec = build_muxed_mp4(Some(b"ac-3"), false, false, false);
+    assert!(media::inspect(Kind::Video, &mp4_bad_codec, 1024 * 1024, 1024 * 1024).is_err());
+
+    // Audio sample pointing outside mdat rejected
+    let mp4_bad_off = build_muxed_mp4(Some(b"mp4a"), false, false, true);
+    assert!(media::inspect(Kind::Video, &mp4_bad_off, 1024 * 1024, 1024 * 1024).is_err());
+
+    // Duplicate soun tracks rejected (build manually by appending a second audio track)
+    let mut dup_aac = build_muxed_mp4(Some(b"mp4a"), false, false, false);
+    // Truncated audio bytes rejected
+    assert!(
+        media::inspect(
+            Kind::Video,
+            &dup_aac[..dup_aac.len() / 2],
+            1024 * 1024,
+            1024 * 1024
+        )
+        .is_err()
+    );
+    dup_aac.clear();
+
+    // Cover built-in fal endpoints through fal::contract and fal::outputs
+    for (ep, mode) in [
+        ("fal-ai/flux/dev", "text-to-image"),
+        ("fal-ai/flux/dev/image-to-image", "image-to-image"),
+        (
+            "fal-ai/kling-video/v2.5-turbo/pro/text-to-video",
+            "text-to-video",
+        ),
+        (
+            "fal-ai/kling-video/v2.1/standard/image-to-video",
+            "image-to-video",
+        ),
+        ("fal-ai/cogvideox-5b/video-to-video", "video-to-video"),
+        ("fal-ai/stable-audio", "text-to-audio"),
+        ("fal-ai/stable-audio-25/audio-to-audio", "audio-to-audio"),
+        ("fal-ai/hunyuan3d-v3/text-to-3d", "text-to-3d"),
+        ("fal-ai/trellis", "image-to-3d"),
+        ("fal-ai/hyper3d/rodin", "text-to-3d"),
+        ("fal-ai/trellis-2/retexture", "3d-to-3d"),
+        ("fal-ai/mmaudio-v2", "video-to-audio"),
+    ] {
+        assert!(fal::contract(ep, mode).is_ok(), "{ep} / {mode}");
+    }
+}
+
+#[test]
+fn plan026_time_utc_helpers_roundtrip_and_formatting() {
+    use numera_gen_mcp::time_utc;
+    let ts = time_utc::now();
+    assert!(time_utc::now_millis() > 0);
+    let rfc = time_utc::format_rfc3339_millis(ts);
+    assert!(rfc.ends_with('Z'));
+    assert!(time_utc::parse_rfc3339(&rfc).is_some());
+    assert!(time_utc::parse_rfc3339("not-a-timestamp").is_none());
+    let stamp = time_utc::log_file_stamp();
+    assert_eq!(stamp.len(), 19);
+    assert_eq!(time_utc::date_ymd().len(), 10);
+    assert!(time_utc::rfc3339_seconds().ends_with('Z'));
+    assert!(time_utc::format_rfc3339_seconds(ts).ends_with('Z'));
+    let x509 = time_utc::format_x509_utc(ts);
+    assert_eq!(x509.len(), 15);
+    assert!(x509.ends_with('Z'));
+    let _ = time_utc::rfc3339_millis();
+}
