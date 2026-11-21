@@ -19,7 +19,7 @@ Antigravity image route forwards text only. Its aspect_ratio and image_size mapp
 Vision/underlying Gemini native input support does not repair gateway forwarding.
 
 Codex generation n>1 fans out multiple paid operations, so Numera rejects it. Its public multipart
-edit route supports up to8 refs but does not forward masks; generic/custom editing defaults1 ref.
+edit route supports up to 8 refs but does not forward masks; generic/custom editing defaults to 1 ref.
 Some built-ins including native openai reject edits. Configure only independently verified custom
 routes, never assume brand parity. Gateway JSON may include base64, URL or data-URL outputs; actual
 bytes determine format, not requested MIME. Gateway internal retry/fallback remains outside this bridge.
@@ -54,4 +54,13 @@ Configure that connection with `FAL_API_ENDPOINT` (or `adapter: "fal-queue"`, `b
 to that prefix, and treats a `404` cancel response as not found only when the JSON body carries a non-null
 `"error"` string. Direct `https://queue.fal.run` connections continue to use `Key` auth and skip `GET /models`
 during `health_check`.
+
+### Animated GIF forwarding note
+
+OpenAI models such as `openai/gpt-image-2.6-flare` and `openai/gpt-image-2.6-sunburst` support
+`output_format: "gif"`, `frame_count` (`2`-`16`), and `frame_duration_ms` (`20`-`2000`). Use
+`adapter: "openai-images"` (the default `.env` `PROFILE="openai-images"`) so Numera forwards those
+fields. Note that OmniRoute `3.8.54` strips `output_format`, `frame_count`, and `frame_duration_ms` on
+`/v1/images/generations` unless patched or upgraded to a release that forwards them; if stripped,
+OpenAI returns PNG and Numera records `status: "partial"` with a format deviation.
 

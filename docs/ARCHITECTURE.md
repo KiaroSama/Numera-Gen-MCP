@@ -1,11 +1,13 @@
 # Architecture
 
-Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated tools -> application
-services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs and
-transactional receipts. Release 0.3.0 added `generate_media` and `get_media_output_info` to the ten
-legacy image tools. The released 0.5.0 source `ab667a7` passed qualification run `44317635481`, attempt 1
-(six jobs) and protected signing run `44323885497`, attempt 1 (four native targets plus the signed
-collector); see [test results](TEST-RESULTS.md) and [0.5.0 verification](releases/0.5.0.md).
+Native Rust CLI `bridge` -> bounded stdio RMCP transport -> schema-validated tools (13 tools in 1.0.0,
+adding `list_jobs` and MCP `notifications/progress` to the 12 tools from 0.3.0) -> application
+services -> pure adapter mapping -> bounded HTTP -> normalization -> validated original outputs (PNG,
+JPEG, WebP, single-frame and animated GIF, WAV including `WAVE_FORMAT_EXTENSIBLE`, MP4 with optional
+`mp4a`/`Opus` audio tracks, and GLB 2.0 with safe Khronos extensions) and transactional SQLite WAL
+receipts. The released 1.0.0 source `f3e3165` passed run `44942765654`, attempt 1 (all eleven active
+qualification and protected signing jobs across Windows and Linux x64/ARM64); see
+[test results](TEST-RESULTS.md) and [1.0.0 verification](releases/1.0.0.md).
 The tracked production runtime is Rust. Historical 0.2.0 has reviewed mappings for all 470 frozen
 cases and 50 suites, with exact hosted execution at `f253557` / run `40244894089`, attempt2. All sixteen jobs, six real publisher
 signing/negative checks and signed extracted SDK checks passed; owner-host cutover remains separate.
@@ -86,8 +88,8 @@ local cancellation stops waiting even when its provider account is unavailable. 
 operations in one waiting call share its original deadline.
 
 `media_finalization.rs` reuses schema2 journals, writer fences and stable output publication in
-`native/files/output.rs`; there is no separate media database. Legacy indices0–9 retain the image
-limit; additive media overflow10–63 shares the same database, read view and capacity/expiry accounting.
+`native/files/output.rs`; there is no separate media database. Legacy indices 0-9 retain the image
+limit; additive media overflow 10-63 shares the same database, read view and capacity/expiry accounting.
 Existing tables/receipt identities remain unchanged; old runtimes do not understand new media state.
 PNG/JPEG/WebP, PCM/float WAV, bounded
 visual-track MP4 and self-contained GLB mesh structure are checked without rewriting original bytes.

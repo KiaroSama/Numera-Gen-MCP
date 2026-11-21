@@ -5,19 +5,22 @@ itself with `args: ["bridge"]`; no launcher, daemon or manual server startup is 
 stdio MCP in `bridge` mode. The optional separate [direct HTTP mode](HTTP.md) listens locally on
 configurable port 1969; it is not required for Desktop's process entry. Numera does not replace Claude's chat model.
 
-All 470 frozen cases and all four real signature/package/extracted SDK checks passed at
-`ab667a7` / qualification run `44317635481`, attempt 1, with protected signing run `44323885497`,
-attempt 1. [0.5.0 verification](releases/0.5.0.md) records exact archives and deliberate self-signed
-trust limits. CI and isolated native readiness are not actual Desktop reconnection. Install the
-verified binary before using the examples below; retain the previous runtime until the actual host
-connection is verified.
+All baseline suites plus v1.0.0 security, concurrency, feature acceptance and media suites passed at
+`f3e3165` in [run 44942765654](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/44942765654),
+attempt 1 (four native targets, coverage, execution matrix, four signing jobs and signed execution
+matrix). [1.0.0 verification](releases/1.0.0.md) records exact archives, live E2E evidence and
+deliberate self-signed trust limits. CI and isolated native readiness are not actual Desktop
+reconnection. Install the verified binary before using the examples below; retain the previous runtime
+until the actual host connection is verified.
 
 The current examples use Numera Gen MCP's `numera-gen-mcp` executable and `numera-gen-mcp` host entry.
-Release 0.5.0 ships that executable and was qualified and signed at `ab667a7`; the
-[0.5.0 verification record](releases/0.5.0.md) holds both runs. The immutable published 0.2.0 archives
-retain their legacy executable name; use that actual name for those archives, never rename signed bytes
-to imitate the new build. Saved `numera-gen` and `numera-image-gen` entries are not automatically
-renamed or removed: back them up and explicitly migrate the selected Numera entry rather than running
+Release 1.0.0 ships that executable with 13 tools (including `list_jobs`), animated GIF generation and
+editing (`output_format: "gif"`), and 11 typed media modes (including `video-to-audio` via
+`fal-ai/mmaudio-v2`); the [1.0.0 verification record](releases/1.0.0.md) holds the qualification and
+signing evidence. Historical [0.5.0](releases/0.5.0.md) and immutable 0.2.0 archives retain their
+recorded filenames and builds; never rename signed bytes to imitate a newer release. Saved `numera-gen`
+and `numera-image-gen` entries are not automatically renamed or removed: back them up and explicitly
+migrate the selected Numera entry rather than running
 two copies against shared state.
 
 ## Claude Desktop

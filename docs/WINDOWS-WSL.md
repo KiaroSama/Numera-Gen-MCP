@@ -1,9 +1,8 @@
 # Native Windows and Linux
 
-Ready native archives are the installation target. At `ab667a7`, qualification run `44317635481`,
-attempt 1 (six jobs) and protected signing run `44323885497`, attempt 1 (four native targets plus the
-signed collector) both passed; together they cover the complete matrix.
-[0.5.0 verification](releases/0.5.0.md) separates verified artifacts from actual owner-host activation.
+Ready native archives are the installation target. At `f3e3165`, run `44942765654`, attempt 1, passed
+all eleven active qualification and protected signing jobs across Windows and Linux (x64 and ARM64).
+[1.0.0 verification](releases/1.0.0.md) separates verified artifacts from actual owner-host activation.
 
 Windows uses a native MSVC `.exe`; Linux uses its native executable. macOS support was removed in 0.4.0. Choose the matching
 x86_64 or ARM64 archive from the verified Release. Normal users do not install Node/npm/Rust/Python or

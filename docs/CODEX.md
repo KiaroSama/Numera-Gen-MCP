@@ -1,11 +1,11 @@
 # Codex setup
 
 The native target runs directly over stdio. No launcher, Node runtime or manually started service is
-needed: Codex runs the absolute native executable with `args = ["bridge"]`. At `ab667a7` /
-run `44317635481`, attempt 1, all six qualification jobs passed, and protected signing
-run `44323885497`, attempt 1, passed all four native targets plus the signed collector. Together the
-two runs cover the complete matrix. [0.5.0 verification](releases/0.5.0.md) records the artifacts and
-trust limits. Install the verified binary first; actual owner-host reconnection remains a separate check.
+needed: Codex runs the absolute native executable with `args = ["bridge"]`. At `f3e3165` /
+run `44942765654`, attempt 1, all eleven active qualification and signing jobs passed across all four
+native targets plus coverage and signed execution matrices. [1.0.0 verification](releases/1.0.0.md)
+records the artifacts, live E2E checks and trust limits. Install the verified binary first; actual
+owner-host reconnection remains a separate check.
 
 Current Numera Gen MCP examples use `numera-gen-mcp` and host entry `numera-gen-mcp`. Historical signed
 0.2.0 archives retain the old executable name. Existing `numera-image-gen` tables remain untouched;

@@ -77,7 +77,7 @@ guaranteed. Inspect the saved result, and keep the original source.
 ## Upscale through your selected image model
 
 Call edit_image with `upscale: true`, exactly one approved reference, a preservation prompt and
-numeric `size`, such as `2048x2048` for a1024x1024 source. Both target dimensions must not shrink,
+numeric `size`, such as `2048x2048` for a 1024x1024 source. Both target dimensions must not shrink,
 at least one must grow, and the target must fit configured pixel limits. Masks/regions/translation
 cannot be combined with this mode. Numera appends explicit preservation/detail instructions and
 uses the same selected model's verified edit route, never a local resize or another provider.
@@ -100,9 +100,19 @@ is partial with a deviation; no local resizing hides it. This is model-based re-
 dedicated super-resolution engine. Fine-detail accuracy/pixel preservation and quality improvement
 are not guaranteed. Keep the source and visually compare the result.
 
+## Animated GIF from still reference images
+
+On OpenAI image models that support animated GIF edits (such as `gpt-image-2.6-sunburst` and
+`gpt-image-2.6-flare`), call `edit_image` with one or more approved still `reference_images`,
+`output_format: "gif"`, and optional `frame_count` (`2`-`16`, default `9`), `frame_duration_ms`
+(`20`-`2000`, default `200`), and `size` (`"auto"` or `WIDTHxHEIGHT` multiples of 16). Do not combine
+`output_format: "gif"` with masks, `edit_region`, streaming, or `output_compression`. Numera preserves
+returned `GIF87a`/`GIF89a` bytes untouched; if an upstream or gateway returns PNG instead, the receipt
+records the format deviation with `status: "partial"`.
+
 ## Native dimensions only
 
-Use size for provider-supported pixel dimensions (for example1024x1024), aspect_ratio for native shapes,
+Use size for provider-supported pixel dimensions (for example 1024x1024), aspect_ratio for native shapes,
 and image_size for native resolution tiers. These are different fields; do not substitute one for another.
 Only parameters accepted by the selected adapter/route are forwarded. Numera never resizes final originals
 to satisfy a requested size. If provider bytes have different dimensions/format, the receipt records the

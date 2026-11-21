@@ -44,9 +44,17 @@ the separately repaired gateway still has no verified successful Pro generation.
 | ComfyUI                | explicit API graph                   | explicit reference/mask graph bindings      | node/GPU checks; job history/view, no automatic node/checkpoint install     |
 
 Native count>1 requires documented maxCount and actual mapped batch support; not silently repeated.
-PNG/JPEG/WebP/GIF originals validated. GIF is the only animated container accepted; multi-frame APNG
-and animated WebP are still rejected, and SVG is not decoded. Source references, live/GUI/GPU not-run
-reasons and exact runtime/platform evidence are separate. SDK2.3.0 selected. Local tests verify legacy
+PNG/JPEG/WebP/GIF originals validated. GIF (`GIF87a`/`GIF89a`) is the only animated container accepted
+and multi-frame animated GIF bytes are preserved untouched. On OpenAI-compatible image routes that
+support GIF output (such as `gpt-image-2.6-sunburst` and `gpt-image-2.6-flare`), `generate_image` and
+`edit_image` forward `output_format: "gif"`, `frame_count` (`2`-`16`), and `frame_duration_ms`
+(`20`-`2000`) with `size: "auto"` or multiples of 16; multi-frame APNG and animated WebP remain
+rejected, and SVG is not decoded. For typed media (`generate_media`), 1.0.0 validates WAV (PCM,
+IEEE-float, and `WAVE_FORMAT_EXTENSIBLE`), self-contained non-fragmented MP4 (visual track plus
+optional `mp4a` AAC or `Opus` audio track, including `fal-ai/mmaudio-v2` `video-to-audio` outputs),
+and self-contained GLB 2.0 meshes (including safe Khronos material/texture extensions). Source
+references, live/GUI/GPU not-run reasons and exact runtime/platform evidence are separate. SDK 2.3.0
+selected. Local tests verify legacy
 initialize and auto negotiation falls back to legacy on this direct stdio server; a modern-only pin is
 rejected. No modern-only transport support is advertised. Provider signatures are privately retained;
 stateless file-reference editing is supported, conversational continuation replay is not exposed.

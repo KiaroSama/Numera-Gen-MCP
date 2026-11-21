@@ -34,7 +34,7 @@ wins. Job polling and recovery select the stored connection name and never re-ro
 
 At least one model must be enabled. First enabled slot is default; disabled IDs are denied and omitted
 from configured listing. Empty output settings mean provider defaults; explicit tool arguments win.
-OUTPUT_FORMAT accepts png/jpeg/webp. SIZE/QUALITY are native provider strings up to100 characters,
+OUTPUT_FORMAT accepts png/jpeg/webp/gif (where supported by the selected model). SIZE and QUALITY are native provider strings up to 100 characters,
 not local resizing instructions. IDs are unique; labels are never routing aliases. Fully empty slots
 are omitted. Nonempty slots need ID/name even when disabled.
 
@@ -69,7 +69,7 @@ not a private file inside node_modules. Selected .env/.env.* files use env parsi
 
 Generic Images does not infer input forwarding from an endpoint/model ID. Enable only a verified
 contract using EDIT_MODE (multipart/json/generation), EDIT_ENCODING
-(image/image[]/images/image_urls/input_references), EDIT_MAX_REFERENCES (1–32), EDIT_MASKS (true/false)
+(image/image[]/images/image_urls/input_references), EDIT_MAX_REFERENCES (1-32), EDIT_MASKS (true/false)
 and EDIT_MASK_POLARITY (transparent-edit/white-edit/black-edit). Nonempty edit fields require EDIT_MODE.
 
 For an actual OpenAI Images edit contract, a typical configuration is:
@@ -135,8 +135,8 @@ For unsupported/unknown native custom sizes it explains why; unknown model IDs h
 `route_support` separately reports request fields accepted by Numera, documented gateway tier limits
 and the local max_pixels ceiling. These facts do not establish account entitlement or actual output.
 
-The Gemini3.1 Flash Image native table includes14 ratios and0.5K/1K/2K/4K. For16:9 these produce
-688x384/1376x768/2752x1536/5504x3072. Gemini3 Pro Image (including its preview alias)
+The Gemini 3.1 Flash Image native table includes 14 ratios and 0.5K/1K/2K/4K. For 16:9 these produce
+688x384/1376x768/2752x1536/5504x3072. Gemini 3 Pro Image (including its preview alias)
 has10 documented ratios and1K/2K/4K, with the same corresponding pixel sizes, no0.5K or extreme
 1:4/1:8/4:1/8:1 ratios. Documentation does not prove the selected Antigravity account can use Pro.
 Aspect labels and native pixels are discrete; do not calculate
@@ -147,7 +147,7 @@ For custom widthxheight, use only a route/model with a verified pixel contract a
 pixel limits. Always inspect actual saved dimensions/deviations; no hidden resize or provider fallback.
 `documented_limits` exposes sourced maximum edge/pixel count separately from route safety limits.
 For GPT Image2 and2.5 Sunburst/Flare the public API contract permits dimensions in multiples of16,
-aspect between1:3 and3:1, edge at most3840 and655360–8294400 total pixels. Resolutions above
+aspect between 1:3 and 3:1, edge at most 3840 and 655360 to 8294400 total pixels. Resolutions above
 2560x1440 are experimental;3840x2160 fits that contract,4096x4096 and native8K do not.
 Numera rejects numeric requests outside known model limits before submission. Opaque orchestration
 IDs such as Sol have unknown limits; a catalog entry or Codex OAuth route does not establish the
@@ -217,12 +217,16 @@ Audio25 uses `total_seconds`, and Kling uses string `duration`. Connection defau
 then explicit parameters merge before preflight and request fingerprinting. Unsupported parameters,
 roles, cardinalities and model policy reject before source transfer or a paid POST.
 
-`generate_media` returns a durable receipt. `get_job` and `cancel_job` use only its original handle;
-local wait cancellation is independent of provider cancellation/refund. Originals are verified as
-PNG/JPEG/WebP, PCM/IEEE-float WAV, self-contained single-visual-track nonfragmented MP4 or a bounded
-self-contained GLB2 mesh subset. Other containers/codecs/features fail explicitly without conversion.
-Release 0.3.0 retains up to64normalized media items through the shared schema2 Store: legacy
-indices0–9 stay unchanged, media-only overflow10–63 uses an additive table in the same database and
+`generate_media` returns a durable receipt. `list_jobs`, `get_job`, and `cancel_job` inspect or manage
+owned handles; local wait cancellation is independent of provider cancellation or refund. Originals are
+verified as PNG/JPEG/WebP/GIF (including multi-frame animated `GIF87a`/`GIF89a` via `generate_image`
+and `edit_image` with `output_format: "gif"`, `frame_count` 2-16, and `frame_duration_ms` 20-2000),
+WAV (PCM, IEEE-float, and `WAVE_FORMAT_EXTENSIBLE`), self-contained non-fragmented MP4 (visual track
+plus optional `mp4a` AAC or `Opus` audio track), or a bounded self-contained GLB 2.0 mesh subset
+(including safe Khronos material/texture extensions). Other containers/codecs/features fail explicitly
+without conversion.
+Release 0.3.0 retains up to 64 normalized media items through the shared schema v2 Store: legacy
+indices 0-9 stay unchanged, media-only overflow 10-63 uses an additive table in the same database and
 shares byte budgets, writer fences and stable publication. No second job database or old-binary
 media-state downgrade is supported. Excessive responses fail, never silently truncate. Structural
 validation is not full playback/rendering or live-provider proof. Storage can fail after a billable

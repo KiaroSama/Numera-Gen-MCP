@@ -7,7 +7,7 @@
 [![CI runs on GitHub Actions across four native jobs plus coverage](https://img.shields.io/badge/CI-GitHub%20Actions-2563eb)](.github/workflows/ci.yml)
 [![License GPL-3.0-or-later, the first-party grant](https://img.shields.io/badge/license-GPL--3.0--or--later-16a34a)](LICENSE)
 [![Latest release v1.0.0](https://img.shields.io/badge/release-v1.0.0-ea580c)](CHANGELOG.md)
-[![Measured CI coverage: 85.3% regions and 80.7% branches](https://img.shields.io/badge/coverage-regions%2085.3%25%20%7C%20branches%2080.7%25-059669)](docs/testing)
+[![Measured CI coverage: 85.6% regions and 80.0% branches](https://img.shields.io/badge/coverage-regions%2085.6%25%20%7C%20branches%2080.0%25-059669)](docs/testing)
 [![Rust 1.100.0 pinned toolchain](https://img.shields.io/badge/rust-1.100.0-8b5cf6)](rust-toolchain.toml)
 [![Runs on Windows and Linux, each built for x64 and ARM64](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%C2%B7%20x64%20%7C%20ARM64-0891b2)](.github/workflows/ci.yml)
 [![Distributed as a native binary](https://img.shields.io/badge/distribution-native%20binary-dc2626)](#installation-and-setup)
@@ -16,7 +16,7 @@
 [![Built with the rmcp 3.10.0 MCP SDK](https://img.shields.io/badge/built%20with-rmcp%203.10.0-be185d)](Cargo.toml)
 [![Job receipts stored in SQLite](https://img.shields.io/badge/receipts-SQLite-0f766e)](native/jobs/store.rs)
 [![MCP transports: stdio and local HTTP](https://img.shields.io/badge/MCP-stdio%20%7C%20HTTP-7651a8)](docs/ARCHITECTURE.md)
-[![Media formats: PNG, JPEG, WebP and GIF images, MP4 video, WAV audio and GLB 3D](https://img.shields.io/badge/media%20formats-PNG%20JPEG%20WebP%20GIF%20%C2%B7%20MP4%20%C2%B7%20WAV%20%C2%B7%20GLB-65a30d)](#video-audio-and-3d)
+[![Media formats: PNG, JPEG, WebP, animated GIF, MP4 video, WAV audio and GLB 3D](https://img.shields.io/badge/media%20formats-PNG%20JPEG%20WebP%20GIF%20%C2%B7%20MP4%20%C2%B7%20WAV%20%C2%B7%20GLB-65a30d)](#what-numera-can-generate)
 [![Image and video modes: text-to-image, image-to-image with editing and masks, text-to-video, image-to-video, video-to-video and video-to-audio](https://img.shields.io/badge/image%20%26%20video%20modes-text%E2%86%92image%20%C2%B7%20image%E2%86%92image%20%28edit%2C%20mask%29%20%C2%B7%20text%E2%86%92video%20%C2%B7%20image%E2%86%92video%20%C2%B7%20video%E2%86%92video%20%C2%B7%20video%E2%86%92audio-3068b7)](#video-audio-and-3d)
 [![Audio and 3D modes: text-to-audio, audio-to-audio, video-to-audio, text-to-3D, image-to-3D and 3D-to-3D](https://img.shields.io/badge/audio%20%26%203D%20modes-text%E2%86%92audio%20%C2%B7%20audio%E2%86%92audio%20%C2%B7%20video%E2%86%92audio%20%C2%B7%20text%E2%86%923D%20%C2%B7%20image%E2%86%923D%20%C2%B7%203D%E2%86%923D-475569)](#video-audio-and-3d)
 [![Support donations](https://img.shields.io/badge/Support-donations-d04a9a)](#donate)
@@ -28,15 +28,20 @@ Keep your host chat model unchanged. Named connections separate native image pro
 forwarding, configured GPU ComfyUI workflows and exact fal queue endpoint contracts. No paid POST
 retries, hidden uploads, prompt enhancement or automatic provider/model fallback.
 
-**Version 0.5.0** lets one `.env` configure two providers: the main endpoint and an optional fal
-section (`FAL_API_ENDPOINT`, `FAL_API_KEY`, `FAL_MODEL_n_*`). Requests are routed by model ID. It runs
-on Windows and Linux, x64 and ARM64. Version 0.4.0 removed macOS and routed the legacy image tools
-through fal. Version 0.3.0 added
-multimedia generation, explicit output kinds/modes, twelve tools and Rust-only maintained tooling. First-party code is now **GPL-3.0-or-later**; source builds use
-**Rust 1.100.0**, while released binaries need no compiler or language runtime.
+**Version 1.0.0** ships 13 MCP tools (adding `list_jobs`), animated GIF generation and editing
+(`output_format: "gif"`, `frame_count`, `frame_duration_ms`), 11 typed media modes (adding
+`video-to-audio` via `fal-ai/mmaudio-v2`), muxed MP4 AAC/Opus audio validation,
+`WAVE_FORMAT_EXTENSIBLE` WAV, safe Khronos GLB 2.0 extensions, opt-in custom `falContract`
+endpoints, OmniRoute `/v1/fal` support, MCP `notifications/progress` updates, non-blocking
+`wait: false` background creation (`openai-responses` and `gemini-interactions`), DNS/redirect SSRF
+hardening and SQLite WAL/lease concurrency hardening. One `.env` can still configure both a main
+endpoint and a `fal` section (`FAL_API_ENDPOINT`, `FAL_API_KEY`, `FAL_MODEL_n_*`) routed by model ID.
+Supported targets are Windows and Linux, each on x64 and ARM64 (macOS was removed in 0.4.0).
+First-party code is **GPL-3.0-or-later**; source builds pin **Rust 1.100.0**, while released binaries
+need no compiler or language runtime.
 
-Install only the signed [0.5.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v0.5.0)
-with its [verification record](docs/releases/0.5.0.md). Source or an unsigned CI intermediate is not
+Install only the signed [1.0.0 release](https://github.com/KiaroSama/Numera-Gen-MCP/releases/tag/v1.0.0)
+with its [verification record](docs/releases/1.0.0.md). Source or an unsigned CI intermediate is not
 an installable final release.
 
 The runtime, developer utility, CI driver and maintained tests are Rust. All 51 replaced
@@ -49,15 +54,13 @@ the same qualified binaries without rerunning the heavy suites. The workflow bad
 not proof that preparation, tests and signatures all ran; [test evidence](docs/TEST-RESULTS.md) records
 the exact source/run/attempt. [Rust migration](docs/RUST-MIGRATION.md) records scope and dispositions.
 
-The released 0.5.0 source at `ab667a7` passed all six qualification jobs in
-[run 44317635481](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/44317635481), attempt 1:
-all 470 frozen cases across five runtime/coverage contexts, with **85.6354% region** and
-**80.7309% branch** coverage. The unchanged floors are 85% / 80%. Its four signed native targets
-and the signed collector passed
-[run 44323885497](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/44323885497), attempt 1,
-at the same commit with the existing signer. The
-[0.5.0 verification record](docs/releases/0.5.0.md) identifies the actual source, runs, targets and
-checksums. [0.3.0](docs/releases/0.3.0.md) keeps its own record, including its macOS archives. Later edits are not covered by these results.
+The released 1.0.0 source at `f3e3165` passed all eleven active qualification and protected signing
+jobs in [run 44942765654](https://github.com/KiaroSama/Numera-Gen-MCP/actions/runs/44942765654),
+attempt 1, with **85.5671% region** (20,922 / 24,451) and **80.0267% branch** (4,800 / 5,998)
+coverage against unchanged 85% / 80% floors. The [1.0.0 verification record](docs/releases/1.0.0.md)
+identifies the exact source, run, targets, checksums and live E2E evidence. Historical
+[0.5.0](docs/releases/0.5.0.md), [0.3.0](docs/releases/0.3.0.md) and [0.2.0](docs/releases/0.2.0.md)
+keep their own records. Later edits are not covered by these results.
 
 [Historical 0.2.0](docs/releases/0.2.0.md) retains its original signed bytes and image-only template.
 Preserve a working installation until the replacement is signed and the actual host connection is
@@ -76,9 +79,9 @@ registration and interactive GUI use remain unverified.
 ## Installation and setup
 
 **Use a signed released binary, not a source build or unsigned CI intermediate.** The five steps
-below target **0.5.0** and its actual `numera-gen-mcp` executable. Require the published release's
+below target **1.0.0** and its actual `numera-gen-mcp` executable. Require the published release's
 exact-source qualification, signatures and matching checksums before installation; the
-[verification record](docs/releases/0.5.0.md) holds both. The immutable image-only **0.2.0** release
+[verification record](docs/releases/1.0.0.md) holds the full run and digests. The immutable image-only **0.2.0** release
 retains `numera-image-gen-mcp` and its own template; never rename those signed bytes or copy media
 settings into that old version. [Historical installation and trust
 evidence](docs/releases/0.2.0.md) remains available.
@@ -243,12 +246,12 @@ must be enabled, and IDs must be unique. A configured model is not proof of acco
 
 | Field                   | Purpose                                                                                                                                             | Required / default                                                  |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `MODEL_n_ID`            | Exact provider model ID sent to the API, including any required provider prefix.                                                                    | Required for a nonempty slot; up to300 characters.                  |
-| `MODEL_n_NAME`          | Friendly name the agent displays through `list_models`. It does not change routing.                                                                 | Required for a nonempty slot; up to100 characters.                  |
+| `MODEL_n_ID`            | Exact provider model ID sent to the API, including any required provider prefix.                                                                    | Required for a nonempty slot; up to 300 characters.                  |
+| `MODEL_n_NAME`          | Friendly name the agent displays through `list_models`. It does not change routing.                                                                 | Required for a nonempty slot; up to 100 characters.                  |
 | `MODEL_n_ENABLED`       | Enables the slot. `false` hides it from configured listing and denies its ID for submission.                                                        | Empty/omitted: `true`. Template slots2 and3 explicitly use `false`. |
 | `MODEL_n_OUTPUT_FORMAT` | Default output format: `png`, `jpeg` or `webp`, only if the selected route supports it.                                                             | Empty: provider default, nothing sent.                              |
-| `MODEL_n_SIZE`          | Default native pixel dimensions, for example `1024x1024`, if accepted by that API/model. Numera does not resize the returned original to match.     | Empty: provider default; nonblank values up to100 characters.       |
-| `MODEL_n_QUALITY`       | Default native quality value, for example `auto`, `low`, `medium` or `high` on models supporting those values. It is not a universal quality scale. | Empty: provider default; nonblank values up to100 characters.       |
+| `MODEL_n_SIZE`          | Default native pixel dimensions, for example `1024x1024`, if accepted by that API/model. Numera does not resize the returned original to match.     | Empty: provider default; nonblank values up to 100 characters.       |
+| `MODEL_n_QUALITY`       | Default native quality value, for example `auto`, `low`, `medium` or `high` on models supporting those values. It is not a universal quality scale. | Empty: provider default; nonblank values up to 100 characters.       |
 
 The optional `MODEL_n_OUTPUT_TYPES` / `MODEL_n_MODES` pair requires **0.3.0 or later** and is documented in
 [Video, audio and 3D](#video-audio-and-3d). Both fields must be nonempty together or empty together.
@@ -269,7 +272,7 @@ support to an adapter that does not implement it. Any nonempty edit setting requ
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | `EDIT_MODE`           | `multipart`: upload reference bytes to `/images/edits`; `json`: inline references in JSON to `/images/edits`; `generation`: inline references through `/images/generations`. Explicit gateway contracts may override this mapping. | Empty: no explicit Images edit contract.                |
 | `EDIT_ENCODING`       | Reference field shape expected by the route: `image`, `image[]`, `images`, `image_urls` or `input_references`. For multipart, use `image` or `image[]`; JSON/generation must match the provider's documented field.                | Required when EDIT_MODE is set.                         |
-| `EDIT_MAX_REFERENCES` | Maximum reference count declared for the edit contract; other route/model limits can be stricter.                                                                                                                                  | Integer1–32; empty:1.                                   |
+| `EDIT_MAX_REFERENCES` | Maximum reference count declared for the edit contract; other route/model limits can be stricter.                                                                                                                                  | Integer1 to 32; empty:1.                                   |
 | `EDIT_MASKS`          | Declares verified mask forwarding. `true` alone cannot bypass an adapter/gateway restriction.                                                                                                                                      | Empty: `false`.                                         |
 | `EDIT_MASK_POLARITY`  | Which mask pixels are editable: `transparent-edit` = transparent pixels; `white-edit` = white pixels; `black-edit` = black pixels. Must match the provider.                                                                        | Needed for mask/rectangle editing; no inferred default. |
 
@@ -541,6 +544,49 @@ Saved originals provide owned IDs, paths, actual MIME/dimensions/bytes/alpha/SHA
 previews are derivatives. Local paths are not automatically accessible to cloud hosts. Prompts/input
 bytes preserved unless explicit in-image translation or upscale instructions are requested; provider policy/terms still apply. Read [privacy](docs/PRIVACY.md).
 
+## What Numera can generate
+
+| Output type | Tools | Modes / inputs | Verified formats and limits |
+| --- | --- | --- | --- |
+| Still images | `generate_image`, `generate_media` | `text-to-image` (OpenAI Images/Responses, Gemini, OpenRouter, OmniRoute, 9router, ComfyUI, `fal-ai/flux/dev`) | `PNG`, `JPEG`, `WebP` original bytes preserved |
+| Animated GIFs | `generate_image`, `edit_image` | Text-to-GIF and still-reference-to-GIF (`output_format: "gif"`, `frame_count` 2-16, `frame_duration_ms` 20-2000) | Single-frame and multi-frame `GIF87a`/`GIF89a` bytes preserved |
+| Image edits | `edit_image`, `generate_media` | `image-to-image`, multi-reference, `edit_region` masks, `target_language` comic translation, native `upscale: true` | `PNG`, `JPEG`, `WebP`, `GIF` (native model output only; no local resize) |
+| Video | `generate_media` | `text-to-video` (`kling-video` v2.5 turbo), `image-to-video` (`kling-video` v2.1), `video-to-video` (`cogvideox-5b`, `mmaudio-v2`) | Self-contained non-fragmented `MP4` (visual + optional `mp4a`/`Opus` audio) |
+| Audio and soundtracks | `generate_media` | `text-to-audio` (`stable-audio`), `audio-to-audio` (`stable-audio-25`), `video-to-audio` (`fal-ai/mmaudio-v2`) | `WAV` (PCM, IEEE-float, `WAVE_FORMAT_EXTENSIBLE`) and muxed `MP4` (`mmaudio-v2`) |
+| 3D meshes | `generate_media` | `text-to-3d` (`hunyuan3d-v3`, `hyper3d/rodin`), `image-to-3d` (`trellis`, `hyper3d/rodin`), `3d-to-3d` (`trellis-2/retexture`) | Self-contained `GLB 2.0` (including safe Khronos material/texture extensions) |
+| Custom fal endpoints | `generate_media` | Opt-in `modelOverrides.<id>.falContract` definitions | Validated against the declared `image`, `video`, `audio`, or `3d` format rules |
+
+## Animated GIF generation
+
+Models that support OpenAI animated GIF output (such as `gpt-image-2.6-sunburst` and
+`gpt-image-2.6-flare`) accept `output_format: "gif"` on `generate_image` (text prompt) and
+`edit_image` (still reference images guiding the animation):
+
+- `output_format`: `"gif"`
+- `frame_count`: optional integer from `2` to `16` (upstream default `9`)
+- `frame_duration_ms`: optional integer from `20` to `2000` milliseconds per frame (upstream default `200`, rounded to 10 ms)
+- `size`: `"auto"` or `WIDTHxHEIGHT` with dimensions divisible by 16 within the model's GIF pixel budget
+
+```json
+{
+  "model": "openai/gpt-image-2.6-flare",
+  "prompt": "A glowing origami lantern pulsing gently in a dark room, seamless loop",
+  "size": "auto",
+  "quality": "low",
+  "output_format": "gif",
+  "frame_count": 4,
+  "frame_duration_ms": 250,
+  "request_id": "lantern-gif-001"
+}
+```
+
+Numera validates the returned `GIF87a`/`GIF89a` header and saves the original animated bytes untouched
+with `.gif` and `image/gif`. Do not combine `output_format: "gif"` with streaming, partial images,
+masks, or `output_compression`. When routing through a gateway (such as OmniRoute), the gateway must
+forward `output_format`, `frame_count`, and `frame_duration_ms` upstream; if the upstream returns PNG
+instead, Numera preserves those bytes and records a format deviation with `status: "partial"`. See
+[Compatibility](docs/COMPATIBILITY.md) and [OmniRoute](docs/OMNIROUTE.md).
+
 ## Video, audio and 3D
 
 Declare both output kinds and exact transformations for each model. Full JSON uses
@@ -622,11 +668,11 @@ a real authorized sample; offline wire/mask tests are not semantic proof.
 Ask the agent to call `get_model_capabilities` for the exact model. Its `dimensions` result includes
 built-in ratio presets, sourced model-native ratios/tiers/pixel sizes, custom-size support status and
 separate selected-route parameter acceptance. Presets alone are suggestions, not support claims.
-Unknown model IDs have unknown native dimensions rather than invented universal4K support.
+Unknown model IDs have unknown native dimensions rather than invented universal 4K support.
 
-For documented Gemini3.1 Flash Image,14 ratios include1:1,16:9,9:16,3:2,2:3 and21:9; native tiers
-are0.5K/1K/2K/4K. The complete per-ratio pixel table is returned by the tool.4K16:9 maps to5504x3072,
-not3840x2160. The examined OmniRoute path accepts1K/2K/4K but not0.5K; generic Images does not accept
+For documented Gemini 3.1 Flash Image, 14 ratios include 1:1, 16:9, 9:16, 3:2, 2:3 and 21:9; native tiers
+are 0.5K/1K/2K/4K. The tool returns the complete per-ratio pixel table. 4K 16:9 maps to 5504x3072,
+not 3840x2160. The examined OmniRoute path accepts 1K/2K/4K but not 0.5K; generic Images does not accept
 undeclared `aspect_ratio`/`image_size`. Arbitrary custom pixels are not a native Gemini contract:
 select a documented ratio+tier, or use an independently verified custom-size model. Numera never
 silently resizes output to match. [Dimension selection details](docs/CONFIGURATION.md#dimension-discovery).

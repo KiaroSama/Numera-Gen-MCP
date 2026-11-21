@@ -1,6 +1,6 @@
 # References
 
-## Rust completion and upstream refresh — checked 2026-11-10
+## Rust completion and upstream refresh (checked 2026-11-10)
 
 Coverage follows the pinned [cargo-llvm-cov 0.9.1 external-test workflow](https://github.com/taiki-e/cargo-llvm-cov/blob/v0.9.1/README.md#get-coverage-of-external-tests):
 instrument with `show-env`, execute existing workspace harnesses and inherited child processes,
@@ -23,7 +23,7 @@ listed here. No upstream implementation was copied into the Rust workspace.
 | [oh-my-pi](https://github.com/can1357/oh-my-pi) | `e1d8f29d54957da5cb38b11d10a6778d13476980` | Current host reset/routing changes remain host-owned. Numera's explicit provider endpoints, model IDs and native MCP transport remain independent; no host credential/reset behavior is imported. |
 | [fal-js](https://github.com/fal-ai/fal-js) | `a29c8955d51c7e9009091b43dca4f10660f721ae` | Read reserved tag validation and endpoint type refresh. Numera does not expose `X-Fal-Tags`; fixed no-retry/store-IO headers and exact endpoint contracts stay in Rust. No SDK upload, tag passthrough or automatic POST retry is added. |
 
-The reference branch already supersedes Cargo PRs #17–#21 with RMCP 3.9.0, rusqlite 0.41.1,
+The reference branch already supersedes Cargo PRs #17-#21 with RMCP 3.9.0, rusqlite 0.41.1,
 libc 0.2.191, SHA2 0.11.1 and UUID 1.29.2. Current RMCP, rusqlite and UUID release notes were
 checked again. The official source-preparation run also resolved const-oid 0.10.3, crc32fast 1.5.5,
 rustls-pki-types 1.16.0 and sqlite-wasm-rs 0.6.3, with registry checksums committed in Cargo.lock.
@@ -202,7 +202,7 @@ Google InteractionStatusUpdateStatus at
 https://github.com/googleapis/js-genai/blob/f6b85db43db2cb88705f60af9c394fee308ac497/src/gaos/models/interactions/interaction-status-update.ts ;
 Comfy targeted cancellation dispatch/terminal job status at
 https://github.com/Comfy-Org/ComfyUI/blob/5c460d8172fe30761ff67c0df3d5643bb74e0d70/server.py and openapi.yaml.
-A true cancellation boolean confirms dispatch only, not completion/refund. SDK2.3.1 patch release
+A true cancellation boolean confirms dispatch only, not completion/refund. SDK 2.3.1 patch release
 https://github.com/modelcontextprotocol/typescript-sdk/releases/tag/v2.3.1 retains stdio contracts.
 No third-party implementation copied.
 
@@ -221,3 +221,12 @@ https://fal.ai/docs/api-reference/inference-api/queue/submit-path document `POST
 (`transport: "queue"`, `Idempotency-Key`), `GET /v1/fal/jobs/{id}`, `GET /v1/fal/jobs/{id}?result=true`
 (nested `output` payload), `DELETE /v1/fal/jobs/{id}` cancellation, and `GET /v1/fal/models`. No
 upstream code was copied.
+
+OpenAI Images animated GIF specification, checked 2026-11-22:
+https://developers.openai.com/api/docs/guides/image-generation (section "Generate animated GIF output")
+and https://developers.openai.com/api/reference/resources/images/methods/generate document
+`output_format: "gif"`, `frame_count` (`2`-`16`, default `9`), `frame_duration_ms` (`20`-`2000` in guide,
+rounded to 10 ms, default `200`), and `size` (`"auto"` or `WIDTHxHEIGHT` multiples of 16) on
+`gpt-image-2.6-sunburst` and `gpt-image-2.6-flare` for both `/v1/images/generations` and `/v1/images/edits`,
+returning raw `GIF89a` bytes in `data[].b64_json`. No streaming, partial images, masks, or custom
+`output_compression` are supported with GIF output.
