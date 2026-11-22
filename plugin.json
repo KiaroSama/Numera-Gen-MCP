@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "numera-gen",
+  "version": "1.0.0",
+  "description": "Optional workflow guidance skill for Numera Gen MCP: still images, animated GIFs, edits, video, audio, video-to-audio, 3D meshes, and safe job recovery.",
+  "author": {
+    "name": "KiaroSama",
+    "email": "Kiaro.Sama.Dev@gmail.com",
+    "url": "https://github.com/KiaroSama"
+  },
+  "homepage": "https://github.com/KiaroSama/Numera-Gen-MCP",
+  "repository": "https://github.com/KiaroSama/Numera-Gen-MCP",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "numera",
+    "mcp",
+    "image-generation",
+    "animated-gif",
+    "video",
+    "audio",
+    "3d",
+    "fal",
+    "openai",
+    "comfyui"
+  ]
+}

@@ -684,6 +684,17 @@ silently resizes output to match. [Dimension selection details](docs/CONFIGURATI
 [Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) · [Requirements](docs/REQUIREMENTS.md) ·
 [References](docs/REFERENCES.md)
 
+## Optional skill plugin packaging
+
+Numera Gen MCP works without any skill or plugin: the binary exposes its own MCP `instructions` and
+strict JSON schemas for all 13 tools. For clients that also install workflow skills from a repository,
+this repo packages [skills/numera-gen/SKILL.md](skills/numera-gen/SKILL.md) in five native manifest
+formats: Claude Code (`.claude-plugin/`), Cursor (`.cursor-plugin/`), Codex (`.codex-plugin/` and
+`.agents/plugins/marketplace.json`), Antigravity (`.antigravity-plugin/`), and Agent Plugins 1.0.0
+(`plugin.json`). These manifests package the optional skill only; install and register your local
+signed `numera-gen-mcp` binary separately as shown above. Manifest structure is validated statically
+and does not claim live GUI installation across all five clients.
+
 ## Native private maintenance
 
 Version 0.3.0 adds Windows `numera-dev protect-secret --path ABSOLUTE_FILE` with hidden

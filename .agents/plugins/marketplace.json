@@ -1,0 +1,20 @@
+{
+  "name": "numera-gen",
+  "interface": {
+    "displayName": "Numera Gen MCP"
+  },
+  "plugins": [
+    {
+      "name": "numera-gen",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/KiaroSama/Numera-Gen-MCP.git"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "NONE"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

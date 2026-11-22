@@ -1,0 +1,13 @@
+{
+  "name": "numera-gen",
+  "owner": {
+    "name": "KiaroSama"
+  },
+  "plugins": [
+    {
+      "name": "numera-gen",
+      "source": "./",
+      "description": "Optional workflow guidance skill for Numera Gen MCP: still images, animated GIFs, edits, video, audio, video-to-audio, 3D meshes, and safe job recovery."
+    }
+  ]
+}

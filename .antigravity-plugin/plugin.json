@@ -1,0 +1,37 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "numera-gen",
+  "displayName": "Numera Gen MCP",
+  "version": "1.0.0",
+  "description": "Optional workflow guidance skill for Numera Gen MCP: still images, animated GIFs, edits, video, audio, video-to-audio, 3D meshes, and safe job recovery.",
+  "logo": "docs/assets/logo.png",
+  "suggestedPrompts": [
+    "Check Numera Gen MCP connections, models, and capabilities before generating an image",
+    "Generate an animated GIF with output_format gif, frame_count, and frame_duration_ms",
+    "Inspect existing Numera jobs with list_jobs and recover a pending output without resubmitting"
+  ],
+  "category": [
+    "Media",
+    "Developer Tools"
+  ],
+  "author": {
+    "name": "KiaroSama",
+    "email": "Kiaro.Sama.Dev@gmail.com",
+    "url": "https://github.com/KiaroSama"
+  },
+  "homepage": "https://github.com/KiaroSama/Numera-Gen-MCP",
+  "repository": "https://github.com/KiaroSama/Numera-Gen-MCP",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "numera",
+    "mcp",
+    "image-generation",
+    "animated-gif",
+    "video",
+    "audio",
+    "3d",
+    "fal",
+    "openai",
+    "comfyui"
+  ]
+}
