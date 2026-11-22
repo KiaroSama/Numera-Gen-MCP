@@ -95,6 +95,10 @@ name = "v1_media_branch_coverage"
 path = "tests/rust/v1_media_branch_coverage.rs"
 
 [[test]]
+name = "v1_fal_branch_coverage"
+path = "tests/rust/v1_fal_branch_coverage.rs"
+
+[[test]]
 name = "sdk_acceptance"
 path = "tests/rust/sdk_acceptance.rs"
 
