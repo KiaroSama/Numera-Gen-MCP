@@ -110,9 +110,12 @@ runs:
           .ci-cache/cargo/registry/cache
           .ci-cache/cargo/git/db
           target
-        key: numera-cargo-v1-${{ inputs.target }}-${{ inputs.coverage }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          !target/llvm-cov-target
+          !target/**/*.profraw
+          !target/**/*.profdata
+        key: numera-cargo-v2-${{ inputs.target }}-${{ inputs.coverage }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
         restore-keys: |
-          numera-cargo-v1-${{ inputs.target }}-${{ inputs.coverage }}-
+          numera-cargo-v2-${{ inputs.target }}-${{ inputs.coverage }}-
     - name: Build the exact locked workspace task once
       if: inputs.build-task == 'true'
       shell: bash
