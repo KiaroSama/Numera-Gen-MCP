@@ -14,7 +14,7 @@ tokio = { version = "=1.54.1", features = ["rt-multi-thread", "macros", "time", 
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = { version = "=1.0.154", features = ["preserve_order"] }
 sha2 = "=0.11.1"
-uuid = { version = "=1.29.2", features = ["v4"] }
+uuid = { version = "=1.29.3", features = ["v4"] }
 base64 = "=0.23.1"
 chrono = { version = "=0.4.45", default-features = false, features = ["clock"] }
 flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
